@@ -1,0 +1,18 @@
+export default {
+  primary: '#E91E63',
+  secondary: '#009688',
+  background: '#FFFDF5',
+  surface: '#FFFFFF',
+  text: '#1A1A2E',
+  textSecondary: '#6B7280',
+  textLight: '#9CA3AF',
+  border: '#F0EDE5',
+  cardGradientStart: '#E91E63',
+  cardGradientMiddle: '#F06292',
+  cardGradientEnd: '#FF9800',
+  teal: '#009688',
+  tealLight: '#B2DFDB',
+  pinkLight: '#FCE4EC',
+  sand: '#F5F0E1',
+  sandDark: '#E8E0CC',
+};
