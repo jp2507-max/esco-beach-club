@@ -79,8 +79,8 @@ export default function HomeScreen() {
   const progressWidth = (userPoints / userMaxPoints) * 100;
 
   const quickActions = [
-    { icon: UtensilsCrossed, label: 'Book Table', color: Colors.secondary },
-    { icon: Wine, label: 'Happy Hour', color: Colors.primary },
+    { icon: UtensilsCrossed, label: 'Book Table', color: Colors.secondary, route: '/booking-modal' as const },
+    { icon: Wine, label: 'Menu', color: Colors.primary, route: '/menu' as const },
   ];
 
   return (
@@ -172,6 +172,7 @@ export default function HomeScreen() {
                 style={styles.quickActionPill}
                 activeOpacity={0.7}
                 testID={`action-${action.label}`}
+                onPress={() => router.push(action.route)}
               >
                 <action.icon size={18} color={action.color} />
                 <Text style={[styles.quickActionText, { color: action.color }]}>{action.label}</Text>

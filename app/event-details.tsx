@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
   Animated,
 } from 'react-native';
 import { Image } from 'expo-image';
@@ -102,11 +101,7 @@ export default function EventDetailsScreen() {
   ];
 
   const handleBook = () => {
-    Alert.alert(
-      'Booking Confirmed! 🎉',
-      `You're all set for "${event.title}" on ${event.date}.\n\nA confirmation has been sent to your email.`,
-      [{ text: 'Awesome!', style: 'default' }]
-    );
+    router.push({ pathname: '/booking-modal', params: { eventTitle: event.title } });
   };
 
   return (

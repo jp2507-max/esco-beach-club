@@ -54,6 +54,9 @@ function RootLayoutNav() {
       <Stack.Screen name="rate-us" options={{ presentation: 'modal', headerShown: false }} />
       <Stack.Screen name="private-event" options={{ presentation: 'modal', headerShown: false }} />
       <Stack.Screen name="event-details" options={{ presentation: 'card', headerShown: false }} />
+      <Stack.Screen name="booking-modal" options={{ presentation: 'modal', headerShown: false }} />
+      <Stack.Screen name="menu" options={{ presentation: 'card', headerShown: false }} />
+      <Stack.Screen name="success" options={{ presentation: 'modal', headerShown: false, gestureEnabled: false }} />
     </Stack>
   );
 }
