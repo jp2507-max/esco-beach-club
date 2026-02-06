@@ -13,7 +13,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { SlidersHorizontal } from 'lucide-react-native';
 import Colors from '@/constants/colors';
-import { mockPartners, partnerCategories, Partner } from '@/mocks/partners';
+import { useFilteredPartners } from '@/providers/DataProvider';
+import type { Partner } from '@/lib/types';
+
+const partnerCategories = ['All', 'Hotels', 'Travel', 'Dining', 'Wellness'] as const;
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 52) / 2;
@@ -23,9 +26,7 @@ export default function PerksScreen() {
   const router = useRouter();
   const [activeCategory, setActiveCategory] = useState<string>('All');
 
-  const filtered = activeCategory === 'All'
-    ? mockPartners
-    : mockPartners.filter((p) => p.category === activeCategory);
+  const filtered = useFilteredPartners(activeCategory);
 
   const handlePartnerPress = useCallback((partner: Partner) => {
     console.log('Opening partner:', partner.name);
@@ -42,7 +43,7 @@ export default function PerksScreen() {
       <View style={styles.cardImageWrap}>
         <Image source={{ uri: item.image }} style={styles.cardImage} contentFit="cover" />
         <View style={styles.badgeWrap}>
-          <Text style={styles.badgeText}>{item.discountLabel}</Text>
+          <Text style={styles.badgeText}>{item.discount_label}</Text>
         </View>
       </View>
       <View style={styles.cardBody}>

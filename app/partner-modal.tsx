@@ -12,7 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Copy, X, Star, Percent, Award } from 'lucide-react-native';
 import * as Clipboard from 'expo-clipboard';
 import Colors from '@/constants/colors';
-import { mockPartners } from '@/mocks/partners';
+import { usePartnerById } from '@/providers/DataProvider';
 
 export default function PartnerModal() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -21,7 +21,7 @@ export default function PartnerModal() {
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
 
-  const partner = mockPartners.find((p) => p.id === id);
+  const partner = usePartnerById(id);
 
   useEffect(() => {
     Animated.parallel([
@@ -74,7 +74,7 @@ export default function PartnerModal() {
           </View>
 
           <Text style={styles.title}>Congratulations!</Text>
-          <Text style={styles.titleAccent}>{partner.discountLabel}!</Text>
+          <Text style={styles.titleAccent}>{partner.discount_label}!</Text>
           <Text style={styles.subtitle}>
             Enjoy exclusive benefits at {partner.name}. {partner.description}.
           </Text>

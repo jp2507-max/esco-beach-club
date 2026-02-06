@@ -26,7 +26,7 @@ import {
   Heart,
 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
-import { mockEvents } from '@/mocks/user';
+import { useEventById } from '@/providers/DataProvider';
 
 interface PriceTier {
   label: string;
@@ -44,7 +44,28 @@ export default function EventDetailsScreen() {
   const slideAnim = useRef(new Animated.Value(40)).current;
   const headerOpacity = useRef(new Animated.Value(0)).current;
 
-  const event = mockEvents.find((e) => e.id === id) ?? mockEvents[0];
+  const foundEvent = useEventById(id);
+
+  const event = foundEvent ?? {
+    id: id ?? '',
+    title: 'Event',
+    description: null,
+    time: '',
+    date: '',
+    day_label: null,
+    location: '',
+    image: 'https://images.unsplash.com/photo-1506929562872-bb421503ef21?w=600&h=400&fit=crop',
+    attendees: 0,
+    price: '$0',
+    badge: null,
+    badge_color: null,
+    featured: false,
+    category: null,
+    vip_price: null,
+    member_price: null,
+    guest_price: null,
+    created_at: '',
+  };
 
   useEffect(() => {
     Animated.stagger(150, [
@@ -59,21 +80,21 @@ export default function EventDetailsScreen() {
   const priceTiers: PriceTier[] = [
     {
       label: 'VIP',
-      price: '$85',
+      price: event.vip_price ?? '$85',
       highlight: true,
       icon: Crown,
       perks: ['Priority seating', 'Welcome drink', 'Backstage access'],
     },
     {
       label: 'Member',
-      price: event.price || '$45',
+      price: event.member_price ?? event.price ?? '$45',
       highlight: false,
       icon: Star,
       perks: ['Reserved area', 'Complimentary snacks'],
     },
     {
       label: 'Guest',
-      price: '$65',
+      price: event.guest_price ?? '$65',
       highlight: false,
       icon: UserCheck,
       perks: ['General admission', 'Cash bar'],
@@ -117,7 +138,7 @@ export default function EventDetailsScreen() {
         </View>
 
         <View style={styles.heroBadge}>
-          <Text style={styles.heroBadgeText}>{event.badge}</Text>
+          <Text style={styles.heroBadgeText}>{event.badge ?? ''}</Text>
         </View>
 
         <View style={styles.heroInfo}>

@@ -15,6 +15,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { X, PartyPopper, Calendar, Users, ChevronDown, Send } from 'lucide-react-native';
 import Colors from '@/constants/colors';
+import { useData } from '@/providers/DataProvider';
+import { submitPrivateEventInquiry } from '@/lib/api';
+import { useMutation } from '@tanstack/react-query';
 
 const eventTypes = ['Company Party', 'Birthday', 'Wedding', 'Anniversary', 'Corporate Retreat', 'Other'];
 
@@ -31,6 +34,22 @@ export default function PrivateEventScreen() {
   const [submitted, setSubmitted] = useState<boolean>(false);
   const checkAnim = useRef(new Animated.Value(0)).current;
 
+  const { userId } = useData();
+
+  const inquiryMutation = useMutation({
+    mutationFn: () => submitPrivateEventInquiry({
+      user_id: userId,
+      event_type: eventType,
+      preferred_date: preferredDate,
+      estimated_pax: parseInt(estimatedPax, 10) || 0,
+      contact_name: contactName || undefined,
+      contact_email: contactEmail || undefined,
+      notes: notes || undefined,
+    }),
+    onSuccess: () => console.log('[PrivateEvent] Inquiry submitted'),
+    onError: (err) => console.log('[PrivateEvent] Submit error:', err),
+  });
+
   const isValid = eventType.length > 0 && preferredDate.length > 0 && estimatedPax.length > 0;
 
   const handleSubmit = () => {
@@ -38,15 +57,7 @@ export default function PrivateEventScreen() {
       Alert.alert('Missing Info', 'Please fill in the event type, date, and estimated guests.');
       return;
     }
-    console.log('=== PRIVATE EVENT INQUIRY ===');
-    console.log('Event Type:', eventType);
-    console.log('Preferred Date:', preferredDate);
-    console.log('Estimated Pax:', estimatedPax);
-    console.log('Contact:', contactName);
-    console.log('Email:', contactEmail);
-    console.log('Notes:', notes || '(none)');
-    console.log('=============================');
-
+    inquiryMutation.mutate();
     setSubmitted(true);
     Animated.spring(checkAnim, {
       toValue: 1,

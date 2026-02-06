@@ -20,7 +20,7 @@ import {
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import Colors from '@/constants/colors';
-import { mockUser, mockHomeEvents, mockNewsFeed } from '@/mocks/user';
+import { useData, useHomeEvents } from '@/providers/DataProvider';
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -65,7 +65,18 @@ export default function HomeScreen() {
     ]).start();
   }, [cardScale, cardOpacity, fadeIn, slideUp]);
 
-  const progressWidth = (mockUser.points / mockUser.maxPoints) * 100;
+  const { profile, news } = useData();
+  const homeEvents = useHomeEvents();
+
+  const userName = profile?.full_name ?? 'Guest';
+  const userTier = profile?.tier_label ?? 'Member';
+  const userPoints = profile?.points ?? 0;
+  const userMaxPoints = profile?.max_points ?? 5000;
+  const userAvatar = profile?.avatar_url ?? 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face';
+  const tierLevel = profile?.tier ?? 'STANDARD';
+  const vipStatus = tierLevel === 'VIP' || tierLevel === 'OWNER' ? 'VIP Status' : '';
+
+  const progressWidth = (userPoints / userMaxPoints) * 100;
 
   const quickActions = [
     { icon: UtensilsCrossed, label: 'Book Table', color: Colors.secondary },
@@ -91,7 +102,7 @@ export default function HomeScreen() {
           </View>
           <TouchableOpacity style={styles.avatarContainer} testID="profile-avatar">
             <Image
-              source={{ uri: mockUser.avatar }}
+              source={{ uri: userAvatar }}
               style={styles.avatarImage}
             />
             <View style={styles.avatarOnline} />
@@ -117,15 +128,15 @@ export default function HomeScreen() {
 
             <View style={styles.cardTierRow}>
               <View>
-                <Text style={styles.cardTierName}>{mockUser.tier}</Text>
+                <Text style={styles.cardTierName}>{userTier}</Text>
                 <Text style={styles.cardPointsLabel}>Points Balance</Text>
               </View>
-              <Text style={styles.cardVipLabel}>{mockUser.vipStatus}</Text>
+              <Text style={styles.cardVipLabel}>{vipStatus}</Text>
             </View>
 
             <View style={styles.cardPointsRow}>
-              <Text style={styles.cardPointsValue}>{mockUser.points.toLocaleString()}</Text>
-              <Text style={styles.cardPointsMax}>/ {mockUser.maxPoints.toLocaleString()} pts</Text>
+              <Text style={styles.cardPointsValue}>{userPoints.toLocaleString()}</Text>
+              <Text style={styles.cardPointsMax}>/ {userMaxPoints.toLocaleString()} pts</Text>
             </View>
 
             <View style={styles.progressTrack}>
@@ -135,7 +146,7 @@ export default function HomeScreen() {
             <View style={styles.cardBottomRow}>
               <View>
                 <Text style={styles.cardMemberLabel}>MEMBER NAME</Text>
-                <Text style={styles.cardMemberName}>{mockUser.name}</Text>
+                <Text style={styles.cardMemberName}>{userName}</Text>
               </View>
               <View style={styles.qrMini}>
                 <View style={styles.qrGrid}>
@@ -179,7 +190,7 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
 
-          {mockHomeEvents.map((event) => (
+          {homeEvents.map((event) => (
             <TouchableOpacity
               key={event.id}
               style={styles.eventCard}
@@ -197,7 +208,7 @@ export default function HomeScreen() {
                 style={styles.eventOverlay}
               />
               <View style={styles.eventDayBadge}>
-                <Text style={styles.eventDayText}>{event.dayLabel}</Text>
+                <Text style={styles.eventDayText}>{event.day_label ?? event.date}</Text>
               </View>
               <View style={styles.eventInfo}>
                 <Text style={styles.eventTitle}>{event.title}</Text>
@@ -221,22 +232,22 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
 
-          {mockNewsFeed.map((news) => (
+          {news.map((item) => (
             <TouchableOpacity
-              key={news.id}
+              key={item.id}
               style={styles.newsCard}
               activeOpacity={0.8}
-              testID={`news-${news.id}`}
+              testID={`news-${item.id}`}
             >
               <Image
-                source={{ uri: news.image }}
+                source={{ uri: item.image }}
                 style={styles.newsThumb}
                 contentFit="cover"
               />
               <View style={styles.newsContent}>
-                <Text style={styles.newsTitle} numberOfLines={1}>{news.title}</Text>
-                <Text style={styles.newsSubtitle} numberOfLines={2}>{news.subtitle}</Text>
-                <Text style={styles.newsTime}>{news.time}</Text>
+                <Text style={styles.newsTitle} numberOfLines={1}>{item.title}</Text>
+                <Text style={styles.newsSubtitle} numberOfLines={2}>{item.subtitle}</Text>
+                <Text style={styles.newsTime}>{item.time_label}</Text>
               </View>
             </TouchableOpacity>
           ))}

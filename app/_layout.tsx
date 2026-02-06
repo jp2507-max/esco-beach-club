@@ -5,6 +5,7 @@ import React, { useEffect } from 'react';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider, useAuth } from '@/providers/AuthProvider';
+import { DataProvider } from '@/providers/DataProvider';
 import Colors from '@/constants/colors';
 
 SplashScreen.preventAutoHideAsync();
@@ -66,7 +67,9 @@ export default function RootLayout() {
     <QueryClientProvider client={queryClient}>
       <GestureHandlerRootView>
         <AuthProvider>
-          <AuthGate />
+          <DataProvider>
+            <AuthGate />
+          </DataProvider>
         </AuthProvider>
       </GestureHandlerRootView>
     </QueryClientProvider>

@@ -19,7 +19,9 @@ import {
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import Colors from '@/constants/colors';
-import { mockEvents, mockUser, eventCategories } from '@/mocks/user';
+import { useData } from '@/providers/DataProvider';
+
+const eventCategories = ['All Events', 'Parties', 'Live Music', 'Wellness', 'Dining'];
 
 export default function EventsScreen() {
   const insets = useSafeAreaInsets();
@@ -27,8 +29,15 @@ export default function EventsScreen() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const router = useRouter();
 
-  const featuredEvent = mockEvents.find((e) => e.featured);
-  const listEvents = mockEvents.filter((e) => !e.featured);
+  const { events, profile } = useData();
+  const userAvatar = profile?.avatar_url ?? 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face';
+
+  const filteredEvents = activeCategory === 'All Events'
+    ? events
+    : events.filter((e) => e.category?.toLowerCase() === activeCategory.toLowerCase());
+
+  const featuredEvent = filteredEvents.find((e) => e.featured);
+  const listEvents = filteredEvents.filter((e) => !e.featured);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -43,7 +52,7 @@ export default function EventsScreen() {
             <Text style={styles.title}>Beach Events</Text>
           </View>
           <TouchableOpacity style={styles.avatarContainer}>
-            <Image source={{ uri: mockUser.avatar }} style={styles.avatarImage} />
+            <Image source={{ uri: userAvatar }} style={styles.avatarImage} />
             <View style={styles.avatarOnline} />
           </TouchableOpacity>
         </View>
@@ -102,7 +111,7 @@ export default function EventsScreen() {
               style={styles.featuredOverlay}
             />
             <View style={styles.featuredBadge}>
-              <Text style={styles.featuredBadgeText}>{featuredEvent.badge}</Text>
+              <Text style={styles.featuredBadgeText}>{featuredEvent.badge ?? ''}</Text>
             </View>
             <View style={styles.featuredPriceTag}>
               <Text style={styles.featuredPriceLabel}>PRICE</Text>
@@ -116,7 +125,7 @@ export default function EventsScreen() {
                 </Text>
               </View>
               <Text style={styles.featuredTitle}>{featuredEvent.title}</Text>
-              <Text style={styles.featuredDesc}>{featuredEvent.description}</Text>
+              <Text style={styles.featuredDesc} numberOfLines={1}>{featuredEvent.description}</Text>
             </View>
           </TouchableOpacity>
         )}
@@ -142,9 +151,9 @@ export default function EventsScreen() {
                   {event.date} • {event.time}
                 </Text>
               </View>
-              <View style={[styles.listBadge, { backgroundColor: event.badgeColor + '18' }]}>
-                <Text style={[styles.listBadgeText, { color: event.badgeColor }]}>
-                  {event.badge}
+              <View style={[styles.listBadge, { backgroundColor: (event.badge_color ?? Colors.secondary) + '18' }]}>
+                <Text style={[styles.listBadgeText, { color: event.badge_color ?? Colors.secondary }]}>
+                  {event.badge ?? ''}
                 </Text>
               </View>
             </View>

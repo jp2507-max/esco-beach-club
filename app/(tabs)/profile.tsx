@@ -29,7 +29,8 @@ import {
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import Colors from '@/constants/colors';
-import { mockUser } from '@/mocks/user';
+import { useData } from '@/providers/DataProvider';
+import { useAuth } from '@/providers/AuthProvider';
 
 const menuItems = [
   { icon: Users, label: 'Invite & Earn', color: Colors.primary, route: '/invite' as const },
@@ -63,7 +64,19 @@ export default function ProfileScreen() {
     ]).start();
   }, [scaleAnim, fadeAnim]);
 
-  const [showVoucher, setShowVoucher] = useState(!mockUser.hasSeenWelcomeVoucher);
+  const { profile, dismissVoucher } = useData();
+  const { signOut } = useAuth();
+
+  const userName = profile?.full_name ?? 'Guest';
+  const userAvatar = profile?.avatar_url ?? 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face';
+  const tierBadge = profile?.tier_label ?? 'MEMBER';
+  const tierLevel = profile?.tier ?? 'STANDARD';
+  const memberId = profile?.member_id ?? '';
+  const earned = profile?.earned ?? 0;
+  const saved = profile?.saved ?? 0;
+  const hasSeenVoucher = profile?.has_seen_welcome_voucher ?? true;
+
+  const [showVoucher, setShowVoucher] = useState(!hasSeenVoucher);
   const voucherScale = useRef(new Animated.Value(0.9)).current;
   const voucherOpacity = useRef(new Animated.Value(0)).current;
 
@@ -76,7 +89,7 @@ export default function ProfileScreen() {
     }
   }, [showVoucher, voucherScale, voucherOpacity]);
 
-  const isVIP = mockUser.tierLevel === 'VIP' || mockUser.tierLevel === 'OWNER';
+  const isVIP = tierLevel === 'VIP' || tierLevel === 'OWNER';
 
   const handleConcierge = () => {
     const whatsappUrl = 'https://wa.me/1234567890?text=Hi%20Esco%20Life%20VIP%20Concierge';
@@ -87,8 +100,8 @@ export default function ProfileScreen() {
     Linking.openURL('mailto:support@escolife.com').catch(() => console.log('Could not open mail'));
   };
 
-  const earnedProgress = (mockUser.earned / 2000) * 100;
-  const savedProgress = (mockUser.saved / 300) * 100;
+  const earnedProgress = (earned / 2000) * 100;
+  const savedProgress = (saved / 300) * 100;
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -105,11 +118,11 @@ export default function ProfileScreen() {
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <TouchableOpacity style={styles.headerAvatar}>
-              <Image source={{ uri: mockUser.avatar }} style={styles.headerAvatarImg} />
+              <Image source={{ uri: userAvatar }} style={styles.headerAvatarImg} />
             </TouchableOpacity>
             <View>
               <Text style={styles.welcomeText}>Welcome back,</Text>
-              <Text style={styles.headerName}>{mockUser.name}</Text>
+              <Text style={styles.headerName}>{userName}</Text>
             </View>
           </View>
           <TouchableOpacity style={styles.bellBtn} testID="notification-bell">
@@ -120,7 +133,7 @@ export default function ProfileScreen() {
         <View style={styles.tierBadgeRow}>
           <View style={styles.tierBadge}>
             <Star size={14} color={Colors.primary} />
-            <Text style={styles.tierBadgeText}>{mockUser.tierBadge}</Text>
+            <Text style={styles.tierBadgeText}>{tierBadge}</Text>
           </View>
         </View>
 
@@ -152,7 +165,7 @@ export default function ProfileScreen() {
             </View>
 
             <Text style={styles.scanText}>Scan at table for 10% off</Text>
-            <Text style={styles.refText}>Ref: {mockUser.memberId}</Text>
+            <Text style={styles.refText}>Ref: {memberId}</Text>
           </View>
         </Animated.View>
 
@@ -164,7 +177,7 @@ export default function ProfileScreen() {
               </View>
             </View>
             <Text style={styles.statLabel}>EARNED</Text>
-            <Text style={styles.statValue}>{mockUser.earned.toLocaleString()}</Text>
+            <Text style={styles.statValue}>{earned.toLocaleString()}</Text>
           </View>
           <View style={styles.statCard}>
             <View style={styles.statRing}>
@@ -173,7 +186,7 @@ export default function ProfileScreen() {
               </View>
             </View>
             <Text style={styles.statLabel}>SAVED</Text>
-            <Text style={styles.statValue}>${mockUser.saved}</Text>
+            <Text style={styles.statValue}>${saved}</Text>
           </View>
         </View>
 
@@ -191,7 +204,7 @@ export default function ProfileScreen() {
               <View style={styles.voucherDivider} />
               <Text style={styles.voucherCode}>CODE: WELCOME10</Text>
               <Text style={styles.voucherExpiry}>Valid for 30 days from signup</Text>
-              <TouchableOpacity style={styles.voucherDismiss} onPress={() => setShowVoucher(false)}>
+              <TouchableOpacity style={styles.voucherDismiss} onPress={() => { setShowVoucher(false); dismissVoucher(); }}>
                 <Text style={styles.voucherDismissText}>Got it!</Text>
               </TouchableOpacity>
             </View>
@@ -229,7 +242,13 @@ export default function ProfileScreen() {
                 index < menuItems.length - 1 && styles.menuItemBorder,
               ]}
               activeOpacity={0.7}
-              onPress={() => item.route && router.push(item.route)}
+              onPress={() => {
+                if (item.label === 'Log Out') {
+                  signOut().catch((e: unknown) => console.log('Sign out error', e));
+                  return;
+                }
+                if (item.route) router.push(item.route);
+              }}
               testID={`menu-${item.label}`}
             >
               <View style={[styles.menuIcon, { backgroundColor: item.color + '15' }]}>

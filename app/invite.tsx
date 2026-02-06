@@ -23,7 +23,7 @@ import {
 } from 'lucide-react-native';
 import * as Clipboard from 'expo-clipboard';
 import Colors from '@/constants/colors';
-import { referralCode, referralProgress, mockReferrals } from '@/mocks/partners';
+import { useData, useReferralProgress } from '@/providers/DataProvider';
 
 const milestones = [
   { icon: Wine, label: 'Free Cocktail', sub: 'Unlocked', unlocked: true },
@@ -34,6 +34,10 @@ const milestones = [
 export default function InviteScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { profile, referrals } = useData();
+  const referralProgress = useReferralProgress();
+  const code = profile?.referral_code ?? 'ESCO-2025';
+
   const progressAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -55,7 +59,7 @@ export default function InviteScreen() {
 
   const handleCopy = async () => {
     try {
-      await Clipboard.setStringAsync(referralCode);
+      await Clipboard.setStringAsync(code);
       console.log('Referral code copied');
     } catch (e) {
       console.log('Copy failed', e);
@@ -65,7 +69,7 @@ export default function InviteScreen() {
   const handleShare = async () => {
     try {
       await Share.share({
-        message: `Join Esco Life with my referral code: ${referralCode}\nhttps://escolife.app/invite/${referralCode}`,
+        message: `Join Esco Life with my referral code: ${code}\nhttps://escolife.app/invite/${code}`,
       });
     } catch (e) {
       console.log('Share failed', e);
@@ -105,7 +109,7 @@ export default function InviteScreen() {
               <View style={styles.codeIconWrap}>
                 <Users size={18} color={Colors.primary} />
               </View>
-              <Text style={styles.codeText}>{referralCode}</Text>
+              <Text style={styles.codeText}>{code}</Text>
               <TouchableOpacity onPress={handleCopy} style={styles.copyBtn} testID="copy-code">
                 <Copy size={18} color={Colors.textSecondary} />
               </TouchableOpacity>
@@ -172,15 +176,15 @@ export default function InviteScreen() {
                 <Text style={styles.viewAll}>View All</Text>
               </TouchableOpacity>
             </View>
-            {mockReferrals.map((ref) => (
+            {referrals.map((ref) => (
               <View key={ref.id} style={styles.referralCard}>
                 <View style={styles.referralLeft}>
                   <View style={styles.referralAvatarWrap}>
-                    <Image source={{ uri: ref.avatar }} style={styles.referralAvatar} />
+                    <Image source={{ uri: ref.referred_avatar ?? 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face' }} style={styles.referralAvatar} />
                     <View style={styles.referralDot} />
                   </View>
                   <View>
-                    <Text style={styles.referralName}>{ref.name}</Text>
+                    <Text style={styles.referralName}>{ref.referred_name}</Text>
                     <Text style={styles.referralSub}>Joined via your link</Text>
                   </View>
                 </View>
@@ -189,7 +193,7 @@ export default function InviteScreen() {
                 </View>
               </View>
             ))}
-            {mockReferrals.length === 0 && (
+            {referrals.length === 0 && (
               <Text style={styles.emptyText}>No referrals yet. Share your code!</Text>
             )}
           </View>

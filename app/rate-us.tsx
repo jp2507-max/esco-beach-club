@@ -15,7 +15,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { X, Star, Send } from 'lucide-react-native';
 import Colors from '@/constants/colors';
-import { mockUser } from '@/mocks/user';
+import { useData } from '@/providers/DataProvider';
+import { submitReview } from '@/lib/api';
+import { useMutation } from '@tanstack/react-query';
 
 const starLabels = ['Terrible', 'Poor', 'Okay', 'Great', 'Amazing!'];
 
@@ -27,6 +29,17 @@ export default function RateUsScreen() {
   const [submitted, setSubmitted] = useState<boolean>(false);
   const scaleAnims = useRef([1, 2, 3, 4, 5].map(() => new Animated.Value(1))).current;
   const checkAnim = useRef(new Animated.Value(0)).current;
+  const { userId } = useData();
+
+  const reviewMutation = useMutation({
+    mutationFn: () => submitReview(userId, rating, comment || null),
+    onSuccess: () => {
+      console.log('[RateUs] Review submitted successfully');
+    },
+    onError: (err) => {
+      console.log('[RateUs] Review submit error:', err);
+    },
+  });
 
   const handleStarPress = (star: number) => {
     setRating(star);
@@ -49,14 +62,7 @@ export default function RateUsScreen() {
       Alert.alert('Rating Required', 'Please select a star rating before submitting.');
       return;
     }
-    console.log('=== MEMBER REVIEW SUBMITTED ===');
-    console.log('User:', mockUser.name);
-    console.log('Member ID:', mockUser.memberId);
-    console.log('Tier:', mockUser.tierBadge);
-    console.log('Rating:', rating, '/ 5');
-    console.log('Comment:', comment || '(no comment)');
-    console.log('================================');
-
+    reviewMutation.mutate();
     setSubmitted(true);
     Animated.spring(checkAnim, {
       toValue: 1,
