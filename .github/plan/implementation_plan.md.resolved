@@ -1,0 +1,141 @@
+# Community Screen Improvement Plan
+
+Aesthetic direction: **Organic / natural** — matches GrowBro's cultivation theme. The feed should feel like a living garden wall: lush, warm, and inviting. Less corporate social-media, more grower-community board.
+
+---
+
+## Issues Identified
+
+| # | Problem | Evidence |
+|---|---------|----------|
+| 1 | **Top pills waste vertical space** | "Gespeicherte Beiträge" + "+ Beitrag" eat ~50px above the title; duplicate the FAB and Saved screen access |
+| 2 | **FAB hidden behind tab bar** | `bottom = 24` in [AnimatedFab](file:///c:/Users/Peter/growbro-cultivation-app/src/components/ui/fab.tsx#25-80) but tab bar height isn't accounted for — button is clipped |
+| 3 | **Flat, generic feed layout** | White cards separated by thin borders → every social app looks like this |
+| 4 | **Empty state is lifeless** | Plain icon + two lines of text in a vast void |
+| 5 | **Sort button is detached** | Floats alone on the right, feels like an afterthought |
+| 6 | **No visual hierarchy between post types** | Only a thin left border distinguishes "Help" posts |
+| 7 | **Action bar lacks personality** | Standard icon row, no brand feel |
+
+---
+
+## Proposed Improvements
+
+### 1. Remove top pills, relocate actions
+
+**What**: Remove [HeaderActions](file:///c:/Users/Peter/growbro-cultivation-app/app/%28tabs%29/community/index.tsx#414-453) (the toolbar buttons for "Saved" / "+ Post") and the old iOS `Stack.Toolbar.Button` pairs.
+
+**Replace with**:
+- **Saved posts** → icon-only bookmark in the native header right (already have [HeaderAction](file:///c:/Users/Peter/growbro-cultivation-app/app/%28tabs%29/community/index.tsx#414-453) component)
+- **Create post** → FAB only (already exists, just needs fixing)
+
+> [!NOTE]
+> On iOS, use a single [headerRight](file:///c:/Users/Peter/growbro-cultivation-app/app/%28tabs%29/community/index.tsx#772-778) with a bookmark icon. The text-label toolbar buttons are removed entirely.
+
+#### [MODIFY] [index.tsx](file:///c:/Users/Peter/growbro-cultivation-app/app/(tabs)/community/index.tsx)
+- Delete [HeaderActions](file:///c:/Users/Peter/growbro-cultivation-app/app/%28tabs%29/community/index.tsx#414-453) component (lines 414-452)
+- Replace iOS `Stack.Toolbar` blocks (lines 823-841, 875-893) with a single [headerRight](file:///c:/Users/Peter/growbro-cultivation-app/app/%28tabs%29/community/index.tsx#772-778) prop containing a bookmark icon button
+- Delete the old [HeaderActions](file:///c:/Users/Peter/growbro-cultivation-app/app/%28tabs%29/community/index.tsx#414-453) usage in Android `headerOptions`
+
+---
+
+### 2. Fix FAB position (tab bar overlap)
+
+**What**: Pass a `bottom` value to [AnimatedFab](file:///c:/Users/Peter/growbro-cultivation-app/src/components/ui/fab.tsx#25-80) that accounts for the tab bar height + safe area.
+
+#### [MODIFY] [index.tsx](file:///c:/Users/Peter/growbro-cultivation-app/app/(tabs)/community/index.tsx)
+- Use `useSafeAreaInsets()` to get the bottom inset
+- Calculate `fabBottom` = tab bar height (~49) + bottom inset + 16px padding
+- Pass `bottom={fabBottom}` to `<AnimatedFab>`
+
+---
+
+### 3. Card redesign — edge-to-edge with breathing room
+
+**What**: Replace the bordered-card style with a more immersive, card-gap approach.
+
+#### [MODIFY] [index.tsx](file:///c:/Users/Peter/growbro-cultivation-app/app/(tabs)/community/index.tsx)
+- Remove `border-b` separator, use `gap` spacing between cards via `ItemSeparatorComponent` in FlashList (8px transparent gap)
+- Give cards rounded corners (`rounded-2xl`), subtle elevation (`shadow-sm`), and `mx-3` horizontal margin → cards float on the background
+- Image becomes `rounded-xl` with slight inset or full bleed within the card
+- Background stays `bg-background dark:bg-dark-bg` for the feed, card surface uses `bg-card dark:bg-dark-bg-card`
+
+---
+
+### 4. Merge sort into the filter bar
+
+**What**: Integrate the sort toggle inline with the `SegmentedControl` row instead of a separate floating element.
+
+#### [MODIFY] [index.tsx](file:///c:/Users/Peter/growbro-cultivation-app/app/(tabs)/community/index.tsx)
+- Place the sort chip directly right-aligned on the same row as the segmented control
+- Delete the standalone `sortButton` JSX block (lines 785-805)
+- Wrap both in a single `flex-row items-center justify-between` container
+
+---
+
+### 5. Richer empty state
+
+**What**: Give the empty state more personality — an illustration placeholder, gradient background accent, and CTA button to create first post.
+
+#### [MODIFY] [index.tsx](file:///c:/Users/Peter/growbro-cultivation-app/app/(tabs)/community/index.tsx)
+- Replace the plain icon circle with a larger, branded illustration area (plant/community icon with gradient ring)
+- Add a "Create first post" CTA `Pressable` styled as a primary pill button
+- Subtle animated entrance for the empty state (`FadeInUp`)
+
+---
+
+### 6. Better "Help" post differentiation
+
+**What**: Make help posts unmistakably different — a warm amber accent header strip inside the card.
+
+#### [MODIFY] [index.tsx](file:///c:/Users/Peter/growbro-cultivation-app/app/(tabs)/community/index.tsx)
+- Replace left border with a small amber accent bar at the top of the card + the existing help badge
+- Use `bg-warning/5 dark:bg-warning-dark/10` as the card background tint for help posts
+
+---
+
+### 7. Action bar polish
+
+**What**: Tighten the action bar and add micro-interaction punch.
+
+#### [MODIFY] [index.tsx](file:///c:/Users/Peter/growbro-cultivation-app/app/(tabs)/community/index.tsx)
+- Add a scale spring animation on the heart icon when liked (small `useSharedValue` bounce)
+- Compact the gap between actions slightly
+- Make the green reply pill bolder with slightly more padding and font weight
+
+---
+
+### 8. i18n keys
+
+#### [MODIFY] [community.ts (en)](file:///c:/Users/Peter/growbro-cultivation-app/src/lib/i18n/locales/en/community.ts)
+#### [MODIFY] [community.ts (de)](file:///c:/Users/Peter/growbro-cultivation-app/src/lib/i18n/locales/de/community.ts)
+- Add keys for any new CTA text in empty state (e.g., `createFirstPost`)
+- Remove keys for deleted toolbar labels if no longer used
+
+---
+
+## Priority Order
+
+| Priority | Item | Impact | Effort |
+|----------|------|--------|--------|
+| 🔴 P0 | Fix FAB overlap | Broken UX | Small |
+| 🔴 P0 | Remove top pills | Declutter | Small |
+| 🟡 P1 | Card redesign (floating cards) | Visual upgrade | Medium |
+| 🟡 P1 | Merge sort into filter bar | Cleaner hierarchy | Small |
+| 🟢 P2 | Richer empty state | Polish | Small |
+| 🟢 P2 | Help post differentiation | Clarity | Small |
+| 🟢 P2 | Action bar polish (like animation) | Delight | Small |
+
+---
+
+## Verification Plan
+
+### Manual Verification (user on device)
+1. **FAB visibility**: Open Community tab → FAB should be fully visible above the tab bar, tappable, and opens composer
+2. **Header buttons**: Bookmark icon in top right navigates to saved posts; no pills/toolbar labels visible
+3. **Card appearance**: Posts render as floating rounded cards with spacing between them
+4. **Filter + sort**: Segmented control and sort chip sit on the same row; both function correctly
+5. **Empty state**: With no posts, see the enhanced empty state with CTA; CTA navigates to composer
+6. **Help posts**: Help-type posts have amber tint, clearly distinct from showcase posts
+7. **Like animation**: Tapping heart shows a small bounce; haptics fire
+8. **Dark mode**: All above checks hold in dark mode (toggle in device settings)
+9. **Search**: Native search bar still works for filtering posts
