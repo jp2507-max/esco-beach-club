@@ -1,0 +1,163 @@
+import React, { useEffect } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Copy, X, Star, Percent, Award } from 'lucide-react-native';
+import * as Clipboard from 'expo-clipboard';
+import {
+  cancelAnimation,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
+import { Colors } from '@/constants/colors';
+import { usePartnerById } from '@/providers/DataProvider';
+import { rmTiming } from '@/src/lib/animations/motion';
+import { Animated } from '@/src/tw/animated';
+import { Image } from '@/src/tw/image';
+import { Text, Pressable, View } from '@/src/tw';
+
+export default function PartnerModal(): React.JSX.Element {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const scale = useSharedValue(0.8);
+  const opacity = useSharedValue(0);
+
+  const partner = usePartnerById(id);
+
+  useEffect(() => {
+    scale.set(
+      withSpring(1, {
+        damping: 15,
+        stiffness: 140,
+      })
+    );
+    opacity.set(withTiming(1, rmTiming(300)));
+    return () => {
+      cancelAnimation(scale);
+      cancelAnimation(opacity);
+    };
+  }, [id, opacity, scale]);
+
+  const contentStyle = useAnimatedStyle(() => ({
+    opacity: opacity.get(),
+    transform: [{ scale: scale.get() }],
+  }));
+
+  async function handleCopy(): Promise<void> {
+    if (!partner) return;
+
+    try {
+      await Clipboard.setStringAsync(partner.code);
+      console.log('Code copied:', partner.code);
+    } catch (e) {
+      console.log('Copy error', e);
+    }
+  }
+
+  if (!partner) {
+    return (
+      <View className="flex-1 bg-black/70 px-6" style={{ paddingTop: insets.top }}>
+        <Text className="text-base text-white">Partner not found</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View className="flex-1 bg-black/55">
+      <Pressable
+        className="absolute right-4 z-10 size-9 items-center justify-center rounded-full bg-white/90"
+        onPress={() => router.back()}
+        style={{ top: insets.top + 12 }}
+        testID="close-modal"
+      >
+        <X color={Colors.text} size={20} />
+      </Pressable>
+
+      <View
+        className="absolute bottom-0 left-0 right-0 rounded-t-[28px] px-7 pb-10 pt-3"
+        style={{ backgroundColor: '#FFF8F5', minHeight: '60%' }}
+      >
+        <View className="mb-4 h-1 w-10 self-center rounded bg-border" />
+
+        <Animated.View className="items-center" style={contentStyle}>
+          <Image
+            className="mb-4 size-20 rounded-2xl"
+            contentFit="cover"
+            recyclingKey={`partner-header-${partner.id}`}
+            source={{ uri: partner.image }}
+            transition={180}
+          />
+
+          <View className="mb-4 items-center">
+            <View
+              className="mb-1.5 size-20 items-center justify-center rounded-full border-[3px]"
+              style={{ backgroundColor: '#FFF8E1', borderColor: '#F9A825' }}
+            >
+              <Star size={32} color="#F9A825" fill="#F9A825" />
+            </View>
+            <Text className="text-[11px] font-extrabold tracking-[1.5px] text-[#F9A825]">
+              UNLOCKED
+            </Text>
+          </View>
+
+          <Text className="text-center text-[28px] font-extrabold text-text">
+            Congratulations!
+          </Text>
+          <Text className="mb-2.5 text-center text-[28px] font-extrabold text-primary">
+            {partner.discount_label}!
+          </Text>
+          <Text className="mb-6 text-center text-sm leading-[22px] text-text-secondary">
+            Enjoy exclusive benefits at {partner.name}. {partner.description}.
+          </Text>
+
+          <View className="mb-6 flex-row">
+            <View className="mr-4 size-[90px] items-center justify-center rounded-2xl border border-border bg-white">
+              <Award size={24} color={Colors.primary} />
+              <Text className="mt-1.5 text-xs font-semibold text-text">Exclusive</Text>
+            </View>
+            <View className="mr-4 size-[90px] items-center justify-center rounded-2xl border border-border bg-white">
+              <Percent size={24} color={Colors.primary} />
+              <Text className="mt-1.5 text-xs font-semibold text-text">Discount</Text>
+            </View>
+            <View className="size-[90px] items-center justify-center rounded-2xl border border-border bg-white">
+              <Star size={24} color={Colors.primary} />
+              <Text className="mt-1.5 text-xs font-semibold text-text">VIP Perk</Text>
+            </View>
+          </View>
+
+          <View className="mb-5 w-full rounded-2xl border border-border bg-white p-4">
+            <Text className="mb-2.5 text-[10px] font-bold tracking-[1px] text-text-secondary">
+              YOUR DISCOUNT CODE
+            </Text>
+            <View className="flex-row items-center justify-between">
+              <Text className="text-lg font-extrabold tracking-[0.5px] text-text">
+                {partner.code}
+              </Text>
+              <Pressable
+                className="size-9 items-center justify-center rounded-xl"
+                onPress={handleCopy}
+                style={{ backgroundColor: `${Colors.secondary}15` }}
+                testID="copy-discount"
+              >
+                <Copy size={18} color={Colors.secondary} />
+              </Pressable>
+            </View>
+          </View>
+
+          <Pressable
+            className="mb-3.5 w-full items-center rounded-[18px] bg-primary py-[17px]"
+            onPress={() => router.back()}
+          >
+            <Text className="text-[17px] font-bold text-white">Enjoy my Perks</Text>
+          </Pressable>
+
+          <Pressable onPress={() => router.back()}>
+            <Text className="text-sm font-medium text-text-secondary">Maybe later</Text>
+          </Pressable>
+        </Animated.View>
+      </View>
+    </View>
+  );
+}

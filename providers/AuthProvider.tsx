@@ -1,86 +1,113 @@
-import { useEffect, useState } from 'react';
-import { Session, User } from '@supabase/supabase-js';
+import { useState } from 'react';
 import createContextHook from '@nkzw/create-context-hook';
-import { supabase } from '@/lib/supabase';
-import { useMutation } from '@tanstack/react-query';
+import { db } from '@/src/lib/instant';
 
-interface SignUpParams {
+type SendCodeParams = {
   email: string;
-  password: string;
-  fullName: string;
-}
+};
 
-interface SignInParams {
+type VerifyCodeParams = {
+  code: string;
   email: string;
-  password: string;
+};
+
+function toError(error: unknown, fallbackMessage: string): Error {
+  if (
+    error &&
+    typeof error === 'object' &&
+    'body' in error &&
+    error.body &&
+    typeof error.body === 'object' &&
+    'message' in error.body &&
+    typeof error.body.message === 'string'
+  ) {
+    return new Error(error.body.message);
+  }
+
+  if (error instanceof Error && error.message) {
+    return error;
+  }
+
+  return new Error(fallbackMessage);
 }
 
 export const [AuthProvider, useAuth] = createContextHook(() => {
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const { error: authError, isLoading, user } = db.useAuth();
+  const [sendCodeLoading, setSendCodeLoading] = useState<boolean>(false);
+  const [verifyCodeLoading, setVerifyCodeLoading] = useState<boolean>(false);
+  const [signOutLoading, setSignOutLoading] = useState<boolean>(false);
+  const [sendCodeError, setSendCodeError] = useState<Error | null>(null);
+  const [verifyCodeError, setVerifyCodeError] = useState<Error | null>(null);
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
-      console.log('[Auth] Initial session:', s ? 'found' : 'none');
-      setSession(s);
-      setUser(s?.user ?? null);
-      setIsLoading(false);
-    });
+  async function sendCode({ email }: SendCodeParams): Promise<string> {
+    setSendCodeLoading(true);
+    setSendCodeError(null);
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
-      console.log('[Auth] State changed:', _event);
-      setSession(s);
-      setUser(s?.user ?? null);
-    });
+    try {
+      const trimmedEmail = email.trim();
 
-    return () => subscription.unsubscribe();
-  }, []);
+      if (!trimmedEmail) {
+        throw new Error('Email is required.');
+      }
 
-  const signUpMutation = useMutation({
-    mutationFn: async ({ email, password, fullName }: SignUpParams) => {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { full_name: fullName },
-        },
+      await db.auth.sendMagicCode({ email: trimmedEmail });
+      return trimmedEmail;
+    } catch (error: unknown) {
+      const nextError = toError(error, 'Unable to send verification code.');
+      setSendCodeError(nextError);
+      throw nextError;
+    } finally {
+      setSendCodeLoading(false);
+    }
+  }
+
+  async function verifyCode({ code, email }: VerifyCodeParams): Promise<void> {
+    setVerifyCodeLoading(true);
+    setVerifyCodeError(null);
+
+    try {
+      const trimmedEmail = email.trim();
+      const trimmedCode = code.trim();
+
+      if (!trimmedEmail || !trimmedCode) {
+        throw new Error('Email and verification code are required.');
+      }
+
+      await db.auth.signInWithMagicCode({
+        code: trimmedCode,
+        email: trimmedEmail,
       });
-      if (error) throw error;
-      return data;
-    },
-  });
+    } catch (error: unknown) {
+      const nextError = toError(error, 'Unable to verify code.');
+      setVerifyCodeError(nextError);
+      throw nextError;
+    } finally {
+      setVerifyCodeLoading(false);
+    }
+  }
 
-  const signInMutation = useMutation({
-    mutationFn: async ({ email, password }: SignInParams) => {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (error) throw error;
-      return data;
-    },
-  });
+  async function signOut(): Promise<void> {
+    setSignOutLoading(true);
 
-  const signOutMutation = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-    },
-  });
+    try {
+      await db.auth.signOut();
+    } finally {
+      setSignOutLoading(false);
+    }
+  }
 
   return {
-    session,
+    authError,
     user,
     isLoading,
-    isAuthenticated: !!session,
-    signUp: signUpMutation.mutateAsync,
-    signIn: signInMutation.mutateAsync,
-    signOut: signOutMutation.mutateAsync,
-    signUpLoading: signUpMutation.isPending,
-    signInLoading: signInMutation.isPending,
-    signOutLoading: signOutMutation.isPending,
-    signUpError: signUpMutation.error,
-    signInError: signInMutation.error,
+    isAuthenticated: !!user,
+    sendCode,
+    verifyCode,
+    signOut,
+    sendCodeLoading,
+    verifyCodeLoading,
+    signOutLoading,
+    sendCodeError,
+    verifyCodeError,
   };
 });

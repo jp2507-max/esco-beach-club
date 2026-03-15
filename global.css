@@ -1,0 +1,39 @@
+@import 'tailwindcss';
+@import 'uniwind';
+
+@source './app/**/*.{ts,tsx}';
+@source './src/**/*.{ts,tsx}';
+@source './providers/**/*.{ts,tsx}';
+@source './lib/**/*.{ts,tsx}';
+@source './constants/**/*.{ts,tsx}';
+
+@theme {
+  --color-primary: #e91e63;
+  --color-primary-bright: #ff4f8b;
+  --color-secondary: #009688;
+  --color-background: #fffdf5;
+  --color-dark-bg: #0f172a;
+  --color-card: #ffffff;
+  --color-dark-bg-card: #111827;
+  --color-dark-bg-elevated: #1f2937;
+  --color-border: #f0ede5;
+  --color-border-light: #f4e7dc;
+  --color-dark-border: #334155;
+  --color-dark-border-bright: #475569;
+  --color-text: #1a1a2e;
+  --color-text-primary-dark: #f8fafc;
+  --color-text-secondary: #6b7280;
+  --color-text-secondary-dark: #cbd5e1;
+  --color-text-muted: #9ca3af;
+  --color-text-muted-dark: #94a3b8;
+  --color-danger: #ef5350;
+  --color-error-dark: #f87171;
+  --color-warning: #ff9800;
+  --color-warning-dark: #f59e0b;
+  --color-sand: #f5f0e1;
+  --color-sand-dark: #e8e0cc;
+  --color-teal-light: #b2dfdb;
+  --color-pink-light: #fce4ec;
+  --color-success: #4caf50;
+  --color-gold: #c8a24d;
+}
