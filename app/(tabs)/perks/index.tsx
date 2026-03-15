@@ -50,7 +50,6 @@ export default function PerksScreen(): React.JSX.Element {
 
   const handlePartnerPress = useCallback(
     (partner: Partner): void => {
-      console.log('Opening partner:', partner.name);
       router.push(`/partner?id=${partner.id}` as never);
     },
     [router]
@@ -136,6 +135,7 @@ export default function PerksScreen(): React.JSX.Element {
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={listContentContainerStyle}
         data={filtered}
+        estimatedItemSize={cardWidth * 0.7 + 80}
         extraData={cardWidth}
         keyExtractor={(item) => item.id}
         numColumns={2}

@@ -38,7 +38,11 @@ const queryClient = new QueryClient({
 if (Platform.OS !== 'web') {
   onlineManager.setEventListener((setOnline) =>
     NetInfo.addEventListener((state) => {
-      setOnline(!!state.isConnected);
+      const isOnline =
+        state.isInternetReachable == null
+          ? !!state.isConnected
+          : !!state.isConnected && !!state.isInternetReachable;
+      setOnline(isOnline);
     })
   );
 }

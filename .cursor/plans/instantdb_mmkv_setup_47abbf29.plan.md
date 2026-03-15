@@ -142,4 +142,4 @@ Work:
 - The rest of the tabs still render using the mock data layer.
 - README reflects the new env var and native dev build requirement.
 
-i already created a instantdb project if this sis helpful: escolife --app 9c3142a0-8d34-40f4-9d93-97cd601a016d --token 895b6982-9020-4099-b0f3-de10377862c8 --expo --rules
+An InstantDB project has been created. For CLI commands (e.g. `escolife`, `instant-cli`), use environment variables instead of inline credentials: `EXPO_PUBLIC_INSTANT_APP_ID` for the app ID and `INSTANT_CLI_AUTH_TOKEN` for the CLI auth token. Store these in `.env` (already gitignored) or a secrets manager. **If this plan was ever committed or pushed, rotate the token immediately in the InstantDB dashboard and update your local env.**

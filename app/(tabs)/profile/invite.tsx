@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo } from 'react';
-import { Share, type LayoutChangeEvent } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Alert, Share, type LayoutChangeEvent } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -43,6 +43,7 @@ export default function InviteScreen(): React.JSX.Element {
   const referralProgress = useReferralProgress();
   const code = profile?.referral_code ?? 'ESCO-2025';
   const progressRatio = Math.min(referralProgress.current / referralProgress.goal, 1);
+  const [copiedRecently, setCopiedRecently] = useState<boolean>(false);
 
   const progress = useSharedValue(0);
   const fade = useSharedValue(0);
@@ -114,9 +115,11 @@ export default function InviteScreen(): React.JSX.Element {
   async function handleCopy(): Promise<void> {
     try {
       await Clipboard.setStringAsync(code);
-      console.log('Referral code copied');
+      setCopiedRecently(true);
+      setTimeout(() => setCopiedRecently(false), 2000);
     } catch (e) {
-      console.log('Copy failed', e);
+      console.error('Copy failed', e);
+      Alert.alert(t('invite.codeCopyFailed'));
     }
   }
 
@@ -171,7 +174,13 @@ export default function InviteScreen(): React.JSX.Element {
                 onPress={handleCopy}
                 testID="copy-code"
               >
-                <Copy color={Colors.textSecondary} size={18} />
+                {copiedRecently ? (
+                  <Text className="text-[10px] font-bold text-primary">
+                    {t('invite.codeCopied')}
+                  </Text>
+                ) : (
+                  <Copy color={Colors.textSecondary} size={18} />
+                )}
               </Pressable>
             </View>
           </View>

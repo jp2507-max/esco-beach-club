@@ -126,6 +126,7 @@ const _schema = i.schema({
         on: 'private_event_inquiries',
         has: 'one',
         label: 'owner',
+        onDelete: 'cascade',
       },
       reverse: {
         on: '$users',
@@ -162,6 +163,7 @@ const _schema = i.schema({
         on: 'reviews',
         has: 'one',
         label: 'owner',
+        onDelete: 'cascade',
       },
       reverse: {
         on: '$users',

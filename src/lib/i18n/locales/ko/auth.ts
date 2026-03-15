@@ -21,6 +21,8 @@ const auth = {
   verificationFailedTitle: '인증 실패',
   unableToSendCode: '코드를 보낼 수 없습니다.',
   unableToVerifyCode: '코드를 확인할 수 없습니다.',
+  emailRequired: '이메일을 입력해 주세요.',
+  emailAndCodeRequired: '이메일과 인증 코드를 입력해 주세요.',
   invalidEmailTitle: '유효하지 않은 이메일',
   invalidEmailMessage: '올바른 이메일 주소를 입력하세요.',
   missingCodeTitle: '코드가 없습니다',

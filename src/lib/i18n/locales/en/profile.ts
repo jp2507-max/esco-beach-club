@@ -26,13 +26,15 @@ const profile = {
   gotIt: 'Got it!',
   contactVipConcierge: 'Contact VIP Concierge',
   contactSupport: 'Contact Support',
-  conciergeUrl: 'https://wa.me/1234567890?text=Hi%20Esco%20Life%20VIP%20Concierge',
-  supportEmail: 'support@escolife.com',
+  conciergeMessage: 'Hi Esco Life VIP Concierge',
+
   errors: {
     openMail: 'Could not open mail',
     openWhatsApp: 'Could not open WhatsApp',
   },
   invite: {
+    codeCopied: 'Copied!',
+    codeCopyFailed: 'Could not copy code',
     titlePrefix: 'Unlock the',
     titleHighlight: 'VIP Life',
     subtitle: 'Invite friends to Esco Life and start\nearning exclusive perks today.',

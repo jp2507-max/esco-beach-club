@@ -1,14 +1,14 @@
 import React from 'react';
 import { Stack } from 'expo-router';
 
-export default function ModalLayout(): React.JSX.Element {
-  const formSheetOptions = {
-    presentation: 'formSheet' as const,
-    sheetAllowedDetents: 'fitToContents' as const,
-    sheetExpandsWhenScrolledToEdge: false,
-    sheetGrabberVisible: true,
-  };
+const formSheetOptions = {
+  presentation: 'formSheet' as const,
+  sheetAllowedDetents: 'fitToContents' as const,
+  sheetExpandsWhenScrolledToEdge: false,
+  sheetGrabberVisible: true,
+};
 
+export default function ModalLayout(): React.JSX.Element {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="booking" options={formSheetOptions} />

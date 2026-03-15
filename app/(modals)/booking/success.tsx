@@ -4,6 +4,8 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { CircleCheck, PartyPopper } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import {
+  cancelAnimation,
+  ReduceMotion,
   useAnimatedStyle,
   useSharedValue,
   withSequence,
@@ -32,15 +34,22 @@ export default function SuccessScreen(): React.JSX.Element {
         withSpring(1.05, {
           damping: 12,
           stiffness: 180,
+          reduceMotion: ReduceMotion.System,
         }),
         withSpring(1, {
           damping: 15,
           stiffness: 160,
+          reduceMotion: ReduceMotion.System,
         })
       )
     );
     fadeIn.set(withTiming(1, rmTiming(400)));
     confettiY.set(withTiming(0, rmTiming(400)));
+    return () => {
+      cancelAnimation(scale);
+      cancelAnimation(fadeIn);
+      cancelAnimation(confettiY);
+    };
   }, [scale, fadeIn, confettiY]);
 
   const iconStyle = useAnimatedStyle(() => ({
@@ -48,7 +57,6 @@ export default function SuccessScreen(): React.JSX.Element {
   }));
 
   const contentStyle = useAnimatedStyle(() => ({
-    alignItems: 'center',
     opacity: fadeIn.get(),
     transform: [{ translateY: confettiY.get() }],
   }));
@@ -118,7 +126,7 @@ export default function SuccessScreen(): React.JSX.Element {
           </View>
         </Animated.View>
 
-        <Animated.View style={contentStyle}>
+        <Animated.View className="items-center" style={contentStyle}>
           <Text className="mb-3 text-center text-[28px] font-extrabold text-text dark:text-text-primary-dark">
             {t('bookingSuccess.title', { name: name ?? t('bookingSuccess.guest') })}
           </Text>

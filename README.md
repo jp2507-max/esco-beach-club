@@ -130,9 +130,9 @@ EAS build profiles are defined in `eas.json`:
 Examples:
 
 ```bash
-eas build --profile development --platform ios
-eas build --profile preview --platform android
-eas build --profile production --platform all
+bunx eas-cli build --profile development --platform ios
+bunx eas-cli build --profile preview --platform android
+bunx eas-cli build --profile production --platform all
 ```
 
 ## App identifiers

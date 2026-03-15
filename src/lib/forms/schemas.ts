@@ -1,32 +1,34 @@
 import { z } from 'zod';
 
+const v = (key: string) => `common:validation.${key}` as const;
+
 export const loginSchema = z.object({
-  email: z.string().trim().email(),
+  email: z.string().trim().email({ error: v('email') }),
 });
 
 export type LoginFormValues = z.infer<typeof loginSchema>;
 
 export const verifyCodeSchema = z.object({
-  code: z.string().trim().min(1),
+  code: z.string().trim().min(1, { error: v('required') }),
 });
 
 export type VerifyCodeFormValues = z.infer<typeof verifyCodeSchema>;
 
 export const signupSchema = z.object({
-  email: z.string().trim().email(),
+  email: z.string().trim().email({ error: v('email') }),
 });
 
 export type SignupFormValues = z.infer<typeof signupSchema>;
 
 export const privateEventSchema = z.object({
-  eventType: z.string().trim().min(1),
-  preferredDate: z.string().trim().min(1),
+  eventType: z.string().trim().min(1, { error: v('required') }),
+  preferredDate: z.coerce.date(),
   estimatedPax: z
     .string()
     .trim()
-    .regex(/^\d+$/, { error: 'validation.number' })
+    .regex(/^\d+$/, { error: v('number') })
     .refine((value) => Number.parseInt(value, 10) > 0, {
-      error: 'validation.positiveNumber',
+      error: v('positiveNumber'),
     }),
   contactName: z.string().trim().optional(),
   contactEmail: z
@@ -34,7 +36,7 @@ export const privateEventSchema = z.object({
     .trim()
     .optional()
     .refine((value) => !value || z.email().safeParse(value).success, {
-      error: 'validation.email',
+      error: v('email'),
     }),
   notes: z.string().trim().optional(),
 });
@@ -42,8 +44,8 @@ export const privateEventSchema = z.object({
 export type PrivateEventFormValues = z.infer<typeof privateEventSchema>;
 
 export const reviewSchema = z.object({
-  rating: z.number().min(1),
-  comment: z.string().trim().max(500).optional(),
+  rating: z.number().min(1, { error: v('required') }),
+  comment: z.string().trim().max(500, { error: v('commentMax') }).optional(),
 });
 
 export type ReviewFormValues = z.infer<typeof reviewSchema>;

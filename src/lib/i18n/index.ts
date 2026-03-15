@@ -7,18 +7,21 @@ import eventsEn from '@/src/lib/i18n/locales/en/events';
 import homeEn from '@/src/lib/i18n/locales/en/home';
 import perksEn from '@/src/lib/i18n/locales/en/perks';
 import profileEn from '@/src/lib/i18n/locales/en/profile';
+import bookingEn from '@/src/lib/i18n/locales/en/booking';
 import authKo from '@/src/lib/i18n/locales/ko/auth';
 import commonKo from '@/src/lib/i18n/locales/ko/common';
 import eventsKo from '@/src/lib/i18n/locales/ko/events';
 import homeKo from '@/src/lib/i18n/locales/ko/home';
 import perksKo from '@/src/lib/i18n/locales/ko/perks';
 import profileKo from '@/src/lib/i18n/locales/ko/profile';
+import bookingKo from '@/src/lib/i18n/locales/ko/booking';
 import authVi from '@/src/lib/i18n/locales/vi/auth';
 import commonVi from '@/src/lib/i18n/locales/vi/common';
 import eventsVi from '@/src/lib/i18n/locales/vi/events';
 import homeVi from '@/src/lib/i18n/locales/vi/home';
 import perksVi from '@/src/lib/i18n/locales/vi/perks';
 import profileVi from '@/src/lib/i18n/locales/vi/profile';
+import bookingVi from '@/src/lib/i18n/locales/vi/booking';
 import { appLanguages, defaultLanguage, defaultNamespace, type AppLanguage, namespaces } from '@/src/lib/i18n/types';
 
 const i18n = createInstance();
@@ -31,6 +34,7 @@ export const resources = {
     home: homeEn,
     perks: perksEn,
     profile: profileEn,
+    booking: bookingEn,
   },
   ko: {
     auth: authKo,
@@ -39,14 +43,15 @@ export const resources = {
     home: homeKo,
     perks: perksKo,
     profile: profileKo,
-  },
-  vi: {
+    booking: bookingKo,
+  },  vi: {
     auth: authVi,
     common: commonVi,
     events: eventsVi,
     home: homeVi,
     perks: perksVi,
     profile: profileVi,
+    booking: bookingVi,
   },
 } as const;
 
@@ -67,7 +72,7 @@ function resolveDeviceLanguage(): AppLanguage {
 }
 
 if (!i18n.isInitialized) {
-  void i18n.use(initReactI18next).init({
+  i18n.use(initReactI18next).init({
     defaultNS: defaultNamespace,
     fallbackLng: defaultLanguage,
     interpolation: {
@@ -81,6 +86,8 @@ if (!i18n.isInitialized) {
     resources,
     returnNull: false,
     supportedLngs: appLanguages,
+  }).catch((error) => {
+    console.error('[i18n] Initialization failed:', error);
   });
 }
 

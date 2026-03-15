@@ -3,6 +3,7 @@ import {
   type KeyboardTypeOptions,
   type ReturnKeyTypeOptions,
   type TextInputProps,
+  useColorScheme,
 } from 'react-native';
 import { Controller, type Control, type FieldPath, type FieldValues } from 'react-hook-form';
 import { Colors } from '@/constants/colors';
@@ -55,6 +56,12 @@ export function ControlledTextInput<TFieldValues extends FieldValues>({
   testID,
   textAlignVertical,
 }: ControlledTextInputProps<TFieldValues>) {
+  const colorScheme = useColorScheme();
+  const iconColor =
+    colorScheme === 'dark' ? Colors.textMutedDark : Colors.textLight;
+  const placeholderColor =
+    colorScheme === 'dark' ? Colors.textMutedDark : Colors.textLight;
+
   return (
     <Controller
       control={control}
@@ -68,7 +75,9 @@ export function ControlledTextInput<TFieldValues extends FieldValues>({
             containerClassName
           )}
         >
-          {icon ? <View className="mr-3 mt-0.5">{icon({ color: Colors.textLight, size: 18 })}</View> : null}
+          {icon ? (
+            <View className="mr-3 mt-0.5">{icon({ color: iconColor, size: 18 })}</View>
+          ) : null}
           <View className="flex-1">
             {label ? (
               <Text className="mb-1 text-[11px] font-semibold uppercase tracking-[0.8px] text-text-secondary dark:text-text-secondary-dark">
@@ -90,7 +99,7 @@ export function ControlledTextInput<TFieldValues extends FieldValues>({
               onBlur={onBlur}
               onChangeText={onChange}
               placeholder={placeholder}
-              placeholderTextColor={Colors.textLight}
+              placeholderTextColor={placeholderColor}
               returnKeyType={returnKeyType}
               secureTextEntry={secureTextEntry}
               testID={testID}

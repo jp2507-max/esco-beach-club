@@ -26,13 +26,15 @@ const profile = {
   gotIt: '알겠습니다!',
   contactVipConcierge: 'VIP 컨시어지 연락',
   contactSupport: '지원팀에 문의',
-  conciergeUrl: 'https://wa.me/1234567890?text=Hi%20Esco%20Life%20VIP%20Concierge',
-  supportEmail: 'support@escolife.com',
+  conciergeMessage: '안녕하세요, Esco Life VIP 컨시어지입니다',
+
   errors: {
     openMail: '메일을 열 수 없습니다',
     openWhatsApp: 'WhatsApp을 열 수 없습니다',
   },
   invite: {
+    codeCopied: '복사됨!',
+    codeCopyFailed: '코드를 복사할 수 없습니다',
     titlePrefix: '지금',
     titleHighlight: 'VIP Life',
     subtitle: '친구를 Esco Life로 초대하고\n오늘 바로 특별한 혜택을 받으세요.',

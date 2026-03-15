@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -31,8 +32,8 @@ import { ScrollView, Text, Pressable, View } from '@/src/tw';
 type PriceTier = {
   highlight: boolean;
   icon: React.ElementType;
-  label: string;
-  perks: string[];
+  labelKey: string;
+  perkKeys: string[];
   price: string;
 };
 
@@ -44,7 +45,12 @@ export default function EventDetailsScreen(): React.JSX.Element {
   const slide = useSharedValue(40);
   const headerOpacity = useSharedValue(0);
 
+  const { t } = useTranslation('events');
   const foundEvent = useEventById(id);
+
+  if (!foundEvent) {
+    console.warn(`[EventDetails] Warning: using fallback event data for missing event id: ${id}`);
+  }
 
   const event = foundEvent ?? {
     id: id ?? '',
@@ -87,32 +93,33 @@ export default function EventDetailsScreen(): React.JSX.Element {
     transform: [{ translateY: slide.get() }],
   }));
 
+  const contactForPricing = t('priceTiers.contactForPricing');
   const priceTiers: PriceTier[] = [
     {
-      label: 'VIP',
-      price: event.vip_price ?? '$85',
+      labelKey: 'priceTiers.vip.label',
+      price: event.vip_price ?? contactForPricing,
       highlight: true,
       icon: Crown,
-      perks: ['Priority seating', 'Welcome drink', 'Backstage access'],
+      perkKeys: ['priceTiers.vip.perk1', 'priceTiers.vip.perk2', 'priceTiers.vip.perk3'],
     },
     {
-      label: 'Member',
-      price: event.member_price ?? event.price ?? '$45',
+      labelKey: 'priceTiers.member.label',
+      price: event.member_price ?? event.price ?? contactForPricing,
       highlight: false,
       icon: Star,
-      perks: ['Reserved area', 'Complimentary snacks'],
+      perkKeys: ['priceTiers.member.perk1', 'priceTiers.member.perk2'],
     },
     {
-      label: 'Guest',
-      price: event.guest_price ?? '$65',
+      labelKey: 'priceTiers.guest.label',
+      price: event.guest_price ?? contactForPricing,
       highlight: false,
       icon: UserCheck,
-      perks: ['General admission', 'Cash bar'],
+      perkKeys: ['priceTiers.guest.perk1', 'priceTiers.guest.perk2'],
     },
   ];
 
   function handleBook(): void {
-    router.push(`/booking?eventTitle=${encodeURIComponent(event.title)}` as never);
+    router.push({ pathname: '/(modals)/booking', params: { eventTitle: event.title } });
   }
 
   return (
@@ -204,34 +211,33 @@ export default function EventDetailsScreen(): React.JSX.Element {
             <View className="flex-row items-center rounded-xl border border-border bg-white px-3.5 py-2.5 dark:border-dark-border dark:bg-dark-bg-card">
               <Users color={Colors.primary} size={16} />
               <Text className="ml-1.5 text-[13px] font-semibold text-text dark:text-text-primary-dark">
-                {event.attendees} attending
+                {t('attendeesCount', { count: event.attendees })}
               </Text>
             </View>
           </View>
 
           <View className="mb-7">
             <Text className="mb-2 text-xl font-extrabold text-text dark:text-text-primary-dark">
-              About This Event
+              {t('aboutThisEvent')}
             </Text>
             <Text className="text-sm leading-[22px] text-text-secondary dark:text-text-secondary-dark">
-              Join us for an unforgettable evening at {event.location}.{' '}
-              {event.description ||
-                'Experience the best of Esco Life with live entertainment, premium drinks, and an incredible atmosphere.'}{' '}
-              Perfect for making memories with friends and meeting new people.
+              {t('aboutDescription1', { location: event.location })}{' '}
+              {event.description || t('aboutDescription2')}{' '}
+              {t('aboutDescription3')}
             </Text>
           </View>
 
           <View className="mb-6">
             <Text className="mb-2 text-xl font-extrabold text-text dark:text-text-primary-dark">
-              Choose Your Experience
+              {t('chooseExperience')}
             </Text>
             <Text className="mb-4 text-[13px] text-text-secondary dark:text-text-secondary-dark">
-              Select a tier that fits your vibe
+              {t('selectTier')}
             </Text>
 
             {priceTiers.map((tier) => (
               <View
-                key={tier.label}
+                key={tier.labelKey}
                 className="mb-3 rounded-[18px] border bg-white p-[18px] dark:bg-dark-bg-card"
                 style={{
                   backgroundColor: tier.highlight ? '#FFF5F8' : Colors.surface,
@@ -242,7 +248,7 @@ export default function EventDetailsScreen(): React.JSX.Element {
                 {tier.highlight ? (
                   <View className="absolute right-4 top-[-10px] rounded-lg bg-primary px-2.5 py-1">
                     <Text className="text-[9px] font-extrabold tracking-[1px] text-white">
-                      RECOMMENDED
+                      {t('recommended')}
                     </Text>
                   </View>
                 ) : null}
@@ -264,10 +270,10 @@ export default function EventDetailsScreen(): React.JSX.Element {
                         className="text-base font-bold"
                         style={{ color: tier.highlight ? Colors.primary : Colors.text }}
                       >
-                        {tier.label}
+                        {t(tier.labelKey as any)}
                       </Text>
                       <Text className="mt-0.5 text-[11px] font-medium text-text-muted dark:text-text-muted-dark">
-                        per person
+                        {t('perPerson')}
                       </Text>
                     </View>
                   </View>
@@ -281,14 +287,14 @@ export default function EventDetailsScreen(): React.JSX.Element {
 
                 <View className="my-[14px] h-px bg-border dark:bg-dark-border" />
 
-                {tier.perks.map((perk) => (
-                  <View key={perk} className="mb-2 flex-row items-center">
+                {tier.perkKeys.map((key) => (
+                  <View key={key} className="mb-2 flex-row items-center">
                     <View
                       className="mr-2.5 size-1.5 rounded-full"
                       style={{ backgroundColor: tier.highlight ? Colors.primary : Colors.secondary }}
                     />
                     <Text className="text-[13px] font-medium text-text-secondary dark:text-text-secondary-dark">
-                      {perk}
+                      {t(key as any)}
                     </Text>
                   </View>
                 ))}
@@ -313,10 +319,10 @@ export default function EventDetailsScreen(): React.JSX.Element {
             </View>
             <View className="flex-1">
               <Text className="mb-0.5 text-[15px] font-bold text-text dark:text-text-primary-dark">
-                Plan a Private Party instead?
+                {t('privatePartyTitle')}
               </Text>
               <Text className="text-xs font-medium text-text-secondary dark:text-text-secondary-dark">
-                Birthdays, corporate events & more
+                {t('privatePartyDescription')}
               </Text>
             </View>
           </Pressable>
@@ -331,7 +337,7 @@ export default function EventDetailsScreen(): React.JSX.Element {
       >
         <View>
           <Text className="text-xs font-medium text-text-muted dark:text-text-muted-dark">
-            From
+            {t('from')}
           </Text>
           <Text className="text-2xl font-extrabold text-text dark:text-text-primary-dark">
             {event.price}
@@ -342,7 +348,7 @@ export default function EventDetailsScreen(): React.JSX.Element {
           onPress={handleBook}
           testID="book-now-btn"
         >
-          <Text className="text-base font-bold text-white">Book Now</Text>
+          <Text className="text-base font-bold text-white">{t('bookNow')}</Text>
         </Pressable>
       </View>
     </View>

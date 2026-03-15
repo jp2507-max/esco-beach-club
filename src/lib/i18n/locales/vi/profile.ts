@@ -26,13 +26,15 @@ const profile = {
   gotIt: 'Đã hiểu!',
   contactVipConcierge: 'Liên hệ concierge VIP',
   contactSupport: 'Liên hệ hỗ trợ',
-  conciergeUrl: 'https://wa.me/1234567890?text=Xin%20ch%C3%A0o%20Esco%20Life%20VIP%20Concierge',
-  supportEmail: 'support@escolife.com',
+  conciergeMessage: 'Xin chào Esco Life VIP Concierge',
+
   errors: {
     openMail: 'Không thể mở ứng dụng email',
     openWhatsApp: 'Không thể mở WhatsApp',
   },
   invite: {
+    codeCopied: 'Đã sao chép!',
+    codeCopyFailed: 'Không thể sao chép mã',
     titlePrefix: 'Mở khóa',
     titleHighlight: 'VIP Life',
     subtitle: 'Mời bạn bè đến với Esco Life và bắt đầu\nnhận những đặc quyền độc quyền ngay hôm nay.',

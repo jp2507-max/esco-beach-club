@@ -38,6 +38,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   const [signOutLoading, setSignOutLoading] = useState<boolean>(false);
   const [sendCodeError, setSendCodeError] = useState<Error | null>(null);
   const [verifyCodeError, setVerifyCodeError] = useState<Error | null>(null);
+  const [signOutError, setSignOutError] = useState<Error | null>(null);
 
   async function sendCode({ email }: SendCodeParams): Promise<string> {
     setSendCodeLoading(true);
@@ -47,13 +48,13 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       const trimmedEmail = email.trim();
 
       if (!trimmedEmail) {
-        throw new Error('Email is required.');
+        throw new Error('emailRequired');
       }
 
       await db.auth.sendMagicCode({ email: trimmedEmail });
       return trimmedEmail;
     } catch (error: unknown) {
-      const nextError = toError(error, 'Unable to send verification code.');
+      const nextError = toError(error, 'unableToSendCode');
       setSendCodeError(nextError);
       throw nextError;
     } finally {
@@ -70,7 +71,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       const trimmedCode = code.trim();
 
       if (!trimmedEmail || !trimmedCode) {
-        throw new Error('Email and verification code are required.');
+        throw new Error('emailAndCodeRequired');
       }
 
       await db.auth.signInWithMagicCode({
@@ -78,7 +79,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         email: trimmedEmail,
       });
     } catch (error: unknown) {
-      const nextError = toError(error, 'Unable to verify code.');
+      const nextError = toError(error, 'unableToVerifyCode');
       setVerifyCodeError(nextError);
       throw nextError;
     } finally {
@@ -88,9 +89,14 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
 
   async function signOut(): Promise<void> {
     setSignOutLoading(true);
+    setSignOutError(null);
 
     try {
       await db.auth.signOut();
+    } catch (error: unknown) {
+      const nextError = toError(error, 'Unable to sign out.');
+      setSignOutError(nextError);
+      throw nextError;
     } finally {
       setSignOutLoading(false);
     }
@@ -109,5 +115,6 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     signOutLoading,
     sendCodeError,
     verifyCodeError,
+    signOutError,
   };
 });

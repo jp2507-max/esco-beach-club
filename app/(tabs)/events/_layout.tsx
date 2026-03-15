@@ -3,7 +3,7 @@ import { Stack } from 'expo-router';
 
 export default function EventsStackLayout(): React.JSX.Element {
   return (
-    <Stack>
+    <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
     </Stack>
   );

@@ -34,6 +34,7 @@ import { shadows } from '@/src/lib/styles/shadows';
 import { Animated } from '@/src/tw/animated';
 import { Image } from '@/src/tw/image';
 import { ScrollView, Text, Pressable, View } from '@/src/tw';
+import { config } from '@/src/lib/config';
 
 type MenuItem = {
   color: string;
@@ -61,6 +62,7 @@ function StatCard({
   progressTrackColor,
   value,
 }: StatCardProps): React.JSX.Element {
+  const clampedDegrees = Math.max(0, Math.min(progressDegrees, 360));
   return (
     <View className="flex-1 items-center rounded-[18px] border border-border bg-white p-[18px] dark:border-dark-border dark:bg-dark-bg-card">
       <View className="mb-2.5 size-[60px] items-center justify-center">
@@ -73,7 +75,7 @@ function StatCard({
             style={{
               borderColor: accentColor,
               borderTopColor: 'transparent',
-              transform: [{ rotate: `${progressDegrees}deg` }],
+              transform: [{ rotate: `${clampedDegrees}deg` }],
             }}
           />
         </View>
@@ -115,9 +117,7 @@ export default function ProfileScreen(): React.JSX.Element {
   const { signOut } = useAuth();
 
   const userName = profile?.full_name ?? t('guest');
-  const userAvatar =
-    profile?.avatar_url ??
-    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face';
+  const userAvatar = profile?.avatar_url ?? config.defaultAvatarUri;
   const tierBadge = profile?.tier_label ?? t('memberFallback');
   const tierLevel = profile?.tier ?? 'STANDARD';
   const memberId = profile?.member_id ?? '';
@@ -196,12 +196,13 @@ export default function ProfileScreen(): React.JSX.Element {
   }));
 
   function handleConcierge(): void {
-    const whatsappUrl = t('conciergeUrl');
+    const message = encodeURIComponent(t('conciergeMessage'));
+    const whatsappUrl = `${config.contact.conciergeBase}?text=${message}`;
     Linking.openURL(whatsappUrl).catch(() => console.log(t('errors.openWhatsApp')));
   }
 
   function handleSupport(): void {
-    const supportEmail = t('supportEmail');
+    const supportEmail = config.contact.supportEmail;
     Linking.openURL(`mailto:${supportEmail}`).catch(() => console.log(t('errors.openMail')));
   }
 
@@ -216,8 +217,8 @@ export default function ProfileScreen(): React.JSX.Element {
     if (item.route) router.push(item.route as never);
   }
 
-  const earnedProgress = (earned / 2000) * 100;
-  const savedProgress = (saved / 300) * 100;
+  const earnedProgress = Math.min(Math.max((earned / 2000) * 100, 0), 100);
+  const savedProgress = Math.min(Math.max((saved / 300) * 100, 0), 100);
 
   return (
     <View

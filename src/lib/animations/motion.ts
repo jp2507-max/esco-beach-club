@@ -46,15 +46,10 @@ export function rmTiming(duration: number): {
   };
 }
 
-export function withRM<T>(animation: T): T {
-  if (
-    animation &&
-    typeof animation === 'object' &&
-    'reduceMotion' in animation &&
-    typeof animation.reduceMotion === 'function'
-  ) {
-    return animation.reduceMotion(ReduceMotion.System) as T;
-  }
+export type ReduceMotionCapable<T> = {
+  reduceMotion(mode: ReduceMotion): T;
+};
 
-  return animation;
+export function withRM<T extends ReduceMotionCapable<T>>(animation: T): T {
+  return animation.reduceMotion(ReduceMotion.System);
 }

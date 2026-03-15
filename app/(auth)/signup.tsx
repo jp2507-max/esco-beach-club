@@ -28,6 +28,7 @@ import {
   Pressable,
   View,
 } from '@/src/tw';
+import { isAuthErrorKey } from '@/src/lib/auth-errors';
 
 export default function SignupScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
@@ -80,8 +81,9 @@ export default function SignupScreen(): React.JSX.Element {
       setSentEmail(email);
       resetCodeForm({ code: '' });
     } catch (error: unknown) {
-      const message: string =
-        error instanceof Error && error.message ? error.message : t('unableToSendCode');
+      const raw =
+        error instanceof Error && error.message ? error.message : 'unableToSendCode';
+      const message = isAuthErrorKey(raw) ? t(raw) : raw;
 
       Alert.alert(t('codeNotSentTitle'), message);
     }
@@ -94,8 +96,9 @@ export default function SignupScreen(): React.JSX.Element {
         email: sentEmail,
       });
     } catch (error: unknown) {
-      const message: string =
-        error instanceof Error && error.message ? error.message : t('unableToVerifyCode');
+      const raw =
+        error instanceof Error && error.message ? error.message : 'unableToVerifyCode';
+      const message = isAuthErrorKey(raw) ? t(raw) : raw;
 
       Alert.alert(t('verificationFailedTitle'), message);
     }
@@ -168,7 +171,9 @@ export default function SignupScreen(): React.JSX.Element {
             {visibleError ? (
               <View className="mb-4 rounded-xl bg-[#FEE2E2] p-3">
                 <Text className="text-[13px] font-medium text-[#DC2626]">
-                  {visibleError.message}
+                  {isAuthErrorKey(visibleError.message)
+                    ? t(visibleError.message)
+                    : visibleError.message}
                 </Text>
               </View>
             ) : null}
@@ -201,7 +206,6 @@ export default function SignupScreen(): React.JSX.Element {
               <Pressable
                 className="mt-1 overflow-hidden rounded-2xl"
                 disabled={primaryLoading}
-                onLongPress={undefined}
                 onPress={
                   isCodeStep
                     ? handleCodeSubmit(handleVerifyCode, handleInvalidCodeSubmit)

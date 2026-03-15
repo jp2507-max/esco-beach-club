@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { X, PartyPopper, Calendar, Users, ChevronDown, Send } from 'lucide-react-native';
-import { useForm, useWatch } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { Colors } from '@/constants/colors';
 import { useUserId } from '@/providers/DataProvider';
@@ -12,16 +12,26 @@ import { submitPrivateEventInquiry } from '@/lib/api';
 import { useMutation } from '@tanstack/react-query';
 import { motion } from '@/src/lib/animations/motion';
 import { ControlledTextInput } from '@/src/lib/forms/controlled-text-input';
+import { cn } from '@/src/lib/utils';
 import {
   type PrivateEventFormValues,
   privateEventSchema,
 } from '@/src/lib/forms/schemas';
 import { Animated } from '@/src/tw/animated';
-import { KeyboardAvoidingView, ScrollView, Text, Pressable, View } from '@/src/tw';
+import { KeyboardAvoidingView, ScrollView, Text, TextInput, Pressable, View } from '@/src/tw';
+import { useTranslation } from 'react-i18next';
 
-const eventTypes = ['Company Party', 'Birthday', 'Wedding', 'Anniversary', 'Corporate Retreat', 'Other'];
+const EVENT_TYPE_KEYS = [
+  'companyParty',
+  'birthday',
+  'wedding',
+  'anniversary',
+  'corporateRetreat',
+  'other',
+] as const;
 
 export default function PrivateEventScreen(): React.JSX.Element {
+  const { t } = useTranslation('common');
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const [showTypePicker, setShowTypePicker] = useState<boolean>(false);
@@ -36,14 +46,14 @@ export default function PrivateEventScreen(): React.JSX.Element {
       estimatedPax: '',
       eventType: '',
       notes: '',
-      preferredDate: '',
+      preferredDate: undefined as unknown as Date,
     },
     mode: 'onBlur',
     resolver: zodResolver(privateEventSchema),
   });
 
   const eventType = useWatch({ control, name: 'eventType', defaultValue: '' });
-  const preferredDate = useWatch({ control, name: 'preferredDate', defaultValue: '' });
+  const preferredDate = useWatch({ control, name: 'preferredDate' });
   const estimatedPax = useWatch({ control, name: 'estimatedPax', defaultValue: '' });
 
   const successStyle = useAnimatedStyle(() => ({
@@ -56,8 +66,8 @@ export default function PrivateEventScreen(): React.JSX.Element {
       submitPrivateEventInquiry({
         user_id: userId,
         event_type: values.eventType,
-        preferred_date: values.preferredDate,
-        estimated_pax: Number.parseInt(values.estimatedPax, 10),
+        preferred_date: values.preferredDate.toISOString(),
+        estimated_pax: Number.parseInt(values.estimatedPax, 10) || 0,
         contact_name: values.contactName?.trim() || undefined,
         contact_email: values.contactEmail?.trim() || undefined,
         notes: values.notes?.trim() || undefined,
@@ -69,15 +79,15 @@ export default function PrivateEventScreen(): React.JSX.Element {
     },
     onError: (err) => {
       console.log('[PrivateEvent] Submit error:', err);
-      const message = err instanceof Error ? err.message : 'Could not send your inquiry right now.';
-      Alert.alert('Submission Failed', message);
+      const message = err instanceof Error ? err.message : t('privateEvent.submitError');
+      Alert.alert(t('privateEvent.submissionFailed'), message);
     },
   });
 
-  const isValid = eventType.length > 0 && preferredDate.length > 0 && estimatedPax.length > 0;
+  const isValid = eventType.length > 0 && !!preferredDate && estimatedPax.length > 0;
 
   function handleInvalidSubmit(): void {
-    Alert.alert('Missing Info', 'Please fill in the event type, date, and estimated guests.');
+    Alert.alert(t('privateEvent.missingInfo'), t('privateEvent.missingInfoMessage'));
   }
 
   function handleTypeSelect(value: string): void {
@@ -107,7 +117,7 @@ export default function PrivateEventScreen(): React.JSX.Element {
           <X color={Colors.text} size={20} />
         </Pressable>
         <Text className="text-base font-bold text-text dark:text-text-primary-dark">
-          Private Event
+          {t('privateEvent.title')}
         </Text>
         <View className="w-10" />
       </View>
@@ -129,15 +139,15 @@ export default function PrivateEventScreen(): React.JSX.Element {
                   <PartyPopper color={Colors.primary} size={32} />
                 </View>
                 <Text className="mb-2 text-center text-2xl font-extrabold text-text dark:text-text-primary-dark">
-                  Plan Your Private Party
+                  {t('privateEvent.header')}
                 </Text>
                 <Text className="px-2 text-center text-sm leading-5 text-text-secondary dark:text-text-secondary-dark">
-                  From intimate birthdays to grand corporate events — let us handle it all.
+                  {t('privateEvent.subtitle')}
                 </Text>
               </View>
 
               <Text className="mb-2 ml-1 text-[11px] font-bold uppercase tracking-[1.2px] text-text-secondary dark:text-text-secondary-dark">
-                Event Details
+                {t('privateEvent.eventDetails')}
               </Text>
 
               <Pressable
@@ -153,7 +163,7 @@ export default function PrivateEventScreen(): React.JSX.Element {
                 </View>
                 <View className="flex-1">
                   <Text className="mb-0.5 text-[11px] font-semibold text-text-secondary dark:text-text-secondary-dark">
-                    Event Type
+                    {t('privateEvent.eventType')}
                   </Text>
                   <Text
                     className={
@@ -162,7 +172,7 @@ export default function PrivateEventScreen(): React.JSX.Element {
                         : 'text-[15px] font-normal text-text-muted dark:text-text-muted-dark'
                     }
                   >
-                    {eventType || 'Select type...'}
+                    {eventType ? t(`privateEvent.eventTypes.${eventType}`) : t('privateEvent.selectType')}
                   </Text>
                 </View>
                 <ChevronDown color={Colors.textLight} size={18} />
@@ -170,56 +180,103 @@ export default function PrivateEventScreen(): React.JSX.Element {
 
               {showTypePicker && (
                 <View className="mb-2 mt-[-4px] overflow-hidden rounded-[14px] border border-border bg-white dark:border-dark-border dark:bg-dark-bg-card">
-                  {eventTypes.map((type) => (
+                  {EVENT_TYPE_KEYS.map((key) => (
                     <Pressable
-                      key={type}
+                      key={key}
                       className="border-b border-border px-[18px] py-[13px] last:border-b-0 dark:border-dark-border"
-                      onPress={() => handleTypeSelect(type)}
-                      style={eventType === type ? { backgroundColor: `${Colors.secondary}12` } : undefined}
-                      testID={`type-${type}`}
+                      onPress={() => handleTypeSelect(key)}
+                      style={eventType === key ? { backgroundColor: `${Colors.secondary}12` } : undefined}
+                      testID={`type-${key}`}
                     >
                       <Text
                         className="text-[15px]"
                         style={{
-                          color: eventType === type ? Colors.secondary : Colors.text,
-                          fontWeight: eventType === type ? '700' : '500',
+                          color: eventType === key ? Colors.secondary : Colors.text,
+                          fontWeight: eventType === key ? '700' : '500',
                         }}
                       >
-                        {type}
+                        {t(`privateEvent.eventTypes.${key}`)}
                       </Text>
                     </Pressable>
                   ))}
                 </View>
               )}
 
-              <ControlledTextInput<PrivateEventFormValues>
+              <Controller
                 control={control}
-                icon={({ color, size }) => <Calendar color={Colors.secondary} size={size} />}
-                label="Preferred Date"
                 name="preferredDate"
-                placeholder="e.g. March 15, 2026"
-                testID="date-input"
+                render={({ field: { onChange, onBlur, value }, fieldState: { invalid } }) => (
+                  <View
+                    className={cn(
+                      'mb-3 flex-row items-center rounded-2xl border bg-background px-4 py-3 dark:bg-dark-bg-card',
+                      invalid ? 'border-danger dark:border-error-dark' : 'border-border dark:border-dark-border'
+                    )}
+                  >
+                    <View className="mr-3 mt-0.5">
+                      <Calendar color={Colors.secondary} size={18} />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="mb-1 text-[11px] font-semibold uppercase tracking-[0.8px] text-text-secondary dark:text-text-secondary-dark">
+                        {t('privateEvent.preferredDate')}
+                      </Text>
+                      {Platform.OS === 'web' ? (
+                        <input
+                          type="date"
+                          style={{
+                            background: 'transparent',
+                            border: 'none',
+                            color: 'currentColor',
+                            fontFamily: 'inherit',
+                            fontSize: '15px',
+                            fontWeight: '600',
+                            outline: 'none',
+                            padding: 0,
+                            minHeight: '24px',
+                            width: '100%',
+                          }}
+                          value={value ? new Date(value).toISOString().substring(0, 10) : ''}
+                          onChange={(e) => {
+                            const parsed = new Date(e.target.value);
+                            onChange(!isNaN(parsed.getTime()) ? parsed : undefined);
+                          }}
+                          onBlur={onBlur}
+                          data-testid="date-input"
+                        />
+                      ) : (
+                        <TextInput
+                          className="min-h-[24px] flex-1 p-0 text-[15px] font-semibold text-text dark:text-text-primary-dark"
+                          placeholder={t('privateEvent.preferredDatePlaceholder') || 'YYYY-MM-DD'}
+                          placeholderTextColor={Colors.textLight}
+                          value={typeof value === 'string' ? value : (value as Date)?.toISOString?.()?.substring(0, 10) || ''}
+                          onChangeText={onChange}
+                          onBlur={onBlur}
+                          testID="date-input"
+                        />
+                      )}
+                    </View>
+                  </View>
+                )}
               />
 
               <ControlledTextInput<PrivateEventFormValues>
                 control={control}
                 icon={({ color, size }) => <Users color={Colors.secondary} size={size} />}
                 keyboardType="number-pad"
-                label="Estimated Guests"
+                label={t('privateEvent.estimatedGuests')}
                 name="estimatedPax"
-                placeholder="e.g. 50"
+                placeholder={t('privateEvent.estimatedGuestsPlaceholder')}
                 testID="pax-input"
               />
 
               <Text className="mb-2 ml-1 mt-6 text-[11px] font-bold uppercase tracking-[1.2px] text-text-secondary dark:text-text-secondary-dark">
-                Contact Info (optional)
+                {t('privateEvent.contactInfoOptional')}
               </Text>
 
               <ControlledTextInput<PrivateEventFormValues>
                 control={control}
-                label="Name"
+                label={t('privateEvent.name')}
                 name="contactName"
-                placeholder="Your full name"
+                placeholder={t('privateEvent.namePlaceholder')}
                 testID="name-input"
               />
 
@@ -227,9 +284,9 @@ export default function PrivateEventScreen(): React.JSX.Element {
                 autoCapitalize="none"
                 control={control}
                 keyboardType="email-address"
-                label="Email"
+                label={t('privateEvent.email')}
                 name="contactEmail"
-                placeholder="you@email.com"
+                placeholder={t('privateEvent.emailPlaceholder')}
                 testID="email-input"
               />
 
@@ -237,11 +294,11 @@ export default function PrivateEventScreen(): React.JSX.Element {
                 className="min-h-[60px]"
                 containerClassName="min-h-[100px] items-start pt-[14px]"
                 control={control}
-                label="Additional Notes"
+                label={t('privateEvent.additionalNotes')}
                 multiline={true}
                 name="notes"
                 numberOfLines={4}
-                placeholder="Theme, dietary requirements, special requests..."
+                placeholder={t('privateEvent.additionalNotesPlaceholder')}
                 testID="notes-input"
                 textAlignVertical="top"
               />
@@ -253,28 +310,28 @@ export default function PrivateEventScreen(): React.JSX.Element {
                 testID="submit-inquiry"
               >
                 <Send color="#fff" size={18} />
-                <Text className="ml-2 text-base font-bold text-white">Send Inquiry</Text>
+                <Text className="ml-2 text-base font-bold text-white">{t('privateEvent.sendInquiry')}</Text>
               </Pressable>
 
               <Text className="mt-3 text-center text-xs text-text-muted dark:text-text-muted-dark">
-                Our team will get back to you within 24 hours.
+                {t('privateEvent.teamResponse')}
               </Text>
             </>
           ) : (
             <Animated.View className="items-center pt-[60px]" style={successStyle}>
               <Text className="mb-5 text-[64px]">🎊</Text>
               <Text className="mb-[10px] text-[28px] font-extrabold text-text dark:text-text-primary-dark">
-                Inquiry Sent!
+                {t('privateEvent.inquirySent')}
               </Text>
               <Text className="mb-9 px-5 text-center text-[15px] leading-[22px] text-text-secondary dark:text-text-secondary-dark">
-                Our events team will review your request and reach out within 24 hours. Get ready for an unforgettable event!
+                {t('privateEvent.inquirySentMessage')}
               </Text>
               <Pressable
                 className="rounded-2xl bg-secondary px-12 py-4"
                 onPress={() => router.back()}
                 testID="done-inquiry"
               >
-                <Text className="text-base font-bold text-white">Back to Events</Text>
+                <Text className="text-base font-bold text-white">{t('privateEvent.backToEvents')}</Text>
               </Pressable>
             </Animated.View>
           )}

@@ -13,6 +13,7 @@ import { useProfileData } from '@/providers/DataProvider';
 import { rmTiming } from '@/src/lib/animations/motion';
 import { Animated } from '@/src/tw/animated';
 import { ScrollView, Text, Pressable, View } from '@/src/tw';
+import { useTranslation } from 'react-i18next';
 
 const TIME_SLOTS = [
   { time: '18:00', available: true },
@@ -25,20 +26,34 @@ const TIME_SLOTS = [
   { time: '21:30', available: true },
 ];
 
-const OCCASIONS = ['Date Night', 'Birthday', 'Business', 'Casual', 'Celebration'];
+const OCCASIONS = ['Date Night', 'Birthday', 'Business', 'Casual', 'Celebration'] as const;
 
-function getNext7Days(): { label: string; day: string; date: Date; full: string }[] {
-  const days: { label: string; day: string; date: Date; full: string }[] = [];
-  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function getNext7Days(): { labelKey: string; day: string; date: Date; monthKey: string; dayNameKey: string }[] {
+  const days: { labelKey: string; day: string; date: Date; monthKey: string; dayNameKey: string }[] = [];
+  const dayNames = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
+  const monthNames = [
+    'jan',
+    'feb',
+    'mar',
+    'apr',
+    'may',
+    'jun',
+    'jul',
+    'aug',
+    'sep',
+    'oct',
+    'nov',
+    'dec',
+  ] as const;
   for (let i = 0; i < 7; i++) {
     const d = new Date();
     d.setDate(d.getDate() + i);
     days.push({
-      label: i === 0 ? 'Today' : dayNames[d.getDay()],
-      day: String(d.getDate()),
       date: d,
-      full: `${dayNames[d.getDay()]}, ${monthNames[d.getMonth()]} ${d.getDate()}`,
+      day: String(d.getDate()),
+      dayNameKey: dayNames[d.getDay()],
+      labelKey: i === 0 ? 'today' : dayNames[d.getDay()],
+      monthKey: monthNames[d.getMonth()],
     });
   }
   return days;
@@ -49,6 +64,7 @@ export default function BookingModalScreen(): React.JSX.Element {
   const router = useRouter();
   const { eventTitle } = useLocalSearchParams<{ eventTitle?: string }>();
   const { profile } = useProfileData();
+  const { t } = useTranslation(['booking', 'common']);
 
   const dates = useMemo(() => getNext7Days(), []);
   const [selectedDate, setSelectedDate] = useState<number>(0);
@@ -88,8 +104,12 @@ export default function BookingModalScreen(): React.JSX.Element {
       clearTimeout(confirmTimeoutRef.current);
     }
     confirmTimeoutRef.current = setTimeout(() => {
-      const name = profile?.full_name?.split(' ')[0] ?? 'Guest';
-      const subtitle = `Your table is reserved for ${dates[selectedDate].full} at ${selectedTime}.`;
+      const name = profile?.full_name?.split(' ')[0] ?? t('common:bookingSuccess.guest');
+      const dateStr = t(`booking:days.${dates[selectedDate].dayNameKey}` as any) + ', ' + t(`booking:months.${dates[selectedDate].monthKey}` as any) + ' ' + dates[selectedDate].day;
+      const subtitle = t('booking:confirmationMessage', {
+        date: dateStr,
+        time: selectedTime,
+      });
       const nextRoute = `/booking/success?name=${encodeURIComponent(name)}&subtitle=${encodeURIComponent(subtitle)}`;
       router.replace(nextRoute as never);
     }, 1500);
@@ -103,7 +123,7 @@ export default function BookingModalScreen(): React.JSX.Element {
       <View className="flex-row items-center justify-between border-b border-border px-5 py-4 dark:border-dark-border">
         <View>
           <Text className="text-2xl font-extrabold text-text dark:text-text-primary-dark">
-            Reserve your Spot
+            {t('booking:reserveSpot')}
           </Text>
           {eventTitle ? (
             <Text className="mt-0.5 text-[13px] font-medium text-text-secondary dark:text-text-secondary-dark">
@@ -130,7 +150,7 @@ export default function BookingModalScreen(): React.JSX.Element {
             <View className="mb-3.5 flex-row items-center">
               <CalendarDays color={Colors.primary} size={18} />
               <Text className="ml-2 text-[17px] font-bold text-text dark:text-text-primary-dark">
-                Select Date
+                {t('booking:selectDate')}
               </Text>
             </View>
             <ScrollView
@@ -142,7 +162,7 @@ export default function BookingModalScreen(): React.JSX.Element {
                 const active = selectedDate === i;
                 return (
                   <Pressable
-                    key={d.full}
+                    key={`${d.day}-${d.monthKey}`}
                     className={
                       active
                         ? 'h-20 w-[68px] items-center justify-center rounded-2xl bg-primary'
@@ -158,7 +178,7 @@ export default function BookingModalScreen(): React.JSX.Element {
                           : 'text-xs font-semibold text-text-secondary dark:text-text-secondary-dark'
                       }
                     >
-                      {d.label}
+                      {t(`booking:days.${d.labelKey}` as any)}
                     </Text>
                     <Text
                       className={
@@ -179,7 +199,7 @@ export default function BookingModalScreen(): React.JSX.Element {
             <View className="mb-3.5 flex-row items-center">
               <Sparkles color={Colors.primary} size={18} />
               <Text className="ml-2 text-[17px] font-bold text-text dark:text-text-primary-dark">
-                Pick a Time
+                {t('booking:pickTime')}
               </Text>
             </View>
             <View className="flex-row flex-wrap">
@@ -223,7 +243,7 @@ export default function BookingModalScreen(): React.JSX.Element {
                     </Text>
                     {!slot.available ? (
                       <Text className="mt-0.5 text-[9px] font-bold tracking-[0.5px] text-primary">
-                        Full
+                        {t('booking:full')}
                       </Text>
                     ) : null}
                   </Pressable>
@@ -236,7 +256,7 @@ export default function BookingModalScreen(): React.JSX.Element {
             <View className="mb-3.5 flex-row items-center">
               <Users color={Colors.primary} size={18} />
               <Text className="ml-2 text-[17px] font-bold text-text dark:text-text-primary-dark">
-                Number of Guests
+                {t('booking:numGuests')}
               </Text>
             </View>
             <View className="flex-row items-center justify-center rounded-[20px] border border-border bg-white py-5 dark:border-dark-border dark:bg-dark-bg-card">
@@ -254,7 +274,7 @@ export default function BookingModalScreen(): React.JSX.Element {
                   {pax}
                 </Text>
                 <Text className="mt-0.5 text-[13px] font-medium text-text-secondary dark:text-text-secondary-dark">
-                  guests
+                  {t('booking:guestsUnit')}
                 </Text>
               </View>
               <Pressable
@@ -271,7 +291,7 @@ export default function BookingModalScreen(): React.JSX.Element {
 
           <View className="mb-7">
             <Text className="text-[17px] font-bold text-text dark:text-text-primary-dark">
-              Occasion
+              {t('booking:occasionTitle')}
             </Text>
             <View className="mt-2.5 flex-row flex-wrap">
               {OCCASIONS.map((o) => {
@@ -292,7 +312,7 @@ export default function BookingModalScreen(): React.JSX.Element {
                       className="text-sm font-semibold"
                       style={{ color: active ? '#fff' : Colors.text }}
                     >
-                      {o}
+                      {t(`booking:occasions.${o}` as any)}
                     </Text>
                   </Pressable>
                 );
@@ -316,7 +336,7 @@ export default function BookingModalScreen(): React.JSX.Element {
           testID="confirm-booking"
         >
           <Text className="text-[17px] font-bold text-white">
-            {isSubmitting ? 'Reserving...' : 'Confirm Reservation'}
+            {isSubmitting ? t('booking:reserving') : t('booking:confirmReservation')}
           </Text>
         </Pressable>
       </View>

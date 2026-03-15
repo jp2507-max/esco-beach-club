@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Copy, X, Star, Percent, Award } from 'lucide-react-native';
+import { Check, Copy, X, Star, Percent, Award } from 'lucide-react-native';
 import * as Clipboard from 'expo-clipboard';
 import {
   cancelAnimation,
@@ -10,9 +10,10 @@ import {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
+import { useTranslation } from 'react-i18next';
 import { Colors } from '@/constants/colors';
 import { usePartnerById } from '@/providers/DataProvider';
-import { rmTiming } from '@/src/lib/animations/motion';
+import { motion, rmTiming } from '@/src/lib/animations/motion';
 import { Animated } from '@/src/tw/animated';
 import { Image } from '@/src/tw/image';
 import { Text, Pressable, View } from '@/src/tw';
@@ -21,18 +22,15 @@ export default function PartnerModal(): React.JSX.Element {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation('perks');
   const scale = useSharedValue(0.8);
   const opacity = useSharedValue(0);
 
   const partner = usePartnerById(id);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    scale.set(
-      withSpring(1, {
-        damping: 15,
-        stiffness: 140,
-      })
-    );
+    scale.set(withSpring(1, motion.spring.gentle));
     opacity.set(withTiming(1, rmTiming(300)));
     return () => {
       cancelAnimation(scale);
@@ -50,7 +48,8 @@ export default function PartnerModal(): React.JSX.Element {
 
     try {
       await Clipboard.setStringAsync(partner.code);
-      console.log('Code copied:', partner.code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     } catch (e) {
       console.log('Copy error', e);
     }
@@ -59,7 +58,7 @@ export default function PartnerModal(): React.JSX.Element {
   if (!partner) {
     return (
       <View className="flex-1 bg-black/70 px-6" style={{ paddingTop: insets.top }}>
-        <Text className="text-base text-white">Partner not found</Text>
+        <Text className="text-base text-white">{t('partner.notFound')}</Text>
       </View>
     );
   }
@@ -98,38 +97,38 @@ export default function PartnerModal(): React.JSX.Element {
               <Star size={32} color="#F9A825" fill="#F9A825" />
             </View>
             <Text className="text-[11px] font-extrabold tracking-[1.5px] text-[#F9A825]">
-              UNLOCKED
+              {t('partner.unlocked')}
             </Text>
           </View>
 
           <Text className="text-center text-[28px] font-extrabold text-text">
-            Congratulations!
+            {t('partner.congratulations')}
           </Text>
           <Text className="mb-2.5 text-center text-[28px] font-extrabold text-primary">
             {partner.discount_label}!
           </Text>
           <Text className="mb-6 text-center text-sm leading-[22px] text-text-secondary">
-            Enjoy exclusive benefits at {partner.name}. {partner.description}.
+            {t('partner.benefitsDescription', { name: partner.name, description: partner.description })}
           </Text>
 
           <View className="mb-6 flex-row">
             <View className="mr-4 size-[90px] items-center justify-center rounded-2xl border border-border bg-white">
               <Award size={24} color={Colors.primary} />
-              <Text className="mt-1.5 text-xs font-semibold text-text">Exclusive</Text>
+              <Text className="mt-1.5 text-xs font-semibold text-text">{t('partner.exclusive')}</Text>
             </View>
             <View className="mr-4 size-[90px] items-center justify-center rounded-2xl border border-border bg-white">
               <Percent size={24} color={Colors.primary} />
-              <Text className="mt-1.5 text-xs font-semibold text-text">Discount</Text>
+              <Text className="mt-1.5 text-xs font-semibold text-text">{t('partner.discount')}</Text>
             </View>
             <View className="size-[90px] items-center justify-center rounded-2xl border border-border bg-white">
               <Star size={24} color={Colors.primary} />
-              <Text className="mt-1.5 text-xs font-semibold text-text">VIP Perk</Text>
+              <Text className="mt-1.5 text-xs font-semibold text-text">{t('partner.vipPerk')}</Text>
             </View>
           </View>
 
           <View className="mb-5 w-full rounded-2xl border border-border bg-white p-4">
             <Text className="mb-2.5 text-[10px] font-bold tracking-[1px] text-text-secondary">
-              YOUR DISCOUNT CODE
+              {t('partner.yourDiscountCode')}
             </Text>
             <View className="flex-row items-center justify-between">
               <Text className="text-lg font-extrabold tracking-[0.5px] text-text">
@@ -141,7 +140,11 @@ export default function PartnerModal(): React.JSX.Element {
                 style={{ backgroundColor: `${Colors.secondary}15` }}
                 testID="copy-discount"
               >
-                <Copy size={18} color={Colors.secondary} />
+                {copied ? (
+                  <Check size={18} color={Colors.success} />
+                ) : (
+                  <Copy size={18} color={Colors.secondary} />
+                )}
               </Pressable>
             </View>
           </View>
@@ -150,11 +153,11 @@ export default function PartnerModal(): React.JSX.Element {
             className="mb-3.5 w-full items-center rounded-[18px] bg-primary py-[17px]"
             onPress={() => router.back()}
           >
-            <Text className="text-[17px] font-bold text-white">Enjoy my Perks</Text>
+            <Text className="text-[17px] font-bold text-white">{t('partner.enjoyMyPerks')}</Text>
           </Pressable>
 
           <Pressable onPress={() => router.back()}>
-            <Text className="text-sm font-medium text-text-secondary">Maybe later</Text>
+            <Text className="text-sm font-medium text-text-secondary">{t('partner.maybeLater')}</Text>
           </Pressable>
         </Animated.View>
       </View>

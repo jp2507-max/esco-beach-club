@@ -152,6 +152,49 @@ const MENU_DATA: MenuCategory[] = [
   },
 ];
 
+function renderMenuItem({ item }: ListRenderItemInfo<MenuItem>): React.JSX.Element {
+  return (
+    <View
+      className="mb-3.5 flex-row items-center rounded-[18px] border border-border bg-white p-3 dark:border-dark-border dark:bg-dark-bg-card"
+      testID={`menu-item-${item.id}`}
+    >
+      <Image
+        className="size-20 rounded-[14px]"
+        contentFit="cover"
+        recyclingKey={`menu-item-${item.id}`}
+        source={{ uri: item.image }}
+      />
+      <View className="ml-3.5 flex-1">
+        <View className="mb-1 flex-row items-center">
+          <Text
+            className="shrink text-base font-bold text-text dark:text-text-primary-dark"
+            numberOfLines={1}
+          >
+            {item.name}
+          </Text>
+          {item.tag ? (
+            <View
+              className="ml-2 rounded-md px-2 py-[3px]"
+              style={{ backgroundColor: `${Colors.primary}18` }}
+            >
+              <Text className="text-[10px] font-bold tracking-[0.3px] text-primary">
+                {item.tag}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+        <Text
+          className="mb-1.5 text-xs leading-[17px] text-text-secondary dark:text-text-secondary-dark"
+          numberOfLines={2}
+        >
+          {item.description}
+        </Text>
+        <Text className="text-[17px] font-extrabold text-secondary">{item.price}</Text>
+      </View>
+    </View>
+  );
+}
+
 export default function MenuScreen(): React.JSX.Element {
   const [activeCategory, setActiveCategory] = useState<string>('cocktails');
   const fade = useSharedValue(0);
@@ -173,49 +216,6 @@ export default function MenuScreen(): React.JSX.Element {
     () => ({ paddingBottom: 40, paddingHorizontal: 20, paddingTop: 18 }),
     []
   );
-
-  function renderItem({ item }: ListRenderItemInfo<MenuItem>): React.JSX.Element {
-    return (
-      <View
-        className="mb-3.5 flex-row items-center rounded-[18px] border border-border bg-white p-3 dark:border-dark-border dark:bg-dark-bg-card"
-        testID={`menu-item-${item.id}`}
-      >
-        <Image
-          className="size-20 rounded-[14px]"
-          contentFit="cover"
-          recyclingKey={`menu-item-${item.id}`}
-          source={{ uri: item.image }}
-        />
-        <View className="ml-3.5 flex-1">
-          <View className="mb-1 flex-row items-center">
-            <Text
-              className="shrink text-base font-bold text-text dark:text-text-primary-dark"
-              numberOfLines={1}
-            >
-              {item.name}
-            </Text>
-            {item.tag ? (
-              <View
-                className="ml-2 rounded-md px-2 py-[3px]"
-                style={{ backgroundColor: `${Colors.primary}18` }}
-              >
-                <Text className="text-[10px] font-bold tracking-[0.3px] text-primary">
-                  {item.tag}
-                </Text>
-              </View>
-            ) : null}
-          </View>
-          <Text
-            className="mb-1.5 text-xs leading-[17px] text-text-secondary dark:text-text-secondary-dark"
-            numberOfLines={2}
-          >
-            {item.description}
-          </Text>
-          <Text className="text-[17px] font-extrabold text-secondary">{item.price}</Text>
-        </View>
-      </View>
-    );
-  }
 
   return (
     <View className="flex-1 bg-background dark:bg-dark-bg">
@@ -255,8 +255,9 @@ export default function MenuScreen(): React.JSX.Element {
         <FlashList
           contentContainerStyle={listContentContainerStyle}
           data={currentItems}
+          estimatedItemSize={140}
           keyExtractor={(item) => item.id}
-          renderItem={renderItem}
+          renderItem={renderMenuItem}
           showsVerticalScrollIndicator={false}
         />
       </Animated.View>

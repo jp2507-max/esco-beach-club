@@ -21,6 +21,8 @@ const auth = {
   verificationFailedTitle: 'Xác minh thất bại',
   unableToSendCode: 'Không thể gửi mã.',
   unableToVerifyCode: 'Không thể xác minh mã.',
+  emailRequired: 'Vui lòng nhập email.',
+  emailAndCodeRequired: 'Vui lòng nhập email và mã xác minh.',
   invalidEmailTitle: 'Email không hợp lệ',
   invalidEmailMessage: 'Vui lòng nhập địa chỉ email hợp lệ.',
   missingCodeTitle: 'Thiếu mã',

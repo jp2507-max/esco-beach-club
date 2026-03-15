@@ -20,6 +20,7 @@ import {
   withTiming,
 } from 'react-native-reanimated';
 import { Colors } from '@/constants/colors';
+import { config } from '@/src/lib/config';
 import type { Event, NewsItem } from '@/lib/types';
 import { useHomeEvents, useNewsData, useProfileData } from '@/providers/DataProvider';
 import { rmTiming } from '@/src/lib/animations/motion';
@@ -243,9 +244,7 @@ export default function HomeScreen(): React.JSX.Element {
   const userPoints = profile?.points ?? 0;
   const userMaxPoints =
     profile?.max_points && profile.max_points > 0 ? profile.max_points : 5000;
-  const userAvatar =
-    profile?.avatar_url ??
-    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face';
+  const userAvatar = profile?.avatar_url ?? config.defaultAvatarUri;
   const tierLevel = profile?.tier ?? 'STANDARD';
   const vipStatus = tierLevel === 'VIP' || tierLevel === 'OWNER' ? t('vipStatus') : '';
   const greeting = getGreeting(new Date().getHours(), {
@@ -463,7 +462,7 @@ export default function HomeScreen(): React.JSX.Element {
                 >
                   {quickActions.map((action) => (
                     <MemoizedQuickActionChip
-                      key={action.label}
+                      key={action.id}
                       action={action}
                       onPress={handleRoutePress}
                     />

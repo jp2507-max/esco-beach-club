@@ -10,6 +10,7 @@ import {
 import { Stack, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Colors } from '@/constants/colors';
+import { config } from '@/src/lib/config';
 import type { Event } from '@/lib/types';
 import { useEventsData, useProfileData } from '@/providers/DataProvider';
 import { cn } from '@/src/lib/utils';
@@ -40,9 +41,7 @@ export default function EventsScreen(): React.JSX.Element {
 
   const { events } = useEventsData();
   const { profile } = useProfileData();
-  const userAvatar =
-    profile?.avatar_url ??
-    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face';
+  const userAvatar = profile?.avatar_url ?? config.defaultAvatarUri;
 
   const renderHeaderRight = useCallback(
     () => (
@@ -105,7 +104,7 @@ export default function EventsScreen(): React.JSX.Element {
 
   const openEvent = useCallback(
     (id: string): void => {
-      router.push(`/events/${id}` as never);
+      router.push({ pathname: '/events/[id]', params: { id } });
     },
     [router]
   );
@@ -178,6 +177,7 @@ export default function EventsScreen(): React.JSX.Element {
       <FlashList
         contentInsetAdjustmentBehavior="automatic"
         data={listEvents}
+        estimatedItemSize={110}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         showsVerticalScrollIndicator={false}
