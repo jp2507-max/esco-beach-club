@@ -1,34 +1,39 @@
-import React, { useState } from 'react';
-import { Alert, Platform } from 'react-native';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Mail, ShieldCheck, Waves } from 'lucide-react-native';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
+import { Alert, Platform } from 'react-native';
+import {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/providers/AuthProvider';
 import { motion } from '@/src/lib/animations/motion';
+import { isAuthErrorKey } from '@/src/lib/auth-errors';
 import { ControlledTextInput } from '@/src/lib/forms/controlled-text-input';
-import { shadows } from '@/src/lib/styles/shadows';
 import {
   type LoginFormValues,
-  type VerifyCodeFormValues,
   loginSchema,
+  type VerifyCodeFormValues,
   verifyCodeSchema,
 } from '@/src/lib/forms/schemas';
-import { Animated } from '@/src/tw/animated';
+import { shadows } from '@/src/lib/styles/shadows';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
+  Pressable,
   ScrollView,
   Text,
-  Pressable,
   View,
 } from '@/src/tw';
-import { isAuthErrorKey } from '@/src/lib/auth-errors';
+import { Animated } from '@/src/tw/animated';
 
 export default function LoginScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
@@ -82,7 +87,9 @@ export default function LoginScreen(): React.JSX.Element {
       resetCodeForm({ code: '' });
     } catch (error: unknown) {
       const raw =
-        error instanceof Error && error.message ? error.message : 'unableToSendCode';
+        error instanceof Error && error.message
+          ? error.message
+          : 'unableToSendCode';
       const message = isAuthErrorKey(raw) ? t(raw) : raw;
 
       Alert.alert(t('codeNotSentTitle'), message);
@@ -97,7 +104,9 @@ export default function LoginScreen(): React.JSX.Element {
       });
     } catch (error: unknown) {
       const raw =
-        error instanceof Error && error.message ? error.message : 'unableToVerifyCode';
+        error instanceof Error && error.message
+          ? error.message
+          : 'unableToVerifyCode';
       const message = isAuthErrorKey(raw) ? t(raw) : raw;
 
       Alert.alert(t('verificationFailedTitle'), message);
@@ -183,7 +192,9 @@ export default function LoginScreen(): React.JSX.Element {
                 autoCapitalize="none"
                 autoComplete="one-time-code"
                 control={codeControl}
-                icon={({ color, size }) => <ShieldCheck color={color} size={size} />}
+                icon={({ color, size }) => (
+                  <ShieldCheck color={color} size={size} />
+                )}
                 keyboardType="number-pad"
                 name="code"
                 placeholder={t('codePlaceholder')}
@@ -204,11 +215,15 @@ export default function LoginScreen(): React.JSX.Element {
 
             <Animated.View style={buttonStyle}>
               <Pressable
+                accessibilityRole="button"
                 className="mt-1 overflow-hidden rounded-2xl"
                 disabled={primaryLoading}
                 onPress={
                   isCodeStep
-                    ? handleCodeSubmit(handleVerifyCode, handleInvalidCodeSubmit)
+                    ? handleCodeSubmit(
+                        handleVerifyCode,
+                        handleInvalidCodeSubmit
+                      )
                     : handleSubmit(handleSendCode, handleInvalidEmailSubmit)
                 }
                 onPressIn={handlePressIn}
@@ -230,7 +245,9 @@ export default function LoginScreen(): React.JSX.Element {
                     <ActivityIndicator color="#fff" />
                   ) : (
                     <Text className="text-base font-bold tracking-[0.5px] text-white">
-                      {isCodeStep ? t('verifyContinue') : t('sendVerificationCode')}
+                      {isCodeStep
+                        ? t('verifyContinue')
+                        : t('sendVerificationCode')}
                     </Text>
                   )}
                 </LinearGradient>
@@ -239,6 +256,7 @@ export default function LoginScreen(): React.JSX.Element {
 
             {isCodeStep ? (
               <Pressable
+                accessibilityRole="button"
                 className="mt-4 items-center"
                 onPress={handleUseDifferentEmail}
                 testID="login-edit-email"
@@ -261,13 +279,16 @@ export default function LoginScreen(): React.JSX.Element {
             </View>
 
             <Pressable
+              accessibilityRole="button"
               className="items-center"
               onPress={() => router.push('/signup')}
               testID="login-go-signup"
             >
               <Text className="text-sm text-text-secondary dark:text-text-secondary-dark">
                 {t('needMemberAccount')}{' '}
-                <Text className="font-bold text-primary dark:text-primary-bright">{t('createOne')}</Text>
+                <Text className="font-bold text-primary dark:text-primary-bright">
+                  {t('createOne')}
+                </Text>
               </Text>
             </Pressable>
           </View>

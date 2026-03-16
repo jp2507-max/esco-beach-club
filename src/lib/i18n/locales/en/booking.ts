@@ -8,10 +8,10 @@ const booking = {
   reserving: 'Reserving...',
   occasions: {
     'Date Night': 'Date Night',
-    'Birthday': 'Birthday',
-    'Business': 'Business',
-    'Casual': 'Casual',
-    'Celebration': 'Celebration',
+    Birthday: 'Birthday',
+    Business: 'Business',
+    Casual: 'Casual',
+    Celebration: 'Celebration',
   },
   days: {
     today: 'Today',

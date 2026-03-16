@@ -1,4 +1,5 @@
 const booking = {
+  occasionTitle: 'Dịp',
   reserveSpot: 'Reserve your Spot',
   selectDate: 'Select Date',
   pickTime: 'Pick a Time',
@@ -7,10 +8,10 @@ const booking = {
   reserving: 'Reserving...',
   occasions: {
     'Date Night': 'Date Night',
-    'Birthday': 'Birthday',
-    'Business': 'Business',
-    'Casual': 'Casual',
-    'Celebration': 'Celebration',
+    Birthday: 'Birthday',
+    Business: 'Business',
+    Casual: 'Casual',
+    Celebration: 'Celebration',
   },
   days: {
     today: 'Today',

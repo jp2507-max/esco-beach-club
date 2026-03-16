@@ -1,28 +1,35 @@
 import { getLocales } from 'expo-localization';
 import { createInstance } from 'i18next';
 import { initReactI18next } from 'react-i18next';
+
 import authEn from '@/src/lib/i18n/locales/en/auth';
+import bookingEn from '@/src/lib/i18n/locales/en/booking';
 import commonEn from '@/src/lib/i18n/locales/en/common';
 import eventsEn from '@/src/lib/i18n/locales/en/events';
 import homeEn from '@/src/lib/i18n/locales/en/home';
 import perksEn from '@/src/lib/i18n/locales/en/perks';
 import profileEn from '@/src/lib/i18n/locales/en/profile';
-import bookingEn from '@/src/lib/i18n/locales/en/booking';
 import authKo from '@/src/lib/i18n/locales/ko/auth';
+import bookingKo from '@/src/lib/i18n/locales/ko/booking';
 import commonKo from '@/src/lib/i18n/locales/ko/common';
 import eventsKo from '@/src/lib/i18n/locales/ko/events';
 import homeKo from '@/src/lib/i18n/locales/ko/home';
 import perksKo from '@/src/lib/i18n/locales/ko/perks';
 import profileKo from '@/src/lib/i18n/locales/ko/profile';
-import bookingKo from '@/src/lib/i18n/locales/ko/booking';
 import authVi from '@/src/lib/i18n/locales/vi/auth';
+import bookingVi from '@/src/lib/i18n/locales/vi/booking';
 import commonVi from '@/src/lib/i18n/locales/vi/common';
 import eventsVi from '@/src/lib/i18n/locales/vi/events';
 import homeVi from '@/src/lib/i18n/locales/vi/home';
 import perksVi from '@/src/lib/i18n/locales/vi/perks';
 import profileVi from '@/src/lib/i18n/locales/vi/profile';
-import bookingVi from '@/src/lib/i18n/locales/vi/booking';
-import { appLanguages, defaultLanguage, defaultNamespace, type AppLanguage, namespaces } from '@/src/lib/i18n/types';
+import {
+  type AppLanguage,
+  appLanguages,
+  defaultLanguage,
+  defaultNamespace,
+  namespaces,
+} from '@/src/lib/i18n/types';
 
 const i18n = createInstance();
 
@@ -44,7 +51,8 @@ export const resources = {
     perks: perksKo,
     profile: profileKo,
     booking: bookingKo,
-  },  vi: {
+  },
+  vi: {
     auth: authVi,
     common: commonVi,
     events: eventsVi,
@@ -72,23 +80,26 @@ function resolveDeviceLanguage(): AppLanguage {
 }
 
 if (!i18n.isInitialized) {
-  i18n.use(initReactI18next).init({
-    defaultNS: defaultNamespace,
-    fallbackLng: defaultLanguage,
-    interpolation: {
-      escapeValue: false,
-    },
-    lng: resolveDeviceLanguage(),
-    ns: namespaces,
-    react: {
-      useSuspense: false,
-    },
-    resources,
-    returnNull: false,
-    supportedLngs: appLanguages,
-  }).catch((error) => {
-    console.error('[i18n] Initialization failed:', error);
-  });
+  i18n
+    .use(initReactI18next)
+    .init({
+      defaultNS: defaultNamespace,
+      fallbackLng: defaultLanguage,
+      interpolation: {
+        escapeValue: false,
+      },
+      lng: resolveDeviceLanguage(),
+      ns: namespaces,
+      react: {
+        useSuspense: false,
+      },
+      resources,
+      returnNull: false,
+      supportedLngs: appLanguages,
+    })
+    .catch((error) => {
+      console.error('[i18n] Initialization failed:', error);
+    });
 }
 
 declare module 'i18next' {

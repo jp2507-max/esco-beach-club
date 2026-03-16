@@ -1,30 +1,35 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, Share, type LayoutChangeEvent } from 'react-native';
-import { useTranslation } from 'react-i18next';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import {
-  Copy,
-  Upload,
-  Zap,
-  Wine,
-  Award,
-  Shield,
-  Users,
-} from 'lucide-react-native';
 import * as Clipboard from 'expo-clipboard';
+import {
+  Award,
+  Copy,
+  Shield,
+  Upload,
+  Users,
+  Wine,
+  Zap,
+} from 'lucide-react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Alert, type LayoutChangeEvent, Share } from 'react-native';
 import {
   cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { Colors } from '@/constants/colors';
-import { useProfileData, useReferralProgress, useReferralsData } from '@/providers/DataProvider';
+import {
+  useProfileData,
+  useReferralProgress,
+  useReferralsData,
+} from '@/providers/DataProvider';
 import { rmTiming } from '@/src/lib/animations/motion';
 import { shadows } from '@/src/lib/styles/shadows';
+import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 import { Image } from '@/src/tw/image';
-import { ScrollView, Text, Pressable, View } from '@/src/tw';
 
 type Milestone = {
   icon: typeof Wine;
@@ -42,7 +47,10 @@ export default function InviteScreen(): React.JSX.Element {
   const { referrals } = useReferralsData();
   const referralProgress = useReferralProgress();
   const code = profile?.referral_code ?? 'ESCO-2025';
-  const progressRatio = Math.min(referralProgress.current / referralProgress.goal, 1);
+  const progressRatio = Math.min(
+    referralProgress.current / referralProgress.goal,
+    1
+  );
   const [copiedRecently, setCopiedRecently] = useState<boolean>(false);
 
   const progress = useSharedValue(0);
@@ -147,7 +155,8 @@ export default function InviteScreen(): React.JSX.Element {
       >
         <Animated.View style={fadeStyle}>
           <Text className="mt-2 text-center text-[32px] font-extrabold leading-10 text-text">
-            {t('invite.titlePrefix')}{'\n'}
+            {t('invite.titlePrefix')}
+            {'\n'}
             <Text className="text-primary">{t('invite.titleHighlight')}</Text>
           </Text>
           <Text className="mb-7 mt-2.5 text-center text-[15px] leading-[22px] text-text-secondary">
@@ -168,8 +177,11 @@ export default function InviteScreen(): React.JSX.Element {
               >
                 <Users color={Colors.primary} size={18} />
               </View>
-              <Text className="flex-1 text-xl font-extrabold tracking-[1px] text-text">{code}</Text>
+              <Text className="flex-1 text-xl font-extrabold tracking-[1px] text-text">
+                {code}
+              </Text>
               <Pressable
+                accessibilityRole="button"
                 className="size-9 items-center justify-center rounded-xl border border-border bg-white"
                 onPress={handleCopy}
                 testID="copy-code"
@@ -249,13 +261,23 @@ export default function InviteScreen(): React.JSX.Element {
                   ) : null}
                   <m.icon
                     size={22}
-                    color={m.unlocked ? '#4CAF50' : m.isGoal ? '#fff' : Colors.textLight}
+                    color={
+                      m.unlocked
+                        ? '#4CAF50'
+                        : m.isGoal
+                          ? '#fff'
+                          : Colors.textLight
+                    }
                   />
                 </View>
-                <Text className="mb-0.5 text-xs font-bold text-text">{m.label}</Text>
+                <Text className="mb-0.5 text-xs font-bold text-text">
+                  {m.label}
+                </Text>
                 <Text
                   className="text-[11px] font-medium"
-                  style={{ color: m.unlocked ? '#4CAF50' : Colors.textSecondary }}
+                  style={{
+                    color: m.unlocked ? '#4CAF50' : Colors.textSecondary,
+                  }}
                 >
                   {m.sub}
                 </Text>
@@ -265,9 +287,13 @@ export default function InviteScreen(): React.JSX.Element {
 
           <View className="mb-5">
             <View className="mb-[14px] flex-row items-center justify-between">
-              <Text className="text-lg font-extrabold text-text">{t('invite.recentReferrals')}</Text>
-              <Pressable>
-                <Text className="text-sm font-semibold text-primary">{t('invite.viewAll')}</Text>
+              <Text className="text-lg font-extrabold text-text">
+                {t('invite.recentReferrals')}
+              </Text>
+              <Pressable accessibilityRole="button">
+                <Text className="text-sm font-semibold text-primary">
+                  {t('invite.viewAll')}
+                </Text>
               </Pressable>
             </View>
             {referrals.map((ref) => (
@@ -296,15 +322,21 @@ export default function InviteScreen(): React.JSX.Element {
                     />
                   </View>
                   <View>
-                    <Text className="text-[15px] font-bold text-text">{ref.referred_name}</Text>
-                    <Text className="mt-0.5 text-xs text-text-secondary">{t('invite.joinedViaYourLink')}</Text>
+                    <Text className="text-[15px] font-bold text-text">
+                      {ref.referred_name}
+                    </Text>
+                    <Text className="mt-0.5 text-xs text-text-secondary">
+                      {t('invite.joinedViaYourLink')}
+                    </Text>
                   </View>
                 </View>
                 <View
                   className="rounded-[10px] px-3 py-[5px]"
                   style={{ backgroundColor: '#E8F5E9' }}
                 >
-                  <Text className="text-xs font-bold text-[#4CAF50]">{ref.status}</Text>
+                  <Text className="text-xs font-bold text-[#4CAF50]">
+                    {ref.status}
+                  </Text>
                 </View>
               </View>
             ))}
@@ -324,12 +356,15 @@ export default function InviteScreen(): React.JSX.Element {
         style={{ paddingBottom: Math.max(insets.bottom, 16) }}
       >
         <Pressable
+          accessibilityRole="button"
           className="flex-row items-center justify-center rounded-[18px] bg-primary py-[17px]"
           onPress={handleShare}
           testID="share-btn"
         >
           <Upload color="#fff" size={20} />
-          <Text className="ml-2.5 text-[17px] font-bold text-white">{t('invite.shareInviteLink')}</Text>
+          <Text className="ml-2.5 text-[17px] font-bold text-white">
+            {t('invite.shareInviteLink')}
+          </Text>
         </Pressable>
       </View>
     </View>

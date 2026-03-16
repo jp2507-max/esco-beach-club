@@ -14,14 +14,22 @@ const events = {
   attendeesCount: '{{count}} attending',
   aboutThisEvent: 'About This Event',
   aboutDescription1: 'Join us for an unforgettable evening at {{location}}.',
-  aboutDescription2: 'Experience the best of Esco Life with live entertainment, premium drinks, and an incredible atmosphere.',
-  aboutDescription3: 'Perfect for making memories with friends and meeting new people.',
+  aboutDescription2:
+    'Experience the best of Esco Life with live entertainment, premium drinks, and an incredible atmosphere.',
+  aboutDescription3:
+    'Perfect for making memories with friends and meeting new people.',
   chooseExperience: 'Choose Your Experience',
   selectTier: 'Select a tier that fits your vibe',
   recommended: 'RECOMMENDED',
   perPerson: 'per person',
   from: 'From',
   bookNow: 'Book Now',
+  eventNotFound: 'Event not found',
+  goBack: 'Go Back',
+  shareEvent: 'Share event',
+  likeEvent: 'Like event',
+  unlikeEvent: 'Unlike event',
+  shareMessage: 'Check out {{title}} at {{location}} on {{date}} at {{time}}!',
   priceTiers: {
     contactForPricing: 'Contact for pricing',
     vip: {

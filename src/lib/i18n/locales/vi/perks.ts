@@ -11,7 +11,8 @@ const perks = {
     notFound: 'Không tìm thấy đối tác',
     unlocked: 'ĐÃ MỞ KHÓA',
     congratulations: 'Chúc mừng!',
-    benefitsDescription: 'Tận hưởng các ưu đãi độc quyền tại {{name}}. {{description}}.',
+    benefitsDescription:
+      'Tận hưởng các ưu đãi độc quyền tại {{name}}. {{description}}.',
     exclusive: 'Độc quyền',
     discount: 'Giảm giá',
     vipPerk: 'Đặc quyền VIP',

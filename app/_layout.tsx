@@ -1,21 +1,23 @@
 import '../global.css';
+import '@/src/lib/i18n';
+
 import NetInfo from '@react-native-community/netinfo';
 import {
-  QueryClient,
-  QueryClientProvider,
   focusManager,
   onlineManager,
+  QueryClient,
+  QueryClientProvider,
 } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import React, { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AppState, type AppStateStatus, Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { useTranslation } from 'react-i18next';
+
+import { Colors } from '@/constants/colors';
 import { AuthProvider, useAuth } from '@/providers/AuthProvider';
 import { DataProvider } from '@/providers/DataProvider';
-import { Colors } from '@/constants/colors';
-import '@/src/lib/i18n';
 import { ActivityIndicator, View } from '@/src/tw';
 
 void SplashScreen.preventAutoHideAsync();
@@ -69,7 +71,10 @@ function ReactQueryLifecycle(): null {
 
     focusManager.setFocused(AppState.currentState === 'active');
 
-    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    const subscription = AppState.addEventListener(
+      'change',
+      handleAppStateChange
+    );
 
     return () => {
       subscription.remove();
@@ -108,11 +113,17 @@ function RootLayoutNav() {
   return (
     <Stack screenOptions={{ headerBackTitle: t('back') }}>
       <Stack.Protected guard={!isAuthenticated}>
-        <Stack.Screen name="(auth)" options={{ headerShown: false, animation: 'fade' }} />
+        <Stack.Screen
+          name="(auth)"
+          options={{ headerShown: false, animation: 'fade' }}
+        />
       </Stack.Protected>
       <Stack.Protected guard={isAuthenticated}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="(shared)" options={{ headerShown: false, presentation: 'card' }} />
+        <Stack.Screen
+          name="(shared)"
+          options={{ headerShown: false, presentation: 'card' }}
+        />
         <Stack.Screen name="(modals)" options={{ headerShown: false }} />
       </Stack.Protected>
       <Stack.Screen name="+not-found" />

@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useMemo } from 'react';
-import { useAuth } from '@/providers/AuthProvider';
+
 import type { Event, NewsItem, Partner, Profile, Referral } from '@/lib/types';
+import { useAuth } from '@/providers/AuthProvider';
 import { db } from '@/src/lib/instant';
 import {
   type InstantRecord,
@@ -66,7 +67,9 @@ function useRequiredContext<T>(
   return value;
 }
 
-export function DataProvider({ children }: DataProviderProps): React.JSX.Element {
+export function DataProvider({
+  children,
+}: DataProviderProps): React.JSX.Element {
   const { user } = useAuth();
   const userId = user?.id ?? '';
 
@@ -97,15 +100,14 @@ export function DataProvider({ children }: DataProviderProps): React.JSX.Element
       : null
   );
 
-  const profile = useMemo(
-    () => {
-      if (!userId) return null;
+  const profile = useMemo(() => {
+    if (!userId) return null;
 
-      const record = profileQuery.data?.profiles?.[0] as InstantRecord | undefined;
-      return record ? mapProfile(record) : null;
-    },
-    [profileQuery.data, userId]
-  );
+    const record = profileQuery.data?.profiles?.[0] as
+      | InstantRecord
+      | undefined;
+    return record ? mapProfile(record) : null;
+  }, [profileQuery.data, userId]);
 
   const events = useMemo(() => {
     if (!userId) return EMPTY_EVENTS;
@@ -125,14 +127,11 @@ export function DataProvider({ children }: DataProviderProps): React.JSX.Element
     return records.map(mapPartner);
   }, [partnersQuery.data, userId]);
 
-  const referrals = useMemo(
-    () => {
-      if (!userId) return EMPTY_REFERRALS;
-      const records = (referralsQuery.data?.referrals ?? []) as InstantRecord[];
-      return records.map(mapReferral);
-    },
-    [referralsQuery.data, userId]
-  );
+  const referrals = useMemo(() => {
+    if (!userId) return EMPTY_REFERRALS;
+    const records = (referralsQuery.data?.referrals ?? []) as InstantRecord[];
+    return records.map(mapReferral);
+  }, [referralsQuery.data, userId]);
 
   const dismissVoucher = useCallback((): void => {
     if (!profile || profile.has_seen_welcome_voucher) return;
@@ -145,7 +144,10 @@ export function DataProvider({ children }: DataProviderProps): React.JSX.Element
         })
       )
       .catch((error: unknown) => {
-        console.error('[DataProvider] Failed to dismiss welcome voucher:', error);
+        console.error(
+          '[DataProvider] Failed to dismiss welcome voucher:',
+          error
+        );
       });
   }, [profile]);
 
@@ -231,6 +233,11 @@ export function useUserId(): string {
   return userId;
 }
 
+/**
+ * @deprecated Use focused hooks (`useProfileData()`, `useEventsData()`, etc.) instead.
+ * `useData()` merges all contexts, which defeats the context-splitting optimization
+ * and causes broad re-renders whenever any context changes. Retained as a compatibility shim.
+ */
 export function useData() {
   const profileData = useProfileData();
   const eventsData = useEventsData();
@@ -267,19 +274,28 @@ export function useEventById(id: string | undefined): Event | null {
 
 export function usePartnerById(id: string | undefined): Partner | null {
   const { partners } = usePartnersData();
-  return useMemo(() => partners.find((p) => p.id === id) ?? null, [partners, id]);
+  return useMemo(
+    () => partners.find((p) => p.id === id) ?? null,
+    [partners, id]
+  );
 }
 
 export function useFilteredPartners(category: string): Partner[] {
   const { partners } = usePartnersData();
   return useMemo(
-    () => (category === 'All' ? partners : partners.filter((p) => p.category === category)),
+    () =>
+      category === 'All'
+        ? partners
+        : partners.filter((p) => p.category === category),
     [partners, category]
   );
 }
 
 export function useReferralProgress() {
   const { referrals } = useReferralsData();
-  const completed = useMemo(() => referrals.filter((r) => r.status === 'Completed').length, [referrals]);
+  const completed = useMemo(
+    () => referrals.filter((r) => r.status === 'Completed').length,
+    [referrals]
+  );
   return { current: completed, goal: 3 };
 }

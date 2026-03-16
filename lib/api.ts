@@ -1,4 +1,5 @@
 import { id } from '@instantdb/react-native';
+
 import { db } from '@/src/lib/instant';
 import {
   type InstantRecord,
@@ -8,13 +9,16 @@ import {
   mapProfile,
   mapReferral,
 } from '@/src/lib/mappers';
+
 import type { Event, NewsItem, Partner, Profile, Referral } from './types';
 
 function nowIso(): string {
   return new Date().toISOString();
 }
 
-function withoutUndefined<T extends Record<string, unknown>>(value: T): Record<string, unknown> {
+function withoutUndefined<T extends Record<string, unknown>>(
+  value: T
+): Record<string, unknown> {
   const entries = Object.entries(value).filter(([, v]) => v !== undefined);
   return Object.fromEntries(entries);
 }
@@ -44,19 +48,18 @@ export async function updateProfile(
   if (!current) return null;
 
   const updatedAt = nowIso();
+  const sanitizedUpdates = withoutUndefined(updates) as Partial<Profile>;
 
   await db.transact(
-    db.tx.profiles[current.id].update(
-      withoutUndefined({
-        ...updates,
-        updated_at: updatedAt,
-      })
-    )
+    db.tx.profiles[current.id].update({
+      ...sanitizedUpdates,
+      updated_at: updatedAt,
+    })
   );
 
   return {
     ...current,
-    ...updates,
+    ...sanitizedUpdates,
     id: current.id,
     updated_at: updatedAt,
   };
@@ -126,7 +129,6 @@ export async function submitReview(
   created_at: string;
   id: string;
   rating: number;
-  user_id: string;
 }> {
   const createdAt = nowIso();
   const reviewId = id();
@@ -137,7 +139,6 @@ export async function submitReview(
         comment,
         created_at: createdAt,
         rating,
-        user_id: userId,
       })
       .link({ owner: userId })
   );
@@ -147,7 +148,6 @@ export async function submitReview(
     created_at: createdAt,
     id: reviewId,
     rating,
-    user_id: userId,
   };
 }
 
@@ -168,7 +168,6 @@ export async function submitPrivateEventInquiry(params: {
   id: string;
   notes?: string;
   preferred_date: string;
-  user_id: string;
 }> {
   const createdAt = nowIso();
   const inquiryId = id();
@@ -179,7 +178,6 @@ export async function submitPrivateEventInquiry(params: {
     event_type: params.event_type,
     notes: params.notes,
     preferred_date: params.preferred_date,
-    user_id: params.user_id,
   };
 
   await db.transact(

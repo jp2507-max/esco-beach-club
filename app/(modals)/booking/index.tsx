@@ -1,19 +1,27 @@
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import {
+  CalendarDays,
+  Minus,
+  Plus,
+  Sparkles,
+  Users,
+  X,
+} from 'lucide-react-native';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { X, Minus, Plus, CalendarDays, Users, Sparkles } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import {
   cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { Colors } from '@/constants/colors';
 import { useProfileData } from '@/providers/DataProvider';
 import { rmTiming } from '@/src/lib/animations/motion';
+import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
-import { ScrollView, Text, Pressable, View } from '@/src/tw';
-import { useTranslation } from 'react-i18next';
 
 const TIME_SLOTS = [
   { time: '18:00', available: true },
@@ -26,10 +34,28 @@ const TIME_SLOTS = [
   { time: '21:30', available: true },
 ];
 
-const OCCASIONS = ['Date Night', 'Birthday', 'Business', 'Casual', 'Celebration'] as const;
+const OCCASIONS = [
+  'Date Night',
+  'Birthday',
+  'Business',
+  'Casual',
+  'Celebration',
+] as const;
 
-function getNext7Days(): { labelKey: string; day: string; date: Date; monthKey: string; dayNameKey: string }[] {
-  const days: { labelKey: string; day: string; date: Date; monthKey: string; dayNameKey: string }[] = [];
+function getNext7Days(): {
+  labelKey: string;
+  day: string;
+  date: Date;
+  monthKey: string;
+  dayNameKey: string;
+}[] {
+  const days: {
+    labelKey: string;
+    day: string;
+    date: Date;
+    monthKey: string;
+    dayNameKey: string;
+  }[] = [];
   const dayNames = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
   const monthNames = [
     'jan',
@@ -104,8 +130,20 @@ export default function BookingModalScreen(): React.JSX.Element {
       clearTimeout(confirmTimeoutRef.current);
     }
     confirmTimeoutRef.current = setTimeout(() => {
-      const name = profile?.full_name?.split(' ')[0] ?? t('common:bookingSuccess.guest');
-      const dateStr = t(`booking:days.${dates[selectedDate].dayNameKey}` as any) + ', ' + t(`booking:months.${dates[selectedDate].monthKey}` as any) + ' ' + dates[selectedDate].day;
+      const name =
+        profile?.full_name?.split(' ')[0] ?? t('common:bookingSuccess.guest');
+      const dateStr =
+        t(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          `booking:days.${dates[selectedDate].dayNameKey}` as any
+        ) +
+        ', ' +
+        t(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          `booking:months.${dates[selectedDate].monthKey}` as any
+        ) +
+        ' ' +
+        dates[selectedDate].day;
       const subtitle = t('booking:confirmationMessage', {
         date: dateStr,
         time: selectedTime,
@@ -132,6 +170,7 @@ export default function BookingModalScreen(): React.JSX.Element {
           ) : null}
         </View>
         <Pressable
+          accessibilityRole="button"
           className="size-10 items-center justify-center rounded-full bg-sand dark:bg-dark-bg-card"
           onPress={() => router.back()}
           testID="close-booking"
@@ -162,13 +201,16 @@ export default function BookingModalScreen(): React.JSX.Element {
                 const active = selectedDate === i;
                 return (
                   <Pressable
+                    accessibilityRole="button"
                     key={`${d.day}-${d.monthKey}`}
                     className={
                       active
                         ? 'h-20 w-[68px] items-center justify-center rounded-2xl bg-primary'
                         : 'h-20 w-[68px] items-center justify-center rounded-2xl border-[1.5px] border-border bg-white dark:border-dark-border dark:bg-dark-bg-card'
                     }
-                    onPress={() => setSelectedDate(i)}
+                    onPress={() => !isSubmitting && setSelectedDate(i)}
+                    disabled={isSubmitting}
+                    style={isSubmitting ? { opacity: 0.7 } : undefined}
                     testID={`date-${i}`}
                   >
                     <Text
@@ -178,7 +220,10 @@ export default function BookingModalScreen(): React.JSX.Element {
                           : 'text-xs font-semibold text-text-secondary dark:text-text-secondary-dark'
                       }
                     >
-                      {t(`booking:days.${d.labelKey}` as any)}
+                      {t(
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        `booking:days.${d.labelKey}` as any
+                      )}
                     </Text>
                     <Text
                       className={
@@ -207,10 +252,15 @@ export default function BookingModalScreen(): React.JSX.Element {
                 const active = selectedTime === slot.time;
                 return (
                   <Pressable
+                    accessibilityRole="button"
                     key={slot.time}
                     className="mb-2.5 items-center rounded-[14px] py-[14px]"
-                    onPress={() => slot.available && setSelectedTime(slot.time)}
-                    disabled={!slot.available}
+                    onPress={() =>
+                      slot.available &&
+                      !isSubmitting &&
+                      setSelectedTime(slot.time)
+                    }
+                    disabled={!slot.available || isSubmitting}
                     style={{
                       backgroundColor: !slot.available
                         ? Colors.sand
@@ -224,7 +274,7 @@ export default function BookingModalScreen(): React.JSX.Element {
                           : Colors.border,
                       borderWidth: 1.5,
                       marginRight: 10,
-                      opacity: !slot.available ? 0.6 : 1,
+                      opacity: !slot.available ? 0.6 : isSubmitting ? 0.7 : 1,
                       width: '23%',
                     }}
                     testID={`time-${slot.time}`}
@@ -261,13 +311,17 @@ export default function BookingModalScreen(): React.JSX.Element {
             </View>
             <View className="flex-row items-center justify-center rounded-[20px] border border-border bg-white py-5 dark:border-dark-border dark:bg-dark-bg-card">
               <Pressable
+                accessibilityRole="button"
                 className="size-12 items-center justify-center rounded-full bg-sand dark:bg-dark-bg"
-                onPress={() => setPax(Math.max(1, pax - 1))}
-                disabled={pax <= 1}
-                style={pax <= 1 ? { opacity: 0.4 } : undefined}
+                onPress={() => !isSubmitting && setPax(Math.max(1, pax - 1))}
+                disabled={pax <= 1 || isSubmitting}
+                style={pax <= 1 || isSubmitting ? { opacity: 0.4 } : undefined}
                 testID="pax-minus"
               >
-                <Minus color={pax <= 1 ? Colors.textLight : Colors.text} size={20} />
+                <Minus
+                  color={pax <= 1 ? Colors.textLight : Colors.text}
+                  size={20}
+                />
               </Pressable>
               <View className="mx-6 items-center">
                 <Text className="text-4xl font-extrabold text-text dark:text-text-primary-dark">
@@ -278,13 +332,17 @@ export default function BookingModalScreen(): React.JSX.Element {
                 </Text>
               </View>
               <Pressable
+                accessibilityRole="button"
                 className="size-12 items-center justify-center rounded-full bg-sand dark:bg-dark-bg"
-                onPress={() => setPax(Math.min(20, pax + 1))}
-                disabled={pax >= 20}
-                style={pax >= 20 ? { opacity: 0.4 } : undefined}
+                onPress={() => !isSubmitting && setPax(Math.min(20, pax + 1))}
+                disabled={pax >= 20 || isSubmitting}
+                style={pax >= 20 || isSubmitting ? { opacity: 0.4 } : undefined}
                 testID="pax-plus"
               >
-                <Plus color={pax >= 20 ? Colors.textLight : Colors.text} size={20} />
+                <Plus
+                  color={pax >= 20 ? Colors.textLight : Colors.text}
+                  size={20}
+                />
               </Pressable>
             </View>
           </View>
@@ -298,13 +356,18 @@ export default function BookingModalScreen(): React.JSX.Element {
                 const active = occasion === o;
                 return (
                   <Pressable
+                    accessibilityRole="button"
                     key={o}
                     className="mb-2.5 mr-2.5 rounded-full px-[18px] py-3"
-                    onPress={() => setOccasion(o)}
+                    onPress={() => !isSubmitting && setOccasion(o)}
+                    disabled={isSubmitting}
                     style={{
-                      backgroundColor: active ? Colors.secondary : Colors.surface,
+                      backgroundColor: active
+                        ? Colors.secondary
+                        : Colors.surface,
                       borderColor: active ? Colors.secondary : Colors.border,
                       borderWidth: 1.5,
+                      opacity: isSubmitting ? 0.7 : 1,
                     }}
                     testID={`occasion-${o}`}
                   >
@@ -312,7 +375,10 @@ export default function BookingModalScreen(): React.JSX.Element {
                       className="text-sm font-semibold"
                       style={{ color: active ? '#fff' : Colors.text }}
                     >
-                      {t(`booking:occasions.${o}` as any)}
+                      {t(
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        `booking:occasions.${o}` as any
+                      )}
                     </Text>
                   </Pressable>
                 );
@@ -329,6 +395,7 @@ export default function BookingModalScreen(): React.JSX.Element {
         style={{ paddingBottom: Math.max(insets.bottom, 16) }}
       >
         <Pressable
+          accessibilityRole="button"
           className="items-center rounded-2xl bg-primary py-[18px]"
           onPress={handleConfirm}
           disabled={!canConfirm || isSubmitting}
@@ -336,7 +403,9 @@ export default function BookingModalScreen(): React.JSX.Element {
           testID="confirm-booking"
         >
           <Text className="text-[17px] font-bold text-white">
-            {isSubmitting ? t('booking:reserving') : t('booking:confirmReservation')}
+            {isSubmitting
+              ? t('booking:reserving')
+              : t('booking:confirmReservation')}
           </Text>
         </Pressable>
       </View>

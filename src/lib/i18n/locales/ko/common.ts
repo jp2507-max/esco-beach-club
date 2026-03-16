@@ -8,6 +8,7 @@ const common = {
     max: '최대 {{max}} 이하여야 합니다.',
     maxCharacters: '최대 {{count}}자까지 입력 가능합니다.',
     commentMax: '코멘트는 최대 500자까지 입력 가능합니다.',
+    invalidDate: 'YYYY-MM-DD 형식의 유효한 날짜를 입력해 주세요.',
   },
   back: '뒤로',
   rateUs: {
@@ -18,7 +19,8 @@ const common = {
     placeholder: '경험에 대해 더 알려주세요...',
     submitLabel: '리뷰 제출',
     thankYou: '감사합니다!',
-    thankYouMessage: '소중한 피드백 감사합니다. Esco Life를 더욱 발전시키겠습니다.',
+    thankYouMessage:
+      '소중한 피드백 감사합니다. Esco Life를 더욱 발전시키겠습니다.',
     done: '완료',
     ratingRequired: '평점 필요',
     ratingRequiredMessage: '제출 전에 별점을 선택해 주세요.',
@@ -35,7 +37,8 @@ const common = {
   privateEvent: {
     title: '프라이빗 이벤트',
     header: '나만의 파티를 계획하세요',
-    subtitle: '소규모 생일 파티부터 대규모 기업 행사까지 — 모두 저희가 도와드립니다.',
+    subtitle:
+      '소규모 생일 파티부터 대규모 기업 행사까지 — 모두 저희가 도와드립니다.',
     eventDetails: '이벤트 상세',
     eventType: '이벤트 유형',
     selectType: '유형 선택...',
@@ -48,7 +51,7 @@ const common = {
       other: '기타',
     },
     preferredDate: '희망 날짜',
-    preferredDatePlaceholder: '예: 2026년 3월 15일',
+    preferredDatePlaceholder: 'YYYY-MM-DD',
     estimatedGuests: '예상 인원',
     estimatedGuestsPlaceholder: '예: 50',
     contactInfoOptional: '연락처 (선택)',
@@ -78,7 +81,8 @@ const common = {
   close: '닫기',
   modal: {
     title: 'Esco Life',
-    description: 'Esco Life 비치 클럽에 오신 것을 환영합니다. 회원 전용 혜택을 누려보세요.',
+    description:
+      'Esco Life 비치 클럽에 오신 것을 환영합니다. 회원 전용 혜택을 누려보세요.',
   },
 } as const;
 

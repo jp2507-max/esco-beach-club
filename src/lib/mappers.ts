@@ -22,15 +22,20 @@ export function toBoolean(value: unknown, fallback: boolean = false): boolean {
 }
 
 export function toIsoString(value: unknown): string {
-  if (typeof value === 'number') return new Date(value).toISOString();
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value)) return '';
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? '' : parsed.toISOString();
+  }
   if (typeof value !== 'string') return '';
 
   const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? value : parsed.toISOString();
+  return Number.isNaN(parsed.getTime()) ? '' : parsed.toISOString();
 }
 
 export function toTier(value: unknown): Profile['tier'] {
-  if (value === 'VIP' || value === 'OWNER' || value === 'STANDARD') return value;
+  if (value === 'VIP' || value === 'OWNER' || value === 'STANDARD')
+    return value;
   return 'STANDARD';
 }
 

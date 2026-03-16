@@ -1,21 +1,22 @@
-import React, { useCallback, useDeferredValue, useMemo, useState } from 'react';
 import { FlashList, type ListRenderItemInfo } from '@shopify/flash-list';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Stack, useRouter } from 'expo-router';
 import {
-  SlidersHorizontal,
   Calendar,
   Heart,
   PartyPopper,
+  SlidersHorizontal,
 } from 'lucide-react-native';
-import { Stack, useRouter } from 'expo-router';
+import React, { useCallback, useDeferredValue, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+
 import { Colors } from '@/constants/colors';
-import { config } from '@/src/lib/config';
 import type { Event } from '@/lib/types';
 import { useEventsData, useProfileData } from '@/providers/DataProvider';
+import { config } from '@/src/lib/config';
 import { cn } from '@/src/lib/utils';
-import { Image } from '@/src/tw/image';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
+import { Image } from '@/src/tw/image';
 
 const eventCategories = [
   { labelKey: 'categories.allEvents', value: 'All Events' },
@@ -46,9 +47,9 @@ export default function EventsScreen(): React.JSX.Element {
   const renderHeaderRight = useCallback(
     () => (
       <View className="flex-row items-center">
-        <Pressable className="mr-2 size-9 items-center justify-center rounded-xl border border-border bg-white dark:border-dark-border dark:bg-dark-bg-card">
+        <View className="mr-2 size-9 items-center justify-center rounded-xl border border-border bg-white dark:border-dark-border dark:bg-dark-bg-card">
           <SlidersHorizontal size={18} color={Colors.text} />
-        </Pressable>
+        </View>
         <View className="size-10 items-center justify-center rounded-full border-[2.5px] border-primary/25">
           <Image
             className="size-8.5 rounded-full"
@@ -69,7 +70,8 @@ export default function EventsScreen(): React.JSX.Element {
     return events.filter((event) => {
       const isAllCategory = activeCategory === 'All Events';
       const isCategoryMatch =
-        isAllCategory || event.category?.toLowerCase() === activeCategory.toLowerCase();
+        isAllCategory ||
+        event.category?.toLowerCase() === activeCategory.toLowerCase();
 
       if (!isCategoryMatch) return false;
       if (!normalizedQuery) return true;
@@ -112,6 +114,7 @@ export default function EventsScreen(): React.JSX.Element {
   const renderItem = useCallback(
     ({ item }: ListRenderItemInfo<Event>): React.JSX.Element => (
       <Pressable
+        accessibilityRole="button"
         className="mb-3 flex-row items-center rounded-2xl border border-border bg-card p-3 dark:border-dark-border dark:bg-dark-bg-card"
         testID={`event-${item.id}`}
         onPress={() => openEvent(item.id)}
@@ -134,17 +137,21 @@ export default function EventsScreen(): React.JSX.Element {
               {item.date} • {item.time}
             </Text>
           </View>
-          <View
-            className="self-start rounded-md px-2.5 py-1"
-            style={{ backgroundColor: `${item.badge_color ?? Colors.secondary}18` }}
-          >
-            <Text
-              className="text-[10px] font-extrabold tracking-[0.3px]"
-              style={{ color: item.badge_color ?? Colors.secondary }}
+          {item.badge ? (
+            <View
+              className="self-start rounded-md px-2.5 py-1"
+              style={{
+                backgroundColor: `${item.badge_color ?? Colors.secondary}18`,
+              }}
             >
-              {item.badge ?? ''}
-            </Text>
-          </View>
+              <Text
+                className="text-[10px] font-extrabold tracking-[0.3px]"
+                style={{ color: item.badge_color ?? Colors.secondary }}
+              >
+                {item.badge}
+              </Text>
+            </View>
+          ) : null}
         </View>
         <View className="h-20 items-end justify-between py-1">
           <View className="p-1">
@@ -194,6 +201,7 @@ export default function EventsScreen(): React.JSX.Element {
 
                 return (
                   <Pressable
+                    accessibilityRole="button"
                     key={category.value}
                     className={cn(
                       'rounded-full border px-5 py-2.5',
@@ -219,6 +227,7 @@ export default function EventsScreen(): React.JSX.Element {
 
             {featuredEvent ? (
               <Pressable
+                accessibilityRole="button"
                 className="mb-5 h-65 overflow-hidden rounded-[20px] bg-card dark:bg-dark-bg-card"
                 testID="featured-event"
                 onPress={() => openEvent(featuredEvent.id)}
@@ -233,18 +242,28 @@ export default function EventsScreen(): React.JSX.Element {
                 />
                 <LinearGradient
                   colors={['transparent', 'rgba(0,0,0,0.75)']}
-                  style={{ bottom: 0, left: 0, position: 'absolute', right: 0, top: 0 }}
+                  style={{
+                    bottom: 0,
+                    left: 0,
+                    position: 'absolute',
+                    right: 0,
+                    top: 0,
+                  }}
                 />
-                <View className="absolute right-3.5 top-3.5 rounded-lg bg-[#FF9800] px-3 py-1.25">
-                  <Text className="text-[10px] font-extrabold tracking-[0.5px] text-white">
-                    {featuredEvent.badge ?? ''}
-                  </Text>
-                </View>
+                {featuredEvent.badge ? (
+                  <View className="absolute right-3.5 top-3.5 rounded-lg bg-[#FF9800] px-3 py-1.25">
+                    <Text className="text-[10px] font-extrabold tracking-[0.5px] text-white">
+                      {featuredEvent.badge}
+                    </Text>
+                  </View>
+                ) : null}
                 <View className="absolute bottom-12.5 right-4 items-center rounded-xl bg-[#FF9800] px-3.5 py-2">
                   <Text className="text-[9px] font-bold tracking-[0.5px] text-white/80">
                     {t('featuredPrice')}
                   </Text>
-                  <Text className="text-xl font-extrabold text-white">{featuredEvent.price}</Text>
+                  <Text className="text-xl font-extrabold text-white">
+                    {featuredEvent.price}
+                  </Text>
                 </View>
                 <View className="absolute bottom-0 left-0 right-20 p-4.5">
                   <View className="mb-1.5 flex-row items-center gap-1.25">
@@ -256,7 +275,10 @@ export default function EventsScreen(): React.JSX.Element {
                   <Text className="mb-1 text-[22px] font-extrabold text-white">
                     {featuredEvent.title}
                   </Text>
-                  <Text className="text-xs font-normal text-white/70" numberOfLines={1}>
+                  <Text
+                    className="text-xs font-normal text-white/70"
+                    numberOfLines={1}
+                  >
                     {featuredEvent.description}
                   </Text>
                 </View>
@@ -267,6 +289,7 @@ export default function EventsScreen(): React.JSX.Element {
         ListFooterComponent={
           <>
             <Pressable
+              accessibilityRole="button"
               className="mt-2 flex-row items-center gap-3.5 rounded-2xl border border-border bg-card p-4 dark:border-dark-border dark:bg-dark-bg-card"
               onPress={() => router.push('/private-event')}
               testID="private-event-btn"

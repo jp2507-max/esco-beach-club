@@ -2,6 +2,7 @@ const profile = {
   guest: 'Khách',
   memberFallback: 'THÀNH VIÊN',
   menu: {
+    comingSoon: 'Sắp ra mắt',
     inviteEarn: 'Mời bạn & nhận thưởng',
     rateUs: 'Đánh giá chúng tôi',
     membership: 'Hội viên',
@@ -31,13 +32,15 @@ const profile = {
   errors: {
     openMail: 'Không thể mở ứng dụng email',
     openWhatsApp: 'Không thể mở WhatsApp',
+    signOutFailed: 'Không thể đăng xuất. Vui lòng thử lại.',
   },
   invite: {
     codeCopied: 'Đã sao chép!',
     codeCopyFailed: 'Không thể sao chép mã',
     titlePrefix: 'Mở khóa',
     titleHighlight: 'VIP Life',
-    subtitle: 'Mời bạn bè đến với Esco Life và bắt đầu\nnhận những đặc quyền độc quyền ngay hôm nay.',
+    subtitle:
+      'Mời bạn bè đến với Esco Life và bắt đầu\nnhận những đặc quyền độc quyền ngay hôm nay.',
     referralCode: 'MÃ GIỚI THIỆU CỦA BẠN',
     goalVipStatus: 'MỤC TIÊU: TRẠNG THÁI VIP',
     friendsJoined: '{{current}} trên {{goal}} bạn đã tham gia',

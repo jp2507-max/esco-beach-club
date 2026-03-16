@@ -1,5 +1,6 @@
 import { Link, Stack } from 'expo-router';
-import { Text, Pressable, View } from '@/src/tw';
+
+import { Pressable, Text, View } from '@/src/tw';
 
 export default function NotFoundScreen(): React.JSX.Element {
   return (
@@ -10,7 +11,7 @@ export default function NotFoundScreen(): React.JSX.Element {
           This screen doesn&apos;t exist.
         </Text>
         <Link href="/" asChild={true}>
-          <Pressable className="mt-[15px] py-[15px]">
+          <Pressable accessibilityRole="button" className="mt-[15px] py-[15px]">
             <Text className="text-sm font-semibold text-primary dark:text-primary-bright">
               Go to home screen
             </Text>

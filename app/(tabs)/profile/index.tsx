@@ -1,24 +1,23 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Linking } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useTranslation } from 'react-i18next';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import {
   Bell,
-  Star,
-  QrCode,
-  Settings,
+  ChevronRight,
   CreditCard,
+  Crown,
   Gift,
+  Headphones,
   HelpCircle,
   LogOut,
-  ChevronRight,
-  Users,
-  Crown,
-  Headphones,
+  QrCode,
+  Settings,
+  Star,
   Ticket,
+  Users,
 } from 'lucide-react-native';
-import { useRouter } from 'expo-router';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Alert, Linking } from 'react-native';
 import {
   cancelAnimation,
   useAnimatedStyle,
@@ -26,18 +25,21 @@ import {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { Colors } from '@/constants/colors';
-import { useProfileData } from '@/providers/DataProvider';
 import { useAuth } from '@/providers/AuthProvider';
+import { useProfileData } from '@/providers/DataProvider';
 import { rmTiming } from '@/src/lib/animations/motion';
+import { config } from '@/src/lib/config';
 import { shadows } from '@/src/lib/styles/shadows';
+import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 import { Image } from '@/src/tw/image';
-import { ScrollView, Text, Pressable, View } from '@/src/tw';
-import { config } from '@/src/lib/config';
 
 type MenuItem = {
   color: string;
+  disabled?: boolean;
   icon: React.ComponentType<{
     color?: string;
     size?: number;
@@ -134,17 +136,32 @@ export default function ProfileScreen(): React.JSX.Element {
         label: t('menu.inviteEarn'),
         route: '/profile/invite',
       },
-      { color: '#FFB300', icon: Star, id: 'rate-us', label: t('menu.rateUs'), route: '/rate-us' },
+      {
+        color: '#FFB300',
+        icon: Star,
+        id: 'rate-us',
+        label: t('menu.rateUs'),
+        route: '/rate-us',
+      },
       {
         color: Colors.primary,
+        disabled: true,
         icon: CreditCard,
         id: 'membership',
         label: t('menu.membership'),
         route: null,
       },
-      { color: '#FF9800', icon: Gift, id: 'rewards', label: t('menu.rewards'), route: null },
+      {
+        color: '#FF9800',
+        disabled: true,
+        icon: Gift,
+        id: 'rewards',
+        label: t('menu.rewards'),
+        route: null,
+      },
       {
         color: Colors.secondary,
+        disabled: true,
         icon: Settings,
         id: 'settings',
         label: t('menu.settings'),
@@ -152,12 +169,19 @@ export default function ProfileScreen(): React.JSX.Element {
       },
       {
         color: '#7C4DFF',
+        disabled: true,
         icon: HelpCircle,
         id: 'help-support',
         label: t('menu.helpSupport'),
         route: null,
       },
-      { color: '#EF5350', icon: LogOut, id: 'log-out', label: t('menu.logOut'), route: null },
+      {
+        color: '#EF5350',
+        icon: LogOut,
+        id: 'log-out',
+        label: t('menu.logOut'),
+        route: null,
+      },
     ],
     [t]
   );
@@ -198,22 +222,33 @@ export default function ProfileScreen(): React.JSX.Element {
   function handleConcierge(): void {
     const message = encodeURIComponent(t('conciergeMessage'));
     const whatsappUrl = `${config.contact.conciergeBase}?text=${message}`;
-    Linking.openURL(whatsappUrl).catch(() => console.log(t('errors.openWhatsApp')));
+    Linking.openURL(whatsappUrl).catch((err: unknown) => {
+      const msg = t('errors.openWhatsApp');
+      console.error('handleConcierge:', err);
+      Alert.alert(msg);
+    });
   }
 
   function handleSupport(): void {
     const supportEmail = config.contact.supportEmail;
-    Linking.openURL(`mailto:${supportEmail}`).catch(() => console.log(t('errors.openMail')));
+    Linking.openURL(`mailto:${supportEmail}`).catch((err: unknown) => {
+      const msg = t('errors.openMail');
+      console.error('handleSupport:', err);
+      Alert.alert(msg);
+    });
   }
 
-  async function handleMenuPress(
-    item: MenuItem
-  ): Promise<void> {
+  async function handleMenuPress(item: MenuItem): Promise<void> {
+    if (item.disabled) return;
     if (item.id === 'log-out') {
-      await signOut().catch((error: unknown) => console.log('Sign out error', error));
+      try {
+        await signOut();
+      } catch (error: unknown) {
+        console.error('Sign out error:', error);
+        Alert.alert(t('errors.signOutFailed'));
+      }
       return;
     }
-
     if (item.route) router.push(item.route as never);
   }
 
@@ -263,6 +298,7 @@ export default function ProfileScreen(): React.JSX.Element {
             </View>
           </View>
           <Pressable
+            accessibilityRole="button"
             className="size-[42px] items-center justify-center rounded-full border border-border bg-white dark:border-dark-border dark:bg-dark-bg-card"
             testID="notification-bell"
           >
@@ -286,7 +322,8 @@ export default function ProfileScreen(): React.JSX.Element {
           >
             <View className="mb-5 items-center">
               <Text className="text-2xl font-extrabold text-text dark:text-text-primary-dark">
-                {t('brandPrefix')}<Text className="text-primary">{t('brandHighlight')}</Text>
+                {t('brandPrefix')}
+                <Text className="text-primary">{t('brandHighlight')}</Text>
               </Text>
               <Text className="mt-1 text-[11px] font-semibold tracking-[3px] text-text-secondary dark:text-text-secondary-dark">
                 {t('accessPass')}
@@ -298,7 +335,12 @@ export default function ProfileScreen(): React.JSX.Element {
                 colors={['#E91E63', '#9C27B0', '#00BCD4']}
                 start={{ x: 0, y: 1 }}
                 end={{ x: 1, y: 0 }}
-                style={{ borderRadius: 20, height: 180, padding: 5, width: 180 }}
+                style={{
+                  borderRadius: 20,
+                  height: 180,
+                  padding: 5,
+                  width: 180,
+                }}
               >
                 <View className="flex-1 items-center justify-center rounded-[16px] bg-white dark:bg-dark-bg-card">
                   <QrCode color={Colors.text} size={100} />
@@ -371,13 +413,16 @@ export default function ProfileScreen(): React.JSX.Element {
                 {t('validForThirtyDays')}
               </Text>
               <Pressable
+                accessibilityRole="button"
                 className="rounded-xl bg-primary px-8 py-2.5"
                 onPress={() => {
                   setShowVoucher(false);
                   dismissVoucher();
                 }}
               >
-                <Text className="text-sm font-bold text-white">{t('gotIt')}</Text>
+                <Text className="text-sm font-bold text-white">
+                  {t('gotIt')}
+                </Text>
               </Pressable>
             </View>
           </Animated.View>
@@ -385,6 +430,7 @@ export default function ProfileScreen(): React.JSX.Element {
 
         {isVIP ? (
           <Pressable
+            accessibilityRole="button"
             className="mb-5 flex-row items-center justify-center rounded-2xl py-4"
             onPress={handleConcierge}
             style={{
@@ -398,45 +444,75 @@ export default function ProfileScreen(): React.JSX.Element {
             testID="vip-concierge"
           >
             <Crown size={20} color="#fff" />
-            <Text className="ml-2.5 text-base font-bold text-white">{t('contactVipConcierge')}</Text>
+            <Text className="ml-2.5 text-base font-bold text-white">
+              {t('contactVipConcierge')}
+            </Text>
           </Pressable>
         ) : (
           <Pressable
+            accessibilityRole="button"
             className="mb-5 flex-row items-center justify-center rounded-2xl border-2 border-secondary py-3.5"
             onPress={handleSupport}
             testID="contact-support"
           >
             <Headphones size={20} color={Colors.secondary} />
-            <Text className="ml-2.5 text-base font-bold text-secondary">{t('contactSupport')}</Text>
+            <Text className="ml-2.5 text-base font-bold text-secondary">
+              {t('contactSupport')}
+            </Text>
           </Pressable>
         )}
 
         <View className="overflow-hidden rounded-[18px] border border-border bg-white dark:border-dark-border dark:bg-dark-bg-card">
-          {menuItems.map((item, index) => (
-            <Pressable
-              key={item.id}
-              className={
-                index < menuItems.length - 1
-                  ? 'flex-row items-center border-b border-border px-4 py-[15px] dark:border-dark-border'
-                  : 'flex-row items-center px-4 py-[15px]'
-              }
-              onPress={() => {
-                void handleMenuPress(item);
-              }}
-              testID={`menu-${item.id}`}
-            >
-              <View
-                className="mr-3.5 size-[38px] items-center justify-center rounded-[10px]"
-                style={{ backgroundColor: `${item.color}15` }}
+          {menuItems.map((item, index) => {
+            const rowClassName =
+              index < menuItems.length - 1
+                ? 'flex-row items-center border-b border-border px-4 py-[15px] dark:border-dark-border'
+                : 'flex-row items-center px-4 py-[15px]';
+            if (item.disabled) {
+              return (
+                <View
+                  key={item.id}
+                  className={rowClassName}
+                  testID={`menu-${item.id}`}
+                >
+                  <View
+                    className="mr-3.5 size-[38px] items-center justify-center rounded-[10px] opacity-60"
+                    style={{ backgroundColor: `${item.color}15` }}
+                  >
+                    <item.icon size={20} color={item.color} />
+                  </View>
+                  <Text className="flex-1 text-[15px] font-semibold text-text-muted dark:text-text-muted-dark">
+                    {item.label}
+                  </Text>
+                  <Text className="text-xs font-medium text-text-muted dark:text-text-muted-dark">
+                    {t('menu.comingSoon')}
+                  </Text>
+                </View>
+              );
+            }
+            return (
+              <Pressable
+                accessibilityRole="button"
+                key={item.id}
+                className={rowClassName}
+                onPress={() => {
+                  void handleMenuPress(item);
+                }}
+                testID={`menu-${item.id}`}
               >
-                <item.icon size={20} color={item.color} />
-              </View>
-              <Text className="flex-1 text-[15px] font-semibold text-text dark:text-text-primary-dark">
-                {item.label}
-              </Text>
-              <ChevronRight size={18} color={Colors.textLight} />
-            </Pressable>
-          ))}
+                <View
+                  className="mr-3.5 size-[38px] items-center justify-center rounded-[10px]"
+                  style={{ backgroundColor: `${item.color}15` }}
+                >
+                  <item.icon size={20} color={item.color} />
+                </View>
+                <Text className="flex-1 text-[15px] font-semibold text-text dark:text-text-primary-dark">
+                  {item.label}
+                </Text>
+                <ChevronRight size={18} color={Colors.textLight} />
+              </Pressable>
+            );
+          })}
         </View>
 
         <View className="h-[30px]" />

@@ -9,7 +9,7 @@ import simpleImportSort from 'eslint-plugin-simple-import-sort';
 // import tailwind from 'eslint-plugin-tailwindcss';
 import testingLibrary from 'eslint-plugin-testing-library';
 import unusedImports from 'eslint-plugin-unused-imports';
-import { configs, parser } from 'typescript-eslint';
+import { parser } from 'typescript-eslint';
 
 export default defineConfig([
   globalIgnores([
@@ -18,6 +18,7 @@ export default defineConfig([
     '.expo',
     '.expo-shared',
     '.agent',
+    '.agents',
     '.cursor',
     '.windsurf',
     '.kiro',
@@ -41,7 +42,7 @@ export default defineConfig([
     },
   },
   // ...tailwind.configs['flat/recommended'],
-  ...configs.recommended,
+
   reactCompiler.configs.recommended,
   {
     plugins: {
@@ -98,7 +99,7 @@ export default defineConfig([
       },
     },
     rules: {
-      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/consistent-type-imports': [
         'warn',
         {

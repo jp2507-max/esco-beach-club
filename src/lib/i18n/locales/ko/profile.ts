@@ -2,6 +2,7 @@ const profile = {
   guest: '게스트',
   memberFallback: '멤버',
   menu: {
+    comingSoon: '곧 출시',
     inviteEarn: '초대하고 적립하기',
     rateUs: '평가하기',
     membership: '멤버십',
@@ -31,6 +32,7 @@ const profile = {
   errors: {
     openMail: '메일을 열 수 없습니다',
     openWhatsApp: 'WhatsApp을 열 수 없습니다',
+    signOutFailed: '로그아웃할 수 없습니다. 다시 시도해 주세요.',
   },
   invite: {
     codeCopied: '복사됨!',

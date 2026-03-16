@@ -8,17 +8,20 @@ const common = {
     max: 'Must be at most {{max}}.',
     maxCharacters: 'Must be at most {{count}} characters.',
     commentMax: 'Comment must be at most 500 characters.',
+    invalidDate: 'Please enter a valid date in YYYY-MM-DD format.',
   },
   back: 'Back',
   rateUs: {
     title: 'Rate Your Experience',
     howWasVisit: 'How was your visit?',
-    feedbackHint: 'Your feedback helps us create the best beach club experience.',
+    feedbackHint:
+      'Your feedback helps us create the best beach club experience.',
     starLabels: ['Terrible', 'Poor', 'Okay', 'Great', 'Amazing!'],
     placeholder: 'Tell us more about your experience...',
     submitLabel: 'Submit Review',
     thankYou: 'Thank You!',
-    thankYouMessage: 'Your feedback means the world to us. We will keep making Esco Life even better.',
+    thankYouMessage:
+      'Your feedback means the world to us. We will keep making Esco Life even better.',
     done: 'Done',
     ratingRequired: 'Rating Required',
     ratingRequiredMessage: 'Please select a star rating before submitting.',
@@ -35,7 +38,8 @@ const common = {
   privateEvent: {
     title: 'Private Event',
     header: 'Plan Your Private Party',
-    subtitle: 'From intimate birthdays to grand corporate events — let us handle it all.',
+    subtitle:
+      'From intimate birthdays to grand corporate events — let us handle it all.',
     eventDetails: 'Event Details',
     eventType: 'Event Type',
     selectType: 'Select type...',
@@ -48,7 +52,7 @@ const common = {
       other: 'Other',
     },
     preferredDate: 'Preferred Date',
-    preferredDatePlaceholder: 'e.g. March 15, 2026',
+    preferredDatePlaceholder: 'YYYY-MM-DD',
     estimatedGuests: 'Estimated Guests',
     estimatedGuestsPlaceholder: 'e.g. 50',
     contactInfoOptional: 'Contact Info (optional)',
@@ -57,13 +61,15 @@ const common = {
     email: 'Email',
     emailPlaceholder: 'you@email.com',
     additionalNotes: 'Additional Notes',
-    additionalNotesPlaceholder: 'Theme, dietary requirements, special requests...',
+    additionalNotesPlaceholder:
+      'Theme, dietary requirements, special requests...',
     sendInquiry: 'Send Inquiry',
     teamResponse: 'Our team will get back to you within 24 hours.',
     submissionFailed: 'Submission Failed',
     submitError: 'Could not send your inquiry right now.',
     missingInfo: 'Missing Info',
-    missingInfoMessage: 'Please fill in the event type, date, and estimated guests.',
+    missingInfoMessage:
+      'Please fill in the event type, date, and estimated guests.',
     inquirySent: 'Inquiry Sent!',
     inquirySentMessage:
       'Our events team will review your request and reach out within 24 hours. Get ready for an unforgettable event!',
@@ -78,7 +84,8 @@ const common = {
   close: 'Close',
   modal: {
     title: 'Esco Life',
-    description: 'Welcome to Esco Life Beach Club. Enjoy exclusive member benefits.',
+    description:
+      'Welcome to Esco Life Beach Club. Enjoy exclusive member benefits.',
   },
 } as const;
 

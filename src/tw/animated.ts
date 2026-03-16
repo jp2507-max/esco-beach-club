@@ -1,9 +1,11 @@
-import AnimatedCore from 'react-native-reanimated';
+import { Pressable as RNPressable } from 'react-native';
+import AnimatedCore, { createAnimatedComponent } from 'react-native-reanimated';
 import { withUniwind } from 'uniwind';
 
 const View = withUniwind(AnimatedCore.View);
 const Text = withUniwind(AnimatedCore.Text);
-const Pressable = withUniwind(AnimatedCore.Pressable);
+const AnimatedPressable = createAnimatedComponent(RNPressable);
+const Pressable = withUniwind(AnimatedPressable);
 const ScrollView = withUniwind(AnimatedCore.ScrollView);
 const FlatList = withUniwind(AnimatedCore.FlatList);
 

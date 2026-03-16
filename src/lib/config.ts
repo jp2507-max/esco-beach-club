@@ -1,6 +1,6 @@
 export const config = {
   contact: {
-    conciergeBase: 'https://wa.me/1234567890',
+    conciergeBase: `https://wa.me/${process.env.EXPO_PUBLIC_CONCIERGE_PHONE || '1234567890'}`,
     supportEmail: 'support@escolife.com',
   },
   /** Fallback avatar URL when profile has no avatar_url. Uses ui-avatars.com for reliable placeholder. */

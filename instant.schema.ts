@@ -63,7 +63,6 @@ const _schema = i.schema({
       event_type: i.string(),
       notes: i.string().optional(),
       preferred_date: i.string().indexed(),
-      user_id: i.string().indexed().optional(),
     }),
     profiles: i.entity({
       avatar_url: i.string().optional(),
@@ -91,7 +90,6 @@ const _schema = i.schema({
       comment: i.string().optional(),
       created_at: i.date().indexed().optional(),
       rating: i.number(),
-      user_id: i.string().indexed().optional(),
     }),
   },
   links: {
@@ -176,8 +174,7 @@ const _schema = i.schema({
 });
 
 // This helps TypeScript display nicer intellisense
-type _AppSchema = typeof _schema;
-interface AppSchema extends _AppSchema {}
+type AppSchema = typeof _schema;
 const schema: AppSchema = _schema;
 
 export type { AppSchema };

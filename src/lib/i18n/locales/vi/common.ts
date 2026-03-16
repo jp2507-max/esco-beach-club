@@ -8,17 +8,20 @@ const common = {
     max: 'Không được vượt quá {{max}}.',
     maxCharacters: 'Tối đa {{count}} ký tự.',
     commentMax: 'Nhận xét tối đa 500 ký tự.',
+    invalidDate: 'Vui lòng nhập ngày hợp lệ theo định dạng YYYY-MM-DD.',
   },
   back: 'Quay lại',
   rateUs: {
     title: 'Đánh giá trải nghiệm của bạn',
     howWasVisit: 'Chuyến thăm của bạn thế nào?',
-    feedbackHint: 'Phản hồi của bạn giúp chúng tôi tạo trải nghiệm câu lạc bộ biển tốt nhất.',
+    feedbackHint:
+      'Phản hồi của bạn giúp chúng tôi tạo trải nghiệm câu lạc bộ biển tốt nhất.',
     starLabels: ['Tệ', 'Kém', 'Ổn', 'Tốt', 'Tuyệt vời!'],
     placeholder: 'Cho chúng tôi biết thêm về trải nghiệm của bạn...',
     submitLabel: 'Gửi đánh giá',
     thankYou: 'Cảm ơn bạn!',
-    thankYouMessage: 'Phản hồi của bạn rất ý nghĩa. Chúng tôi sẽ tiếp tục cải thiện Esco Life.',
+    thankYouMessage:
+      'Phản hồi của bạn rất ý nghĩa. Chúng tôi sẽ tiếp tục cải thiện Esco Life.',
     done: 'Xong',
     ratingRequired: 'Cần đánh giá',
     ratingRequiredMessage: 'Vui lòng chọn số sao trước khi gửi.',
@@ -35,7 +38,8 @@ const common = {
   privateEvent: {
     title: 'Sự kiện riêng',
     header: 'Lên kế hoạch tiệc riêng của bạn',
-    subtitle: 'Từ sinh nhật thân mật đến sự kiện doanh nghiệp lớn — hãy để chúng tôi lo.',
+    subtitle:
+      'Từ sinh nhật thân mật đến sự kiện doanh nghiệp lớn — hãy để chúng tôi lo.',
     eventDetails: 'Chi tiết sự kiện',
     eventType: 'Loại sự kiện',
     selectType: 'Chọn loại...',
@@ -48,7 +52,7 @@ const common = {
       other: 'Khác',
     },
     preferredDate: 'Ngày mong muốn',
-    preferredDatePlaceholder: 'VD: 15/03/2026',
+    preferredDatePlaceholder: 'YYYY-MM-DD',
     estimatedGuests: 'Số khách ước tính',
     estimatedGuestsPlaceholder: 'VD: 50',
     contactInfoOptional: 'Thông tin liên hệ (tùy chọn)',
@@ -63,7 +67,8 @@ const common = {
     submissionFailed: 'Gửi thất bại',
     submitError: 'Không thể gửi yêu cầu ngay bây giờ.',
     missingInfo: 'Thiếu thông tin',
-    missingInfoMessage: 'Vui lòng điền loại sự kiện, ngày và số khách ước tính.',
+    missingInfoMessage:
+      'Vui lòng điền loại sự kiện, ngày và số khách ước tính.',
     inquirySent: 'Đã gửi yêu cầu!',
     inquirySentMessage:
       'Đội ngũ sự kiện sẽ xem xét và liên hệ trong vòng 24 giờ. Hãy chuẩn bị cho một sự kiện đáng nhớ!',
@@ -78,7 +83,8 @@ const common = {
   close: 'Đóng',
   modal: {
     title: 'Esco Life',
-    description: 'Chào mừng đến Esco Life Beach Club. Tận hưởng các ưu đãi dành riêng cho thành viên.',
+    description:
+      'Chào mừng đến Esco Life Beach Club. Tận hưởng các ưu đãi dành riêng cho thành viên.',
   },
 } as const;
 

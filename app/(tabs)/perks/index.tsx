@@ -1,15 +1,16 @@
-import React, { useCallback, useMemo, useState } from 'react';
-import { useWindowDimensions } from 'react-native';
 import { FlashList, type ListRenderItemInfo } from '@shopify/flash-list';
 import { Stack, useRouter } from 'expo-router';
 import { SlidersHorizontal } from 'lucide-react-native';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useWindowDimensions } from 'react-native';
+
 import { Colors } from '@/constants/colors';
 import type { Partner } from '@/lib/types';
 import { useFilteredPartners } from '@/providers/DataProvider';
 import { shadows } from '@/src/lib/styles/shadows';
+import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Image } from '@/src/tw/image';
-import { ScrollView, Text, Pressable, View } from '@/src/tw';
 
 const partnerCategories = [
   { labelKey: 'categories.all', value: 'All' },
@@ -41,11 +42,17 @@ export default function PerksScreen(): React.JSX.Element {
 
   const renderHeaderRight = useCallback(
     () => (
-      <Pressable className="size-9 items-center justify-center rounded-xl border border-border bg-white dark:border-dark-border dark:bg-dark-bg-card">
+      <View
+        accessibilityLabel={t('filters', { defaultValue: 'Filters' })}
+        accessibilityHint={t('filtersHint', {
+          defaultValue: 'Filter partners by category',
+        })}
+        className="size-9 items-center justify-center rounded-xl border border-border bg-white dark:border-dark-border dark:bg-dark-bg-card"
+      >
         <SlidersHorizontal size={18} color={Colors.text} />
-      </Pressable>
+      </View>
     ),
-    []
+    [t]
   );
 
   const handlePartnerPress = useCallback(
@@ -58,6 +65,7 @@ export default function PerksScreen(): React.JSX.Element {
   const renderCard = useCallback(
     ({ item }: ListRenderItemInfo<Partner>): React.JSX.Element => (
       <Pressable
+        accessibilityRole="button"
         className="mb-3.5 overflow-hidden rounded-[18px] border border-border bg-white dark:border-dark-border dark:bg-dark-bg-card"
         onPress={() => handlePartnerPress(item)}
         style={[shadows.level2, { width: cardWidth }]}
@@ -115,15 +123,24 @@ export default function PerksScreen(): React.JSX.Element {
       >
         {partnerCategories.map((category) => (
           <Pressable
+            accessibilityRole="button"
             key={category.value}
             className="rounded-full border border-border bg-white px-5 py-2.5 dark:border-dark-border dark:bg-dark-bg-card"
             onPress={() => setActiveCategory(category.value)}
-            style={activeCategory === category.value ? activeCategoryChipStyle : undefined}
+            style={
+              activeCategory === category.value
+                ? activeCategoryChipStyle
+                : undefined
+            }
             testID={`cat-${category.value}`}
           >
             <Text
               className="text-sm font-semibold text-text dark:text-text-primary-dark"
-              style={activeCategory === category.value ? activeCategoryTextStyle : undefined}
+              style={
+                activeCategory === category.value
+                  ? activeCategoryTextStyle
+                  : undefined
+              }
             >
               {t(category.labelKey)}
             </Text>

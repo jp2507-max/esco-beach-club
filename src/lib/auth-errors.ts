@@ -7,7 +7,8 @@ export const AUTH_ERROR_KEYS = [
 ] as const;
 
 export type AuthErrorKey = (typeof AUTH_ERROR_KEYS)[number];
+const AUTH_ERROR_KEY_SET: ReadonlySet<string> = new Set(AUTH_ERROR_KEYS);
 
 export function isAuthErrorKey(message: string): message is AuthErrorKey {
-  return AUTH_ERROR_KEYS.includes(message as AuthErrorKey);
+  return AUTH_ERROR_KEY_SET.has(message);
 }

@@ -1,7 +1,6 @@
-import React, { useEffect } from 'react';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { CircleCheck, PartyPopper } from 'lucide-react-native';
+import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   cancelAnimation,
@@ -12,17 +11,22 @@ import {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { Colors } from '@/constants/colors';
 import { rmTiming } from '@/src/lib/animations/motion';
 import { shadows } from '@/src/lib/styles/shadows';
+import { Pressable, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
-import { Text, Pressable, View } from '@/src/tw';
 
 export default function SuccessScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { t } = useTranslation('common');
-  const { name, subtitle } = useLocalSearchParams<{ name?: string; subtitle?: string }>();
+  const { name, subtitle } = useLocalSearchParams<{
+    name?: string;
+    subtitle?: string;
+  }>();
 
   const scale = useSharedValue(0);
   const fadeIn = useSharedValue(0);
@@ -68,7 +72,10 @@ export default function SuccessScreen(): React.JSX.Element {
   return (
     <View
       className="flex-1 justify-between bg-background dark:bg-dark-bg"
-      style={{ paddingBottom: Math.max(insets.bottom, 20), paddingTop: insets.top }}
+      style={{
+        paddingBottom: Math.max(insets.bottom, 20),
+        paddingTop: insets.top,
+      }}
     >
       <View className="absolute inset-0 overflow-hidden">
         <View
@@ -128,7 +135,9 @@ export default function SuccessScreen(): React.JSX.Element {
 
         <Animated.View className="items-center" style={contentStyle}>
           <Text className="mb-3 text-center text-[28px] font-extrabold text-text dark:text-text-primary-dark">
-            {t('bookingSuccess.title', { name: name ?? t('bookingSuccess.guest') })}
+            {t('bookingSuccess.title', {
+              name: name ?? t('bookingSuccess.guest'),
+            })}
           </Text>
           <Text className="max-w-[280px] text-center text-base leading-6 text-text-secondary dark:text-text-secondary-dark">
             {subtitle ?? t('bookingSuccess.subtitle')}
@@ -138,11 +147,14 @@ export default function SuccessScreen(): React.JSX.Element {
 
       <Animated.View className="px-5" style={buttonStyle}>
         <Pressable
+          accessibilityRole="button"
           className="items-center rounded-2xl bg-primary py-[18px]"
           onPress={() => router.replace('/')}
           testID="back-home"
         >
-          <Text className="text-[17px] font-bold text-white">{t('bookingSuccess.backHome')}</Text>
+          <Text className="text-[17px] font-bold text-white">
+            {t('bookingSuccess.backHome')}
+          </Text>
         </Pressable>
       </Animated.View>
     </View>

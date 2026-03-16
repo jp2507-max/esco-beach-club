@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Check, Copy, X, Star, Percent, Award } from 'lucide-react-native';
 import * as Clipboard from 'expo-clipboard';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Award, Check, Copy, Percent, Star, X } from 'lucide-react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   cancelAnimation,
   useAnimatedStyle,
@@ -10,13 +10,14 @@ import {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { Colors } from '@/constants/colors';
 import { usePartnerById } from '@/providers/DataProvider';
 import { motion, rmTiming } from '@/src/lib/animations/motion';
+import { Pressable, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 import { Image } from '@/src/tw/image';
-import { Text, Pressable, View } from '@/src/tw';
 
 export default function PartnerModal(): React.JSX.Element {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -28,6 +29,7 @@ export default function PartnerModal(): React.JSX.Element {
 
   const partner = usePartnerById(id);
   const [copied, setCopied] = useState(false);
+  const copyResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     scale.set(withSpring(1, motion.spring.gentle));
@@ -37,6 +39,12 @@ export default function PartnerModal(): React.JSX.Element {
       cancelAnimation(opacity);
     };
   }, [id, opacity, scale]);
+
+  useEffect(() => {
+    return () => {
+      if (copyResetTimerRef.current) clearTimeout(copyResetTimerRef.current);
+    };
+  }, []);
 
   const contentStyle = useAnimatedStyle(() => ({
     opacity: opacity.get(),
@@ -49,7 +57,8 @@ export default function PartnerModal(): React.JSX.Element {
     try {
       await Clipboard.setStringAsync(partner.code);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      if (copyResetTimerRef.current) clearTimeout(copyResetTimerRef.current);
+      copyResetTimerRef.current = setTimeout(() => setCopied(false), 2000);
     } catch (e) {
       console.log('Copy error', e);
     }
@@ -57,8 +66,24 @@ export default function PartnerModal(): React.JSX.Element {
 
   if (!partner) {
     return (
-      <View className="flex-1 bg-black/70 px-6" style={{ paddingTop: insets.top }}>
+      <View
+        className="flex-1 bg-black/70 px-6"
+        style={{ paddingTop: insets.top }}
+      >
         <Text className="text-base text-white">{t('partner.notFound')}</Text>
+        <Pressable
+          className="mt-4 self-start"
+          accessibilityRole="button"
+          accessibilityLabel={t('partner.maybeLater')}
+          accessibilityHint={t('partner.maybeLaterHint', {
+            defaultValue: 'Returns to previous screen',
+          })}
+          onPress={() => router.back()}
+        >
+          <Text className="text-sm font-medium text-white/90">
+            {t('partner.maybeLater')}
+          </Text>
+        </Pressable>
       </View>
     );
   }
@@ -66,6 +91,7 @@ export default function PartnerModal(): React.JSX.Element {
   return (
     <View className="flex-1 bg-black/55">
       <Pressable
+        accessibilityRole="button"
         className="absolute right-4 z-10 size-9 items-center justify-center rounded-full bg-white/90"
         onPress={() => router.back()}
         style={{ top: insets.top + 12 }}
@@ -108,21 +134,30 @@ export default function PartnerModal(): React.JSX.Element {
             {partner.discount_label}!
           </Text>
           <Text className="mb-6 text-center text-sm leading-[22px] text-text-secondary">
-            {t('partner.benefitsDescription', { name: partner.name, description: partner.description })}
+            {t('partner.benefitsDescription', {
+              name: partner.name,
+              description: partner.description,
+            })}
           </Text>
 
           <View className="mb-6 flex-row">
             <View className="mr-4 size-[90px] items-center justify-center rounded-2xl border border-border bg-white">
               <Award size={24} color={Colors.primary} />
-              <Text className="mt-1.5 text-xs font-semibold text-text">{t('partner.exclusive')}</Text>
+              <Text className="mt-1.5 text-xs font-semibold text-text">
+                {t('partner.exclusive')}
+              </Text>
             </View>
             <View className="mr-4 size-[90px] items-center justify-center rounded-2xl border border-border bg-white">
               <Percent size={24} color={Colors.primary} />
-              <Text className="mt-1.5 text-xs font-semibold text-text">{t('partner.discount')}</Text>
+              <Text className="mt-1.5 text-xs font-semibold text-text">
+                {t('partner.discount')}
+              </Text>
             </View>
             <View className="size-[90px] items-center justify-center rounded-2xl border border-border bg-white">
               <Star size={24} color={Colors.primary} />
-              <Text className="mt-1.5 text-xs font-semibold text-text">{t('partner.vipPerk')}</Text>
+              <Text className="mt-1.5 text-xs font-semibold text-text">
+                {t('partner.vipPerk')}
+              </Text>
             </View>
           </View>
 
@@ -135,6 +170,7 @@ export default function PartnerModal(): React.JSX.Element {
                 {partner.code}
               </Text>
               <Pressable
+                accessibilityRole="button"
                 className="size-9 items-center justify-center rounded-xl"
                 onPress={handleCopy}
                 style={{ backgroundColor: `${Colors.secondary}15` }}
@@ -150,14 +186,19 @@ export default function PartnerModal(): React.JSX.Element {
           </View>
 
           <Pressable
+            accessibilityRole="button"
             className="mb-3.5 w-full items-center rounded-[18px] bg-primary py-[17px]"
             onPress={() => router.back()}
           >
-            <Text className="text-[17px] font-bold text-white">{t('partner.enjoyMyPerks')}</Text>
+            <Text className="text-[17px] font-bold text-white">
+              {t('partner.enjoyMyPerks')}
+            </Text>
           </Pressable>
 
-          <Pressable onPress={() => router.back()}>
-            <Text className="text-sm font-medium text-text-secondary">{t('partner.maybeLater')}</Text>
+          <Pressable accessibilityRole="button" onPress={() => router.back()}>
+            <Text className="text-sm font-medium text-text-secondary">
+              {t('partner.maybeLater')}
+            </Text>
           </Pressable>
         </Animated.View>
       </View>

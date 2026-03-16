@@ -11,7 +11,8 @@ const perks = {
     notFound: '파트너를 찾을 수 없습니다',
     unlocked: '잠금 해제됨',
     congratulations: '축하합니다!',
-    benefitsDescription: '{{name}}에서 특별한 혜택을 누리세요. {{description}}.',
+    benefitsDescription:
+      '{{name}}에서 특별한 혜택을 누리세요. {{description}}.',
     exclusive: '독점',
     discount: '할인',
     vipPerk: 'VIP 혜택',

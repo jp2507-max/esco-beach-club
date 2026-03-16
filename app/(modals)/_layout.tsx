@@ -1,5 +1,5 @@
-import React from 'react';
 import { Stack } from 'expo-router';
+import React from 'react';
 
 const formSheetOptions = {
   presentation: 'formSheet' as const,
@@ -12,10 +12,16 @@ export default function ModalLayout(): React.JSX.Element {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="booking" options={formSheetOptions} />
-      <Stack.Screen name="partner" options={{ animation: 'fade', presentation: 'transparentModal' }} />
+      <Stack.Screen
+        name="partner"
+        options={{ animation: 'fade', presentation: 'transparentModal' }}
+      />
       <Stack.Screen name="private-event" options={formSheetOptions} />
       <Stack.Screen name="rate-us" options={formSheetOptions} />
-      <Stack.Screen name="modal" options={{ animation: 'fade', presentation: 'transparentModal' }} />
+      <Stack.Screen
+        name="modal"
+        options={{ animation: 'fade', presentation: 'transparentModal' }}
+      />
     </Stack>
   );
 }

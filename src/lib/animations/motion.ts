@@ -46,10 +46,20 @@ export function rmTiming(duration: number): {
   };
 }
 
-export type ReduceMotionCapable<T> = {
-  reduceMotion(mode: ReduceMotion): T;
+/** Layout animation builders (FadeInUp, ZoomOut, LinearTransition, etc.) have .reduceMotion(). */
+type HasReduceMotion = {
+  reduceMotion(mode: ReduceMotion): unknown;
 };
 
-export function withRM<T extends ReduceMotionCapable<T>>(animation: T): T {
-  return animation.reduceMotion(ReduceMotion.System);
+/**
+ * Applies ReduceMotion.System to a layout animation builder.
+ * Use with Reanimated entering/exiting/layout builders (e.g. FadeInUp.springify(), ZoomOut.duration(200)).
+ * Do not use with withSpring/withTiming — those take reduceMotion in their config.
+ */
+export function withRM<T extends HasReduceMotion>(
+  animation: T
+): ReturnType<T['reduceMotion']> {
+  return animation.reduceMotion(ReduceMotion.System) as ReturnType<
+    T['reduceMotion']
+  >;
 }

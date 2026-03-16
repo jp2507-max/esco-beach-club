@@ -11,7 +11,8 @@ const perks = {
     notFound: 'Partner not found',
     unlocked: 'UNLOCKED',
     congratulations: 'Congratulations!',
-    benefitsDescription: 'Enjoy exclusive benefits at {{name}}. {{description}}.',
+    benefitsDescription:
+      'Enjoy exclusive benefits at {{name}}. {{description}}.',
     exclusive: 'Exclusive',
     discount: 'Discount',
     vipPerk: 'VIP Perk',

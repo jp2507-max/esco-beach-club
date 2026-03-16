@@ -1,5 +1,5 @@
-import React from 'react';
 import { Stack } from 'expo-router';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 
 export default function HomeStackLayout(): React.JSX.Element {
@@ -7,7 +7,10 @@ export default function HomeStackLayout(): React.JSX.Element {
   return (
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="menu" options={{ presentation: 'card', title: t('menu') }} />
+      <Stack.Screen
+        name="menu"
+        options={{ presentation: 'card', title: t('menu') }}
+      />
     </Stack>
   );
 }

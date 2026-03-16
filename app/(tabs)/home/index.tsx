@@ -1,17 +1,16 @@
-import React, { useCallback, useEffect, useMemo } from 'react';
 import { FlashList, type ListRenderItemInfo } from '@shopify/flash-list';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useTranslation } from 'react-i18next';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import {
-  UtensilsCrossed,
-  Wine,
+  ArrowRight,
   Clock,
   MapPin,
+  UtensilsCrossed,
   Wifi,
-  ArrowRight,
+  Wine,
 } from 'lucide-react-native';
-import { useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   cancelAnimation,
   useAnimatedStyle,
@@ -19,20 +18,29 @@ import {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { Colors } from '@/constants/colors';
-import { config } from '@/src/lib/config';
 import type { Event, NewsItem } from '@/lib/types';
-import { useHomeEvents, useNewsData, useProfileData } from '@/providers/DataProvider';
+import {
+  useHomeEvents,
+  useNewsData,
+  useProfileData,
+} from '@/providers/DataProvider';
 import { rmTiming } from '@/src/lib/animations/motion';
+import { config } from '@/src/lib/config';
+import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 import { Image } from '@/src/tw/image';
-import { ScrollView, Text, Pressable, View } from '@/src/tw';
 
-function getGreeting(hour: number, greetings: {
-  afternoon: string;
-  evening: string;
-  morning: string;
-}): string {
+function getGreeting(
+  hour: number,
+  greetings: {
+    afternoon: string;
+    evening: string;
+    morning: string;
+  }
+): string {
   if (hour < 12) return greetings.morning;
   if (hour < 17) return greetings.afternoon;
   return greetings.evening;
@@ -66,7 +74,15 @@ type HomeFeedRow =
       type: 'news';
     };
 
-function HomeSectionHeader({ title }: { title: string }): React.JSX.Element {
+type HomeSectionHeaderProps = {
+  title: string;
+  onSeeAllPress?: () => void;
+};
+
+function HomeSectionHeader({
+  title,
+  onSeeAllPress,
+}: HomeSectionHeaderProps): React.JSX.Element {
   const { t } = useTranslation('home');
 
   return (
@@ -74,9 +90,17 @@ function HomeSectionHeader({ title }: { title: string }): React.JSX.Element {
       <Text className="text-xl font-extrabold text-text dark:text-text-primary-dark">
         {title}
       </Text>
-      <Pressable>
-        <Text className="text-sm font-semibold text-primary">{t('seeAll')}</Text>
-      </Pressable>
+      {onSeeAllPress ? (
+        <Pressable accessibilityRole="button" onPress={onSeeAllPress}>
+          <Text className="text-sm font-semibold text-primary">
+            {t('seeAll')}
+          </Text>
+        </Pressable>
+      ) : (
+        <Text className="text-sm font-semibold text-text-muted dark:text-text-muted-dark">
+          {t('seeAll')}
+        </Text>
+      )}
     </View>
   );
 }
@@ -88,9 +112,13 @@ type QuickActionChipProps = {
   onPress: (route: string) => void;
 };
 
-function QuickActionChip({ action, onPress }: QuickActionChipProps): React.JSX.Element {
+function QuickActionChip({
+  action,
+  onPress,
+}: QuickActionChipProps): React.JSX.Element {
   return (
     <Pressable
+      accessibilityRole="button"
       className="flex-row items-center rounded-full border border-border bg-white px-5 py-3.5 dark:border-dark-border dark:bg-dark-bg-card"
       onPress={() => onPress(action.route)}
       testID={`action-${action.id}`}
@@ -113,9 +141,13 @@ type HomeEventCardProps = {
   onPress: (id: string) => void;
 };
 
-function HomeEventCard({ event, onPress }: HomeEventCardProps): React.JSX.Element {
+function HomeEventCard({
+  event,
+  onPress,
+}: HomeEventCardProps): React.JSX.Element {
   return (
     <Pressable
+      accessibilityRole="button"
       className="mx-5 mb-4 h-[200px] overflow-hidden rounded-[18px] bg-white dark:bg-dark-bg-card"
       onPress={() => onPress(event.id)}
       testID={`event-${event.id}`}
@@ -140,10 +172,14 @@ function HomeEventCard({ event, onPress }: HomeEventCardProps): React.JSX.Elemen
         </Text>
       </View>
       <View className="absolute bottom-0 left-0 right-[60px] p-[18px]">
-        <Text className="mb-1.5 text-xl font-extrabold text-white">{event.title}</Text>
+        <Text className="mb-1.5 text-xl font-extrabold text-white">
+          {event.title}
+        </Text>
         <View className="flex-row items-center">
           <Clock size={13} color="rgba(255,255,255,0.85)" />
-          <Text className="ml-[5px] text-xs font-medium text-white/85">{event.time}</Text>
+          <Text className="ml-[5px] text-xs font-medium text-white/85">
+            {event.time}
+          </Text>
           <Text className="mx-[6px] text-xs text-white/50">·</Text>
           <MapPin size={13} color="rgba(255,255,255,0.85)" />
           <Text className="ml-[5px] text-xs font-medium text-white/85">
@@ -151,9 +187,7 @@ function HomeEventCard({ event, onPress }: HomeEventCardProps): React.JSX.Elemen
           </Text>
         </View>
       </View>
-      <View
-        className="absolute bottom-5 right-[18px] size-[42px] items-center justify-center rounded-full bg-primary"
-      >
+      <View className="absolute bottom-5 right-[18px] size-[42px] items-center justify-center rounded-full bg-primary">
         <ArrowRight size={18} color="#fff" />
       </View>
     </Pressable>
@@ -164,7 +198,7 @@ const MemoizedHomeEventCard = React.memo(HomeEventCard);
 
 function HomeNewsRow({ item }: { item: NewsItem }): React.JSX.Element {
   return (
-    <Pressable
+    <View
       className="mx-5 mb-3 flex-row items-center rounded-2xl border border-border bg-white p-3 dark:border-dark-border dark:bg-dark-bg-card"
       testID={`news-${item.id}`}
     >
@@ -192,7 +226,7 @@ function HomeNewsRow({ item }: { item: NewsItem }): React.JSX.Element {
           {item.time_label}
         </Text>
       </View>
-    </Pressable>
+    </View>
   );
 }
 
@@ -246,7 +280,8 @@ export default function HomeScreen(): React.JSX.Element {
     profile?.max_points && profile.max_points > 0 ? profile.max_points : 5000;
   const userAvatar = profile?.avatar_url ?? config.defaultAvatarUri;
   const tierLevel = profile?.tier ?? 'STANDARD';
-  const vipStatus = tierLevel === 'VIP' || tierLevel === 'OWNER' ? t('vipStatus') : '';
+  const vipStatus =
+    tierLevel === 'VIP' || tierLevel === 'OWNER' ? t('vipStatus') : '';
   const greeting = getGreeting(new Date().getHours(), {
     afternoon: t('greetings.afternoon'),
     evening: t('greetings.evening'),
@@ -254,7 +289,8 @@ export default function HomeScreen(): React.JSX.Element {
   });
 
   const safeMaxPoints = Math.max(userMaxPoints, 1);
-  const progressWidth = `${Math.min((userPoints / safeMaxPoints) * 100, 100)}%` as `${number}%`;
+  const progressWidth =
+    `${Math.min((userPoints / safeMaxPoints) * 100, 100)}%` as `${number}%`;
 
   const quickActions = useMemo<QuickAction[]>(
     () => [
@@ -313,18 +349,39 @@ export default function HomeScreen(): React.JSX.Element {
     [router]
   );
 
+  const handleSeeAllEvents = useCallback((): void => {
+    router.push('/events' as never);
+  }, [router]);
+
   const renderFeedItem = useCallback(
     ({ item }: ListRenderItemInfo<HomeFeedRow>): React.JSX.Element => {
       if (item.type === 'section')
-        return <MemoizedHomeSectionHeader title={item.title} />;
+        return (
+          <MemoizedHomeSectionHeader
+            title={item.title}
+            onSeeAllPress={
+              item.title === t('happeningThisWeek')
+                ? handleSeeAllEvents
+                : undefined
+            }
+          />
+        );
       if (item.type === 'event')
-        return <MemoizedHomeEventCard event={item.event} onPress={handleEventPress} />;
+        return (
+          <MemoizedHomeEventCard
+            event={item.event}
+            onPress={handleEventPress}
+          />
+        );
       return <MemoizedHomeNewsRow item={item.item} />;
     },
-    [handleEventPress]
+    [handleEventPress, handleSeeAllEvents, t]
   );
 
-  const getFeedItemType = useCallback((item: HomeFeedRow): HomeFeedRow['type'] => item.type, []);
+  const getFeedItemType = useCallback(
+    (item: HomeFeedRow): HomeFeedRow['type'] => item.type,
+    []
+  );
 
   return (
     <View
@@ -404,10 +461,16 @@ export default function HomeScreen(): React.JSX.Element {
 
                   <View className="mb-1 flex-row items-start justify-between">
                     <View>
-                      <Text className="text-2xl font-extrabold text-white">{userTier}</Text>
-                      <Text className="mt-0.5 text-xs font-medium text-white/75">{t('pointsBalance')}</Text>
+                      <Text className="text-2xl font-extrabold text-white">
+                        {userTier}
+                      </Text>
+                      <Text className="mt-0.5 text-xs font-medium text-white/75">
+                        {t('pointsBalance')}
+                      </Text>
                     </View>
-                    <Text className="mt-1 text-xs font-semibold text-white/70">{vipStatus}</Text>
+                    <Text className="mt-1 text-xs font-semibold text-white/70">
+                      {vipStatus}
+                    </Text>
                   </View>
 
                   <View className="mb-2 mt-2 flex-row items-baseline">
@@ -415,12 +478,17 @@ export default function HomeScreen(): React.JSX.Element {
                       {userPoints.toLocaleString()}
                     </Text>
                     <Text className="ml-1.5 text-sm font-medium text-white/60">
-                      {t('pointsSuffix', { max: userMaxPoints.toLocaleString() })}
+                      {t('pointsSuffix', {
+                        max: userMaxPoints.toLocaleString(),
+                      })}
                     </Text>
                   </View>
 
                   <View className="mb-4 h-1.5 rounded-full bg-white/25">
-                    <View className="h-1.5 rounded-full bg-white" style={{ width: progressWidth }} />
+                    <View
+                      className="h-1.5 rounded-full bg-white"
+                      style={{ width: progressWidth }}
+                    />
                   </View>
 
                   <View className="flex-row items-end justify-between">
@@ -428,7 +496,9 @@ export default function HomeScreen(): React.JSX.Element {
                       <Text className="text-[10px] font-semibold tracking-[1px] text-white/55">
                         {t('memberName')}
                       </Text>
-                      <Text className="mt-1 text-base font-bold text-white">{userName}</Text>
+                      <Text className="mt-1 text-base font-bold text-white">
+                        {userName}
+                      </Text>
                     </View>
                     <View className="size-10 items-center justify-center rounded-md bg-white/85">
                       <View className="h-6 w-6 flex-row flex-wrap">
@@ -436,7 +506,9 @@ export default function HomeScreen(): React.JSX.Element {
                           <View
                             key={`qr-${i}`}
                             className="m-px size-1.5 rounded-[1px]"
-                            style={{ backgroundColor: i % 3 === 0 ? '#333' : '#ccc' }}
+                            style={{
+                              backgroundColor: i % 3 === 0 ? '#333' : '#ccc',
+                            }}
                           />
                         ))}
                       </View>
@@ -445,11 +517,19 @@ export default function HomeScreen(): React.JSX.Element {
 
                   <View
                     className="absolute size-[150px] rounded-full"
-                    style={{ backgroundColor: 'rgba(255,255,255,0.08)', right: -30, top: -30 }}
+                    style={{
+                      backgroundColor: 'rgba(255,255,255,0.08)',
+                      right: -30,
+                      top: -30,
+                    }}
                   />
                   <View
                     className="absolute size-[100px] rounded-full"
-                    style={{ backgroundColor: 'rgba(255,255,255,0.06)', bottom: -20, left: 50 }}
+                    style={{
+                      backgroundColor: 'rgba(255,255,255,0.06)',
+                      bottom: -20,
+                      left: 50,
+                    }}
                   />
                 </LinearGradient>
               </Animated.View>
@@ -471,7 +551,10 @@ export default function HomeScreen(): React.JSX.Element {
               </Animated.View>
             </View>
 
-            <MemoizedHomeSectionHeader title={t('happeningThisWeek')} />
+            <MemoizedHomeSectionHeader
+              title={t('happeningThisWeek')}
+              onSeeAllPress={handleSeeAllEvents}
+            />
           </>
         }
         ListFooterComponent={<View className="h-[30px]" />}

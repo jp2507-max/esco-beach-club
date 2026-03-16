@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
-import { Alert, Platform } from 'react-native';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { X, Star, Send } from 'lucide-react-native';
+import { Send, Star, X } from 'lucide-react-native';
+import React, { useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+import { Alert, Platform } from 'react-native';
 import {
   type SharedValue,
   useAnimatedStyle,
@@ -13,16 +14,22 @@ import {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { Colors } from '@/constants/colors';
-import { useUserId } from '@/providers/DataProvider';
 import { submitReview } from '@/lib/api';
-import { useMutation } from '@tanstack/react-query';
+import { useUserId } from '@/providers/DataProvider';
 import { motion, rmTiming } from '@/src/lib/animations/motion';
 import { ControlledTextInput } from '@/src/lib/forms/controlled-text-input';
 import { type ReviewFormValues, reviewSchema } from '@/src/lib/forms/schemas';
+import {
+  KeyboardAvoidingView,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
-import { KeyboardAvoidingView, ScrollView, Text, Pressable, View } from '@/src/tw';
-import { useTranslation } from 'react-i18next';
 
 type StarButtonProps = {
   isActive: boolean;
@@ -31,13 +38,25 @@ type StarButtonProps = {
   star: number;
 };
 
-function StarButton({ isActive, onPress, scale, star }: StarButtonProps): React.JSX.Element {
+function StarButton({
+  isActive,
+  onPress,
+  scale,
+  star,
+}: StarButtonProps): React.JSX.Element {
   const style = useAnimatedStyle(() => ({
     transform: [{ scale: scale.get() }],
   }));
 
   return (
-    <Pressable onPress={onPress} testID={`star-${star}`}>
+    <Pressable
+      accessibilityLabel={`${star} star${star === 1 ? '' : 's'}`}
+      accessibilityRole="button"
+      accessibilityHint="Tap to select this star rating"
+      accessibilityState={{ selected: isActive }}
+      onPress={onPress}
+      testID={`star-${star}`}
+    >
       <Animated.View style={style}>
         <Star
           color={isActive ? '#FFB300' : Colors.border}
@@ -73,7 +92,8 @@ export default function RateUsScreen(): React.JSX.Element {
   });
 
   const rating = useWatch({ control, name: 'rating', defaultValue: 0 });
-  const comment = useWatch({ control, name: 'comment', defaultValue: '' }) ?? '';
+  const comment =
+    useWatch({ control, name: 'comment', defaultValue: '' }) ?? '';
 
   const successStyle = useAnimatedStyle(() => ({
     opacity: successScale.get(),
@@ -90,7 +110,10 @@ export default function RateUsScreen(): React.JSX.Element {
     },
     onError: (err) => {
       console.log('[RateUs] Review submit error:', err);
-      const message = err instanceof Error ? err.message : 'Could not submit your review right now.';
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Could not submit your review right now.';
       Alert.alert('Review Failed', message);
     },
   });
@@ -102,7 +125,10 @@ export default function RateUsScreen(): React.JSX.Element {
       shouldValidate: true,
     });
     starScales[star - 1].set(
-      withSequence(withTiming(1.4, rmTiming(motion.dur.xs)), withTiming(1, rmTiming(motion.dur.xs)))
+      withSequence(
+        withTiming(1.4, rmTiming(motion.dur.xs)),
+        withTiming(1, rmTiming(motion.dur.xs))
+      )
     );
   }
 
@@ -111,6 +137,7 @@ export default function RateUsScreen(): React.JSX.Element {
   }
 
   function handleValidSubmit(values: ReviewFormValues): void {
+    if (reviewMutation.isPending) return;
     reviewMutation.mutate(values);
   }
 
@@ -121,6 +148,7 @@ export default function RateUsScreen(): React.JSX.Element {
     >
       <View className="flex-row items-center justify-between px-4 py-3">
         <Pressable
+          accessibilityRole="button"
           className="size-10 items-center justify-center rounded-full border border-border bg-white dark:border-dark-border dark:bg-dark-bg-card"
           onPress={() => router.back()}
           testID="close-rate"
@@ -147,7 +175,13 @@ export default function RateUsScreen(): React.JSX.Element {
             <>
               <View className="mb-5 mt-5 size-[90px] items-center justify-center rounded-full border border-border bg-white dark:border-dark-border dark:bg-dark-bg-card">
                 <Text className="text-[40px]">
-                  {rating === 0 ? '🏖️' : rating <= 2 ? '😕' : rating === 3 ? '😊' : '🤩'}
+                  {rating === 0
+                    ? '🏖️'
+                    : rating <= 2
+                      ? '😕'
+                      : rating === 3
+                        ? '😊'
+                        : '🤩'}
                 </Text>
               </View>
 
@@ -160,10 +194,7 @@ export default function RateUsScreen(): React.JSX.Element {
 
               <View className="mb-[10px] flex-row">
                 {[1, 2, 3, 4, 5].map((star) => (
-                  <View
-                    key={star}
-                    className={star < 5 ? 'mr-[14px]' : ''}
-                  >
+                  <View key={star} className={star < 5 ? 'mr-[14px]' : ''}>
                     <StarButton
                       isActive={star <= rating}
                       onPress={() => handleStarPress(star)}
@@ -199,18 +230,28 @@ export default function RateUsScreen(): React.JSX.Element {
               </View>
 
               <Pressable
+                accessibilityRole="button"
                 className="w-full flex-row items-center justify-center rounded-2xl bg-primary py-4"
-                disabled={rating === 0}
+                disabled={rating === 0 || reviewMutation.isPending}
                 onPress={handleSubmit(handleValidSubmit, handleInvalidSubmit)}
-                style={rating === 0 ? { opacity: 0.5 } : undefined}
+                style={
+                  rating === 0 || reviewMutation.isPending
+                    ? { opacity: 0.5 }
+                    : undefined
+                }
                 testID="submit-review"
               >
                 <Send color="#fff" size={18} />
-                <Text className="ml-2 text-base font-bold text-white">{t('rateUs.submitLabel')}</Text>
+                <Text className="ml-2 text-base font-bold text-white">
+                  {t('rateUs.submitLabel')}
+                </Text>
               </Pressable>
             </>
           ) : (
-            <Animated.View className="items-center pt-[60px]" style={successStyle}>
+            <Animated.View
+              className="items-center pt-[60px]"
+              style={successStyle}
+            >
               <Text className="mb-5 text-[64px]">🎉</Text>
               <Text className="mb-[10px] text-[28px] font-extrabold text-text dark:text-text-primary-dark">
                 {t('rateUs.thankYou')}
@@ -219,11 +260,14 @@ export default function RateUsScreen(): React.JSX.Element {
                 {t('rateUs.thankYouMessage')}
               </Text>
               <Pressable
+                accessibilityRole="button"
                 className="rounded-2xl bg-secondary px-12 py-4"
                 onPress={() => router.back()}
                 testID="done-btn"
               >
-                <Text className="text-base font-bold text-white">{t('rateUs.done')}</Text>
+                <Text className="text-base font-bold text-white">
+                  {t('rateUs.done')}
+                </Text>
               </Pressable>
             </Animated.View>
           )}

@@ -1,11 +1,17 @@
 import { type ReactNode } from 'react';
 import {
+  type Control,
+  Controller,
+  type FieldPath,
+  type FieldValues,
+} from 'react-hook-form';
+import {
   type KeyboardTypeOptions,
   type ReturnKeyTypeOptions,
   type TextInputProps,
   useColorScheme,
 } from 'react-native';
-import { Controller, type Control, type FieldPath, type FieldValues } from 'react-hook-form';
+
 import { Colors } from '@/constants/colors';
 import { cn } from '@/src/lib/utils';
 import { Text, TextInput, View } from '@/src/tw';
@@ -20,7 +26,7 @@ type ControlledTextInputProps<TFieldValues extends FieldValues> = {
   autoComplete?: TextInputProps['autoComplete'];
   className?: string;
   containerClassName?: string;
-  control: Control<TFieldValues>;
+  control: Control<TFieldValues, unknown, unknown>;
   icon?: (props: IconProps) => ReactNode;
   keyboardType?: KeyboardTypeOptions;
   label?: string;
@@ -66,7 +72,10 @@ export function ControlledTextInput<TFieldValues extends FieldValues>({
     <Controller
       control={control}
       name={name}
-      render={({ field: { onBlur, onChange, value }, fieldState: { invalid } }) => (
+      render={({
+        field: { onBlur, onChange, value },
+        fieldState: { invalid },
+      }) => (
         <View
           className={cn(
             'mb-3 flex-row items-center rounded-2xl border border-border bg-background px-4 py-3 dark:border-dark-border dark:bg-dark-bg-card',
@@ -76,7 +85,9 @@ export function ControlledTextInput<TFieldValues extends FieldValues>({
           )}
         >
           {icon ? (
-            <View className="mr-3 mt-0.5">{icon({ color: iconColor, size: 18 })}</View>
+            <View className="mr-3 mt-0.5">
+              {icon({ color: iconColor, size: 18 })}
+            </View>
           ) : null}
           <View className="flex-1">
             {label ? (
@@ -85,6 +96,8 @@ export function ControlledTextInput<TFieldValues extends FieldValues>({
               </Text>
             ) : null}
             <TextInput
+              accessibilityLabel="Text input field"
+              accessibilityHint="Enter text"
               autoCapitalize={autoCapitalize}
               autoComplete={autoComplete}
               className={cn(

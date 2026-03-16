@@ -2,6 +2,7 @@ const profile = {
   guest: 'Guest',
   memberFallback: 'MEMBER',
   menu: {
+    comingSoon: 'Coming soon',
     inviteEarn: 'Invite & Earn',
     rateUs: 'Rate Us',
     membership: 'Membership',
@@ -31,13 +32,15 @@ const profile = {
   errors: {
     openMail: 'Could not open mail',
     openWhatsApp: 'Could not open WhatsApp',
+    signOutFailed: 'Could not sign out. Please try again.',
   },
   invite: {
     codeCopied: 'Copied!',
     codeCopyFailed: 'Could not copy code',
     titlePrefix: 'Unlock the',
     titleHighlight: 'VIP Life',
-    subtitle: 'Invite friends to Esco Life and start\nearning exclusive perks today.',
+    subtitle:
+      'Invite friends to Esco Life and start\nearning exclusive perks today.',
     referralCode: 'YOUR REFERRAL CODE',
     goalVipStatus: 'GOAL: VIP STATUS',
     friendsJoined: '{{current}} of {{goal}} Friends Joined',

@@ -1,33 +1,35 @@
-import React, { useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   ArrowLeft,
   Calendar,
   Clock,
-  MapPin,
-  Users,
   Crown,
-  Star,
-  UserCheck,
+  Heart,
+  MapPin,
   PartyPopper,
   Share2,
-  Heart,
+  Star,
+  UserCheck,
+  Users,
 } from 'lucide-react-native';
+import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Share } from 'react-native';
 import {
   cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { Colors } from '@/constants/colors';
 import { useEventById } from '@/providers/DataProvider';
 import { rmTiming } from '@/src/lib/animations/motion';
+import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 import { Image } from '@/src/tw/image';
-import { ScrollView, Text, Pressable, View } from '@/src/tw';
 
 type PriceTier = {
   highlight: boolean;
@@ -47,31 +49,6 @@ export default function EventDetailsScreen(): React.JSX.Element {
 
   const { t } = useTranslation('events');
   const foundEvent = useEventById(id);
-
-  if (!foundEvent) {
-    console.warn(`[EventDetails] Warning: using fallback event data for missing event id: ${id}`);
-  }
-
-  const event = foundEvent ?? {
-    id: id ?? '',
-    title: 'Event',
-    description: null,
-    time: '',
-    date: '',
-    day_label: null,
-    location: '',
-    image: 'https://images.unsplash.com/photo-1506929562872-bb421503ef21?w=600&h=400&fit=crop',
-    attendees: 0,
-    price: '$0',
-    badge: null,
-    badge_color: null,
-    featured: false,
-    category: null,
-    vip_price: null,
-    member_price: null,
-    guest_price: null,
-    created_at: '',
-  };
 
   useEffect(() => {
     headerOpacity.set(withTiming(1, rmTiming(400)));
@@ -93,6 +70,26 @@ export default function EventDetailsScreen(): React.JSX.Element {
     transform: [{ translateY: slide.get() }],
   }));
 
+  const [isLiked, setIsLiked] = useState(false);
+
+  if (!foundEvent) {
+    return (
+      <View className="flex-1 items-center justify-center bg-background dark:bg-dark-bg">
+        <Text className="mb-4 text-base font-semibold text-text dark:text-text-primary-dark">
+          {t('eventNotFound')}
+        </Text>
+        <Pressable
+          accessibilityRole="button"
+          className="rounded-xl bg-primary px-5 py-3"
+          onPress={() => router.back()}
+        >
+          <Text className="text-white">{t('goBack')}</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  const event = foundEvent;
   const contactForPricing = t('priceTiers.contactForPricing');
   const priceTiers: PriceTier[] = [
     {
@@ -100,7 +97,11 @@ export default function EventDetailsScreen(): React.JSX.Element {
       price: event.vip_price ?? contactForPricing,
       highlight: true,
       icon: Crown,
-      perkKeys: ['priceTiers.vip.perk1', 'priceTiers.vip.perk2', 'priceTiers.vip.perk3'],
+      perkKeys: [
+        'priceTiers.vip.perk1',
+        'priceTiers.vip.perk2',
+        'priceTiers.vip.perk3',
+      ],
     },
     {
       labelKey: 'priceTiers.member.label',
@@ -119,7 +120,29 @@ export default function EventDetailsScreen(): React.JSX.Element {
   ];
 
   function handleBook(): void {
-    router.push({ pathname: '/(modals)/booking', params: { eventTitle: event.title } });
+    router.push({
+      pathname: '/(modals)/booking',
+      params: { eventTitle: event.title },
+    });
+  }
+
+  async function handleShare(): Promise<void> {
+    try {
+      await Share.share({
+        message: t('shareMessage', {
+          title: event.title,
+          location: event.location,
+          date: event.date,
+          time: event.time,
+        }),
+      });
+    } catch {
+      // User cancelled or share failed
+    }
+  }
+
+  function handleToggleLike(): void {
+    setIsLiked((prev) => !prev);
   }
 
   return (
@@ -143,6 +166,7 @@ export default function EventDetailsScreen(): React.JSX.Element {
           style={{ top: insets.top + 8 }}
         >
           <Pressable
+            accessibilityRole="button"
             className="size-10 items-center justify-center rounded-full"
             onPress={() => router.back()}
             style={{ backgroundColor: 'rgba(0,0,0,0.35)' }}
@@ -154,14 +178,37 @@ export default function EventDetailsScreen(): React.JSX.Element {
             <Pressable
               className="mr-2.5 size-10 items-center justify-center rounded-full"
               style={{ backgroundColor: 'rgba(0,0,0,0.35)' }}
+              onPress={handleShare}
+              accessibilityRole="button"
+              accessibilityLabel={t('shareEvent')}
+              accessibilityHint={t('shareEventHint', {
+                defaultValue: 'Opens share sheet',
+              })}
+              testID="share-btn"
             >
               <Share2 size={18} color="#fff" />
             </Pressable>
             <Pressable
               className="size-10 items-center justify-center rounded-full"
               style={{ backgroundColor: 'rgba(0,0,0,0.35)' }}
+              onPress={handleToggleLike}
+              accessibilityRole="button"
+              accessibilityLabel={isLiked ? t('unlikeEvent') : t('likeEvent')}
+              accessibilityHint={
+                isLiked
+                  ? t('unlikeEventHint', {
+                      defaultValue: 'Removes from favourites',
+                    })
+                  : t('likeEventHint', { defaultValue: 'Adds to favourites' })
+              }
+              accessibilityState={{ selected: isLiked }}
+              testID="like-btn"
             >
-              <Heart size={18} color="#fff" />
+              <Heart
+                size={18}
+                color={isLiked ? Colors.primary : '#fff'}
+                fill={isLiked ? Colors.primary : 'transparent'}
+              />
             </Pressable>
           </View>
         </View>
@@ -175,11 +222,15 @@ export default function EventDetailsScreen(): React.JSX.Element {
         ) : null}
 
         <View className="absolute bottom-0 left-0 right-0 p-5">
-          <Text className="mb-2 text-[28px] font-extrabold text-white">{event.title}</Text>
+          <Text className="mb-2 text-[28px] font-extrabold text-white">
+            {event.title}
+          </Text>
           <View className="flex-row items-center">
             <View className="flex-row items-center">
               <Calendar size={14} color="rgba(255,255,255,0.85)" />
-              <Text className="ml-[5px] text-[13px] font-medium text-white/90">{event.date}</Text>
+              <Text className="ml-[5px] text-[13px] font-medium text-white/90">
+                {event.date}
+              </Text>
             </View>
             <View
               className="mx-[10px] size-1 rounded-full"
@@ -187,7 +238,9 @@ export default function EventDetailsScreen(): React.JSX.Element {
             />
             <View className="flex-row items-center">
               <Clock size={14} color="rgba(255,255,255,0.85)" />
-              <Text className="ml-[5px] text-[13px] font-medium text-white/90">{event.time}</Text>
+              <Text className="ml-[5px] text-[13px] font-medium text-white/90">
+                {event.time}
+              </Text>
             </View>
           </View>
         </View>
@@ -263,13 +316,19 @@ export default function EventDetailsScreen(): React.JSX.Element {
                           : `${Colors.tealLight}40`,
                       }}
                     >
-                      <tier.icon size={20} color={tier.highlight ? '#fff' : Colors.secondary} />
+                      <tier.icon
+                        size={20}
+                        color={tier.highlight ? '#fff' : Colors.secondary}
+                      />
                     </View>
                     <View>
                       <Text
                         className="text-base font-bold"
-                        style={{ color: tier.highlight ? Colors.primary : Colors.text }}
+                        style={{
+                          color: tier.highlight ? Colors.primary : Colors.text,
+                        }}
                       >
+                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                         {t(tier.labelKey as any)}
                       </Text>
                       <Text className="mt-0.5 text-[11px] font-medium text-text-muted dark:text-text-muted-dark">
@@ -279,7 +338,9 @@ export default function EventDetailsScreen(): React.JSX.Element {
                   </View>
                   <Text
                     className="text-[28px] font-extrabold"
-                    style={{ color: tier.highlight ? Colors.primary : Colors.text }}
+                    style={{
+                      color: tier.highlight ? Colors.primary : Colors.text,
+                    }}
                   >
                     {tier.price}
                   </Text>
@@ -291,9 +352,14 @@ export default function EventDetailsScreen(): React.JSX.Element {
                   <View key={key} className="mb-2 flex-row items-center">
                     <View
                       className="mr-2.5 size-1.5 rounded-full"
-                      style={{ backgroundColor: tier.highlight ? Colors.primary : Colors.secondary }}
+                      style={{
+                        backgroundColor: tier.highlight
+                          ? Colors.primary
+                          : Colors.secondary,
+                      }}
                     />
                     <Text className="text-[13px] font-medium text-text-secondary dark:text-text-secondary-dark">
+                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                       {t(key as any)}
                     </Text>
                   </View>
@@ -303,6 +369,7 @@ export default function EventDetailsScreen(): React.JSX.Element {
           </View>
 
           <Pressable
+            accessibilityRole="button"
             className="flex-row items-center rounded-2xl border px-4 py-4"
             onPress={() => router.push('/private-event')}
             style={{
@@ -344,6 +411,7 @@ export default function EventDetailsScreen(): React.JSX.Element {
           </Text>
         </View>
         <Pressable
+          accessibilityRole="button"
           className="rounded-2xl bg-primary px-9 py-4"
           onPress={handleBook}
           testID="book-now-btn"

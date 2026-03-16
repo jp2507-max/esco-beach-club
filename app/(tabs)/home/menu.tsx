@@ -1,11 +1,16 @@
-import React, { useEffect, useMemo, useState } from 'react';
 import { FlashList, type ListRenderItemInfo } from '@shopify/flash-list';
-import { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
+
 import { Colors } from '@/constants/colors';
 import { rmTiming } from '@/src/lib/animations/motion';
+import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 import { Image } from '@/src/tw/image';
-import { ScrollView, Text, Pressable, View } from '@/src/tw';
 
 type MenuItem = {
   description: string;
@@ -30,9 +35,11 @@ const MENU_DATA: MenuCategory[] = [
       {
         id: 'c1',
         name: 'Esco Sunset',
-        description: 'Passion fruit, rum, lime, topped with prosecco & edible flowers',
+        description:
+          'Passion fruit, rum, lime, topped with prosecco & edible flowers',
         price: '$18',
-        image: 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=300&h=300&fit=crop',
+        image:
+          'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=300&h=300&fit=crop',
         tag: 'Signature',
       },
       {
@@ -40,22 +47,26 @@ const MENU_DATA: MenuCategory[] = [
         name: 'Tokyo Drift',
         description: 'Japanese whisky, yuzu, shiso leaf, ginger foam',
         price: '$22',
-        image: 'https://images.unsplash.com/photo-1536935338788-846bb9981813?w=300&h=300&fit=crop',
+        image:
+          'https://images.unsplash.com/photo-1536935338788-846bb9981813?w=300&h=300&fit=crop',
       },
       {
         id: 'c3',
         name: 'Velvet Rose',
         description: 'Gin, rose water, lychee, elderflower tonic',
         price: '$16',
-        image: 'https://images.unsplash.com/photo-1551538827-9c037cb4f32a?w=300&h=300&fit=crop',
+        image:
+          'https://images.unsplash.com/photo-1551538827-9c037cb4f32a?w=300&h=300&fit=crop',
         tag: 'Popular',
       },
       {
         id: 'c4',
         name: 'Smoky Old Fashioned',
-        description: 'Bourbon, demerara, angostura, orange peel, smoked tableside',
+        description:
+          'Bourbon, demerara, angostura, orange peel, smoked tableside',
         price: '$24',
-        image: 'https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=300&h=300&fit=crop',
+        image:
+          'https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=300&h=300&fit=crop',
       },
     ],
   },
@@ -68,7 +79,8 @@ const MENU_DATA: MenuCategory[] = [
         name: 'Truffle Wagyu Sliders',
         description: 'A5 wagyu, truffle aioli, brioche bun, micro greens',
         price: '$32',
-        image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300&h=300&fit=crop',
+        image:
+          'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300&h=300&fit=crop',
         tag: "Chef's Pick",
       },
       {
@@ -76,21 +88,24 @@ const MENU_DATA: MenuCategory[] = [
         name: 'Tuna Tartare',
         description: 'Bluefin tuna, avocado mousse, sesame crisp, ponzu',
         price: '$28',
-        image: 'https://images.unsplash.com/photo-1534604973900-c43ab4c2e0ab?w=300&h=300&fit=crop',
+        image:
+          'https://images.unsplash.com/photo-1534604973900-c43ab4c2e0ab?w=300&h=300&fit=crop',
       },
       {
         id: 'f3',
         name: 'Lobster Tempura',
         description: 'Crispy lobster tail, wasabi mayo, pickled ginger',
         price: '$36',
-        image: 'https://images.unsplash.com/photo-1625943553852-781c6dd46faa?w=300&h=300&fit=crop',
+        image:
+          'https://images.unsplash.com/photo-1625943553852-781c6dd46faa?w=300&h=300&fit=crop',
       },
       {
         id: 'f4',
         name: 'Mezze Platter',
         description: "Hummus, baba ganoush, falafel, warm pita, za'atar",
         price: '$22',
-        image: 'https://images.unsplash.com/photo-1541014741259-de529411b96a?w=300&h=300&fit=crop',
+        image:
+          'https://images.unsplash.com/photo-1541014741259-de529411b96a?w=300&h=300&fit=crop',
       },
     ],
   },
@@ -101,9 +116,11 @@ const MENU_DATA: MenuCategory[] = [
       {
         id: 'w1',
         name: 'Dom Pérignon 2013',
-        description: 'Champagne, France — Elegant with notes of almond & citrus',
+        description:
+          'Champagne, France — Elegant with notes of almond & citrus',
         price: '$380',
-        image: 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=300&h=300&fit=crop',
+        image:
+          'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=300&h=300&fit=crop',
         tag: 'Premium',
       },
       {
@@ -111,14 +128,16 @@ const MENU_DATA: MenuCategory[] = [
         name: 'Cloudy Bay Sauvignon',
         description: 'Marlborough, NZ — Crisp, tropical, refreshing',
         price: '$14',
-        image: 'https://images.unsplash.com/photo-1474722883778-792e7990302f?w=300&h=300&fit=crop',
+        image:
+          'https://images.unsplash.com/photo-1474722883778-792e7990302f?w=300&h=300&fit=crop',
       },
       {
         id: 'w3',
         name: 'Barolo Riserva 2016',
         description: 'Piedmont, Italy — Full-bodied, cherry, leather notes',
         price: '$28',
-        image: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=300&h=300&fit=crop',
+        image:
+          'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=300&h=300&fit=crop',
       },
     ],
   },
@@ -131,14 +150,16 @@ const MENU_DATA: MenuCategory[] = [
         name: 'Double Apple Classic',
         description: 'Traditional blend with a sweet anise finish',
         price: '$35',
-        image: 'https://images.unsplash.com/photo-1527661591475-527312dd65f5?w=300&h=300&fit=crop',
+        image:
+          'https://images.unsplash.com/photo-1527661591475-527312dd65f5?w=300&h=300&fit=crop',
       },
       {
         id: 'h2',
         name: 'Esco Cloud Mix',
         description: 'Blueberry, mint & grape — our house special',
         price: '$40',
-        image: 'https://images.unsplash.com/photo-1534294668821-28a3054f4256?w=300&h=300&fit=crop',
+        image:
+          'https://images.unsplash.com/photo-1534294668821-28a3054f4256?w=300&h=300&fit=crop',
         tag: 'House Special',
       },
       {
@@ -146,13 +167,16 @@ const MENU_DATA: MenuCategory[] = [
         name: 'Tropical Paradise',
         description: 'Mango, passion fruit & coconut with ice base',
         price: '$42',
-        image: 'https://images.unsplash.com/photo-1560185007-c5ca9d2c014d?w=300&h=300&fit=crop',
+        image:
+          'https://images.unsplash.com/photo-1560185007-c5ca9d2c014d?w=300&h=300&fit=crop',
       },
     ],
   },
 ];
 
-function renderMenuItem({ item }: ListRenderItemInfo<MenuItem>): React.JSX.Element {
+function renderMenuItem({
+  item,
+}: ListRenderItemInfo<MenuItem>): React.JSX.Element {
   return (
     <View
       className="mb-3.5 flex-row items-center rounded-[18px] border border-border bg-white p-3 dark:border-dark-border dark:bg-dark-bg-card"
@@ -189,7 +213,9 @@ function renderMenuItem({ item }: ListRenderItemInfo<MenuItem>): React.JSX.Eleme
         >
           {item.description}
         </Text>
-        <Text className="text-[17px] font-extrabold text-secondary">{item.price}</Text>
+        <Text className="text-[17px] font-extrabold text-secondary">
+          {item.price}
+        </Text>
       </View>
     </View>
   );
@@ -229,6 +255,7 @@ export default function MenuScreen(): React.JSX.Element {
             const active = activeCategory === cat.key;
             return (
               <Pressable
+                accessibilityRole="button"
                 key={cat.key}
                 className="rounded-full px-5 py-2.5"
                 onPress={() => setActiveCategory(cat.key)}
