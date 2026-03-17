@@ -8,7 +8,8 @@ const menu = {
   items: {
     c1: {
       name: 'Esco Sunset',
-      description: 'Passion fruit, rum, lime, topped with prosecco & edible flowers',
+      description:
+        'Passion fruit, rum, lime, topped with prosecco & edible flowers',
       tag: 'Signature',
     },
     c2: {
@@ -22,7 +23,8 @@ const menu = {
     },
     c4: {
       name: 'Smoky Old Fashioned',
-      description: 'Bourbon, demerara, angostura, orange peel, smoked tableside',
+      description:
+        'Bourbon, demerara, angostura, orange peel, smoked tableside',
     },
     f1: {
       name: 'Truffle Wagyu Sliders',

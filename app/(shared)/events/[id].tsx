@@ -135,7 +135,7 @@ export default function EventDetailsScreen(): React.JSX.Element {
 
   function handleBook(): void {
     router.push({
-      pathname: '/(modals)/booking',
+      pathname: '/booking-modal',
       params: { eventTitle: event.title },
     });
   }

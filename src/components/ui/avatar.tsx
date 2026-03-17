@@ -17,22 +17,19 @@ interface AvatarProps {
  * falls back to a bundled local asset if the remote URI is missing or fails to load.
  */
 export function Avatar({ uri, className, recyclingKey }: AvatarProps) {
-  const [imgSource, setImgSource] = useState<number | { uri: string }>(
-    uri ? { uri } : config.defaultAvatarUri
-  );
-
-  // Synchronize internal source if the uri prop changes from the outside
+  const [loadFailed, setLoadFailed] = useState(false);
   useEffect(() => {
-    setImgSource(uri ? { uri } : config.defaultAvatarUri);
+    setLoadFailed(false);
   }, [uri]);
+
+  const imgSource = uri && !loadFailed ? { uri } : config.defaultAvatarUri;
 
   return (
     <Image
       className={className}
       source={imgSource}
       onError={() => {
-        // Switch to the local fallback asset on any load error
-        setImgSource(config.defaultAvatarUri);
+        setLoadFailed(true);
       }}
       cachePolicy="memory-disk"
       transition={180}

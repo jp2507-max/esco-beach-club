@@ -152,7 +152,6 @@ export default function PerksScreen(): React.JSX.Element {
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={listContentContainerStyle}
         data={filtered}
-        estimatedItemSize={cardWidth * 0.7 + 80}
         extraData={cardWidth}
         keyExtractor={(item) => item.id}
         numColumns={2}

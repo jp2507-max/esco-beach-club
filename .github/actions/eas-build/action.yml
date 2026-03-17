@@ -121,7 +121,7 @@ runs:
 
     - name: 📱 Run Android Build
       if: ${{ inputs.ANDROID == 'true' }}
-      run: bun run build:${{ inputs.APP_ENV }}:android --non-interactive  --no-wait --message "Build  ${{ inputs.APP_ENV }} ${{ inputs.VERSION }}"
+      run: bun run build:${{ inputs.APP_ENV }}:android --non-interactive --no-wait --message "Build ${{ inputs.APP_ENV }} ${{ inputs.VERSION }}"
       shell: bash
 
     - name: 📱 Run IOS Build

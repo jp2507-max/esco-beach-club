@@ -165,11 +165,13 @@ export function DataProvider({
         })
       )
       .catch((error: unknown) => {
-        isDismissingRef.current = false;
         console.error(
           '[DataProvider] Failed to dismiss welcome voucher:',
           error
         );
+      })
+      .finally(() => {
+        isDismissingRef.current = false;
       });
   }, [profile]);
 

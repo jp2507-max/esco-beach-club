@@ -38,6 +38,14 @@ type StarButtonProps = {
   star: number;
 };
 
+const STAR_LABEL_KEYS = [
+  'rateUs.starLabels.0',
+  'rateUs.starLabels.1',
+  'rateUs.starLabels.2',
+  'rateUs.starLabels.3',
+  'rateUs.starLabels.4',
+] as const;
+
 function useStarScales(): SharedValue<number>[] {
   return [
     useSharedValue(1),
@@ -211,7 +219,7 @@ export default function RateUsScreen(): React.JSX.Element {
 
               {rating > 0 ? (
                 <Text className="mb-7 mt-1.5 text-[15px] font-bold text-[#FFB300]">
-                  {t(`rateUs.starLabels.${rating - 1}`)}
+                  {t(STAR_LABEL_KEYS[rating - 1])}
                 </Text>
               ) : null}
 

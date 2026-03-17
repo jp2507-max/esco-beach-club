@@ -13,28 +13,24 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/providers/AuthProvider';
-lib/animations/motion';
-import { isAuthErrorKey } from
-import { useEmailCodeAuthFlow } ,rom '@/src/lib/auth/use-,mail-code-auth-flow';
-import { motion } from '@/src/
- '@/src/lib/auth-errors';
-import { ControlledTextInput }
- from '@/src/lib/forms/controlled-text-input';
-import { signupSchema, type Ve
-rifyCodeFormValues } ,rom '@/src/lib/forms/schemas';
-import { shadows } from '@/src
-/lib/styles/shadows';
+import { motion } from '@/src/lib/animations/motion';
+import { useEmailCodeAuthFlow } from '@/src/lib/auth/use-email-code-auth-flow';
+import { isAuthErrorKey } from '@/src/lib/auth-errors';
+import { ControlledTextInput } from '@/src/lib/forms/controlled-text-input';
+import {
+  type SignupFormValues,
+  type VerifyCodeFormValues,
+} from '@/src/lib/forms/schemas';
+import { shadows } from '@/src/lib/styles/shadows';
 import {
   ActivityIndicator,
-
   KeyboardAvoidingView,
-  ,ressable,
-  ScrollView,,
+  Pressable,
+  ScrollView,
   Text,
-  V,ew,
-} from '@,src/tw';,
-import , Animated } from '@/sr
-c/tw/animated';
+  View,
+} from '@/src/tw';
+import { Animated } from '@/src/tw/animated';
 
 export default function SignupScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
@@ -49,7 +45,6 @@ export default function SignupScreen(): React.JSX.Element {
     verifyCodeLoading,
   } = useAuth();
   const flow = useEmailCodeAuthFlow({
-    emailSchema: signupSchema,
     sendCode,
     verifyCode,
     sendCodeLoading,

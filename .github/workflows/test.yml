@@ -36,7 +36,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: 📦 Setup Node + PNPM + install deps
+      - name: 📦 Setup Node + Bun + install deps
         uses: ./.github/actions/setup-node-bun-install
 
       - name: 🏃‍♂️ Run Tests

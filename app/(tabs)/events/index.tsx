@@ -103,7 +103,7 @@ export default function EventsScreen(): React.JSX.Element {
 
   const openEvent = useCallback(
     (id: string): void => {
-      router.push({ pathname: '/events/[id]', params: { id } });
+      router.push({ pathname: '/event-details', params: { id } });
     },
     [router]
   );
@@ -183,7 +183,6 @@ export default function EventsScreen(): React.JSX.Element {
       <FlashList
         contentInsetAdjustmentBehavior="automatic"
         data={listEvents}
-        estimatedItemSize={110}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         showsVerticalScrollIndicator={false}

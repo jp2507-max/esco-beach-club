@@ -46,11 +46,10 @@ export default function InviteScreen(): React.JSX.Element {
   const { profile } = useProfileData();
   const { referrals } = useReferralsData();
   const referralProgress = useReferralProgress();
+  const referralCurrent = referralProgress.current;
+  const referralGoal = referralProgress.goal;
   const code = profile?.referral_code ?? 'ESCO-2025';
-  const progressRatio = Math.min(
-    referralProgress.current / referralProgress.goal,
-    1
-  );
+  const progressRatio = Math.min(referralCurrent / referralGoal, 1);
   const [copiedRecently, setCopiedRecently] = useState<boolean>(false);
   const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -72,7 +71,7 @@ export default function InviteScreen(): React.JSX.Element {
         isGoal: true,
         label: t('invite.milestones.vipBadge'),
         sub: t('invite.milestones.twoMoreInvites', {
-          count: Math.max(referralProgress.goal - referralProgress.current, 0),
+          count: Math.max(referralGoal - referralCurrent, 0),
         }),
         unlocked: false,
       },
@@ -84,7 +83,7 @@ export default function InviteScreen(): React.JSX.Element {
         unlocked: false,
       },
     ],
-    [referralProgress.current, referralProgress.goal, t]
+    [referralCurrent, referralGoal, t]
   );
 
   useEffect(() => {
@@ -216,8 +215,8 @@ export default function InviteScreen(): React.JSX.Element {
             <View className="mb-3 flex-row items-center justify-between">
               <Text className="text-lg font-extrabold text-text">
                 {t('invite.friendsJoined', {
-                  current: referralProgress.current,
-                  goal: referralProgress.goal,
+                  current: referralCurrent,
+                  goal: referralGoal,
                 })}
               </Text>
               <Zap color={Colors.primary} size={22} />

@@ -170,7 +170,7 @@ const MENU_DATA: MenuCategory[] = [
       },
     ],
   },
-] as const;
+];
 
 function MenuItemRow({ item }: { item: MenuItem }): React.JSX.Element {
   const { t } = useTranslation('menu');
@@ -242,8 +242,7 @@ export default function MenuScreen(): React.JSX.Element {
   }));
 
   const currentItems = useMemo(
-    () =>
-      (MENU_DATA.find((c) => c.key === activeCategory)?.items as unknown as MenuItem[]) ?? [],
+    () => MENU_DATA.find((c) => c.key === activeCategory)?.items ?? [],
     [activeCategory]
   );
 
@@ -292,7 +291,6 @@ export default function MenuScreen(): React.JSX.Element {
         <FlashList
           contentContainerStyle={listContentContainerStyle}
           data={currentItems}
-          estimatedItemSize={140}
           keyExtractor={(item) => item.id}
           renderItem={renderMenuItem}
           showsVerticalScrollIndicator={false}

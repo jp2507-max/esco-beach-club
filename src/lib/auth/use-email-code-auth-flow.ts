@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import type { TFunction } from 'i18next';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Alert } from 'react-native';
@@ -20,7 +21,7 @@ export type UseEmailCodeAuthFlowParams = {
   sendCodeError: Error | null;
   verifyCodeLoading: boolean;
   verifyCodeError: Error | null;
-  t: (key: string, options?: Record<string, unknown>) => string;
+  t: TFunction<'auth'>;
 };
 
 export type UseEmailCodeAuthFlowReturn = {
@@ -49,6 +50,8 @@ export function useEmailCodeAuthFlow(
   } = params;
 
   const [sentEmail, setSentEmail] = useState<string>('');
+  const [hasAttemptedCodeVerification, setHasAttemptedCodeVerification] =
+    useState(false);
 
   const { control, handleSubmit } = useForm<EmailFormValues>({
     defaultValues: { email: '' },
@@ -70,6 +73,7 @@ export function useEmailCodeAuthFlow(
     try {
       const email = await sendCode({ email: values.email });
       setSentEmail(email);
+      setHasAttemptedCodeVerification(false);
       resetCodeForm({ code: '' });
     } catch (error: unknown) {
       const raw =
@@ -82,6 +86,7 @@ export function useEmailCodeAuthFlow(
   }
 
   async function handleVerifyCode(values: VerifyCodeFormValues): Promise<void> {
+    setHasAttemptedCodeVerification(true);
     try {
       await verifyCode({
         code: values.code,
@@ -107,12 +112,16 @@ export function useEmailCodeAuthFlow(
 
   function handleUseDifferentEmail(): void {
     setSentEmail('');
+    setHasAttemptedCodeVerification(false);
     resetCodeForm({ code: '' });
   }
 
   const isCodeStep = !!sentEmail;
   const primaryLoading = isCodeStep ? verifyCodeLoading : sendCodeLoading;
-  const visibleError = isCodeStep ? verifyCodeError : sendCodeError;
+  const visibleError =
+    isCodeStep && hasAttemptedCodeVerification
+      ? verifyCodeError
+      : sendCodeError;
 
   const onEmailSubmit = handleSubmit(handleSendCode, handleInvalidEmailSubmit);
   const onCodeSubmit = handleCodeSubmit(

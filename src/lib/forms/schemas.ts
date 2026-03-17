@@ -13,11 +13,6 @@ export const emailAuthSchema = z.object({
 export type EmailFormValues = z.infer<typeof emailAuthSchema>;
 
 export const loginSchema = emailAuthSchema;
-  email: z
-    .string()
-    .trim()
-    .email({ error: v('email') }),
-});
 
 export type LoginFormValues = z.infer<typeof loginSchema>;
 

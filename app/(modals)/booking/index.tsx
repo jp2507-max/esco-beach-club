@@ -42,7 +42,7 @@ const OCCASIONS = [
   'Celebration',
 ] as const;
 
-function getNext7Days(): {
+function getNext7Days(baseDate: Date): {
   labelKey: string;
   day: string;
   date: Date;
@@ -72,8 +72,8 @@ function getNext7Days(): {
     'dec',
   ] as const;
   for (let i = 0; i < 7; i++) {
-    const d = new Date();
-    d.setDate(d.getDate() + i);
+    const d = new Date(baseDate);
+    d.setDate(baseDate.getDate() + i);
     days.push({
       date: d,
       day: String(d.getDate()),
@@ -93,7 +93,7 @@ export default function BookingModalScreen(): React.JSX.Element {
   const { t } = useTranslation(['booking', 'common']);
 
   const [now, setNow] = useState(() => new Date());
-  const dates = useMemo(() => getNext7Days(), [now]);
+  const dates = useMemo(() => getNext7Days(now), [now]);
 
   useEffect(() => {
     const msUntilMidnight = (): number => {
