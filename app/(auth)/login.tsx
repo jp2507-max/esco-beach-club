@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/providers/AuthProvider';
+import { ErrorBanner } from '@/src/components/ui';
 import { motion } from '@/src/lib/animations/motion';
 import { useEmailCodeAuthFlow } from '@/src/lib/auth/use-email-code-auth-flow';
 import { isAuthErrorKey } from '@/src/lib/auth-errors';
@@ -78,6 +79,12 @@ export default function LoginScreen(): React.JSX.Element {
     buttonScale.set(withSpring(1, motion.spring.snappy));
   }
 
+  const resolvedErrorMessage = visibleError
+    ? isAuthErrorKey(visibleError.message)
+      ? t(visibleError.message)
+      : visibleError.message
+    : null;
+
   return (
     <View className="flex-1">
       <LinearGradient
@@ -125,15 +132,7 @@ export default function LoginScreen(): React.JSX.Element {
                 : t('loginSubtitle')}
             </Text>
 
-            {visibleError ? (
-              <View className="mb-4 rounded-xl bg-[#FEE2E2] p-3">
-                <Text className="text-[13px] font-medium text-[#DC2626]">
-                  {isAuthErrorKey(visibleError.message)
-                    ? t(visibleError.message)
-                    : visibleError.message}
-                </Text>
-              </View>
-            ) : null}
+            <ErrorBanner className="mb-4" message={resolvedErrorMessage} />
 
             {isCodeStep ? (
               <ControlledTextInput<VerifyCodeFormValues>

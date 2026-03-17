@@ -5,21 +5,15 @@ import {
   Plus,
   Sparkles,
   Users,
-  X,
 } from 'lucide-react-native';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  cancelAnimation,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
 import { useProfileData } from '@/providers/DataProvider';
-import { rmTiming } from '@/src/lib/animations/motion';
+import { Button, ModalHeader } from '@/src/components/ui';
+import { useScreenEntry } from '@/src/lib/animations/use-screen-entry';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 
@@ -112,26 +106,15 @@ export default function BookingModalScreen(): React.JSX.Element {
   const [occasion, setOccasion] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const confirmTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const fadeIn = useSharedValue(0);
-  const slideUp = useSharedValue(30);
+  const { contentStyle } = useScreenEntry();
 
   useEffect(() => {
-    fadeIn.set(withTiming(1, rmTiming(400)));
-    slideUp.set(withTiming(0, rmTiming(400)));
     return () => {
-      cancelAnimation(fadeIn);
-      cancelAnimation(slideUp);
       if (confirmTimeoutRef.current) {
         clearTimeout(confirmTimeoutRef.current);
       }
     };
-  }, [confirmTimeoutRef, fadeIn, slideUp]);
-
-  const contentStyle = useAnimatedStyle(() => ({
-    opacity: fadeIn.get(),
-    transform: [{ translateY: slideUp.get() }],
-  }));
+  }, [confirmTimeoutRef]);
 
   const canConfirm = selectedTime !== null && occasion !== null;
 
@@ -171,26 +154,13 @@ export default function BookingModalScreen(): React.JSX.Element {
       className="flex-1 bg-background dark:bg-dark-bg"
       style={{ paddingTop: insets.top }}
     >
-      <View className="flex-row items-center justify-between border-b border-border px-5 py-4 dark:border-dark-border">
-        <View>
-          <Text className="text-2xl font-extrabold text-text dark:text-text-primary-dark">
-            {t('booking:reserveSpot')}
-          </Text>
-          {eventTitle ? (
-            <Text className="mt-0.5 text-[13px] font-medium text-text-secondary dark:text-text-secondary-dark">
-              {eventTitle}
-            </Text>
-          ) : null}
-        </View>
-        <Pressable
-          accessibilityRole="button"
-          className="size-10 items-center justify-center rounded-full bg-sand dark:bg-dark-bg-card"
-          onPress={() => router.back()}
-          testID="close-booking"
-        >
-          <X color={Colors.text} size={20} />
-        </Pressable>
-      </View>
+      <ModalHeader
+        className="border-b border-border dark:border-dark-border"
+        closeTestID="close-booking"
+        onClose={() => router.back()}
+        subtitle={eventTitle}
+        title={t('booking:reserveSpot')}
+      />
 
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
@@ -218,8 +188,8 @@ export default function BookingModalScreen(): React.JSX.Element {
                     key={`${d.day}-${d.monthKey}`}
                     className={
                       active
-                        ? 'h-20 w-[68px] items-center justify-center rounded-2xl bg-primary'
-                        : 'h-20 w-[68px] items-center justify-center rounded-2xl border-[1.5px] border-border bg-white dark:border-dark-border dark:bg-dark-bg-card'
+                        ? 'h-20 w-17 items-center justify-center rounded-2xl bg-primary'
+                        : 'h-20 w-17 items-center justify-center rounded-2xl border-[1.5px] border-border bg-white dark:border-dark-border dark:bg-dark-bg-card'
                     }
                     onPress={() => !isSubmitting && setSelectedDate(i)}
                     disabled={isSubmitting}
@@ -267,7 +237,7 @@ export default function BookingModalScreen(): React.JSX.Element {
                   <Pressable
                     accessibilityRole="button"
                     key={slot.time}
-                    className="mb-2.5 items-center rounded-[14px] py-[14px]"
+                    className="mb-2.5 items-center rounded-[14px] py-3.5"
                     onPress={() =>
                       slot.available &&
                       !isSubmitting &&
@@ -371,7 +341,7 @@ export default function BookingModalScreen(): React.JSX.Element {
                   <Pressable
                     accessibilityRole="button"
                     key={o}
-                    className="mb-2.5 mr-2.5 rounded-full px-[18px] py-3"
+                    className="mb-2.5 mr-2.5 rounded-full px-4.5 py-3"
                     onPress={() => !isSubmitting && setOccasion(o)}
                     disabled={isSubmitting}
                     style={{
@@ -399,7 +369,7 @@ export default function BookingModalScreen(): React.JSX.Element {
             </View>
           </View>
 
-          <View className="h-[120px]" />
+          <View className="h-30" />
         </Animated.View>
       </ScrollView>
 
@@ -407,20 +377,17 @@ export default function BookingModalScreen(): React.JSX.Element {
         className="absolute bottom-0 left-0 right-0 border-t border-border bg-white px-5 pt-3.5 dark:border-dark-border dark:bg-dark-bg-card"
         style={{ paddingBottom: Math.max(insets.bottom, 16) }}
       >
-        <Pressable
-          accessibilityRole="button"
-          className="items-center rounded-2xl bg-primary py-[18px]"
+        <Button
+          className="rounded-2xl"
           onPress={handleConfirm}
           disabled={!canConfirm || isSubmitting}
-          style={!canConfirm ? { opacity: 0.45 } : undefined}
+          size="lg"
           testID="confirm-booking"
         >
-          <Text className="text-[17px] font-bold text-white">
-            {isSubmitting
-              ? t('booking:reserving')
-              : t('booking:confirmReservation')}
-          </Text>
-        </Pressable>
+          {isSubmitting
+            ? t('booking:reserving')
+            : t('booking:confirmReservation')}
+        </Button>
       </View>
     </View>
   );

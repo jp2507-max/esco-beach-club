@@ -84,6 +84,7 @@ export default function EventDetailsScreen(): React.JSX.Element {
     transform: [{ translateY: slide.get() }],
   }));
 
+  // TODO(#FAV-123): Persist isLiked to API/localStorage; currently local-only and resets on navigation
   const [isLiked, setIsLiked] = useState(false);
 
   if (!foundEvent) {

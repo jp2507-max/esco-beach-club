@@ -27,8 +27,9 @@ import {
   useNewsData,
   useProfileData,
 } from '@/providers/DataProvider';
-import { Avatar } from '@/src/components/ui/avatar';
+import { Avatar, Card, SectionHeader } from '@/src/components/ui';
 import { rmTiming } from '@/src/lib/animations/motion';
+import { useScreenEntry } from '@/src/lib/animations/use-screen-entry';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 import { Image } from '@/src/tw/image';
@@ -74,39 +75,6 @@ type HomeFeedRow =
       type: 'news';
     };
 
-type HomeSectionHeaderProps = {
-  title: string;
-  onSeeAllPress?: () => void;
-};
-
-function HomeSectionHeader({
-  title,
-  onSeeAllPress,
-}: HomeSectionHeaderProps): React.JSX.Element {
-  const { t } = useTranslation('home');
-
-  return (
-    <View className="mb-4 mt-1 flex-row items-center justify-between px-5">
-      <Text className="text-xl font-extrabold text-text dark:text-text-primary-dark">
-        {title}
-      </Text>
-      {onSeeAllPress ? (
-        <Pressable accessibilityRole="button" onPress={onSeeAllPress}>
-          <Text className="text-sm font-semibold text-primary">
-            {t('seeAll')}
-          </Text>
-        </Pressable>
-      ) : (
-        <Text className="text-sm font-semibold text-text-muted dark:text-text-muted-dark">
-          {t('seeAll')}
-        </Text>
-      )}
-    </View>
-  );
-}
-
-const MemoizedHomeSectionHeader = React.memo(HomeSectionHeader);
-
 type QuickActionChipProps = {
   action: QuickAction;
   onPress: (route: string) => void;
@@ -148,7 +116,7 @@ function HomeEventCard({
   return (
     <Pressable
       accessibilityRole="button"
-      className="mx-5 mb-4 h-[200px] overflow-hidden rounded-[18px] bg-white dark:bg-dark-bg-card"
+      className="mx-5 mb-4 h-50 overflow-hidden rounded-[18px] bg-white dark:bg-dark-bg-card"
       onPress={() => onPress(event.id)}
       testID={`event-${event.id}`}
     >
@@ -164,30 +132,30 @@ function HomeEventCard({
         style={{ bottom: 0, left: 0, position: 'absolute', right: 0, top: 0 }}
       />
       <View
-        className="absolute right-[14px] top-[14px] rounded-lg px-3 py-[5px]"
+        className="absolute right-3.5 top-3.5 rounded-lg px-3 py-1.25"
         style={{ backgroundColor: 'rgba(0,0,0,0.45)' }}
       >
         <Text className="text-[11px] font-bold tracking-[0.5px] text-white">
           {event.day_label ?? event.date}
         </Text>
       </View>
-      <View className="absolute bottom-0 left-0 right-[60px] p-[18px]">
+      <View className="absolute bottom-0 left-0 right-15 p-4.5">
         <Text className="mb-1.5 text-xl font-extrabold text-white">
           {event.title}
         </Text>
         <View className="flex-row items-center">
           <Clock size={13} color="rgba(255,255,255,0.85)" />
-          <Text className="ml-[5px] text-xs font-medium text-white/85">
+          <Text className="ml-1.25 text-xs font-medium text-white/85">
             {event.time}
           </Text>
-          <Text className="mx-[6px] text-xs text-white/50">·</Text>
+          <Text className="mx-1.5 text-xs text-white/50">·</Text>
           <MapPin size={13} color="rgba(255,255,255,0.85)" />
-          <Text className="ml-[5px] text-xs font-medium text-white/85">
+          <Text className="ml-1.25 text-xs font-medium text-white/85">
             {event.location}
           </Text>
         </View>
       </View>
-      <View className="absolute bottom-5 right-[18px] size-[42px] items-center justify-center rounded-full bg-primary">
+      <View className="absolute bottom-5 right-4.5 size-10.5 items-center justify-center rounded-full bg-primary">
         <ArrowRight size={18} color="#fff" />
       </View>
     </Pressable>
@@ -198,12 +166,12 @@ const MemoizedHomeEventCard = React.memo(HomeEventCard);
 
 function HomeNewsRow({ item }: { item: NewsItem }): React.JSX.Element {
   return (
-    <View
-      className="mx-5 mb-3 flex-row items-center rounded-2xl border border-border bg-white p-3 dark:border-dark-border dark:bg-dark-bg-card"
+    <Card
+      className="mx-5 mb-3 flex-row items-center p-3"
       testID={`news-${item.id}`}
     >
       <Image
-        className="size-[60px] rounded-xl"
+        className="size-15 rounded-xl"
         source={{ uri: item.image }}
         cachePolicy="memory-disk"
         contentFit="cover"
@@ -217,7 +185,7 @@ function HomeNewsRow({ item }: { item: NewsItem }): React.JSX.Element {
           {item.title}
         </Text>
         <Text
-          className="mb-1 text-xs leading-[17px] text-text-secondary dark:text-text-secondary-dark"
+          className="mb-1 text-xs leading-4.25 text-text-secondary dark:text-text-secondary-dark"
           numberOfLines={2}
         >
           {item.subtitle}
@@ -226,7 +194,7 @@ function HomeNewsRow({ item }: { item: NewsItem }): React.JSX.Element {
           {item.time_label}
         </Text>
       </View>
-    </View>
+    </Card>
   );
 }
 
@@ -238,8 +206,7 @@ export default function HomeScreen(): React.JSX.Element {
   const { t } = useTranslation('home');
   const cardScale = useSharedValue(0.95);
   const cardOpacity = useSharedValue(0);
-  const fadeIn = useSharedValue(0);
-  const slideUp = useSharedValue(30);
+  const { contentStyle: sectionStyle } = useScreenEntry({ durationMs: 500 });
 
   useEffect(() => {
     cardScale.set(
@@ -249,24 +216,15 @@ export default function HomeScreen(): React.JSX.Element {
       })
     );
     cardOpacity.set(withTiming(1, rmTiming(600)));
-    fadeIn.set(withTiming(1, rmTiming(500)));
-    slideUp.set(withTiming(0, rmTiming(500)));
     return () => {
       cancelAnimation(cardScale);
       cancelAnimation(cardOpacity);
-      cancelAnimation(fadeIn);
-      cancelAnimation(slideUp);
     };
-  }, [cardOpacity, cardScale, fadeIn, slideUp]);
+  }, [cardOpacity, cardScale]);
 
   const cardStyle = useAnimatedStyle(() => ({
     opacity: cardOpacity.get(),
     transform: [{ scale: cardScale.get() }],
-  }));
-
-  const sectionStyle = useAnimatedStyle(() => ({
-    opacity: fadeIn.get(),
-    transform: [{ translateY: slideUp.get() }],
   }));
 
   const { profile } = useProfileData();
@@ -356,9 +314,11 @@ export default function HomeScreen(): React.JSX.Element {
     ({ item }: ListRenderItemInfo<HomeFeedRow>): React.JSX.Element => {
       if (item.type === 'section')
         return (
-          <MemoizedHomeSectionHeader
+          <SectionHeader
+            actionLabel={t('seeAll')}
+            className="mb-4 mt-1 px-5"
             title={item.title}
-            onSeeAllPress={
+            onActionPress={
               item.title === t('happeningThisWeek')
                 ? handleSeeAllEvents
                 : undefined
@@ -387,17 +347,17 @@ export default function HomeScreen(): React.JSX.Element {
       className="flex-1 bg-background dark:bg-dark-bg"
       style={{ paddingTop: insets.top }}
     >
-      <View className="absolute left-0 right-0 top-0 h-[300px] overflow-hidden">
+      <View className="absolute left-0 right-0 top-0 h-75 overflow-hidden">
         <View
-          className="absolute size-[180px] rounded-full"
+          className="absolute size-45 rounded-full"
           style={{ backgroundColor: '#E91E6310', right: -20, top: -40 }}
         />
         <View
-          className="absolute size-[120px] rounded-full"
+          className="absolute size-30 rounded-full"
           style={{ backgroundColor: '#00968812', right: 80, top: 30 }}
         />
         <View
-          className="absolute size-[100px] rounded-full"
+          className="absolute size-25 rounded-full"
           style={{ backgroundColor: '#FF980010', left: -20, top: 10 }}
         />
       </View>
@@ -428,11 +388,11 @@ export default function HomeScreen(): React.JSX.Element {
                   testID="profile-avatar"
                 >
                   <Avatar
-                    className="size-[42px] rounded-full"
+                    className="size-10.5 rounded-full"
                     uri={profile?.avatar_url}
                   />
                   <View
-                    className="absolute -bottom-px -right-px size-[14px] rounded-full"
+                    className="absolute -bottom-px -right-px size-3.5 rounded-full"
                     style={{
                       backgroundColor: '#4CAF50',
                       borderColor: Colors.background,
@@ -513,7 +473,7 @@ export default function HomeScreen(): React.JSX.Element {
                   </View>
 
                   <View
-                    className="absolute size-[150px] rounded-full"
+                    className="absolute size-37.5 rounded-full"
                     style={{
                       backgroundColor: 'rgba(255,255,255,0.08)',
                       right: -30,
@@ -521,7 +481,7 @@ export default function HomeScreen(): React.JSX.Element {
                     }}
                   />
                   <View
-                    className="absolute size-[100px] rounded-full"
+                    className="absolute size-25 rounded-full"
                     style={{
                       backgroundColor: 'rgba(255,255,255,0.06)',
                       bottom: -20,
@@ -548,13 +508,15 @@ export default function HomeScreen(): React.JSX.Element {
               </Animated.View>
             </View>
 
-            <MemoizedHomeSectionHeader
+            <SectionHeader
+              actionLabel={t('seeAll')}
+              className="mb-4 mt-1 px-5"
               title={t('happeningThisWeek')}
-              onSeeAllPress={handleSeeAllEvents}
+              onActionPress={handleSeeAllEvents}
             />
           </>
         }
-        ListFooterComponent={<View className="h-[30px]" />}
+        ListFooterComponent={<View className="h-7.5" />}
       />
     </View>
   );

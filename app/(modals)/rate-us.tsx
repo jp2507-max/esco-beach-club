@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { Send, Star, X } from 'lucide-react-native';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Alert, Platform } from 'react-native';
@@ -47,13 +47,12 @@ const STAR_LABEL_KEYS = [
 ] as const;
 
 function useStarScales(): SharedValue<number>[] {
-  return [
-    useSharedValue(1),
-    useSharedValue(1),
-    useSharedValue(1),
-    useSharedValue(1),
-    useSharedValue(1),
-  ];
+  const s0 = useSharedValue(1);
+  const s1 = useSharedValue(1);
+  const s2 = useSharedValue(1);
+  const s3 = useSharedValue(1);
+  const s4 = useSharedValue(1);
+  return useMemo(() => [s0, s1, s2, s3, s4], [s0, s1, s2, s3, s4]);
 }
 
 function StarButton({

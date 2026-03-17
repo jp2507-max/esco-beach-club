@@ -37,6 +37,8 @@ const profile = {
   invite: {
     codeCopied: 'Đã sao chép!',
     codeCopyFailed: 'Không thể sao chép mã',
+    copyReferralCode: 'Sao chép mã mời',
+    copyReferralCodeHint: 'Sao chép mã giới thiệu của bạn vào bảng nhớ tạm',
     titlePrefix: 'Mở khóa',
     titleHighlight: 'VIP Life',
     subtitle:

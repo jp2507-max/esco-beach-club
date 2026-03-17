@@ -8,6 +8,7 @@ import { useWindowDimensions } from 'react-native';
 import { Colors } from '@/constants/colors';
 import type { Partner } from '@/lib/types';
 import { useFilteredPartners } from '@/providers/DataProvider';
+import { CategoryChip } from '@/src/components/ui';
 import { shadows } from '@/src/lib/styles/shadows';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Image } from '@/src/tw/image';
@@ -19,13 +20,6 @@ const partnerCategories = [
   { labelKey: 'categories.dining', value: 'Dining' },
   { labelKey: 'categories.wellness', value: 'Wellness' },
 ] as const;
-
-const activeCategoryChipStyle = {
-  backgroundColor: Colors.secondary,
-  borderColor: Colors.secondary,
-} as const;
-
-const activeCategoryTextStyle = { color: Colors.white } as const;
 
 export default function PerksScreen(): React.JSX.Element {
   const router = useRouter();
@@ -88,7 +82,7 @@ export default function PerksScreen(): React.JSX.Element {
         </View>
         <View className="p-3">
           <Text
-            className="mb-[3px] text-[15px] font-bold text-text dark:text-text-primary-dark"
+            className="mb-0.75 text-[15px] font-bold text-text dark:text-text-primary-dark"
             numberOfLines={1}
           >
             {item.name}
@@ -122,29 +116,13 @@ export default function PerksScreen(): React.JSX.Element {
         style={{ marginBottom: 8, marginTop: 12, maxHeight: 48 }}
       >
         {partnerCategories.map((category) => (
-          <Pressable
-            accessibilityRole="button"
+          <CategoryChip
             key={category.value}
-            className="rounded-full border border-border bg-white px-5 py-2.5 dark:border-dark-border dark:bg-dark-bg-card"
+            isActive={activeCategory === category.value}
+            label={t(category.labelKey)}
             onPress={() => setActiveCategory(category.value)}
-            style={
-              activeCategory === category.value
-                ? activeCategoryChipStyle
-                : undefined
-            }
             testID={`cat-${category.value}`}
-          >
-            <Text
-              className="text-sm font-semibold text-text dark:text-text-primary-dark"
-              style={
-                activeCategory === category.value
-                  ? activeCategoryTextStyle
-                  : undefined
-              }
-            >
-              {t(category.labelKey)}
-            </Text>
-          </Pressable>
+          />
         ))}
       </ScrollView>
 

@@ -1,31 +1,31 @@
 import { FlashList, type ListRenderItemInfo } from '@shopify/flash-list';
-import React, { useEffect, useMemo, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import {
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { Colors } from '@/constants/colors';
-import { rmTiming } from '@/src/lib/animations/motion';
+import { Badge, Card } from '@/src/components/ui';
+import { useScreenEntry } from '@/src/lib/animations/use-screen-entry';
+import {
+  type MenuCategoryKey,
+  type MenuItemKey,
+  useMenuTranslation,
+} from '@/src/lib/i18n/use-menu-translation';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 import { Image } from '@/src/tw/image';
 
 type MenuItem = {
-  descriptionKey: string;
+  descriptionKey: MenuItemKey;
   id: string;
   image: string;
-  nameKey: string;
+  nameKey: MenuItemKey;
   price: string;
-  tagKey?: string;
+  tagKey?: MenuItemKey;
 };
 
 type MenuCategory = {
   items: MenuItem[];
   key: string;
-  labelKey: string;
+  labelKey: MenuCategoryKey;
 };
 
 const MENU_DATA: MenuCategory[] = [
@@ -172,12 +172,15 @@ const MENU_DATA: MenuCategory[] = [
   },
 ];
 
-function MenuItemRow({ item }: { item: MenuItem }): React.JSX.Element {
-  const { t } = useTranslation('menu');
+type MenuItemRowProps = {
+  item: MenuItem;
+  tMenu: (key: MenuItemKey) => string;
+};
 
+function MenuItemRow({ item, tMenu }: MenuItemRowProps): React.JSX.Element {
   return (
-    <View
-      className="mb-3.5 flex-row items-center rounded-[18px] border border-border bg-white p-3 dark:border-dark-border dark:bg-dark-bg-card"
+    <Card
+      className="mb-3.5 flex-row items-center rounded-[18px] p-3"
       testID={`menu-item-${item.id}`}
     >
       <Image
@@ -192,54 +195,35 @@ function MenuItemRow({ item }: { item: MenuItem }): React.JSX.Element {
             className="shrink text-base font-bold text-text dark:text-text-primary-dark"
             numberOfLines={1}
           >
-            {/* @ts-expect-error - dynamic i18n key */}
-            {t(item.nameKey)}
+            {tMenu(item.nameKey)}
           </Text>
           {item.tagKey ? (
-            <View
-              className="ml-2 rounded-md px-2 py-[3px]"
-              style={{ backgroundColor: `${Colors.primary}18` }}
-            >
-              <Text className="text-[10px] font-bold tracking-[0.3px] text-primary">
-                {/* @ts-expect-error - dynamic i18n key */}
-                {t(item.tagKey)}
-              </Text>
-            </View>
+            <Badge
+              className="ml-2 rounded-md px-2 py-0.75"
+              label={tMenu(item.tagKey)}
+              labelClassName="text-[10px] font-bold tracking-[0.3px]"
+              tone="primary"
+            />
           ) : null}
         </View>
         <Text
-          className="mb-1.5 text-xs leading-[17px] text-text-secondary dark:text-text-secondary-dark"
+          className="mb-1.5 text-xs leading-4.25 text-text-secondary dark:text-text-secondary-dark"
           numberOfLines={2}
         >
-          {/* @ts-expect-error - dynamic i18n key */}
-          {t(item.descriptionKey)}
+          {tMenu(item.descriptionKey)}
         </Text>
         <Text className="text-[17px] font-extrabold text-secondary">
           {item.price}
         </Text>
       </View>
-    </View>
+    </Card>
   );
 }
 
-const renderMenuItem = ({
-  item,
-}: ListRenderItemInfo<MenuItem>): React.JSX.Element => (
-  <MenuItemRow item={item} />
-);
-
 export default function MenuScreen(): React.JSX.Element {
-  const { t } = useTranslation('menu');
+  const tMenu = useMenuTranslation();
   const [activeCategory, setActiveCategory] = useState<string>('cocktails');
-  const fade = useSharedValue(0);
-
-  useEffect(() => {
-    fade.set(withTiming(1, rmTiming(400)));
-  }, [fade]);
-
-  const contentStyle = useAnimatedStyle(() => ({
-    opacity: fade.get(),
-  }));
+  const { contentStyle } = useScreenEntry();
 
   const currentItems = useMemo(
     () => MENU_DATA.find((c) => c.key === activeCategory)?.items ?? [],
@@ -249,6 +233,13 @@ export default function MenuScreen(): React.JSX.Element {
   const listContentContainerStyle = useMemo(
     () => ({ paddingBottom: 40, paddingHorizontal: 20, paddingTop: 18 }),
     []
+  );
+
+  const renderMenuItem = useCallback(
+    ({ item }: ListRenderItemInfo<MenuItem>): React.JSX.Element => (
+      <MenuItemRow item={item} tMenu={tMenu} />
+    ),
+    [tMenu]
   );
 
   return (
@@ -278,8 +269,7 @@ export default function MenuScreen(): React.JSX.Element {
                   className="text-sm font-semibold"
                   style={{ color: active ? '#fff' : Colors.textSecondary }}
                 >
-                  {/* @ts-expect-error - dynamic i18n key */}
-                  {t(cat.labelKey)}
+                  {tMenu(cat.labelKey)}
                 </Text>
               </Pressable>
             );

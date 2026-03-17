@@ -37,6 +37,8 @@ const profile = {
   invite: {
     codeCopied: 'Copied!',
     codeCopyFailed: 'Could not copy code',
+    copyReferralCode: 'Copy invite code',
+    copyReferralCodeHint: 'Copies your referral code to the clipboard',
     titlePrefix: 'Unlock the',
     titleHighlight: 'VIP Life',
     subtitle:

@@ -13,8 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { Colors } from '@/constants/colors';
 import type { Event } from '@/lib/types';
 import { useEventsData, useProfileData } from '@/providers/DataProvider';
-import { Avatar } from '@/src/components/ui/avatar';
-import { cn } from '@/src/lib/utils';
+import { Avatar, CategoryChip } from '@/src/components/ui';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Image } from '@/src/tw/image';
 
@@ -25,13 +24,6 @@ const eventCategories = [
   { labelKey: 'categories.wellness', value: 'Wellness' },
   { labelKey: 'categories.dining', value: 'Dining' },
 ] as const;
-
-const activeCategoryChipStyle = {
-  backgroundColor: Colors.secondary,
-  borderColor: Colors.secondary,
-} as const;
-
-const activeCategoryTextStyle = { color: Colors.white } as const;
 
 export default function EventsScreen(): React.JSX.Element {
   const [activeCategory, setActiveCategory] = useState<string>('All Events');
@@ -198,27 +190,14 @@ export default function EventsScreen(): React.JSX.Element {
                 const isActive = activeCategory === category.value;
 
                 return (
-                  <Pressable
-                    accessibilityRole="button"
+                  <CategoryChip
                     key={category.value}
-                    className={cn(
-                      'rounded-full border px-5 py-2.5',
-                      'border-border bg-card dark:border-dark-border dark:bg-dark-bg-card'
-                    )}
+                    isActive={isActive}
+                    label={t(category.labelKey)}
                     onPress={() => setActiveCategory(category.value)}
-                    style={isActive ? activeCategoryChipStyle : undefined}
                     testID={`cat-${category.value}`}
-                  >
-                    <Text
-                      className={cn(
-                        'text-[13px] font-semibold',
-                        'text-text dark:text-text-primary-dark'
-                      )}
-                      style={isActive ? activeCategoryTextStyle : undefined}
-                    >
-                      {t(category.labelKey)}
-                    </Text>
-                  </Pressable>
+                    labelClassName="text-[13px]"
+                  />
                 );
               })}
             </ScrollView>

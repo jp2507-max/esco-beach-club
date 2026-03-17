@@ -2,6 +2,18 @@ import { z } from 'zod';
 
 const v = (key: string) => `common:validation.${key}` as const;
 
+/** Validates YYYY-MM-DD is a real calendar date (no rollover). */
+function isValidCalendarDate(s: string): boolean {
+  const [y, m, d] = s.split('-').map(Number);
+  if (!y || !m || m < 1 || m > 12 || !d || d < 1) return false;
+  const date = new Date(y, m - 1, d);
+  return (
+    date.getFullYear() === y &&
+    date.getMonth() === m - 1 &&
+    date.getDate() === d
+  );
+}
+
 /** Shared schema for email-code auth (login/signup). */
 export const emailAuthSchema = z.object({
   email: z
@@ -38,6 +50,7 @@ export const privateEventSchema = z.object({
   preferredDate: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, { error: v('invalidDate') })
+    .refine(isValidCalendarDate, { error: v('invalidDate') })
     .transform((s) => new Date(s)),
   estimatedPax: z
     .string()

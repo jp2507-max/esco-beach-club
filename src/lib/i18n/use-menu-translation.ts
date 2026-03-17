@@ -1,10 +1,15 @@
 import { useTranslation } from 'react-i18next';
 
+import type menuEn from '@/src/lib/i18n/locales/en/menu';
+
+type MenuItemId = keyof (typeof menuEn)['items'];
+type MenuCategoryId = keyof (typeof menuEn)['categories'];
+
 export type MenuItemKey =
-  | `items.${string}.name`
-  | `items.${string}.description`
-  | `items.${string}.tag`;
-export type MenuCategoryKey = `categories.${string}`;
+  | `items.${MenuItemId}.name`
+  | `items.${MenuItemId}.description`
+  | `items.${MenuItemId}.tag`;
+export type MenuCategoryKey = `categories.${MenuCategoryId}`;
 export type MenuKey = MenuItemKey | MenuCategoryKey;
 
 export function useMenuTranslation(): (key: MenuKey) => string {

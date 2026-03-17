@@ -8,7 +8,7 @@ export default function NotFoundScreen(): React.JSX.Element {
   const { t } = useTranslation('common');
   return (
     <>
-      <Stack.Screen options={{ title: 'Oops!' }} />
+      <Stack.Screen options={{ title: t('notFound.title') }} />
       <View className="flex-1 items-center justify-center bg-background px-5 dark:bg-dark-bg">
         <Text className="text-lg font-semibold text-text dark:text-text-primary-dark">
           {t('notFound.title')}

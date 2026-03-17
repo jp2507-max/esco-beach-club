@@ -37,6 +37,8 @@ const profile = {
   invite: {
     codeCopied: '복사됨!',
     codeCopyFailed: '코드를 복사할 수 없습니다',
+    copyReferralCode: '초대 코드 복사',
+    copyReferralCodeHint: '추천 코드를 클립보드에 복사합니다',
     titlePrefix: '지금',
     titleHighlight: 'VIP Life',
     subtitle: '친구를 Esco Life로 초대하고\n오늘 바로 특별한 혜택을 받으세요.',

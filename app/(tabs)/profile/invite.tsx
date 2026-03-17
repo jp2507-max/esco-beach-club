@@ -49,13 +49,18 @@ export default function InviteScreen(): React.JSX.Element {
   const referralCurrent = referralProgress.current;
   const referralGoal = referralProgress.goal;
   const code = profile?.referral_code ?? 'ESCO-2025';
-  const progressRatio = Math.min(referralCurrent / referralGoal, 1);
+  const progressRatio =
+    referralGoal > 0
+      ? Math.min(Math.max(referralCurrent / referralGoal, 0), 1)
+      : 0;
   const [copiedRecently, setCopiedRecently] = useState<boolean>(false);
   const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const progress = useSharedValue(0);
   const fade = useSharedValue(0);
   const trackWidth = useSharedValue(0);
+  const remainingToGoal = Math.max(referralGoal - referralCurrent, 0);
+
   const milestones = useMemo<Milestone[]>(
     () => [
       {
@@ -70,10 +75,11 @@ export default function InviteScreen(): React.JSX.Element {
         id: 'vip-badge',
         isGoal: true,
         label: t('invite.milestones.vipBadge'),
-        sub: t('invite.milestones.twoMoreInvites', {
-          count: Math.max(referralGoal - referralCurrent, 0),
-        }),
-        unlocked: false,
+        sub:
+          referralCurrent >= referralGoal
+            ? t('invite.milestones.unlocked')
+            : t('invite.milestones.twoMoreInvites', { count: remainingToGoal }),
+        unlocked: referralCurrent >= referralGoal,
       },
       {
         icon: Shield,
@@ -83,7 +89,7 @@ export default function InviteScreen(): React.JSX.Element {
         unlocked: false,
       },
     ],
-    [referralCurrent, referralGoal, t]
+    [referralCurrent, referralGoal, remainingToGoal, t]
   );
 
   useEffect(() => {
@@ -193,6 +199,8 @@ export default function InviteScreen(): React.JSX.Element {
               </Text>
               <Pressable
                 accessibilityRole="button"
+                accessibilityLabel={t('invite.copyReferralCode')}
+                accessibilityHint={t('invite.copyReferralCodeHint')}
                 className="size-9 items-center justify-center rounded-xl border border-border bg-white"
                 onPress={handleCopy}
                 testID="copy-code"

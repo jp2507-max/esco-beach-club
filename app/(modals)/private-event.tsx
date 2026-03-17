@@ -7,7 +7,6 @@ import {
   PartyPopper,
   Send,
   Users,
-  X,
 } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
@@ -23,6 +22,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/colors';
 import { submitPrivateEventInquiry } from '@/lib/api';
 import { useUserId } from '@/providers/DataProvider';
+import { Button, ModalHeader } from '@/src/components/ui';
 import { motion } from '@/src/lib/animations/motion';
 import { ControlledTextInput } from '@/src/lib/forms/controlled-text-input';
 import {
@@ -115,6 +115,7 @@ export default function PrivateEventScreen(): React.JSX.Element {
 
   const isValid =
     eventType.length > 0 && !!preferredDate && estimatedPax.length > 0;
+  const isSubmitting = inquiryMutation.isPending;
 
   function handleInvalidSubmit(): void {
     Alert.alert(
@@ -141,20 +142,15 @@ export default function PrivateEventScreen(): React.JSX.Element {
       className="flex-1 bg-background dark:bg-dark-bg"
       style={{ paddingTop: insets.top }}
     >
-      <View className="flex-row items-center justify-between px-4 py-3">
-        <Pressable
-          accessibilityRole="button"
-          className="size-10 items-center justify-center rounded-full border border-border bg-white dark:border-dark-border dark:bg-dark-bg-card"
-          onPress={() => router.back()}
-          testID="close-inquiry"
-        >
-          <X color={Colors.text} size={20} />
-        </Pressable>
-        <Text className="text-base font-bold text-text dark:text-text-primary-dark">
-          {t('privateEvent.title')}
-        </Text>
-        <View className="w-10" />
-      </View>
+      <ModalHeader
+        className="px-4 py-3"
+        closeButtonClassName="size-10 items-center justify-center rounded-full border border-border bg-white dark:border-dark-border dark:bg-dark-bg-card"
+        closePosition="left"
+        closeTestID="close-inquiry"
+        onClose={() => router.back()}
+        title={t('privateEvent.title')}
+        titleAlign="center"
+      />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -169,7 +165,7 @@ export default function PrivateEventScreen(): React.JSX.Element {
           {!submitted ? (
             <>
               <View className="mb-7 items-center">
-                <View className="mb-4 size-[70px] items-center justify-center rounded-full bg-pink-light">
+                <View className="mb-4 size-17.5 items-center justify-center rounded-full bg-pink-light">
                   <PartyPopper color={Colors.primary} size={32} />
                 </View>
                 <Text className="mb-2 text-center text-2xl font-extrabold text-text dark:text-text-primary-dark">
@@ -219,12 +215,12 @@ export default function PrivateEventScreen(): React.JSX.Element {
               </Pressable>
 
               {showTypePicker && (
-                <View className="mb-2 mt-[-4px] overflow-hidden rounded-[14px] border border-border bg-white dark:border-dark-border dark:bg-dark-bg-card">
+                <View className="-mt-1 mb-2 overflow-hidden rounded-[14px] border border-border bg-white dark:border-dark-border dark:bg-dark-bg-card">
                   {EVENT_TYPE_KEYS.map((key) => (
                     <Pressable
                       accessibilityRole="button"
                       key={key}
-                      className="border-b border-border px-[18px] py-[13px] last:border-b-0 dark:border-dark-border"
+                      className="border-b border-border px-4.5 py-3.25 last:border-b-0 dark:border-dark-border"
                       onPress={() => handleTypeSelect(key)}
                       style={
                         eventType === key
@@ -302,7 +298,7 @@ export default function PrivateEventScreen(): React.JSX.Element {
                         <TextInput
                           accessibilityLabel="Text input field"
                           accessibilityHint="Enter preferred date in YYYY-MM-DD format"
-                          className="min-h-[24px] flex-1 p-0 text-[15px] font-semibold text-text dark:text-text-primary-dark"
+                          className="min-h-6 flex-1 p-0 text-[15px] font-semibold text-text dark:text-text-primary-dark"
                           placeholder={
                             t('privateEvent.preferredDatePlaceholder') ||
                             'YYYY-MM-DD'
@@ -374,7 +370,7 @@ export default function PrivateEventScreen(): React.JSX.Element {
               />
 
               <ControlledTextInput<PrivateEventFormInput>
-                className="min-h-[60px]"
+                className="min-h-15"
                 containerClassName="min-h-[100px] items-start pt-[14px]"
                 control={control}
                 label={t('privateEvent.additionalNotes')}
@@ -386,45 +382,40 @@ export default function PrivateEventScreen(): React.JSX.Element {
                 textAlignVertical="top"
               />
 
-              <Pressable
-                accessibilityRole="button"
-                className="mt-5 flex-row items-center justify-center rounded-2xl bg-secondary py-4"
+              <Button
+                className="mt-5"
+                isLoading={isSubmitting}
+                leftIcon={<Send color="#fff" size={18} />}
                 onPress={handleSubmit(handleValidSubmit, handleInvalidSubmit)}
-                style={!isValid ? { opacity: 0.5 } : undefined}
+                disabled={!isValid}
                 testID="submit-inquiry"
+                variant="secondary"
               >
-                <Send color="#fff" size={18} />
-                <Text className="ml-2 text-base font-bold text-white">
-                  {t('privateEvent.sendInquiry')}
-                </Text>
-              </Pressable>
+                {t('privateEvent.sendInquiry')}
+              </Button>
 
               <Text className="mt-3 text-center text-xs text-text-muted dark:text-text-muted-dark">
                 {t('privateEvent.teamResponse')}
               </Text>
             </>
           ) : (
-            <Animated.View
-              className="items-center pt-[60px]"
-              style={successStyle}
-            >
+            <Animated.View className="items-center pt-15" style={successStyle}>
               <Text className="mb-5 text-[64px]">🎊</Text>
-              <Text className="mb-[10px] text-[28px] font-extrabold text-text dark:text-text-primary-dark">
+              <Text className="mb-2.5 text-[28px] font-extrabold text-text dark:text-text-primary-dark">
                 {t('privateEvent.inquirySent')}
               </Text>
-              <Text className="mb-9 px-5 text-center text-[15px] leading-[22px] text-text-secondary dark:text-text-secondary-dark">
+              <Text className="mb-9 px-5 text-center text-[15px] leading-5.5 text-text-secondary dark:text-text-secondary-dark">
                 {t('privateEvent.inquirySentMessage')}
               </Text>
-              <Pressable
-                accessibilityRole="button"
-                className="rounded-2xl bg-secondary px-12 py-4"
+              <Button
+                className="px-12"
                 onPress={() => router.back()}
+                size="lg"
                 testID="done-inquiry"
+                variant="secondary"
               >
-                <Text className="text-base font-bold text-white">
-                  {t('privateEvent.backToEvents')}
-                </Text>
-              </Pressable>
+                {t('privateEvent.backToEvents')}
+              </Button>
             </Animated.View>
           )}
         </ScrollView>
