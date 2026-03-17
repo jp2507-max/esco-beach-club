@@ -1,3 +1,4 @@
+import React from 'react';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useTranslation } from 'react-i18next';

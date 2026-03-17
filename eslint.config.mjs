@@ -90,7 +90,7 @@ export default defineConfig([
       },
     },
     settings: {
-      'import/ignore': ['node_modules', '\\.agent'],
+      'import/ignore': ['node_modules', '\\.agents?'],
       'import/resolver': {
         typescript: {
           alwaysTryTypes: true,

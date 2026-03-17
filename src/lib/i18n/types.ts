@@ -10,6 +10,7 @@ export const namespaces = [
   'profile',
   'perks',
   'booking',
+  'menu',
 ] as const;
 
 export type AppNamespace = (typeof namespaces)[number];

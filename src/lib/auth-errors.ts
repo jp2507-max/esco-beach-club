@@ -4,6 +4,7 @@ export const AUTH_ERROR_KEYS = [
   'emailAndCodeRequired',
   'unableToSendCode',
   'unableToVerifyCode',
+  'unableToSignOut',
 ] as const;
 
 export type AuthErrorKey = (typeof AUTH_ERROR_KEYS)[number];

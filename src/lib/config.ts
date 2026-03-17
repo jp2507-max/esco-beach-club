@@ -1,9 +1,10 @@
 export const config = {
   contact: {
-    conciergeBase: `https://wa.me/${process.env.EXPO_PUBLIC_CONCIERGE_PHONE || '1234567890'}`,
+    conciergeBase: process.env.EXPO_PUBLIC_CONCIERGE_PHONE
+      ? `https://wa.me/${process.env.EXPO_PUBLIC_CONCIERGE_PHONE}`
+      : null,
     supportEmail: 'support@escolife.com',
   },
-  /** Fallback avatar URL when profile has no avatar_url. Uses ui-avatars.com for reliable placeholder. */
-  defaultAvatarUri:
-    'https://ui-avatars.com/api/?name=Member&size=200&background=E91E63&color=fff',
+  /** Fallback avatar URL when profile has no avatar_url. Uses bundled local asset for offline reliability. */
+  defaultAvatarUri: require('@/assets/images/default-avatar.png'),
 } as const;

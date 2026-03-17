@@ -1,4 +1,9 @@
 const common = {
+  accessibility: {
+    textInputDefault: 'Trường nhập văn bản',
+    textInputHint: 'Nhập văn bản',
+    textInputHintWithField: 'Nhập {{field}}',
+  },
   validation: {
     required: 'Trường này là bắt buộc.',
     email: 'Vui lòng nhập địa chỉ email hợp lệ.',
@@ -9,6 +14,7 @@ const common = {
     maxCharacters: 'Tối đa {{count}} ký tự.',
     commentMax: 'Nhận xét tối đa 500 ký tự.',
     invalidDate: 'Vui lòng nhập ngày hợp lệ theo định dạng YYYY-MM-DD.',
+    invalidCode: 'Vui lòng nhập mã xác minh 6 chữ số.',
   },
   back: 'Quay lại',
   rateUs: {
@@ -85,6 +91,10 @@ const common = {
     title: 'Esco Life',
     description:
       'Chào mừng đến Esco Life Beach Club. Tận hưởng các ưu đãi dành riêng cho thành viên.',
+  },
+  notFound: {
+    title: 'Màn hình này không tồn tại.',
+    cta: 'Đi đến trang chủ',
   },
 } as const;
 

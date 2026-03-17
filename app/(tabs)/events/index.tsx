@@ -13,7 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { Colors } from '@/constants/colors';
 import type { Event } from '@/lib/types';
 import { useEventsData, useProfileData } from '@/providers/DataProvider';
-import { config } from '@/src/lib/config';
+import { Avatar } from '@/src/components/ui/avatar';
 import { cn } from '@/src/lib/utils';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Image } from '@/src/tw/image';
@@ -42,7 +42,6 @@ export default function EventsScreen(): React.JSX.Element {
 
   const { events } = useEventsData();
   const { profile } = useProfileData();
-  const userAvatar = profile?.avatar_url ?? config.defaultAvatarUri;
 
   const renderHeaderRight = useCallback(
     () => (
@@ -51,17 +50,15 @@ export default function EventsScreen(): React.JSX.Element {
           <SlidersHorizontal size={18} color={Colors.text} />
         </View>
         <View className="size-10 items-center justify-center rounded-full border-[2.5px] border-primary/25">
-          <Image
+          <Avatar
             className="size-8.5 rounded-full"
-            source={{ uri: userAvatar }}
-            cachePolicy="memory-disk"
-            recyclingKey={`events-header-avatar-${userAvatar}`}
-            transition={180}
+            uri={profile?.avatar_url}
+            recyclingKey={`events-header-avatar-${profile?.avatar_url}`}
           />
         </View>
       </View>
     ),
-    [userAvatar]
+    [profile]
   );
 
   const filteredEvents = useMemo(() => {
@@ -155,6 +152,8 @@ export default function EventsScreen(): React.JSX.Element {
         </View>
         <View className="h-20 items-end justify-between py-1">
           <View className="p-1">
+            {/* TODO: Implement favorites feature (Tracking ID: #FAV-123) */}
+            {/* Note: intended onPress behavior is to toggle favorite state or open auth if user is not logged in */}
             <Heart size={18} color={Colors.textLight} />
           </View>
           <Text className="text-lg font-bold text-text dark:text-text-primary-dark">

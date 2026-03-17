@@ -137,6 +137,7 @@ const _schema = i.schema({
         on: 'profiles',
         has: 'one',
         label: 'user',
+        onDelete: 'cascade',
       },
       reverse: {
         on: '$users',

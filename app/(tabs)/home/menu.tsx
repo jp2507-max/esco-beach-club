@@ -1,5 +1,6 @@
 import { FlashList, type ListRenderItemInfo } from '@shopify/flash-list';
 import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   useAnimatedStyle,
   useSharedValue,
@@ -13,57 +14,55 @@ import { Animated } from '@/src/tw/animated';
 import { Image } from '@/src/tw/image';
 
 type MenuItem = {
-  description: string;
+  descriptionKey: string;
   id: string;
   image: string;
-  name: string;
+  nameKey: string;
   price: string;
-  tag?: string;
+  tagKey?: string;
 };
 
 type MenuCategory = {
   items: MenuItem[];
   key: string;
-  label: string;
+  labelKey: string;
 };
 
 const MENU_DATA: MenuCategory[] = [
   {
     key: 'cocktails',
-    label: 'Cocktails',
+    labelKey: 'categories.cocktails',
     items: [
       {
         id: 'c1',
-        name: 'Esco Sunset',
-        description:
-          'Passion fruit, rum, lime, topped with prosecco & edible flowers',
+        nameKey: 'items.c1.name',
+        descriptionKey: 'items.c1.description',
         price: '$18',
         image:
           'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=300&h=300&fit=crop',
-        tag: 'Signature',
+        tagKey: 'items.c1.tag',
       },
       {
         id: 'c2',
-        name: 'Tokyo Drift',
-        description: 'Japanese whisky, yuzu, shiso leaf, ginger foam',
+        nameKey: 'items.c2.name',
+        descriptionKey: 'items.c2.description',
         price: '$22',
         image:
           'https://images.unsplash.com/photo-1536935338788-846bb9981813?w=300&h=300&fit=crop',
       },
       {
         id: 'c3',
-        name: 'Velvet Rose',
-        description: 'Gin, rose water, lychee, elderflower tonic',
+        nameKey: 'items.c3.name',
+        descriptionKey: 'items.c3.description',
         price: '$16',
         image:
           'https://images.unsplash.com/photo-1551538827-9c037cb4f32a?w=300&h=300&fit=crop',
-        tag: 'Popular',
+        tagKey: 'items.c3.tag',
       },
       {
         id: 'c4',
-        name: 'Smoky Old Fashioned',
-        description:
-          'Bourbon, demerara, angostura, orange peel, smoked tableside',
+        nameKey: 'items.c4.name',
+        descriptionKey: 'items.c4.description',
         price: '$24',
         image:
           'https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=300&h=300&fit=crop',
@@ -72,37 +71,37 @@ const MENU_DATA: MenuCategory[] = [
   },
   {
     key: 'food',
-    label: 'Food',
+    labelKey: 'categories.food',
     items: [
       {
         id: 'f1',
-        name: 'Truffle Wagyu Sliders',
-        description: 'A5 wagyu, truffle aioli, brioche bun, micro greens',
+        nameKey: 'items.f1.name',
+        descriptionKey: 'items.f1.description',
         price: '$32',
         image:
           'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300&h=300&fit=crop',
-        tag: "Chef's Pick",
+        tagKey: 'items.f1.tag',
       },
       {
         id: 'f2',
-        name: 'Tuna Tartare',
-        description: 'Bluefin tuna, avocado mousse, sesame crisp, ponzu',
+        nameKey: 'items.f2.name',
+        descriptionKey: 'items.f2.description',
         price: '$28',
         image:
           'https://images.unsplash.com/photo-1534604973900-c43ab4c2e0ab?w=300&h=300&fit=crop',
       },
       {
         id: 'f3',
-        name: 'Lobster Tempura',
-        description: 'Crispy lobster tail, wasabi mayo, pickled ginger',
+        nameKey: 'items.f3.name',
+        descriptionKey: 'items.f3.description',
         price: '$36',
         image:
           'https://images.unsplash.com/photo-1625943553852-781c6dd46faa?w=300&h=300&fit=crop',
       },
       {
         id: 'f4',
-        name: 'Mezze Platter',
-        description: "Hummus, baba ganoush, falafel, warm pita, za'atar",
+        nameKey: 'items.f4.name',
+        descriptionKey: 'items.f4.description',
         price: '$22',
         image:
           'https://images.unsplash.com/photo-1541014741259-de529411b96a?w=300&h=300&fit=crop',
@@ -111,30 +110,29 @@ const MENU_DATA: MenuCategory[] = [
   },
   {
     key: 'wine',
-    label: 'Wine',
+    labelKey: 'categories.wine',
     items: [
       {
         id: 'w1',
-        name: 'Dom Pérignon 2013',
-        description:
-          'Champagne, France — Elegant with notes of almond & citrus',
+        nameKey: 'items.w1.name',
+        descriptionKey: 'items.w1.description',
         price: '$380',
         image:
           'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=300&h=300&fit=crop',
-        tag: 'Premium',
+        tagKey: 'items.w1.tag',
       },
       {
         id: 'w2',
-        name: 'Cloudy Bay Sauvignon',
-        description: 'Marlborough, NZ — Crisp, tropical, refreshing',
+        nameKey: 'items.w2.name',
+        descriptionKey: 'items.w2.description',
         price: '$14',
         image:
           'https://images.unsplash.com/photo-1474722883778-792e7990302f?w=300&h=300&fit=crop',
       },
       {
         id: 'w3',
-        name: 'Barolo Riserva 2016',
-        description: 'Piedmont, Italy — Full-bodied, cherry, leather notes',
+        nameKey: 'items.w3.name',
+        descriptionKey: 'items.w3.description',
         price: '$28',
         image:
           'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=300&h=300&fit=crop',
@@ -143,40 +141,40 @@ const MENU_DATA: MenuCategory[] = [
   },
   {
     key: 'hookah',
-    label: 'Hookah',
+    labelKey: 'categories.hookah',
     items: [
       {
         id: 'h1',
-        name: 'Double Apple Classic',
-        description: 'Traditional blend with a sweet anise finish',
+        nameKey: 'items.h1.name',
+        descriptionKey: 'items.h1.description',
         price: '$35',
         image:
           'https://images.unsplash.com/photo-1527661591475-527312dd65f5?w=300&h=300&fit=crop',
       },
       {
         id: 'h2',
-        name: 'Esco Cloud Mix',
-        description: 'Blueberry, mint & grape — our house special',
+        nameKey: 'items.h2.name',
+        descriptionKey: 'items.h2.description',
         price: '$40',
         image:
           'https://images.unsplash.com/photo-1534294668821-28a3054f4256?w=300&h=300&fit=crop',
-        tag: 'House Special',
+        tagKey: 'items.h2.tag',
       },
       {
         id: 'h3',
-        name: 'Tropical Paradise',
-        description: 'Mango, passion fruit & coconut with ice base',
+        nameKey: 'items.h3.name',
+        descriptionKey: 'items.h3.description',
         price: '$42',
         image:
           'https://images.unsplash.com/photo-1560185007-c5ca9d2c014d?w=300&h=300&fit=crop',
       },
     ],
   },
-];
+] as const;
 
-function renderMenuItem({
-  item,
-}: ListRenderItemInfo<MenuItem>): React.JSX.Element {
+function MenuItemRow({ item }: { item: MenuItem }): React.JSX.Element {
+  const { t } = useTranslation('menu');
+
   return (
     <View
       className="mb-3.5 flex-row items-center rounded-[18px] border border-border bg-white p-3 dark:border-dark-border dark:bg-dark-bg-card"
@@ -194,15 +192,17 @@ function renderMenuItem({
             className="shrink text-base font-bold text-text dark:text-text-primary-dark"
             numberOfLines={1}
           >
-            {item.name}
+            {/* @ts-expect-error - dynamic i18n key */}
+            {t(item.nameKey)}
           </Text>
-          {item.tag ? (
+          {item.tagKey ? (
             <View
               className="ml-2 rounded-md px-2 py-[3px]"
               style={{ backgroundColor: `${Colors.primary}18` }}
             >
               <Text className="text-[10px] font-bold tracking-[0.3px] text-primary">
-                {item.tag}
+                {/* @ts-expect-error - dynamic i18n key */}
+                {t(item.tagKey)}
               </Text>
             </View>
           ) : null}
@@ -211,7 +211,8 @@ function renderMenuItem({
           className="mb-1.5 text-xs leading-[17px] text-text-secondary dark:text-text-secondary-dark"
           numberOfLines={2}
         >
-          {item.description}
+          {/* @ts-expect-error - dynamic i18n key */}
+          {t(item.descriptionKey)}
         </Text>
         <Text className="text-[17px] font-extrabold text-secondary">
           {item.price}
@@ -221,7 +222,14 @@ function renderMenuItem({
   );
 }
 
+const renderMenuItem = ({
+  item,
+}: ListRenderItemInfo<MenuItem>): React.JSX.Element => (
+  <MenuItemRow item={item} />
+);
+
 export default function MenuScreen(): React.JSX.Element {
+  const { t } = useTranslation('menu');
   const [activeCategory, setActiveCategory] = useState<string>('cocktails');
   const fade = useSharedValue(0);
 
@@ -234,7 +242,8 @@ export default function MenuScreen(): React.JSX.Element {
   }));
 
   const currentItems = useMemo(
-    () => MENU_DATA.find((c) => c.key === activeCategory)?.items ?? [],
+    () =>
+      (MENU_DATA.find((c) => c.key === activeCategory)?.items as unknown as MenuItem[]) ?? [],
     [activeCategory]
   );
 
@@ -270,7 +279,8 @@ export default function MenuScreen(): React.JSX.Element {
                   className="text-sm font-semibold"
                   style={{ color: active ? '#fff' : Colors.textSecondary }}
                 >
-                  {cat.label}
+                  {/* @ts-expect-error - dynamic i18n key */}
+                  {t(cat.labelKey)}
                 </Text>
               </Pressable>
             );

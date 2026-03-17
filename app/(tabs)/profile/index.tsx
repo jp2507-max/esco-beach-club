@@ -30,12 +30,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/providers/AuthProvider';
 import { useProfileData } from '@/providers/DataProvider';
+import { Avatar } from '@/src/components/ui/avatar';
 import { rmTiming } from '@/src/lib/animations/motion';
 import { config } from '@/src/lib/config';
 import { shadows } from '@/src/lib/styles/shadows';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
-import { Image } from '@/src/tw/image';
 
 type MenuItem = {
   color: string;
@@ -119,7 +119,6 @@ export default function ProfileScreen(): React.JSX.Element {
   const { signOut } = useAuth();
 
   const userName = profile?.full_name ?? t('guest');
-  const userAvatar = profile?.avatar_url ?? config.defaultAvatarUri;
   const tierBadge = profile?.tier_label ?? t('memberFallback');
   const tierLevel = profile?.tier ?? 'STANDARD';
   const memberId = profile?.member_id ?? '';
@@ -220,6 +219,7 @@ export default function ProfileScreen(): React.JSX.Element {
   }));
 
   function handleConcierge(): void {
+    if (!config.contact.conciergeBase) return;
     const message = encodeURIComponent(t('conciergeMessage'));
     const whatsappUrl = `${config.contact.conciergeBase}?text=${message}`;
     Linking.openURL(whatsappUrl).catch((err: unknown) => {
@@ -286,7 +286,7 @@ export default function ProfileScreen(): React.JSX.Element {
               className="mr-3 size-12 overflow-hidden rounded-full border-[2.5px]"
               style={{ borderColor: `${Colors.primary}40` }}
             >
-              <Image className="h-full w-full" source={{ uri: userAvatar }} />
+              <Avatar className="h-full w-full" uri={profile?.avatar_url} />
             </View>
             <View>
               <Text className="text-[13px] font-medium text-text-secondary dark:text-text-secondary-dark">
@@ -300,6 +300,7 @@ export default function ProfileScreen(): React.JSX.Element {
           <Pressable
             accessibilityRole="button"
             className="size-[42px] items-center justify-center rounded-full border border-border bg-white dark:border-dark-border dark:bg-dark-bg-card"
+            onPress={() => Alert.alert(t('menu.comingSoon'))}
             testID="notification-bell"
           >
             <Bell color={Colors.text} size={20} />
@@ -428,7 +429,7 @@ export default function ProfileScreen(): React.JSX.Element {
           </Animated.View>
         )}
 
-        {isVIP ? (
+        {isVIP && config.contact.conciergeBase ? (
           <Pressable
             accessibilityRole="button"
             className="mb-5 flex-row items-center justify-center rounded-2xl py-4"

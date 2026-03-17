@@ -8,7 +8,7 @@ import {
   Wine,
   Zap,
 } from 'lucide-react-native';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, type LayoutChangeEvent, Share } from 'react-native';
 import {
@@ -52,6 +52,7 @@ export default function InviteScreen(): React.JSX.Element {
     1
   );
   const [copiedRecently, setCopiedRecently] = useState<boolean>(false);
+  const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const progress = useSharedValue(0);
   const fade = useSharedValue(0);
@@ -70,7 +71,9 @@ export default function InviteScreen(): React.JSX.Element {
         id: 'vip-badge',
         isGoal: true,
         label: t('invite.milestones.vipBadge'),
-        sub: t('invite.milestones.twoMoreInvites', { count: 2 }),
+        sub: t('invite.milestones.twoMoreInvites', {
+          count: Math.max(referralProgress.goal - referralProgress.current, 0),
+        }),
         unlocked: false,
       },
       {
@@ -81,7 +84,7 @@ export default function InviteScreen(): React.JSX.Element {
         unlocked: false,
       },
     ],
-    [t]
+    [referralProgress.current, referralProgress.goal, t]
   );
 
   useEffect(() => {
@@ -92,6 +95,12 @@ export default function InviteScreen(): React.JSX.Element {
       cancelAnimation(fade);
     };
   }, [fade, progress, progressRatio]);
+
+  useEffect(() => {
+    return () => {
+      if (copiedTimeoutRef.current) clearTimeout(copiedTimeoutRef.current);
+    };
+  }, []);
 
   const fadeStyle = useAnimatedStyle(() => ({
     opacity: fade.get(),
@@ -124,7 +133,10 @@ export default function InviteScreen(): React.JSX.Element {
     try {
       await Clipboard.setStringAsync(code);
       setCopiedRecently(true);
-      setTimeout(() => setCopiedRecently(false), 2000);
+      if (copiedTimeoutRef.current) clearTimeout(copiedTimeoutRef.current);
+      copiedTimeoutRef.current = setTimeout(() => {
+        setCopiedRecently(false);
+      }, 2000);
     } catch (e) {
       console.error('Copy failed', e);
       Alert.alert(t('invite.codeCopyFailed'));
@@ -290,11 +302,9 @@ export default function InviteScreen(): React.JSX.Element {
               <Text className="text-lg font-extrabold text-text">
                 {t('invite.recentReferrals')}
               </Text>
-              <Pressable accessibilityRole="button">
-                <Text className="text-sm font-semibold text-primary">
-                  {t('invite.viewAll')}
-                </Text>
-              </Pressable>
+              <Text className="text-sm font-semibold text-primary">
+                {t('invite.viewAll')}
+              </Text>
             </View>
             {referrals.map((ref) => (
               <View

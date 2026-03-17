@@ -38,6 +38,16 @@ type StarButtonProps = {
   star: number;
 };
 
+function useStarScales(): SharedValue<number>[] {
+  return [
+    useSharedValue(1),
+    useSharedValue(1),
+    useSharedValue(1),
+    useSharedValue(1),
+    useSharedValue(1),
+  ];
+}
+
 function StarButton({
   isActive,
   onPress,
@@ -73,13 +83,7 @@ export default function RateUsScreen(): React.JSX.Element {
   const router = useRouter();
   const { t } = useTranslation('common');
   const [submitted, setSubmitted] = useState<boolean>(false);
-  const starScales = [
-    useSharedValue(1),
-    useSharedValue(1),
-    useSharedValue(1),
-    useSharedValue(1),
-    useSharedValue(1),
-  ];
+  const starScales = useStarScales();
   const successScale = useSharedValue(0);
   const userId = useUserId();
   const { control, handleSubmit, setValue } = useForm<ReviewFormValues>({

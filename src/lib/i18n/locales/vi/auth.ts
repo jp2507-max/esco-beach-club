@@ -21,6 +21,7 @@ const auth = {
   verificationFailedTitle: 'Xác minh thất bại',
   unableToSendCode: 'Không thể gửi mã.',
   unableToVerifyCode: 'Không thể xác minh mã.',
+  unableToSignOut: 'Không thể đăng xuất.',
   emailRequired: 'Vui lòng nhập email.',
   emailAndCodeRequired: 'Vui lòng nhập email và mã xác minh.',
   invalidEmailTitle: 'Email không hợp lệ',

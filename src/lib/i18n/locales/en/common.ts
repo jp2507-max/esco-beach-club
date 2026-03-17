@@ -1,4 +1,9 @@
 const common = {
+  accessibility: {
+    textInputDefault: 'Text input field',
+    textInputHint: 'Enter text',
+    textInputHintWithField: 'Enter {{field}}',
+  },
   validation: {
     required: 'This field is required.',
     email: 'Please enter a valid email address.',
@@ -9,6 +14,7 @@ const common = {
     maxCharacters: 'Must be at most {{count}} characters.',
     commentMax: 'Comment must be at most 500 characters.',
     invalidDate: 'Please enter a valid date in YYYY-MM-DD format.',
+    invalidCode: 'Please enter a 6-digit verification code.',
   },
   back: 'Back',
   rateUs: {
@@ -86,6 +92,10 @@ const common = {
     title: 'Esco Life',
     description:
       'Welcome to Esco Life Beach Club. Enjoy exclusive member benefits.',
+  },
+  notFound: {
+    title: "This screen doesn't exist.",
+    cta: 'Go to home screen',
   },
 } as const;
 

@@ -27,8 +27,8 @@ import {
   useNewsData,
   useProfileData,
 } from '@/providers/DataProvider';
+import { Avatar } from '@/src/components/ui/avatar';
 import { rmTiming } from '@/src/lib/animations/motion';
-import { config } from '@/src/lib/config';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 import { Image } from '@/src/tw/image';
@@ -278,7 +278,6 @@ export default function HomeScreen(): React.JSX.Element {
   const userPoints = profile?.points ?? 0;
   const userMaxPoints =
     profile?.max_points && profile.max_points > 0 ? profile.max_points : 5000;
-  const userAvatar = profile?.avatar_url ?? config.defaultAvatarUri;
   const tierLevel = profile?.tier ?? 'STANDARD';
   const vipStatus =
     tierLevel === 'VIP' || tierLevel === 'OWNER' ? t('vipStatus') : '';
@@ -428,11 +427,9 @@ export default function HomeScreen(): React.JSX.Element {
                   style={{ borderColor: `${Colors.primary}40` }}
                   testID="profile-avatar"
                 >
-                  <Image
+                  <Avatar
                     className="size-[42px] rounded-full"
-                    source={{ uri: userAvatar }}
-                    cachePolicy="memory-disk"
-                    transition={180}
+                    uri={profile?.avatar_url}
                   />
                   <View
                     className="absolute -bottom-px -right-px size-[14px] rounded-full"

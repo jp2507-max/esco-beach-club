@@ -18,11 +18,11 @@ jobs:
       - name: 📦 Checkout
         uses: actions/checkout@v4
 
-      - name: 📦 Setup Node + PNPM + install deps
-        uses: ./.github/actions/setup-node-pnpm-install
+      - name: 📦 Setup Node + Bun + install deps
+        uses: ./.github/actions/setup-node-bun-install
 
       - name: 🔍 Run cannabis policy scan
-        run: pnpm run compliance:cannabis
+        run: bun run compliance:cannabis
 
       - name: 📄 Upload compliance report (always)
         if: always()

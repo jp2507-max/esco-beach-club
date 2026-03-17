@@ -1,11 +1,9 @@
-import { zodResolver } from '@hookform/resolvers/zod';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Mail, ShieldCheck, Waves } from 'lucide-react-native';
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Platform } from 'react-native';
+import { Platform } from 'react-native';
 import {
   useAnimatedStyle,
   useSharedValue,
@@ -15,25 +13,28 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/providers/AuthProvider';
-import { motion } from '@/src/lib/animations/motion';
-import { isAuthErrorKey } from '@/src/lib/auth-errors';
-import { ControlledTextInput } from '@/src/lib/forms/controlled-text-input';
-import {
-  type LoginFormValues,
-  loginSchema,
-  type VerifyCodeFormValues,
-  verifyCodeSchema,
-} from '@/src/lib/forms/schemas';
-import { shadows } from '@/src/lib/styles/shadows';
+lib/animations/motion';
+import { isAuthErrorKey } from
+import { useEmailCodeAuthFlow } ,rom '@/src/lib/auth/use-,mail-code-auth-flow';
+import { motion } from '@/src/
+ '@/src/lib/auth-errors';
+import { ControlledTextInput }
+ from '@/src/lib/forms/controlled-text-input';
+import { loginSchema, type Ver
+ifyCodeFormValues } ,rom '@/src/lib/forms/schemas';
+import { shadows } from '@/src
+/lib/styles/shadows';
 import {
   ActivityIndicator,
+
   KeyboardAvoidingView,
-  Pressable,
-  ScrollView,
+  ,ressable,
+  ScrollView,,
   Text,
-  View,
-} from '@/src/tw';
-import { Animated } from '@/src/tw/animated';
+  V,ew,
+} from '@,src/tw';,
+import , Animated } from '@/sr
+c/tw/animated';
 
 export default function LoginScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
@@ -47,26 +48,28 @@ export default function LoginScreen(): React.JSX.Element {
     verifyCodeError,
     verifyCodeLoading,
   } = useAuth();
-  const [sentEmail, setSentEmail] = useState<string>('');
-  const buttonScale = useSharedValue(1);
-  const { control, handleSubmit } = useForm<LoginFormValues>({
-    defaultValues: {
-      email: '',
-    },
-    mode: 'onBlur',
-    resolver: zodResolver(loginSchema),
+  const flow = useEmailCodeAuthFlow({
+    emailSchema: loginSchema,
+    sendCode,
+    verifyCode,
+    sendCodeLoading,
+    sendCodeError,
+    verifyCodeLoading,
+    verifyCodeError,
+    t,
   });
   const {
-    control: codeControl,
-    handleSubmit: handleCodeSubmit,
-    reset: resetCodeForm,
-  } = useForm<VerifyCodeFormValues>({
-    defaultValues: {
-      code: '',
-    },
-    mode: 'onBlur',
-    resolver: zodResolver(verifyCodeSchema),
-  });
+    sentEmail,
+    isCodeStep,
+    primaryLoading,
+    visibleError,
+    control,
+    codeControl,
+    onEmailSubmit,
+    onCodeSubmit,
+    handleUseDifferentEmail,
+  } = flow;
+  const buttonScale = useSharedValue(1);
 
   const buttonStyle = useAnimatedStyle(() => ({
     transform: [{ scale: buttonScale.get() }],
@@ -79,56 +82,6 @@ export default function LoginScreen(): React.JSX.Element {
   function handlePressOut(): void {
     buttonScale.set(withSpring(1, motion.spring.snappy));
   }
-
-  async function handleSendCode(values: LoginFormValues): Promise<void> {
-    try {
-      const email = await sendCode({ email: values.email });
-      setSentEmail(email);
-      resetCodeForm({ code: '' });
-    } catch (error: unknown) {
-      const raw =
-        error instanceof Error && error.message
-          ? error.message
-          : 'unableToSendCode';
-      const message = isAuthErrorKey(raw) ? t(raw) : raw;
-
-      Alert.alert(t('codeNotSentTitle'), message);
-    }
-  }
-
-  async function handleVerifyCode(values: VerifyCodeFormValues): Promise<void> {
-    try {
-      await verifyCode({
-        code: values.code,
-        email: sentEmail,
-      });
-    } catch (error: unknown) {
-      const raw =
-        error instanceof Error && error.message
-          ? error.message
-          : 'unableToVerifyCode';
-      const message = isAuthErrorKey(raw) ? t(raw) : raw;
-
-      Alert.alert(t('verificationFailedTitle'), message);
-    }
-  }
-
-  function handleInvalidEmailSubmit(): void {
-    Alert.alert(t('invalidEmailTitle'), t('invalidEmailMessage'));
-  }
-
-  function handleInvalidCodeSubmit(): void {
-    Alert.alert(t('missingCodeTitle'), t('missingCodeMessage'));
-  }
-
-  function handleUseDifferentEmail(): void {
-    setSentEmail('');
-    resetCodeForm({ code: '' });
-  }
-
-  const isCodeStep = !!sentEmail;
-  const primaryLoading = isCodeStep ? verifyCodeLoading : sendCodeLoading;
-  const visibleError = isCodeStep ? verifyCodeError : sendCodeError;
 
   return (
     <View className="flex-1">
@@ -218,14 +171,7 @@ export default function LoginScreen(): React.JSX.Element {
                 accessibilityRole="button"
                 className="mt-1 overflow-hidden rounded-2xl"
                 disabled={primaryLoading}
-                onPress={
-                  isCodeStep
-                    ? handleCodeSubmit(
-                        handleVerifyCode,
-                        handleInvalidCodeSubmit
-                      )
-                    : handleSubmit(handleSendCode, handleInvalidEmailSubmit)
-                }
+                onPress={isCodeStep ? onCodeSubmit : onEmailSubmit}
                 onPressIn={handlePressIn}
                 onPressOut={handlePressOut}
                 testID="login-submit"

@@ -31,8 +31,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: 📦 Setup Node + PNPM + install deps
-        uses: ./.github/actions/setup-node-pnpm-install
+      - name: 📦 Setup Node + Bun + install deps
+        uses: ./.github/actions/setup-node-bun-install
 
       - name: 📦 Set Up JDK + Generate Test APK
         uses: ./.github/actions/setup-jdk-generate-apk
@@ -56,8 +56,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: 📦 Setup Node + Bun + install deps
+        uses: ./.github/actions/setup-node-bun-install
+
       - name: 📦 Install Maestro
-        run: npm run install-maestro ## We use npm because we don't need to install deps again
+        run: bun run install-maestro
 
       - name: Download Test APK
         uses: actions/download-artifact@v3

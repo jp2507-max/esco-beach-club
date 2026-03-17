@@ -31,11 +31,25 @@ import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 import { Image } from '@/src/tw/image';
 
+type PriceTierLabelKey =
+  | 'priceTiers.vip.label'
+  | 'priceTiers.member.label'
+  | 'priceTiers.guest.label';
+
+type PriceTierPerkKey =
+  | 'priceTiers.vip.perk1'
+  | 'priceTiers.vip.perk2'
+  | 'priceTiers.vip.perk3'
+  | 'priceTiers.member.perk1'
+  | 'priceTiers.member.perk2'
+  | 'priceTiers.guest.perk1'
+  | 'priceTiers.guest.perk2';
+
 type PriceTier = {
   highlight: boolean;
   icon: React.ElementType;
-  labelKey: string;
-  perkKeys: string[];
+  labelKey: PriceTierLabelKey;
+  perkKeys: PriceTierPerkKey[];
   price: string;
 };
 
@@ -328,8 +342,7 @@ export default function EventDetailsScreen(): React.JSX.Element {
                           color: tier.highlight ? Colors.primary : Colors.text,
                         }}
                       >
-                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                        {t(tier.labelKey as any)}
+                        {t(tier.labelKey)}
                       </Text>
                       <Text className="mt-0.5 text-[11px] font-medium text-text-muted dark:text-text-muted-dark">
                         {t('perPerson')}
@@ -359,8 +372,7 @@ export default function EventDetailsScreen(): React.JSX.Element {
                       }}
                     />
                     <Text className="text-[13px] font-medium text-text-secondary dark:text-text-secondary-dark">
-                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                      {t(key as any)}
+                      {t(key)}
                     </Text>
                   </View>
                 ))}

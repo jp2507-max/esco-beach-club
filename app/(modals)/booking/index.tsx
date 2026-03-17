@@ -92,7 +92,20 @@ export default function BookingModalScreen(): React.JSX.Element {
   const { profile } = useProfileData();
   const { t } = useTranslation(['booking', 'common']);
 
-  const dates = useMemo(() => getNext7Days(), []);
+  const [now, setNow] = useState(() => new Date());
+  const dates = useMemo(() => getNext7Days(), [now]);
+
+  useEffect(() => {
+    const msUntilMidnight = (): number => {
+      const d = new Date();
+      d.setHours(24, 0, 0, 0);
+      return d.getTime() - Date.now();
+    };
+    const timeout = setTimeout(() => {
+      setNow(new Date());
+    }, msUntilMidnight());
+    return () => clearTimeout(timeout);
+  }, [now]);
   const [selectedDate, setSelectedDate] = useState<number>(0);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [pax, setPax] = useState<number>(2);

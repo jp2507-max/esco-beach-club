@@ -1,4 +1,10 @@
-import React, { createContext, useCallback, useContext, useMemo } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useRef,
+} from 'react';
 
 import type { Event, NewsItem, Partner, Profile, Referral } from '@/lib/types';
 import { useAuth } from '@/providers/AuthProvider';
@@ -50,21 +56,32 @@ const EMPTY_NEWS: NewsItem[] = [];
 const EMPTY_PARTNERS: Partner[] = [];
 const EMPTY_REFERRALS: Referral[] = [];
 
+// Safe fallbacks returned during sign-out DataProvider teardown so consumers
+// never receive a thrown error during navigation transitions.
+const FALLBACK_PROFILE: ProfileData = {
+  dismissVoucher: () => {},
+  profile: null,
+  profileLoading: false,
+  userId: '',
+};
+const FALLBACK_EVENTS: EventsData = { events: EMPTY_EVENTS, eventsLoading: false };
+const FALLBACK_NEWS: NewsData = { news: EMPTY_NEWS, newsLoading: false };
+const FALLBACK_PARTNERS: PartnersData = { partners: EMPTY_PARTNERS, partnersLoading: false };
+const FALLBACK_REFERRALS: ReferralsData = { referrals: EMPTY_REFERRALS, referralsLoading: false };
+
 type DataProviderProps = {
   children: React.ReactNode;
 };
 
 function useRequiredContext<T>(
   context: React.Context<T | null>,
-  hookName: string
+  fallback: T
 ): T {
   const value = useContext(context);
-
-  if (!value) {
-    throw new Error(`${hookName} must be used within DataProvider`);
-  }
-
-  return value;
+  // Return the fallback during sign-out transitions when DataProvider has
+  // unmounted before its consumers finish navigating away. This prevents
+  // synchronous throws that would crash the app mid-transition.
+  return value ?? fallback;
 }
 
 export function DataProvider({
@@ -133,9 +150,13 @@ export function DataProvider({
     return records.map(mapReferral);
   }, [referralsQuery.data, userId]);
 
+  const isDismissingRef = useRef(false);
+
   const dismissVoucher = useCallback((): void => {
     if (!profile || profile.has_seen_welcome_voucher) return;
+    if (isDismissingRef.current) return;
 
+    isDismissingRef.current = true;
     void db
       .transact(
         db.tx.profiles[profile.id].update({
@@ -144,6 +165,7 @@ export function DataProvider({
         })
       )
       .catch((error: unknown) => {
+        isDismissingRef.current = false;
         console.error(
           '[DataProvider] Failed to dismiss welcome voucher:',
           error
@@ -209,23 +231,23 @@ export function DataProvider({
 }
 
 export function useProfileData(): ProfileData {
-  return useRequiredContext(ProfileContext, 'useProfileData');
+  return useRequiredContext(ProfileContext, FALLBACK_PROFILE);
 }
 
 export function useEventsData(): EventsData {
-  return useRequiredContext(EventsContext, 'useEventsData');
+  return useRequiredContext(EventsContext, FALLBACK_EVENTS);
 }
 
 export function useNewsData(): NewsData {
-  return useRequiredContext(NewsContext, 'useNewsData');
+  return useRequiredContext(NewsContext, FALLBACK_NEWS);
 }
 
 export function usePartnersData(): PartnersData {
-  return useRequiredContext(PartnersContext, 'usePartnersData');
+  return useRequiredContext(PartnersContext, FALLBACK_PARTNERS);
 }
 
 export function useReferralsData(): ReferralsData {
-  return useRequiredContext(ReferralsContext, 'useReferralsData');
+  return useRequiredContext(ReferralsContext, FALLBACK_REFERRALS);
 }
 
 export function useUserId(): string {

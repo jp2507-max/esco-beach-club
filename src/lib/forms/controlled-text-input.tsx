@@ -5,6 +5,7 @@ import {
   type FieldPath,
   type FieldValues,
 } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import {
   type KeyboardTypeOptions,
   type ReturnKeyTypeOptions,
@@ -22,6 +23,8 @@ type IconProps = {
 };
 
 type ControlledTextInputProps<TFieldValues extends FieldValues> = {
+  accessibilityHint?: string;
+  accessibilityLabel?: string;
   autoCapitalize?: TextInputProps['autoCapitalize'];
   autoComplete?: TextInputProps['autoComplete'];
   className?: string;
@@ -43,6 +46,8 @@ type ControlledTextInputProps<TFieldValues extends FieldValues> = {
 };
 
 export function ControlledTextInput<TFieldValues extends FieldValues>({
+  accessibilityHint,
+  accessibilityLabel,
   autoCapitalize,
   autoComplete,
   className,
@@ -62,7 +67,21 @@ export function ControlledTextInput<TFieldValues extends FieldValues>({
   testID,
   textAlignVertical,
 }: ControlledTextInputProps<TFieldValues>) {
+  const { t } = useTranslation('common');
   const colorScheme = useColorScheme();
+  const resolvedAccessibilityLabel =
+    accessibilityLabel ??
+    label ??
+    placeholder ??
+    t('accessibility.textInputDefault');
+  const fieldForHint = label ?? placeholder;
+  const resolvedAccessibilityHint =
+    accessibilityHint ??
+    (fieldForHint
+      ? t('accessibility.textInputHintWithField', {
+          field: fieldForHint.toLowerCase(),
+        })
+      : t('accessibility.textInputHint'));
   const iconColor =
     colorScheme === 'dark' ? Colors.textMutedDark : Colors.textLight;
   const placeholderColor =
@@ -96,8 +115,8 @@ export function ControlledTextInput<TFieldValues extends FieldValues>({
               </Text>
             ) : null}
             <TextInput
-              accessibilityLabel="Text input field"
-              accessibilityHint="Enter text"
+              accessibilityLabel={resolvedAccessibilityLabel}
+              accessibilityHint={resolvedAccessibilityHint}
               autoCapitalize={autoCapitalize}
               autoComplete={autoComplete}
               className={cn(

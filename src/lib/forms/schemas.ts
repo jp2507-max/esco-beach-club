@@ -2,7 +2,17 @@ import { z } from 'zod';
 
 const v = (key: string) => `common:validation.${key}` as const;
 
-export const loginSchema = z.object({
+/** Shared schema for email-code auth (login/signup). */
+export const emailAuthSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .email({ error: v('email') }),
+});
+
+export type EmailFormValues = z.infer<typeof emailAuthSchema>;
+
+export const loginSchema = emailAuthSchema;
   email: z
     .string()
     .trim()
@@ -15,17 +25,13 @@ export const verifyCodeSchema = z.object({
   code: z
     .string()
     .trim()
-    .min(1, { error: v('required') }),
+    .length(6, { error: v('invalidCode') })
+    .regex(/^\d{6}$/, { error: v('invalidCode') }),
 });
 
 export type VerifyCodeFormValues = z.infer<typeof verifyCodeSchema>;
 
-export const signupSchema = z.object({
-  email: z
-    .string()
-    .trim()
-    .email({ error: v('email') }),
-});
+export const signupSchema = emailAuthSchema;
 
 export type SignupFormValues = z.infer<typeof signupSchema>;
 

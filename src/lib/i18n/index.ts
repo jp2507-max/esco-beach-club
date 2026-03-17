@@ -7,6 +7,7 @@ import bookingEn from '@/src/lib/i18n/locales/en/booking';
 import commonEn from '@/src/lib/i18n/locales/en/common';
 import eventsEn from '@/src/lib/i18n/locales/en/events';
 import homeEn from '@/src/lib/i18n/locales/en/home';
+import menuEn from '@/src/lib/i18n/locales/en/menu';
 import perksEn from '@/src/lib/i18n/locales/en/perks';
 import profileEn from '@/src/lib/i18n/locales/en/profile';
 import authKo from '@/src/lib/i18n/locales/ko/auth';
@@ -14,6 +15,7 @@ import bookingKo from '@/src/lib/i18n/locales/ko/booking';
 import commonKo from '@/src/lib/i18n/locales/ko/common';
 import eventsKo from '@/src/lib/i18n/locales/ko/events';
 import homeKo from '@/src/lib/i18n/locales/ko/home';
+import menuKo from '@/src/lib/i18n/locales/ko/menu';
 import perksKo from '@/src/lib/i18n/locales/ko/perks';
 import profileKo from '@/src/lib/i18n/locales/ko/profile';
 import authVi from '@/src/lib/i18n/locales/vi/auth';
@@ -21,6 +23,7 @@ import bookingVi from '@/src/lib/i18n/locales/vi/booking';
 import commonVi from '@/src/lib/i18n/locales/vi/common';
 import eventsVi from '@/src/lib/i18n/locales/vi/events';
 import homeVi from '@/src/lib/i18n/locales/vi/home';
+import menuVi from '@/src/lib/i18n/locales/vi/menu';
 import perksVi from '@/src/lib/i18n/locales/vi/perks';
 import profileVi from '@/src/lib/i18n/locales/vi/profile';
 import {
@@ -42,6 +45,7 @@ export const resources = {
     perks: perksEn,
     profile: profileEn,
     booking: bookingEn,
+    menu: menuEn,
   },
   ko: {
     auth: authKo,
@@ -51,6 +55,7 @@ export const resources = {
     perks: perksKo,
     profile: profileKo,
     booking: bookingKo,
+    menu: menuKo,
   },
   vi: {
     auth: authVi,
@@ -60,6 +65,7 @@ export const resources = {
     perks: perksVi,
     profile: profileVi,
     booking: bookingVi,
+    menu: menuVi,
   },
 } as const;
 

@@ -1,4 +1,9 @@
 const common = {
+  accessibility: {
+    textInputDefault: '텍스트 입력 필드',
+    textInputHint: '텍스트 입력',
+    textInputHintWithField: '{{field}} 입력',
+  },
   validation: {
     required: '이 필드는 필수입니다.',
     email: '올바른 이메일 주소를 입력해 주세요.',
@@ -9,6 +14,7 @@ const common = {
     maxCharacters: '최대 {{count}}자까지 입력 가능합니다.',
     commentMax: '코멘트는 최대 500자까지 입력 가능합니다.',
     invalidDate: 'YYYY-MM-DD 형식의 유효한 날짜를 입력해 주세요.',
+    invalidCode: '6자리의 인증 코드를 입력해 주세요.',
   },
   back: '뒤로',
   rateUs: {
@@ -83,6 +89,10 @@ const common = {
     title: 'Esco Life',
     description:
       'Esco Life 비치 클럽에 오신 것을 환영합니다. 회원 전용 혜택을 누려보세요.',
+  },
+  notFound: {
+    title: '이 화면은 존재하지 않습니다.',
+    cta: '홈 화면으로 이동',
   },
 } as const;
 

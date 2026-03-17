@@ -21,6 +21,7 @@ const auth = {
   verificationFailedTitle: 'Verification Failed',
   unableToSendCode: 'Unable to send code.',
   unableToVerifyCode: 'Unable to verify code.',
+  unableToSignOut: 'Unable to sign out.',
   emailRequired: 'Email is required.',
   emailAndCodeRequired: 'Email and verification code are required.',
   invalidEmailTitle: 'Invalid Email',

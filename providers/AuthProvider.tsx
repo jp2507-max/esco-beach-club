@@ -95,7 +95,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     try {
       await db.auth.signOut();
     } catch (error: unknown) {
-      const nextError = toError(error, 'Unable to sign out.');
+      const nextError = toError(error, 'unableToSignOut');
       setSignOutError(nextError);
       throw nextError;
     } finally {
