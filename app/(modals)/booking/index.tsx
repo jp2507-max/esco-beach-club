@@ -144,8 +144,10 @@ export default function BookingModalScreen(): React.JSX.Element {
         date: dateStr,
         time: selectedTime,
       });
-      const nextRoute = `/booking/success?name=${encodeURIComponent(name)}&subtitle=${encodeURIComponent(subtitle)}`;
-      router.replace(nextRoute as never);
+      router.replace({
+        pathname: '/booking/success' as never,
+        params: { name, subtitle },
+      });
     }, 1500);
   }
 

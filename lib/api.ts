@@ -47,13 +47,21 @@ export async function updateProfile(
   const current = await fetchProfile(userId);
   if (!current) return null;
 
-  const updatedAt = nowIso();
-  const sanitizedUpdates = withoutUndefined(updates) as Partial<Profile>;
+  const sanitizedUpdates = withoutUndefined({
+    avatar_url: updates.avatar_url,
+    full_name: updates.full_name,
+    has_seen_welcome_voucher: updates.has_seen_welcome_voucher,
+  }) as Partial<
+    Pick<Profile, 'avatar_url' | 'full_name' | 'has_seen_welcome_voucher'>
+  >;
+
+  if (Object.keys(sanitizedUpdates).length === 0) {
+    return current;
+  }
 
   await db.transact(
     db.tx.profiles[current.id].update({
       ...sanitizedUpdates,
-      updated_at: updatedAt,
     })
   );
 
@@ -61,7 +69,6 @@ export async function updateProfile(
     ...current,
     ...sanitizedUpdates,
     id: current.id,
-    updated_at: updatedAt,
   };
 }
 

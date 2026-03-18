@@ -95,7 +95,7 @@ export default function EventsScreen(): React.JSX.Element {
 
   const openEvent = useCallback(
     (id: string): void => {
-      router.push({ pathname: '/event-details', params: { id } });
+      router.push({ pathname: '/events/[id]' as never, params: { id } });
     },
     [router]
   );

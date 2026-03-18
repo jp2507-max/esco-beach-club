@@ -161,7 +161,6 @@ export function DataProvider({
       .transact(
         db.tx.profiles[profile.id].update({
           has_seen_welcome_voucher: true,
-          updated_at: new Date().toISOString(),
         })
       )
       .catch((error: unknown) => {
