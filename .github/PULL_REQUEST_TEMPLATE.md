@@ -20,7 +20,7 @@ What does this change do and why now? Brief rationale referencing AGENTS.md and 
 
 ## Quality Gates
 
-- [ ] pnpm check-all passed locally (or individually: lint, type-check, lint:translations, i18n:validate, privacy:validate, test)
+- [ ] bun run check-all passed locally (or individually: lint, type-check, lint:translations, i18n:validate, privacy:validate, test)
 - [ ] CodeRabbit shows 0 open improvement comments
 - [ ] All required status checks are green
 

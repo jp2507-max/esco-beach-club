@@ -1,12 +1,24 @@
-export default {
+export const Colors = {
   primary: '#E91E63',
+  primaryBright: '#FF4F8B',
   secondary: '#009688',
   background: '#FFFDF5',
+  darkBg: '#0F172A',
   surface: '#FFFFFF',
+  card: '#FFFFFF',
+  darkBgCard: '#111827',
+  darkBgElevated: '#1F2937',
   text: '#1A1A2E',
+  textPrimaryDark: '#F8FAFC',
   textSecondary: '#6B7280',
+  textSecondaryDark: '#CBD5E1',
   textLight: '#9CA3AF',
+  textMuted: '#9CA3AF',
+  textMutedDark: '#94A3B8',
   border: '#F0EDE5',
+  borderLight: '#F4E7DC',
+  darkBorder: '#334155',
+  darkBorderBright: '#475569',
   cardGradientStart: '#E91E63',
   cardGradientMiddle: '#F06292',
   cardGradientEnd: '#FF9800',
@@ -15,4 +27,14 @@ export default {
   pinkLight: '#FCE4EC',
   sand: '#F5F0E1',
   sandDark: '#E8E0CC',
-};
+  success: '#4CAF50',
+  gold: '#C8A24D',
+  warning: '#FF9800',
+  warningDark: '#F59E0B',
+  danger: '#EF5350',
+  errorDark: '#F87171',
+  white: '#FFFFFF',
+  black: '#000000',
+} as const;
+
+export default Colors;

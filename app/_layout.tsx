@@ -1,89 +1,147 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import '../global.css';
+import '@/src/lib/i18n';
+
+import NetInfo from '@react-native-community/netinfo';
+import {
+  focusManager,
+  onlineManager,
+  QueryClient,
+  QueryClientProvider,
+} from '@tanstack/react-query';
+import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import React, { useEffect } from 'react';
-import { ActivityIndicator, View, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { AppState, type AppStateStatus, Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
+import { Colors } from '@/constants/colors';
 import { AuthProvider, useAuth } from '@/providers/AuthProvider';
 import { DataProvider } from '@/providers/DataProvider';
-import Colors from '@/constants/colors';
+import { ActivityIndicator, View } from '@/src/tw';
 
-SplashScreen.preventAutoHideAsync();
+void SplashScreen.preventAutoHideAsync();
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 2,
+      gcTime: 1000 * 60 * 10,
+      retry: 2,
+      refetchOnReconnect: true,
+      refetchOnWindowFocus: false,
+    },
+    mutations: {
+      retry: 1,
+    },
+  },
+});
 
-function AuthGate() {
-  const { isAuthenticated, isLoading } = useAuth();
-  const segments = useSegments();
-  const router = useRouter();
+if (Platform.OS !== 'web') {
+  onlineManager.setEventListener((setOnline) =>
+    NetInfo.addEventListener((state) => {
+      const isOnline =
+        state.isInternetReachable == null
+          ? !!state.isConnected
+          : !!state.isConnected && !!state.isInternetReachable;
+      setOnline(isOnline);
+    })
+  );
+}
 
+export const unstable_settings = {
+  anchor: '(tabs)',
+};
+
+function AppLoadingScreen() {
+  return (
+    <View className="flex-1 items-center justify-center bg-background dark:bg-dark-bg">
+      <ActivityIndicator size="large" color={Colors.primary} />
+    </View>
+  );
+}
+
+function ReactQueryLifecycle(): null {
   useEffect(() => {
-    if (isLoading) return;
+    if (Platform.OS === 'web') return;
 
-    const inAuthGroup = segments[0] === 'login' || segments[0] === 'signup';
-
-    if (!isAuthenticated && !inAuthGroup) {
-      console.log('[AuthGate] Not authenticated, redirecting to login');
-      router.replace('/login');
-    } else if (isAuthenticated && inAuthGroup) {
-      console.log('[AuthGate] Authenticated, redirecting to home');
-      router.replace('/');
+    function handleAppStateChange(status: AppStateStatus): void {
+      focusManager.setFocused(status === 'active');
     }
-  }, [isAuthenticated, isLoading, segments]);
 
-  if (isLoading) {
-    return (
-      <View style={styles.loader}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-      </View>
+    focusManager.setFocused(AppState.currentState === 'active');
+
+    const subscription = AppState.addEventListener(
+      'change',
+      handleAppStateChange
     );
-  }
 
-  return <RootLayoutNav />;
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
+  return null;
+}
+
+function AuthenticatedDataProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}): React.JSX.Element {
+  const { isAuthenticated } = useAuth();
+
+  if (!isAuthenticated) return <>{children}</>;
+
+  return <DataProvider>{children}</DataProvider>;
 }
 
 function RootLayoutNav() {
+  const { isAuthenticated, isLoading } = useAuth();
+  const { t } = useTranslation('common');
+
+  useEffect(() => {
+    if (!isLoading) {
+      void SplashScreen.hideAsync();
+    }
+  }, [isLoading]);
+
+  if (isLoading) {
+    return <AppLoadingScreen />;
+  }
+
   return (
-    <Stack screenOptions={{ headerBackTitle: 'Back' }}>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="login" options={{ headerShown: false, animation: 'fade' }} />
-      <Stack.Screen name="signup" options={{ headerShown: false, animation: 'slide_from_right' }} />
-      <Stack.Screen name="modal" options={{ presentation: 'modal', headerShown: false }} />
-      <Stack.Screen name="invite" options={{ presentation: 'card', headerShown: false }} />
-      <Stack.Screen name="partner-modal" options={{ presentation: 'modal', headerShown: false }} />
-      <Stack.Screen name="rate-us" options={{ presentation: 'modal', headerShown: false }} />
-      <Stack.Screen name="private-event" options={{ presentation: 'modal', headerShown: false }} />
-      <Stack.Screen name="event-details" options={{ presentation: 'card', headerShown: false }} />
-      <Stack.Screen name="booking-modal" options={{ presentation: 'modal', headerShown: false }} />
-      <Stack.Screen name="menu" options={{ presentation: 'card', headerShown: false }} />
-      <Stack.Screen name="success" options={{ presentation: 'modal', headerShown: false, gestureEnabled: false }} />
+    <Stack screenOptions={{ headerBackTitle: t('back') }}>
+      <Stack.Protected guard={!isAuthenticated}>
+        <Stack.Screen
+          name="(auth)"
+          options={{ headerShown: false, animation: 'fade' }}
+        />
+      </Stack.Protected>
+      <Stack.Protected guard={isAuthenticated}>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="(shared)"
+          options={{ headerShown: false, presentation: 'card' }}
+        />
+        <Stack.Screen name="(modals)" options={{ headerShown: false }} />
+      </Stack.Protected>
+      <Stack.Screen name="+not-found" />
     </Stack>
   );
 }
 
 export default function RootLayout() {
-  useEffect(() => {
-    SplashScreen.hideAsync();
-  }, []);
-
   return (
     <QueryClientProvider client={queryClient}>
-      <GestureHandlerRootView>
+      <ReactQueryLifecycle />
+      <GestureHandlerRootView style={{ flex: 1 }}>
         <AuthProvider>
-          <DataProvider>
-            <AuthGate />
-          </DataProvider>
+          <AuthenticatedDataProvider>
+            <RootLayoutNav />
+          </AuthenticatedDataProvider>
         </AuthProvider>
       </GestureHandlerRootView>
     </QueryClientProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  loader: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.background,
-  },
-});

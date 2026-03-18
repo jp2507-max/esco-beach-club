@@ -1,0 +1,10 @@
+{
+  "overrides": [
+    {
+      "include": ["global.css"],
+      "linter": {
+        "enabled": false
+      }
+    }
+  ]
+}

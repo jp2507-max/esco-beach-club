@@ -11,17 +11,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: oven-sh/setup-bun@v2
         with:
-          version: 10.17.0
+          bun-version: latest
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
       - name: Install
-        run: pnpm install --frozen-lockfile
+        run: bun install --frozen-lockfile
       - name: Prebuild (managed → native)
-        run: pnpm prebuild
+        run: bun run prebuild
       - name: Verify targetSdk per variant (AGP)
         shell: bash
         run: |
@@ -31,11 +30,11 @@ jobs:
             echo "android/ not found after prebuild" && exit 2
           fi
       - name: Scan Android Manifest for restricted permissions
-        run: pnpm run compliance:scan:android
+        run: bun run compliance:scan:android
       - name: Validate data safety disclosures
-        run: pnpm run data-safety:validate
+        run: bun run data-safety:validate
       - name: Check SIWA compliance
-        run: pnpm run compliance:siwa-guard
+        run: bun run compliance:siwa-guard
       - name: Upload compliance report
         if: always()
         uses: actions/upload-artifact@v4
@@ -59,17 +58,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: oven-sh/setup-bun@v2
         with:
-          version: 10.17.0
+          bun-version: latest
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
       - name: Install
-        run: pnpm install --frozen-lockfile
+        run: bun install --frozen-lockfile
       - name: Validate lawful bases matrix
-        run: pnpm run compliance:lawful-bases-matrix
+        run: bun run compliance:lawful-bases-matrix
       - name: Upload lawful bases matrix validation report
         if: always()
         uses: actions/upload-artifact@v4

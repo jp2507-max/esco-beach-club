@@ -1,0 +1,101 @@
+const common = {
+  accessibility: {
+    textInputDefault: 'Trường nhập văn bản',
+    textInputHint: 'Nhập văn bản',
+    textInputHintWithField: 'Nhập {{field}}',
+  },
+  validation: {
+    required: 'Trường này là bắt buộc.',
+    email: 'Vui lòng nhập địa chỉ email hợp lệ.',
+    number: 'Vui lòng nhập số.',
+    positiveNumber: 'Vui lòng nhập số dương.',
+    min: 'Phải có ít nhất {{min}}.',
+    max: 'Không được vượt quá {{max}}.',
+    maxCharacters: 'Tối đa {{count}} ký tự.',
+    commentMax: 'Nhận xét tối đa 500 ký tự.',
+    invalidDate: 'Vui lòng nhập ngày hợp lệ theo định dạng YYYY-MM-DD.',
+    invalidCode: 'Vui lòng nhập mã xác minh 6 chữ số.',
+  },
+  back: 'Quay lại',
+  rateUs: {
+    title: 'Đánh giá trải nghiệm của bạn',
+    howWasVisit: 'Chuyến thăm của bạn thế nào?',
+    feedbackHint:
+      'Phản hồi của bạn giúp chúng tôi tạo trải nghiệm câu lạc bộ biển tốt nhất.',
+    starLabels: ['Tệ', 'Kém', 'Ổn', 'Tốt', 'Tuyệt vời!'],
+    placeholder: 'Cho chúng tôi biết thêm về trải nghiệm của bạn...',
+    submitLabel: 'Gửi đánh giá',
+    thankYou: 'Cảm ơn bạn!',
+    thankYouMessage:
+      'Phản hồi của bạn rất ý nghĩa. Chúng tôi sẽ tiếp tục cải thiện Esco Life.',
+    done: 'Xong',
+    ratingRequired: 'Cần đánh giá',
+    ratingRequiredMessage: 'Vui lòng chọn số sao trước khi gửi.',
+    reviewFailed: 'Gửi đánh giá thất bại',
+    reviewSubmitError: 'Không thể gửi đánh giá ngay bây giờ.',
+  },
+  bookingSuccess: {
+    backHome: 'Quay về trang chủ',
+    guest: 'Khách',
+    subtitle: 'Đặt chỗ của bạn đã được xác nhận.',
+    title: 'Mọi thứ đã sẵn sàng, {{name}}!',
+  },
+  menu: 'Thực đơn',
+  privateEvent: {
+    title: 'Sự kiện riêng',
+    header: 'Lên kế hoạch tiệc riêng của bạn',
+    subtitle:
+      'Từ sinh nhật thân mật đến sự kiện doanh nghiệp lớn — hãy để chúng tôi lo.',
+    eventDetails: 'Chi tiết sự kiện',
+    eventType: 'Loại sự kiện',
+    selectType: 'Chọn loại...',
+    eventTypes: {
+      companyParty: 'Tiệc công ty',
+      birthday: 'Sinh nhật',
+      wedding: 'Đám cưới',
+      anniversary: 'Kỷ niệm',
+      corporateRetreat: 'Hội nghị công ty',
+      other: 'Khác',
+    },
+    preferredDate: 'Ngày mong muốn',
+    preferredDatePlaceholder: 'YYYY-MM-DD',
+    estimatedGuests: 'Số khách ước tính',
+    estimatedGuestsPlaceholder: 'VD: 50',
+    contactInfoOptional: 'Thông tin liên hệ (tùy chọn)',
+    name: 'Tên',
+    namePlaceholder: 'Họ tên của bạn',
+    email: 'Email',
+    emailPlaceholder: 'you@email.com',
+    additionalNotes: 'Ghi chú thêm',
+    additionalNotesPlaceholder: 'Chủ đề, yêu cầu ăn uống, yêu cầu đặc biệt...',
+    sendInquiry: 'Gửi yêu cầu',
+    teamResponse: 'Đội ngũ sẽ phản hồi trong vòng 24 giờ.',
+    submissionFailed: 'Gửi thất bại',
+    submitError: 'Không thể gửi yêu cầu ngay bây giờ.',
+    missingInfo: 'Thiếu thông tin',
+    missingInfoMessage:
+      'Vui lòng điền loại sự kiện, ngày và số khách ước tính.',
+    inquirySent: 'Đã gửi yêu cầu!',
+    inquirySentMessage:
+      'Đội ngũ sự kiện sẽ xem xét và liên hệ trong vòng 24 giờ. Hãy chuẩn bị cho một sự kiện đáng nhớ!',
+    backToEvents: 'Quay lại Sự kiện',
+  },
+  tabs: {
+    home: 'Trang chủ',
+    events: 'Sự kiện',
+    perks: 'Ưu đãi',
+    profile: 'Hồ sơ',
+  },
+  close: 'Đóng',
+  modal: {
+    title: 'Esco Life',
+    description:
+      'Chào mừng đến Esco Life Beach Club. Tận hưởng các ưu đãi dành riêng cho thành viên.',
+  },
+  notFound: {
+    title: 'Màn hình này không tồn tại.',
+    cta: 'Đi đến trang chủ',
+  },
+} as const;
+
+export default common;

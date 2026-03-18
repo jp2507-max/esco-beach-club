@@ -1,57 +1,28 @@
-import { Tabs } from 'expo-router';
-import { Home, CalendarDays, User, Gift } from 'lucide-react-native';
+import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
-import Colors from '@/constants/colors';
+export default function TabLayout(): React.JSX.Element {
+  const { t } = useTranslation('common');
 
-export default function TabLayout() {
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors.primary,
-        tabBarInactiveTintColor: Colors.textLight,
-        tabBarStyle: {
-          backgroundColor: Colors.surface,
-          borderTopColor: Colors.border,
-          borderTopWidth: 1,
-          elevation: 0,
-          shadowOpacity: 0,
-        },
-        tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '600' as const,
-        },
-        headerShown: false,
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color, size }) => <Home size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="events"
-        options={{
-          title: 'Events',
-          tabBarIcon: ({ color, size }) => <CalendarDays size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="perks"
-        options={{
-          title: 'Perks',
-          tabBarIcon: ({ color, size }) => <Gift size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: 'Profile',
-          tabBarIcon: ({ color, size }) => <User size={size} color={color} />,
-        }}
-      />
-    </Tabs>
+    <NativeTabs backBehavior="history">
+      <NativeTabs.Trigger name="home">
+        <NativeTabs.Trigger.Icon sf="house.fill" md="home" />
+        <NativeTabs.Trigger.Label>{t('tabs.home')}</NativeTabs.Trigger.Label>
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="events">
+        <NativeTabs.Trigger.Icon sf="calendar" md="event" />
+        <NativeTabs.Trigger.Label>{t('tabs.events')}</NativeTabs.Trigger.Label>
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="perks">
+        <NativeTabs.Trigger.Icon sf="gift.fill" md="redeem" />
+        <NativeTabs.Trigger.Label>{t('tabs.perks')}</NativeTabs.Trigger.Label>
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="profile">
+        <NativeTabs.Trigger.Icon sf="person.fill" md="person" />
+        <NativeTabs.Trigger.Label>{t('tabs.profile')}</NativeTabs.Trigger.Label>
+      </NativeTabs.Trigger>
+    </NativeTabs>
   );
 }

@@ -29,14 +29,14 @@ This directory contains end-to-end tests for the Strains Browser feature using M
 1. Install Maestro:
 
    ```bash
-   pnpm install-maestro
+   bun run install-maestro
    ```
 
 2. Build and install the app on a device/emulator:
    ```bash
    pnpm build:development:android
    # or
-   pnpm build:development:ios
+   bun run build:development:ios
    ```
 
 ### Run Individual Tests

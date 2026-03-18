@@ -1,143 +1,161 @@
-import { supabase } from './supabase';
-import type { Profile, Event, NewsItem, Partner, Referral } from './types';
+import { id } from '@instantdb/react-native';
 
-export async function fetchProfile(userId: string): Promise<Profile | null> {
-  console.log('[API] Fetching profile for:', userId);
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .single();
+import { db } from '@/src/lib/instant';
+import {
+  type InstantRecord,
+  mapEvent,
+  mapNewsItem,
+  mapPartner,
+  mapProfile,
+  mapReferral,
+} from '@/src/lib/mappers';
 
-  if (error) {
-    console.log('[API] Profile fetch error:', error.message);
-    return null;
-  }
-  console.log('[API] Profile fetched:', data?.full_name);
-  return data as Profile;
+import type { Event, NewsItem, Partner, Profile, Referral } from './types';
+
+function nowIso(): string {
+  return new Date().toISOString();
 }
 
-export async function updateProfile(userId: string, updates: Partial<Profile>): Promise<Profile | null> {
-  console.log('[API] Updating profile:', userId, updates);
-  const { data, error } = await supabase
-    .from('profiles')
-    .update(updates)
-    .eq('id', userId)
-    .select()
-    .single();
+function withoutUndefined<T extends Record<string, unknown>>(
+  value: T
+): Record<string, unknown> {
+  const entries = Object.entries(value).filter(([, v]) => v !== undefined);
+  return Object.fromEntries(entries);
+}
 
-  if (error) {
-    console.log('[API] Profile update error:', error.message);
-    return null;
+export async function fetchProfile(userId: string): Promise<Profile | null> {
+  if (!userId) return null;
+
+  const { data } = await db.queryOnce({
+    profiles: {
+      $: {
+        where: { 'user.id': userId },
+      },
+    },
+  });
+
+  const profile = data.profiles[0] as InstantRecord | undefined;
+  return profile ? mapProfile(profile) : null;
+}
+
+export async function updateProfile(
+  userId: string,
+  updates: Partial<Profile>
+): Promise<Profile | null> {
+  if (!userId) return null;
+
+  const current = await fetchProfile(userId);
+  if (!current) return null;
+
+  const sanitizedUpdates = withoutUndefined({
+    avatar_url: updates.avatar_url,
+    full_name: updates.full_name,
+    has_seen_welcome_voucher: updates.has_seen_welcome_voucher,
+  }) as Partial<
+    Pick<Profile, 'avatar_url' | 'full_name' | 'has_seen_welcome_voucher'>
+  >;
+
+  if (Object.keys(sanitizedUpdates).length === 0) {
+    return current;
   }
-  return data as Profile;
+
+  await db.transact(
+    db.tx.profiles[current.id].update({
+      ...sanitizedUpdates,
+    })
+  );
+
+  return {
+    ...current,
+    ...sanitizedUpdates,
+    id: current.id,
+  };
 }
 
 export async function fetchEvents(): Promise<Event[]> {
-  console.log('[API] Fetching events');
-  const { data, error } = await supabase
-    .from('events')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    console.log('[API] Events fetch error:', error.message);
-    return [];
-  }
-  console.log('[API] Events fetched:', data?.length);
-  return (data ?? []) as Event[];
+  const { data } = await db.queryOnce({ events: {} });
+  return (data.events as InstantRecord[]).map(mapEvent);
 }
 
 export async function fetchEventById(id: string): Promise<Event | null> {
-  console.log('[API] Fetching event:', id);
-  const { data, error } = await supabase
-    .from('events')
-    .select('*')
-    .eq('id', id)
-    .single();
+  const { data } = await db.queryOnce({
+    events: {
+      $: {
+        where: { id },
+      },
+    },
+  });
 
-  if (error) {
-    console.log('[API] Event fetch error:', error.message);
-    return null;
-  }
-  return data as Event;
+  const event = data.events[0] as InstantRecord | undefined;
+  return event ? mapEvent(event) : null;
 }
 
 export async function fetchNewsFeed(): Promise<NewsItem[]> {
-  console.log('[API] Fetching news feed');
-  const { data, error } = await supabase
-    .from('news_feed')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    console.log('[API] News fetch error:', error.message);
-    return [];
-  }
-  console.log('[API] News fetched:', data?.length);
-  return (data ?? []) as NewsItem[];
+  const { data } = await db.queryOnce({ news_items: {} });
+  return (data.news_items as InstantRecord[]).map(mapNewsItem);
 }
 
 export async function fetchPartners(): Promise<Partner[]> {
-  console.log('[API] Fetching partners');
-  const { data, error } = await supabase
-    .from('partners')
-    .select('*')
-    .order('name', { ascending: true });
-
-  if (error) {
-    console.log('[API] Partners fetch error:', error.message);
-    return [];
-  }
-  console.log('[API] Partners fetched:', data?.length);
-  return (data ?? []) as Partner[];
+  const { data } = await db.queryOnce({ partners: {} });
+  return (data.partners as InstantRecord[]).map(mapPartner);
 }
 
 export async function fetchPartnerById(id: string): Promise<Partner | null> {
-  console.log('[API] Fetching partner:', id);
-  const { data, error } = await supabase
-    .from('partners')
-    .select('*')
-    .eq('id', id)
-    .single();
+  const { data } = await db.queryOnce({
+    partners: {
+      $: {
+        where: { id },
+      },
+    },
+  });
 
-  if (error) {
-    console.log('[API] Partner fetch error:', error.message);
-    return null;
-  }
-  return data as Partner;
+  const partner = data.partners[0] as InstantRecord | undefined;
+  return partner ? mapPartner(partner) : null;
 }
 
 export async function fetchReferrals(userId: string): Promise<Referral[]> {
-  console.log('[API] Fetching referrals for:', userId);
-  const { data, error } = await supabase
-    .from('referrals')
-    .select('*')
-    .eq('referrer_id', userId)
-    .order('created_at', { ascending: false });
+  if (!userId) return [];
 
-  if (error) {
-    console.log('[API] Referrals fetch error:', error.message);
-    return [];
-  }
-  console.log('[API] Referrals fetched:', data?.length);
-  return (data ?? []) as Referral[];
+  const { data } = await db.queryOnce({
+    referrals: {
+      $: {
+        where: { 'referrer.user.id': userId },
+      },
+    },
+  });
+
+  return (data.referrals as InstantRecord[]).map(mapReferral);
 }
 
-export async function submitReview(userId: string, rating: number, comment: string | null) {
-  console.log('[API] Submitting review:', { userId, rating, comment });
-  const { data, error } = await supabase
-    .from('reviews')
-    .insert({ user_id: userId, rating, comment })
-    .select()
-    .single();
+export async function submitReview(
+  userId: string,
+  rating: number,
+  comment: string | null
+): Promise<{
+  comment: string | null;
+  created_at: string;
+  id: string;
+  rating: number;
+}> {
+  const createdAt = nowIso();
+  const reviewId = id();
 
-  if (error) {
-    console.log('[API] Review submit error:', error.message);
-    throw error;
-  }
-  console.log('[API] Review submitted:', data?.id);
-  return data;
+  await db.transact(
+    db.tx.reviews[reviewId]
+      .create({
+        comment,
+        created_at: createdAt,
+        rating,
+      })
+      .link({ owner: userId })
+  );
+
+  return {
+    comment,
+    created_at: createdAt,
+    id: reviewId,
+    rating,
+  };
 }
 
 export async function submitPrivateEventInquiry(params: {
@@ -148,18 +166,36 @@ export async function submitPrivateEventInquiry(params: {
   contact_name?: string;
   contact_email?: string;
   notes?: string;
-}) {
-  console.log('[API] Submitting private event inquiry:', params);
-  const { data, error } = await supabase
-    .from('private_event_inquiries')
-    .insert(params)
-    .select()
-    .single();
+}): Promise<{
+  contact_email?: string;
+  contact_name?: string;
+  created_at: string;
+  estimated_pax: number;
+  event_type: string;
+  id: string;
+  notes?: string;
+  preferred_date: string;
+}> {
+  const createdAt = nowIso();
+  const inquiryId = id();
+  const payload = {
+    contact_email: params.contact_email,
+    contact_name: params.contact_name,
+    estimated_pax: params.estimated_pax,
+    event_type: params.event_type,
+    notes: params.notes,
+    preferred_date: params.preferred_date,
+  };
 
-  if (error) {
-    console.log('[API] Inquiry submit error:', error.message);
-    throw error;
-  }
-  console.log('[API] Inquiry submitted:', data?.id);
-  return data;
+  await db.transact(
+    db.tx.private_event_inquiries[inquiryId]
+      .update(withoutUndefined({ ...payload, created_at: createdAt }))
+      .link({ owner: params.user_id })
+  );
+
+  return {
+    ...payload,
+    created_at: createdAt,
+    id: inquiryId,
+  };
 }

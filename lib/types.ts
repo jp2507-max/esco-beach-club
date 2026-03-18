@@ -70,7 +70,6 @@ export interface Referral {
 
 export interface Review {
   id: string;
-  user_id: string;
   rating: number;
   comment: string | null;
   created_at: string;
@@ -78,7 +77,6 @@ export interface Review {
 
 export interface PrivateEventInquiry {
   id: string;
-  user_id: string;
   event_type: string;
   preferred_date: string;
   estimated_pax: number;

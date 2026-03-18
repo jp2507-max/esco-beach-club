@@ -1,41 +1,26 @@
 import { Link, Stack } from 'expo-router';
-import { StyleSheet, Text, View } from 'react-native';
-import Colors from '@/constants/colors';
+import React from 'react';
+import { useTranslation } from 'react-i18next';
 
-export default function NotFoundScreen() {
+import { Pressable, Text, View } from '@/src/tw';
+
+export default function NotFoundScreen(): React.JSX.Element {
+  const { t } = useTranslation('common');
   return (
     <>
-      <Stack.Screen options={{ title: 'Oops!' }} />
-      <View style={styles.container}>
-        <Text style={styles.title}>This screen doesn&apos;t exist.</Text>
-        <Link href="/" style={styles.link}>
-          <Text style={styles.linkText}>Go to home screen</Text>
+      <Stack.Screen options={{ title: t('notFound.title') }} />
+      <View className="flex-1 items-center justify-center bg-background px-5 dark:bg-dark-bg">
+        <Text className="text-lg font-semibold text-text dark:text-text-primary-dark">
+          {t('notFound.title')}
+        </Text>
+        <Link href="/" asChild={true}>
+          <Pressable accessibilityRole="button" className="mt-[15px] py-[15px]">
+            <Text className="text-sm font-semibold text-primary dark:text-primary-bright">
+              {t('notFound.cta')}
+            </Text>
+          </Pressable>
         </Link>
       </View>
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-    backgroundColor: Colors.background,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '600' as const,
-    color: Colors.text,
-  },
-  link: {
-    marginTop: 15,
-    paddingVertical: 15,
-  },
-  linkText: {
-    fontSize: 14,
-    color: Colors.primary,
-    fontWeight: '600' as const,
-  },
-});
