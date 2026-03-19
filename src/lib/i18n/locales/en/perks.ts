@@ -13,9 +13,13 @@ const perks = {
     congratulations: 'Congratulations!',
     benefitsDescription:
       'Enjoy exclusive benefits at {{name}}. {{description}}.',
+    claiming: 'Claiming...',
     exclusive: 'Exclusive',
     discount: 'Discount',
     vipPerk: 'VIP Perk',
+    redemptionFailedTitle: 'Perk Claim Failed',
+    redemptionFailedMessage:
+      'Could not save your perk claim right now. Please try again.',
     yourDiscountCode: 'YOUR DISCOUNT CODE',
     enjoyMyPerks: 'Enjoy my Perks',
     maybeLater: 'Maybe later',

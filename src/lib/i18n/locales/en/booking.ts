@@ -40,6 +40,9 @@ const booking = {
   guestsUnit: 'guests',
   full: 'Full',
   confirmationMessage: 'Your table is reserved for {{date}} at {{time}}.',
+  reservationFailedTitle: 'Reservation Failed',
+  reservationFailedMessage:
+    'Could not confirm your reservation right now. Please try again.',
 } as const;
 
 export default booking;

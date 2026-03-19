@@ -2,6 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import {
   Bell,
+  Bookmark,
   ChevronRight,
   CreditCard,
   Crown,
@@ -9,6 +10,7 @@ import {
   Headphones,
   HelpCircle,
   LogOut,
+  PencilLine,
   QrCode,
   Settings,
   Star,
@@ -29,7 +31,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/providers/AuthProvider';
-import { useProfileData } from '@/providers/DataProvider';
+import {
+  useMemberOffersData,
+  useProfileData,
+  useSavedEventsCount,
+} from '@/providers/DataProvider';
+import { HeaderGlassButton } from '@/src/components/ui';
 import { Avatar } from '@/src/components/ui/avatar';
 import { rmTiming } from '@/src/lib/animations/motion';
 import { config } from '@/src/lib/config';
@@ -116,18 +123,37 @@ export default function ProfileScreen(): React.JSX.Element {
   }, [fade, scale]);
 
   const { profile, dismissVoucher } = useProfileData();
+  const { welcomeOffer } = useMemberOffersData();
+  const savedEventsCount = useSavedEventsCount();
   const { signOut } = useAuth();
 
   const userName = profile?.full_name ?? t('guest');
   const tierBadge = profile?.tier_label ?? t('memberFallback');
   const tierLevel = profile?.tier ?? 'STANDARD';
+  const bio = profile?.bio?.trim() ?? '';
   const memberId = profile?.member_id ?? '';
+  const memberSince = profile?.member_since
+    ? profile.member_since.slice(0, 10)
+    : '—';
   const earned = profile?.earned ?? 0;
+  const nightsLeft = profile?.nights_left ?? 0;
   const saved = profile?.saved ?? 0;
+  const welcomeOfferBadgeKey = welcomeOffer?.badge_key ?? 'welcomeGift';
+  const welcomeOfferTitleKey = welcomeOffer?.title_key ?? 'welcomeDiscount';
+  const welcomeOfferSubtitleKey = welcomeOffer?.subtitle_key ?? 'firstVisit';
+  const welcomeOfferTermsKey = welcomeOffer?.terms_key ?? 'validForThirtyDays';
+  const welcomeOfferCode = welcomeOffer?.code ?? 'WELCOME10';
 
   const [showVoucher, setShowVoucher] = useState<boolean>(false);
   const menuItems = useMemo<MenuItem[]>(
     () => [
+      {
+        color: Colors.primary,
+        icon: PencilLine,
+        id: 'edit-profile',
+        label: t('menu.editProfile'),
+        route: '/profile/edit-profile',
+      },
       {
         color: Colors.primary,
         icon: Users,
@@ -141,6 +167,13 @@ export default function ProfileScreen(): React.JSX.Element {
         id: 'rate-us',
         label: t('menu.rateUs'),
         route: '/rate-us',
+      },
+      {
+        color: Colors.secondary,
+        icon: Bookmark,
+        id: 'saved-events',
+        label: t('menu.savedEvents'),
+        route: '/profile/saved-events',
       },
       {
         color: Colors.primary,
@@ -160,11 +193,10 @@ export default function ProfileScreen(): React.JSX.Element {
       },
       {
         color: Colors.secondary,
-        disabled: true,
         icon: Settings,
         id: 'settings',
         label: t('menu.settings'),
-        route: null,
+        route: '/profile/theme-preference',
       },
       {
         color: '#7C4DFF',
@@ -297,14 +329,15 @@ export default function ProfileScreen(): React.JSX.Element {
               </Text>
             </View>
           </View>
-          <Pressable
-            accessibilityRole="button"
+          <HeaderGlassButton
+            accessibilityLabel={t('menu.comingSoon')}
+            accessibilityHint={t('menu.comingSoon')}
             className="size-[42px] items-center justify-center rounded-full border border-border bg-white dark:border-dark-border dark:bg-dark-bg-card"
             onPress={() => Alert.alert(t('menu.comingSoon'))}
             testID="notification-bell"
           >
             <Bell color={Colors.text} size={20} />
-          </Pressable>
+          </HeaderGlassButton>
         </View>
 
         <View className="mb-5 items-center">
@@ -377,6 +410,54 @@ export default function ProfileScreen(): React.JSX.Element {
           />
         </View>
 
+        <View className="mb-5 rounded-[20px] border border-border bg-white p-5 dark:border-dark-border dark:bg-dark-bg-card">
+          <View className="mb-4 flex-row items-center justify-between">
+            <Text className="text-lg font-bold text-text dark:text-text-primary-dark">
+              {t('profileDetails')}
+            </Text>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => router.push('/profile/edit-profile')}
+              testID="profile-edit-shortcut"
+            >
+              <Text className="text-sm font-bold text-primary dark:text-primary-bright">
+                {t('edit')}
+              </Text>
+            </Pressable>
+          </View>
+
+          <Text className="text-sm leading-6 text-text-secondary dark:text-text-secondary-dark">
+            {bio || t('noBio')}
+          </Text>
+
+          <View className="mt-4 flex-row gap-3">
+            <View className="flex-1 rounded-2xl bg-background px-4 py-3 dark:bg-dark-bg-elevated">
+              <Text className="text-[11px] font-semibold uppercase tracking-[0.8px] text-text-muted dark:text-text-muted-dark">
+                {t('memberSince')}
+              </Text>
+              <Text className="mt-1 text-sm font-bold text-text dark:text-text-primary-dark">
+                {memberSince}
+              </Text>
+            </View>
+            <View className="flex-1 rounded-2xl bg-background px-4 py-3 dark:bg-dark-bg-elevated">
+              <Text className="text-[11px] font-semibold uppercase tracking-[0.8px] text-text-muted dark:text-text-muted-dark">
+                {t('nightsLeft')}
+              </Text>
+              <Text className="mt-1 text-sm font-bold text-text dark:text-text-primary-dark">
+                {nightsLeft}
+              </Text>
+            </View>
+            <View className="flex-1 rounded-2xl bg-background px-4 py-3 dark:bg-dark-bg-elevated">
+              <Text className="text-[11px] font-semibold uppercase tracking-[0.8px] text-text-muted dark:text-text-muted-dark">
+                {t('savedEventsCount')}
+              </Text>
+              <Text className="mt-1 text-sm font-bold text-text dark:text-text-primary-dark">
+                {savedEventsCount}
+              </Text>
+            </View>
+          </View>
+        </View>
+
         {showVoucher && (
           <Animated.View className="mb-5" style={voucherStyle}>
             <View
@@ -397,21 +478,21 @@ export default function ProfileScreen(): React.JSX.Element {
               <View className="mb-2 flex-row items-center">
                 <Ticket color={Colors.primary} size={22} />
                 <Text className="ml-2 text-[11px] font-extrabold tracking-[2px] text-primary">
-                  {t('welcomeGift')}
+                  {t(welcomeOfferBadgeKey as never)}
                 </Text>
               </View>
               <Text className="mb-0.5 text-[42px] font-black text-text dark:text-text-primary-dark">
-                {t('welcomeDiscount')}
+                {t(welcomeOfferTitleKey as never)}
               </Text>
               <Text className="mb-3.5 text-base font-semibold text-text-secondary dark:text-text-secondary-dark">
-                {t('firstVisit')}
+                {t(welcomeOfferSubtitleKey as never)}
               </Text>
               <View className="mb-3.5 h-px w-4/5 bg-border dark:bg-dark-border" />
               <Text className="mb-1.5 text-lg font-extrabold tracking-[2px] text-secondary">
-                {t('codeLabel', { code: 'WELCOME10' })}
+                {t('codeLabel', { code: welcomeOfferCode })}
               </Text>
               <Text className="mb-4 text-xs text-text-muted dark:text-text-muted-dark">
-                {t('validForThirtyDays')}
+                {t(welcomeOfferTermsKey as never)}
               </Text>
               <Pressable
                 accessibilityRole="button"

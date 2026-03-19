@@ -3,7 +3,9 @@ import React from 'react';
 
 import { Colors } from '@/constants/colors';
 import { cn } from '@/src/lib/utils';
-import { Pressable, Text, View } from '@/src/tw';
+import { Text, View } from '@/src/tw';
+
+import { HeaderGlassButton } from './header-glass-button';
 
 export type ModalHeaderTitleAlign = 'center' | 'left';
 export type ModalHeaderClosePosition = 'left' | 'right';
@@ -29,8 +31,9 @@ function CloseButton({
   testID?: string;
 }): React.JSX.Element {
   return (
-    <Pressable
-      accessibilityRole="button"
+    <HeaderGlassButton
+      accessibilityLabel="Close"
+      accessibilityHint="Closes this modal"
       className={cn(
         'size-10 items-center justify-center rounded-full bg-sand dark:bg-dark-bg-card',
         className
@@ -39,7 +42,7 @@ function CloseButton({
       testID={testID}
     >
       <X color={Colors.text} size={20} />
-    </Pressable>
+    </HeaderGlassButton>
   );
 }
 

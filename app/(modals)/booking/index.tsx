@@ -6,12 +6,17 @@ import {
   Sparkles,
   Users,
 } from 'lucide-react-native';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
-import { useProfileData } from '@/providers/DataProvider';
+import { submitTableReservation } from '@/lib/api';
+import {
+  useBookingContentData,
+  useProfileData,
+} from '@/providers/DataProvider';
 import { Button, ModalHeader } from '@/src/components/ui';
 import { useScreenEntry } from '@/src/lib/animations/use-screen-entry';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
@@ -36,54 +41,103 @@ const OCCASIONS = [
   'Celebration',
 ] as const;
 
+const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
+const MONTH_KEYS = [
+  'jan',
+  'feb',
+  'mar',
+  'apr',
+  'may',
+  'jun',
+  'jul',
+  'aug',
+  'sep',
+  'oct',
+  'nov',
+  'dec',
+] as const;
+
+type BookingOccasionKey = (typeof OCCASIONS)[number];
+type BookingDayKey = (typeof DAY_KEYS)[number];
+type BookingMonthKey = (typeof MONTH_KEYS)[number];
+type BookingDayLabelKey = 'today' | BookingDayKey;
+
+type BookingOccasionTranslationKey = `booking:occasions.${BookingOccasionKey}`;
+type BookingDayTranslationKey = `booking:days.${BookingDayLabelKey}`;
+type BookingMonthTranslationKey = `booking:months.${BookingMonthKey}`;
+
+type ResolvedOccasion = {
+  label: string;
+  value: string;
+};
+
+type ResolvedTimeSlot = {
+  available: boolean;
+  time: string;
+};
+
 function getNext7Days(baseDate: Date): {
-  labelKey: string;
+  labelKey: BookingDayLabelKey;
   day: string;
   date: Date;
-  monthKey: string;
-  dayNameKey: string;
+  monthKey: BookingMonthKey;
+  dayNameKey: BookingDayKey;
 }[] {
   const days: {
-    labelKey: string;
+    labelKey: BookingDayLabelKey;
     day: string;
     date: Date;
-    monthKey: string;
-    dayNameKey: string;
+    monthKey: BookingMonthKey;
+    dayNameKey: BookingDayKey;
   }[] = [];
-  const dayNames = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
-  const monthNames = [
-    'jan',
-    'feb',
-    'mar',
-    'apr',
-    'may',
-    'jun',
-    'jul',
-    'aug',
-    'sep',
-    'oct',
-    'nov',
-    'dec',
-  ] as const;
   for (let i = 0; i < 7; i++) {
     const d = new Date(baseDate);
     d.setDate(baseDate.getDate() + i);
     days.push({
       date: d,
       day: String(d.getDate()),
-      dayNameKey: dayNames[d.getDay()],
-      labelKey: i === 0 ? 'today' : dayNames[d.getDay()],
-      monthKey: monthNames[d.getMonth()],
+      dayNameKey: DAY_KEYS[d.getDay()],
+      labelKey: i === 0 ? 'today' : DAY_KEYS[d.getDay()],
+      monthKey: MONTH_KEYS[d.getMonth()],
     });
   }
   return days;
 }
 
+function getOccasionTranslationKey(
+  value: BookingOccasionKey
+): BookingOccasionTranslationKey {
+  return `booking:occasions.${value}`;
+}
+
+function getDayTranslationKey(
+  value: BookingDayLabelKey
+): BookingDayTranslationKey {
+  return `booking:days.${value}`;
+}
+
+function getMonthTranslationKey(
+  value: BookingMonthKey
+): BookingMonthTranslationKey {
+  return `booking:months.${value}`;
+}
+
+function toLocalDateString(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 export default function BookingModalScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { eventTitle } = useLocalSearchParams<{ eventTitle?: string }>();
-  const { profile } = useProfileData();
+  const { eventId, eventTitle } = useLocalSearchParams<{
+    eventId?: string;
+    eventTitle?: string;
+  }>();
+  const { profile, userId } = useProfileData();
+  const { bookingOccasions, bookingTimeSlots } = useBookingContentData();
   const { t } = useTranslation(['booking', 'common']);
 
   const [now, setNow] = useState(() => new Date());
@@ -105,50 +159,89 @@ export default function BookingModalScreen(): React.JSX.Element {
   const [pax, setPax] = useState<number>(2);
   const [occasion, setOccasion] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const confirmTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { contentStyle } = useScreenEntry();
 
-  useEffect(() => {
-    return () => {
-      if (confirmTimeoutRef.current) {
-        clearTimeout(confirmTimeoutRef.current);
-      }
-    };
-  }, [confirmTimeoutRef]);
+  const resolvedTimeSlots = useMemo<ResolvedTimeSlot[]>(() => {
+    if (bookingTimeSlots.length === 0) {
+      return TIME_SLOTS;
+    }
+
+    return bookingTimeSlots.map((slot) => ({
+      available: slot.available,
+      time: slot.time,
+    }));
+  }, [bookingTimeSlots]);
+
+  const resolvedOccasions = useMemo<ResolvedOccasion[]>(() => {
+    if (bookingOccasions.length === 0) {
+      return OCCASIONS.map((value) => ({
+        label: t(getOccasionTranslationKey(value)),
+        value,
+      }));
+    }
+
+    return bookingOccasions.map((option) => ({
+      label: t(option.label_key as never),
+      value: option.value,
+    }));
+  }, [bookingOccasions, t]);
 
   const canConfirm = selectedTime !== null && occasion !== null;
 
-  function handleConfirm(): void {
+  function getConfirmationDate(): string {
+    return (
+      t(getDayTranslationKey(dates[selectedDate].dayNameKey)) +
+      ', ' +
+      t(getMonthTranslationKey(dates[selectedDate].monthKey)) +
+      ' ' +
+      dates[selectedDate].day
+    );
+  }
+
+  async function handleConfirm(): Promise<void> {
     if (!canConfirm) return;
-    setIsSubmitting(true);
-    console.log('[Booking] Submitting reservation...');
-    if (confirmTimeoutRef.current) {
-      clearTimeout(confirmTimeoutRef.current);
+    if (!userId || !selectedTime || !occasion) {
+      Alert.alert(
+        t('booking:reservationFailedTitle'),
+        t('booking:reservationFailedMessage')
+      );
+      return;
     }
-    confirmTimeoutRef.current = setTimeout(() => {
+
+    setIsSubmitting(true);
+
+    try {
+      await submitTableReservation({
+        event_id: eventId,
+        event_title: eventTitle,
+        occasion,
+        party_size: pax,
+        reservation_date: toLocalDateString(dates[selectedDate].date),
+        reservation_time: selectedTime,
+        source: eventId ? 'event' : 'general',
+        user_id: userId,
+      });
+
       const name =
         profile?.full_name?.split(' ')[0] ?? t('common:bookingSuccess.guest');
-      const dateStr =
-        t(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          `booking:days.${dates[selectedDate].dayNameKey}` as any
-        ) +
-        ', ' +
-        t(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          `booking:months.${dates[selectedDate].monthKey}` as any
-        ) +
-        ' ' +
-        dates[selectedDate].day;
       const subtitle = t('booking:confirmationMessage', {
-        date: dateStr,
+        date: getConfirmationDate(),
         time: selectedTime,
       });
+
       router.replace({
         pathname: '/booking/success' as never,
         params: { name, subtitle },
       });
-    }, 1500);
+    } catch (error: unknown) {
+      console.error('[Booking] Failed to submit reservation:', error);
+      Alert.alert(
+        t('booking:reservationFailedTitle'),
+        t('booking:reservationFailedMessage')
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -205,10 +298,7 @@ export default function BookingModalScreen(): React.JSX.Element {
                           : 'text-xs font-semibold text-text-secondary dark:text-text-secondary-dark'
                       }
                     >
-                      {t(
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        `booking:days.${d.labelKey}` as any
-                      )}
+                      {t(getDayTranslationKey(d.labelKey))}
                     </Text>
                     <Text
                       className={
@@ -233,7 +323,7 @@ export default function BookingModalScreen(): React.JSX.Element {
               </Text>
             </View>
             <View className="flex-row flex-wrap">
-              {TIME_SLOTS.map((slot) => {
+              {resolvedTimeSlots.map((slot) => {
                 const active = selectedTime === slot.time;
                 return (
                   <Pressable
@@ -337,14 +427,14 @@ export default function BookingModalScreen(): React.JSX.Element {
               {t('booking:occasionTitle')}
             </Text>
             <View className="mt-2.5 flex-row flex-wrap">
-              {OCCASIONS.map((o) => {
-                const active = occasion === o;
+              {resolvedOccasions.map((option) => {
+                const active = occasion === option.value;
                 return (
                   <Pressable
                     accessibilityRole="button"
-                    key={o}
+                    key={option.value}
                     className="mb-2.5 mr-2.5 rounded-full px-4.5 py-3"
-                    onPress={() => !isSubmitting && setOccasion(o)}
+                    onPress={() => !isSubmitting && setOccasion(option.value)}
                     disabled={isSubmitting}
                     style={{
                       backgroundColor: active
@@ -354,16 +444,13 @@ export default function BookingModalScreen(): React.JSX.Element {
                       borderWidth: 1.5,
                       opacity: isSubmitting ? 0.7 : 1,
                     }}
-                    testID={`occasion-${o}`}
+                    testID={`occasion-${option.value}`}
                   >
                     <Text
                       className="text-sm font-semibold"
                       style={{ color: active ? '#fff' : Colors.text }}
                     >
-                      {t(
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        `booking:occasions.${o}` as any
-                      )}
+                      {option.label}
                     </Text>
                   </Pressable>
                 );

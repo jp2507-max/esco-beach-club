@@ -32,7 +32,17 @@
     "plugins": [
       "expo-router",
       "expo-image",
-      "expo-localization"
+      "expo-localization",
+      "expo-web-browser",
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "escolife",
+          "organization": "canabro"
+        }
+      ],
+      "@react-native-google-signin/google-signin"
     ],
     "experiments": {
       "typedRoutes": true,

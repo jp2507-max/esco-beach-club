@@ -1,4 +1,19 @@
-import type { Event, NewsItem, Partner, Profile, Referral } from '@/lib/types';
+import type {
+  BookingOccasionOption,
+  BookingTimeSlotOption,
+  Event,
+  MemberOffer,
+  MenuCategoryContent,
+  MenuItemContent,
+  NewsItem,
+  Partner,
+  PartnerRedemption,
+  PrivateEventTypeOption,
+  Profile,
+  Referral,
+  SavedEvent,
+  TableReservation,
+} from '@/lib/types';
 
 export type InstantRecord = {
   id: string;
@@ -34,22 +49,27 @@ export function toIsoString(value: unknown): string {
 }
 
 export function toTier(value: unknown): Profile['tier'] {
-  if (value === 'VIP' || value === 'OWNER' || value === 'STANDARD')
-    return value;
+  const str = String(value);
+  if (str === 'VIP' || str === 'OWNER' || str === 'STANDARD')
+    return str as Profile['tier'];
   return 'STANDARD';
 }
 
 export function toReferralStatus(value: unknown): Referral['status'] {
-  return value === 'Completed' ? 'Completed' : 'Pending';
+  const str = String(value);
+  return str === 'Completed' ? 'Completed' : 'Pending';
 }
 
 export function mapProfile(record: InstantRecord): Profile {
   return {
     id: record.id,
     full_name: toStringOr(record.full_name),
+    bio: toStringOr(record.bio),
     tier: toTier(record.tier),
     tier_label: toStringOr(record.tier_label, 'Member'),
     member_id: toStringOr(record.member_id),
+    member_since: toIsoString(record.member_since),
+    nights_left: toNumber(record.nights_left),
     points: toNumber(record.points),
     max_points: toNumber(record.max_points),
     earned: toNumber(record.earned),
@@ -96,6 +116,85 @@ export function mapNewsItem(record: InstantRecord): NewsItem {
   };
 }
 
+export function mapBookingOccasion(
+  record: InstantRecord
+): BookingOccasionOption {
+  return {
+    id: record.id,
+    created_at: toIsoString(record.created_at),
+    is_active: toBoolean(record.is_active, true),
+    label_key: toStringOr(record.label_key),
+    sort_order: toNumber(record.sort_order),
+    value: toStringOr(record.value),
+  };
+}
+
+export function mapBookingTimeSlot(
+  record: InstantRecord
+): BookingTimeSlotOption {
+  return {
+    id: record.id,
+    available: toBoolean(record.available, true),
+    created_at: toIsoString(record.created_at),
+    sort_order: toNumber(record.sort_order),
+    time: toStringOr(record.time),
+  };
+}
+
+export function mapMemberOffer(record: InstantRecord): MemberOffer {
+  return {
+    id: record.id,
+    badge_key: toStringOr(record.badge_key),
+    code: toNullableString(record.code),
+    created_at: toIsoString(record.created_at),
+    is_active: toBoolean(record.is_active, true),
+    kind: toStringOr(record.kind),
+    sort_order: toNumber(record.sort_order),
+    subtitle_key: toStringOr(record.subtitle_key),
+    terms_key: toNullableString(record.terms_key),
+    title_key: toStringOr(record.title_key),
+  };
+}
+
+export function mapMenuCategory(record: InstantRecord): MenuCategoryContent {
+  return {
+    id: record.id,
+    created_at: toIsoString(record.created_at),
+    is_active: toBoolean(record.is_active, true),
+    key: toStringOr(record.key),
+    label_key: toStringOr(record.label_key),
+    sort_order: toNumber(record.sort_order),
+  };
+}
+
+export function mapMenuItem(record: InstantRecord): MenuItemContent {
+  return {
+    id: record.id,
+    category_key: toStringOr(record.category_key),
+    created_at: toIsoString(record.created_at),
+    description_key: toStringOr(record.description_key),
+    image: toStringOr(record.image),
+    is_active: toBoolean(record.is_active, true),
+    name_key: toStringOr(record.name_key),
+    price: toStringOr(record.price),
+    sort_order: toNumber(record.sort_order),
+    tag_key: toNullableString(record.tag_key),
+  };
+}
+
+export function mapPrivateEventType(
+  record: InstantRecord
+): PrivateEventTypeOption {
+  return {
+    id: record.id,
+    created_at: toIsoString(record.created_at),
+    is_active: toBoolean(record.is_active, true),
+    label_key: toStringOr(record.label_key),
+    sort_order: toNumber(record.sort_order),
+    value: toStringOr(record.value),
+  };
+}
+
 export function mapPartner(record: InstantRecord): Partner {
   return {
     id: record.id,
@@ -118,5 +217,43 @@ export function mapReferral(record: InstantRecord): Referral {
     referred_avatar: toNullableString(record.referred_avatar),
     status: toReferralStatus(record.status),
     created_at: toIsoString(record.created_at),
+  };
+}
+
+export function mapSavedEvent(record: InstantRecord): SavedEvent {
+  return {
+    id: record.id,
+    event_id: toStringOr(record.event_id),
+    entry_key: toStringOr(record.entry_key),
+    created_at: toIsoString(record.created_at),
+  };
+}
+
+export function mapTableReservation(record: InstantRecord): TableReservation {
+  return {
+    id: record.id,
+    created_at: toIsoString(record.created_at),
+    entry_key: toStringOr(record.entry_key),
+    event_id: toNullableString(record.event_id),
+    event_title: toNullableString(record.event_title),
+    occasion: toNullableString(record.occasion),
+    party_size: toNumber(record.party_size),
+    reservation_date: toStringOr(record.reservation_date),
+    reservation_time: toStringOr(record.reservation_time),
+    source: toStringOr(record.source),
+    status: toStringOr(record.status),
+    updated_at: toIsoString(record.updated_at),
+  };
+}
+
+export function mapPartnerRedemption(record: InstantRecord): PartnerRedemption {
+  return {
+    id: record.id,
+    created_at: toIsoString(record.created_at),
+    entry_key: toStringOr(record.entry_key),
+    partner_code: toNullableString(record.partner_code),
+    partner_id: toStringOr(record.partner_id),
+    redemption_method: toStringOr(record.redemption_method),
+    status: toStringOr(record.status),
   };
 }

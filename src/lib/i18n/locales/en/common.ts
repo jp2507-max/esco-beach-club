@@ -12,6 +12,8 @@ const common = {
     min: 'Must be at least {{min}}.',
     max: 'Must be at most {{max}}.',
     maxCharacters: 'Must be at most {{count}} characters.',
+    profileNameMax: 'Name must be at most 60 characters.',
+    profileBioMax: 'Bio must be at most 160 characters.',
     commentMax: 'Comment must be at most 500 characters.',
     invalidDate: 'Please enter a valid date in YYYY-MM-DD format.',
     invalidCode: 'Please enter a 6-digit verification code.',
@@ -84,6 +86,7 @@ const common = {
   tabs: {
     home: 'Home',
     events: 'Events',
+    qr: 'QR',
     perks: 'Perks',
     profile: 'Profile',
   },

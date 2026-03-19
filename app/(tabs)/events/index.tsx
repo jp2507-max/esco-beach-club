@@ -12,7 +12,11 @@ import { useTranslation } from 'react-i18next';
 
 import { Colors } from '@/constants/colors';
 import type { Event } from '@/lib/types';
-import { useEventsData, useProfileData } from '@/providers/DataProvider';
+import {
+  useEventsData,
+  useProfileData,
+  useSavedEventsData,
+} from '@/providers/DataProvider';
 import { Avatar, CategoryChip } from '@/src/components/ui';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Image } from '@/src/tw/image';
@@ -34,6 +38,7 @@ export default function EventsScreen(): React.JSX.Element {
 
   const { events } = useEventsData();
   const { profile } = useProfileData();
+  const { isEventSaved, toggleSavedEvent } = useSavedEventsData();
 
   const renderHeaderRight = useCallback(
     () => (
@@ -102,59 +107,84 @@ export default function EventsScreen(): React.JSX.Element {
 
   const renderItem = useCallback(
     ({ item }: ListRenderItemInfo<Event>): React.JSX.Element => (
-      <Pressable
-        accessibilityRole="button"
-        className="mb-3 flex-row items-center rounded-2xl border border-border bg-card p-3 dark:border-dark-border dark:bg-dark-bg-card"
-        testID={`event-${item.id}`}
-        onPress={() => openEvent(item.id)}
-      >
-        <Image
-          className="size-20 rounded-xl"
-          source={{ uri: item.image }}
-          cachePolicy="memory-disk"
-          contentFit="cover"
-          recyclingKey={`event-list-${item.id}`}
-          transition={180}
-        />
-        <View className="ml-3.5 flex-1">
-          <Text className="mb-1 text-base font-bold text-text dark:text-text-primary-dark">
-            {item.title}
-          </Text>
-          <View className="mb-2 flex-row items-center gap-1.25">
-            <Calendar size={12} color={Colors.textSecondary} />
-            <Text className="text-xs font-medium text-text-secondary dark:text-text-secondary-dark">
-              {item.date} • {item.time}
+      <View className="mb-3 flex-row items-center rounded-2xl border border-border bg-card p-3 dark:border-dark-border dark:bg-dark-bg-card">
+        <Pressable
+          accessibilityRole="button"
+          className="flex-1 flex-row items-center"
+          onPress={() => openEvent(item.id)}
+          testID={`event-${item.id}`}
+        >
+          <Image
+            className="size-20 rounded-xl"
+            source={{ uri: item.image }}
+            cachePolicy="memory-disk"
+            contentFit="cover"
+            recyclingKey={`event-list-${item.id}`}
+            transition={180}
+          />
+          <View className="ml-3.5 flex-1">
+            <Text className="mb-1 text-base font-bold text-text dark:text-text-primary-dark">
+              {item.title}
             </Text>
-          </View>
-          {item.badge ? (
-            <View
-              className="self-start rounded-md px-2.5 py-1"
-              style={{
-                backgroundColor: `${item.badge_color ?? Colors.secondary}18`,
-              }}
-            >
-              <Text
-                className="text-[10px] font-extrabold tracking-[0.3px]"
-                style={{ color: item.badge_color ?? Colors.secondary }}
-              >
-                {item.badge}
+            <View className="mb-2 flex-row items-center gap-1.25">
+              <Calendar size={12} color={Colors.textSecondary} />
+              <Text className="text-xs font-medium text-text-secondary dark:text-text-secondary-dark">
+                {item.date} • {item.time}
               </Text>
             </View>
-          ) : null}
-        </View>
-        <View className="h-20 items-end justify-between py-1">
-          <View className="p-1">
+            {item.badge ? (
+              <View
+                className="self-start rounded-md px-2.5 py-1"
+                style={{
+                  backgroundColor: `${item.badge_color ?? Colors.secondary}18`,
+                }}
+              >
+                <Text
+                  className="text-[10px] font-extrabold tracking-[0.3px]"
+                  style={{ color: item.badge_color ?? Colors.secondary }}
+                >
+                  {item.badge}
+                </Text>
+              </View>
+            ) : null}
+          </View>
+        </Pressable>
+        <View className="ml-3 h-20 items-end justify-between py-1">
+          <Pressable
+            accessibilityLabel={
+              isEventSaved(item.id) ? t('removeSavedEvent') : t('saveEvent')
+            }
+            accessibilityHint={
+              isEventSaved(item.id)
+                ? t('unlikeEventHint', {
+                    defaultValue: 'Removes this event from your saved list',
+                  })
+                : t('likeEventHint', {
+                    defaultValue: 'Adds this event to your saved list',
+                  })
+            }
+            accessibilityRole="button"
+            className="p-1"
+            onPress={() => {
+              void toggleSavedEvent(item.id);
+            }}
+            testID={`save-event-${item.id}`}
+          >
             {/* TODO: Implement favorites feature (Tracking ID: #FAV-123) */}
             {/* Note: intended onPress behavior is to toggle favorite state or open auth if user is not logged in */}
-            <Heart size={18} color={Colors.textLight} />
-          </View>
+            <Heart
+              size={18}
+              color={isEventSaved(item.id) ? Colors.primary : Colors.textLight}
+              fill={isEventSaved(item.id) ? Colors.primary : 'transparent'}
+            />
+          </Pressable>
           <Text className="text-lg font-bold text-text dark:text-text-primary-dark">
             {item.price}
           </Text>
         </View>
-      </Pressable>
+      </View>
     ),
-    [openEvent]
+    [isEventSaved, openEvent, t, toggleSavedEvent]
   );
 
   return (
@@ -203,63 +233,103 @@ export default function EventsScreen(): React.JSX.Element {
             </ScrollView>
 
             {featuredEvent ? (
-              <Pressable
-                accessibilityRole="button"
-                className="mb-5 h-65 overflow-hidden rounded-[20px] bg-card dark:bg-dark-bg-card"
-                testID="featured-event"
-                onPress={() => openEvent(featuredEvent.id)}
-              >
-                <Image
-                  source={{ uri: featuredEvent.image }}
-                  className="h-full w-full"
-                  cachePolicy="memory-disk"
-                  contentFit="cover"
-                  recyclingKey={`featured-event-${featuredEvent.id}`}
-                  transition={180}
-                />
-                <LinearGradient
-                  colors={['transparent', 'rgba(0,0,0,0.75)']}
-                  style={{
-                    bottom: 0,
-                    left: 0,
-                    position: 'absolute',
-                    right: 0,
-                    top: 0,
+              <View className="mb-5 h-65 overflow-hidden rounded-[20px] bg-card dark:bg-dark-bg-card">
+                <Pressable
+                  accessibilityRole="button"
+                  className="h-full"
+                  testID="featured-event"
+                  onPress={() => openEvent(featuredEvent.id)}
+                >
+                  <Image
+                    source={{ uri: featuredEvent.image }}
+                    className="h-full w-full"
+                    cachePolicy="memory-disk"
+                    contentFit="cover"
+                    recyclingKey={`featured-event-${featuredEvent.id}`}
+                    transition={180}
+                  />
+                  <LinearGradient
+                    colors={['transparent', 'rgba(0,0,0,0.75)']}
+                    style={{
+                      bottom: 0,
+                      left: 0,
+                      position: 'absolute',
+                      right: 0,
+                      top: 0,
+                    }}
+                  />
+                  {featuredEvent.badge ? (
+                    <View className="absolute right-3.5 top-3.5 rounded-lg bg-[#FF9800] px-3 py-1.25">
+                      <Text className="text-[10px] font-extrabold tracking-[0.5px] text-white">
+                        {featuredEvent.badge}
+                      </Text>
+                    </View>
+                  ) : null}
+                  <View className="absolute bottom-12.5 right-4 items-center rounded-xl bg-[#FF9800] px-3.5 py-2">
+                    <Text className="text-[9px] font-bold tracking-[0.5px] text-white/80">
+                      {t('featuredPrice')}
+                    </Text>
+                    <Text className="text-xl font-extrabold text-white">
+                      {featuredEvent.price}
+                    </Text>
+                  </View>
+                  <View className="absolute bottom-0 left-0 right-20 p-4.5">
+                    <View className="mb-1.5 flex-row items-center gap-1.25">
+                      <Calendar size={13} color="rgba(255,255,255,0.8)" />
+                      <Text className="text-xs font-medium text-white/80">
+                        {featuredEvent.date} • {featuredEvent.time}
+                      </Text>
+                    </View>
+                    <Text className="mb-1 text-[22px] font-extrabold text-white">
+                      {featuredEvent.title}
+                    </Text>
+                    <Text
+                      className="text-xs font-normal text-white/70"
+                      numberOfLines={1}
+                    >
+                      {featuredEvent.description}
+                    </Text>
+                  </View>
+                </Pressable>
+                <Pressable
+                  accessibilityLabel={
+                    isEventSaved(featuredEvent.id)
+                      ? t('removeSavedEvent')
+                      : t('saveEvent')
+                  }
+                  accessibilityHint={
+                    isEventSaved(featuredEvent.id)
+                      ? t('unlikeEventHint', {
+                          defaultValue:
+                            'Removes this event from your saved list',
+                        })
+                      : t('likeEventHint', {
+                          defaultValue: 'Adds this event to your saved list',
+                        })
+                  }
+                  accessibilityRole="button"
+                  className="absolute left-3.5 top-3.5 size-10 items-center justify-center rounded-full"
+                  onPress={() => {
+                    void toggleSavedEvent(featuredEvent.id);
                   }}
-                />
-                {featuredEvent.badge ? (
-                  <View className="absolute right-3.5 top-3.5 rounded-lg bg-[#FF9800] px-3 py-1.25">
-                    <Text className="text-[10px] font-extrabold tracking-[0.5px] text-white">
-                      {featuredEvent.badge}
-                    </Text>
-                  </View>
-                ) : null}
-                <View className="absolute bottom-12.5 right-4 items-center rounded-xl bg-[#FF9800] px-3.5 py-2">
-                  <Text className="text-[9px] font-bold tracking-[0.5px] text-white/80">
-                    {t('featuredPrice')}
-                  </Text>
-                  <Text className="text-xl font-extrabold text-white">
-                    {featuredEvent.price}
-                  </Text>
-                </View>
-                <View className="absolute bottom-0 left-0 right-20 p-4.5">
-                  <View className="mb-1.5 flex-row items-center gap-1.25">
-                    <Calendar size={13} color="rgba(255,255,255,0.8)" />
-                    <Text className="text-xs font-medium text-white/80">
-                      {featuredEvent.date} • {featuredEvent.time}
-                    </Text>
-                  </View>
-                  <Text className="mb-1 text-[22px] font-extrabold text-white">
-                    {featuredEvent.title}
-                  </Text>
-                  <Text
-                    className="text-xs font-normal text-white/70"
-                    numberOfLines={1}
-                  >
-                    {featuredEvent.description}
-                  </Text>
-                </View>
-              </Pressable>
+                  style={{ backgroundColor: 'rgba(0,0,0,0.28)' }}
+                  testID="featured-save-event"
+                >
+                  <Heart
+                    size={18}
+                    color={
+                      isEventSaved(featuredEvent.id)
+                        ? Colors.primary
+                        : Colors.white
+                    }
+                    fill={
+                      isEventSaved(featuredEvent.id)
+                        ? Colors.primary
+                        : 'transparent'
+                    }
+                  />
+                </Pressable>
+              </View>
             ) : null}
           </>
         }

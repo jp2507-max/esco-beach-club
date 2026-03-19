@@ -40,6 +40,9 @@ const booking = {
   guestsUnit: '명',
   full: '만석',
   confirmationMessage: '{{date}} {{time}}에 테이블이 예약되었습니다.',
+  reservationFailedTitle: '예약 실패',
+  reservationFailedMessage:
+    '지금은 예약을 확정할 수 없습니다. 다시 시도해 주세요.',
 } as const;
 
 export default booking;

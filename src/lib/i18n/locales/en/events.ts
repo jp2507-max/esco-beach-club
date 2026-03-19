@@ -29,6 +29,8 @@ const events = {
   shareEvent: 'Share event',
   likeEvent: 'Like event',
   unlikeEvent: 'Unlike event',
+  saveEvent: 'Save event',
+  removeSavedEvent: 'Remove saved event',
   shareMessage: 'Check out {{title}} at {{location}} on {{date}} at {{time}}!',
   priceTiers: {
     contactForPricing: 'Contact for pricing',

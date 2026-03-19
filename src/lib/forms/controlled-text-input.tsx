@@ -25,12 +25,15 @@ type IconProps = {
 type ControlledTextInputProps<TFieldValues extends FieldValues> = {
   accessibilityHint?: string;
   accessibilityLabel?: string;
+  autoFocus?: TextInputProps['autoFocus'];
   autoCapitalize?: TextInputProps['autoCapitalize'];
   autoComplete?: TextInputProps['autoComplete'];
+  autoCorrect?: TextInputProps['autoCorrect'];
   className?: string;
   containerClassName?: string;
   control: Control<TFieldValues, unknown, unknown>;
   icon?: (props: IconProps) => ReactNode;
+  inputMode?: TextInputProps['inputMode'];
   keyboardType?: KeyboardTypeOptions;
   label?: string;
   maxLength?: number;
@@ -42,18 +45,22 @@ type ControlledTextInputProps<TFieldValues extends FieldValues> = {
   rightAdornment?: ReactNode;
   secureTextEntry?: boolean;
   testID?: string;
+  textContentType?: TextInputProps['textContentType'];
   textAlignVertical?: 'auto' | 'top' | 'center' | 'bottom';
 };
 
 export function ControlledTextInput<TFieldValues extends FieldValues>({
   accessibilityHint,
   accessibilityLabel,
+  autoFocus,
   autoCapitalize,
   autoComplete,
+  autoCorrect,
   className,
   containerClassName,
   control,
   icon,
+  inputMode,
   keyboardType,
   label,
   maxLength,
@@ -65,6 +72,7 @@ export function ControlledTextInput<TFieldValues extends FieldValues>({
   rightAdornment,
   secureTextEntry,
   testID,
+  textContentType,
   textAlignVertical,
 }: ControlledTextInputProps<TFieldValues>) {
   const { t } = useTranslation('common');
@@ -93,7 +101,7 @@ export function ControlledTextInput<TFieldValues extends FieldValues>({
       name={name}
       render={({
         field: { onBlur, onChange, value },
-        fieldState: { invalid },
+        fieldState: { error, invalid },
       }) => (
         <View
           className={cn(
@@ -117,13 +125,16 @@ export function ControlledTextInput<TFieldValues extends FieldValues>({
             <TextInput
               accessibilityLabel={resolvedAccessibilityLabel}
               accessibilityHint={resolvedAccessibilityHint}
+              autoFocus={autoFocus}
               autoCapitalize={autoCapitalize}
               autoComplete={autoComplete}
+              autoCorrect={autoCorrect}
               className={cn(
                 'min-h-[24px] flex-1 p-0 text-[15px] font-semibold text-text dark:text-text-primary-dark',
                 multiline && 'min-h-[96px]',
                 className
               )}
+              inputMode={inputMode}
               keyboardType={keyboardType}
               maxLength={maxLength}
               multiline={multiline}
@@ -135,9 +146,15 @@ export function ControlledTextInput<TFieldValues extends FieldValues>({
               returnKeyType={returnKeyType}
               secureTextEntry={secureTextEntry}
               testID={testID}
+              textContentType={textContentType}
               textAlignVertical={textAlignVertical}
               value={typeof value === 'string' ? value : ''}
             />
+            {error?.message ? (
+              <Text className="mt-1 text-xs font-medium text-danger dark:text-error-dark">
+                {t(error.message as never)}
+              </Text>
+            ) : null}
           </View>
           {rightAdornment ? <View>{rightAdornment}</View> : null}
         </View>

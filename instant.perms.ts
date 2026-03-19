@@ -8,10 +8,34 @@ const rules = {
       create: 'false',
     },
   },
+  booking_occasions: {
+    allow: {
+      view: 'auth.id != null',
+      create: 'false',
+      delete: 'false',
+      update: 'false',
+    },
+  },
+  booking_time_slots: {
+    allow: {
+      view: 'auth.id != null',
+      create: 'false',
+      delete: 'false',
+      update: 'false',
+    },
+  },
   partners: {
     allow: {
       view: 'auth.id != null',
       create: 'false',
+      delete: 'false',
+      update: 'false',
+    },
+  },
+  partner_redemptions: {
+    allow: {
+      view: "auth.id != null && auth.id in data.ref('owner.id')",
+      create: "auth.id != null && auth.id in data.ref('owner.id')",
       delete: 'false',
       update: 'false',
     },
@@ -36,13 +60,23 @@ const rules = {
     bind: {
       isOwner: "auth.id != null && auth.id in data.ref('user.id')",
       onlySafeProfileFields:
-        "request.modifiedFields.all(field, field in ['full_name', 'avatar_url', 'has_seen_welcome_voucher'])",
+        "request.modifiedFields.all(field, field in ['full_name', 'avatar_url', 'has_seen_welcome_voucher', 'bio', 'member_since', 'nights_left'])",
+      canCreateOwnedProfile:
+        "auth.id != null && auth.id in data.ref('user.id') && size(data.ref('user.profile.id')) <= 1",
     },
     allow: {
       view: 'isOwner',
-      create: 'false',
+      create: 'canCreateOwnedProfile',
       delete: 'false',
       update: 'isOwner && onlySafeProfileFields',
+    },
+  },
+  table_reservations: {
+    allow: {
+      view: "auth.id != null && auth.id in data.ref('owner.id')",
+      create: "auth.id != null && auth.id in data.ref('owner.id')",
+      delete: 'false',
+      update: 'false',
     },
   },
   events: {
@@ -66,7 +100,39 @@ const rules = {
       update: 'false',
     },
   },
+  member_offers: {
+    allow: {
+      view: 'auth.id != null',
+      create: 'false',
+      delete: 'false',
+      update: 'false',
+    },
+  },
+  menu_categories: {
+    allow: {
+      view: 'auth.id != null',
+      create: 'false',
+      delete: 'false',
+      update: 'false',
+    },
+  },
+  menu_items: {
+    allow: {
+      view: 'auth.id != null',
+      create: 'false',
+      delete: 'false',
+      update: 'false',
+    },
+  },
   news_items: {
+    allow: {
+      view: 'auth.id != null',
+      create: 'false',
+      delete: 'false',
+      update: 'false',
+    },
+  },
+  private_event_types: {
     allow: {
       view: 'auth.id != null',
       create: 'false',
@@ -79,6 +145,14 @@ const rules = {
       view: "auth.id != null && auth.id in data.ref('referrer.user.id')",
       create: 'false',
       delete: 'false',
+      update: 'false',
+    },
+  },
+  saved_events: {
+    allow: {
+      view: "auth.id != null && auth.id in data.ref('owner.id')",
+      create: "auth.id != null && auth.id in data.ref('owner.id')",
+      delete: "auth.id != null && auth.id in data.ref('owner.id')",
       update: 'false',
     },
   },

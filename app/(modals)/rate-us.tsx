@@ -19,6 +19,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/colors';
 import { submitReview } from '@/lib/api';
 import { useUserId } from '@/providers/DataProvider';
+import { HeaderGlassButton } from '@/src/components/ui';
 import { motion, rmTiming } from '@/src/lib/animations/motion';
 import { ControlledTextInput } from '@/src/lib/forms/controlled-text-input';
 import { type ReviewFormValues, reviewSchema } from '@/src/lib/forms/schemas';
@@ -158,14 +159,15 @@ export default function RateUsScreen(): React.JSX.Element {
       style={{ paddingTop: insets.top }}
     >
       <View className="flex-row items-center justify-between px-4 py-3">
-        <Pressable
-          accessibilityRole="button"
-          className="size-10 items-center justify-center rounded-full border border-border bg-white dark:border-dark-border dark:bg-dark-bg-card"
+        <HeaderGlassButton
+          accessibilityLabel={t('close')}
+          accessibilityHint={t('back')}
+          className="size-10"
           onPress={() => router.back()}
           testID="close-rate"
         >
           <X color={Colors.text} size={20} />
-        </Pressable>
+        </HeaderGlassButton>
         <Text className="text-base font-bold text-text dark:text-text-primary-dark">
           {t('rateUs.title')}
         </Text>

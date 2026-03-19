@@ -4,5 +4,7 @@ export { Button } from './button';
 export { Card } from './card';
 export { CategoryChip } from './category-chip';
 export { ErrorBanner } from './error-banner';
+export { HeaderGlassButton } from './header-glass-button';
 export { ModalHeader } from './modal-header';
 export { SectionHeader } from './section-header';
+export { SocialAuthButtons } from './social-auth-buttons';

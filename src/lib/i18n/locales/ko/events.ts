@@ -29,6 +29,8 @@ const events = {
   shareEvent: '이벤트 공유',
   likeEvent: '이벤트 좋아요',
   unlikeEvent: '이벤트 좋아요 취소',
+  saveEvent: '이벤트 저장',
+  removeSavedEvent: '저장한 이벤트 삭제',
   shareMessage:
     '{{location}}에서 {{date}} {{time}}에 열리는 {{title}}을(를) 확인해 보세요!',
   priceTiers: {

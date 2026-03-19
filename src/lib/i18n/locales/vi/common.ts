@@ -12,6 +12,8 @@ const common = {
     min: 'Phải có ít nhất {{min}}.',
     max: 'Không được vượt quá {{max}}.',
     maxCharacters: 'Tối đa {{count}} ký tự.',
+    profileNameMax: 'Tên tối đa 60 ký tự.',
+    profileBioMax: 'Tiểu sử tối đa 160 ký tự.',
     commentMax: 'Nhận xét tối đa 500 ký tự.',
     invalidDate: 'Vui lòng nhập ngày hợp lệ theo định dạng YYYY-MM-DD.',
     invalidCode: 'Vui lòng nhập mã xác minh 6 chữ số.',
@@ -83,6 +85,7 @@ const common = {
   tabs: {
     home: 'Trang chủ',
     events: 'Sự kiện',
+    qr: 'QR',
     perks: 'Ưu đãi',
     profile: 'Hồ sơ',
   },

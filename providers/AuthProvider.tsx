@@ -1,6 +1,7 @@
 import createContextHook from '@nkzw/create-context-hook';
 import { useState } from 'react';
 
+import { getAppleIdToken, getGoogleIdToken } from '@/src/lib/auth/social-auth';
 import { db } from '@/src/lib/instant';
 
 type SendCodeParams = {
@@ -34,16 +35,79 @@ function toError(error: unknown, fallbackMessage: string): Error {
 
 export const [AuthProvider, useAuth] = createContextHook(() => {
   const { error: authError, isLoading, user } = db.useAuth();
+  const [appleSignInLoading, setAppleSignInLoading] = useState<boolean>(false);
+  const [googleSignInLoading, setGoogleSignInLoading] =
+    useState<boolean>(false);
   const [sendCodeLoading, setSendCodeLoading] = useState<boolean>(false);
   const [verifyCodeLoading, setVerifyCodeLoading] = useState<boolean>(false);
   const [signOutLoading, setSignOutLoading] = useState<boolean>(false);
+  const [appleSignInError, setAppleSignInError] = useState<Error | null>(null);
+  const [googleSignInError, setGoogleSignInError] = useState<Error | null>(
+    null
+  );
   const [sendCodeError, setSendCodeError] = useState<Error | null>(null);
   const [verifyCodeError, setVerifyCodeError] = useState<Error | null>(null);
   const [signOutError, setSignOutError] = useState<Error | null>(null);
 
+  function resetProviderErrors(): void {
+    setAppleSignInError(null);
+    setGoogleSignInError(null);
+  }
+
+  function resetEmailErrors(): void {
+    setSendCodeError(null);
+    setVerifyCodeError(null);
+  }
+
+  async function signInWithApple(): Promise<void> {
+    setAppleSignInLoading(true);
+    setAppleSignInError(null);
+    setGoogleSignInError(null);
+    resetEmailErrors();
+
+    try {
+      const { clientName, idToken, nonce } = await getAppleIdToken();
+
+      await db.auth.signInWithIdToken({
+        clientName,
+        idToken,
+        nonce,
+      });
+    } catch (error: unknown) {
+      const nextError = toError(error, 'unableToSignInWithApple');
+      setAppleSignInError(nextError);
+      throw nextError;
+    } finally {
+      setAppleSignInLoading(false);
+    }
+  }
+
+  async function signInWithGoogle(): Promise<void> {
+    setGoogleSignInLoading(true);
+    setGoogleSignInError(null);
+    setAppleSignInError(null);
+    resetEmailErrors();
+
+    try {
+      const { clientName, idToken } = await getGoogleIdToken();
+
+      await db.auth.signInWithIdToken({
+        clientName,
+        idToken,
+      });
+    } catch (error: unknown) {
+      const nextError = toError(error, 'unableToSignInWithGoogle');
+      setGoogleSignInError(nextError);
+      throw nextError;
+    } finally {
+      setGoogleSignInLoading(false);
+    }
+  }
+
   async function sendCode({ email }: SendCodeParams): Promise<string> {
     setSendCodeLoading(true);
     setSendCodeError(null);
+    resetProviderErrors();
 
     try {
       const trimmedEmail = email.trim();
@@ -66,6 +130,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   async function verifyCode({ code, email }: VerifyCodeParams): Promise<void> {
     setVerifyCodeLoading(true);
     setVerifyCodeError(null);
+    resetProviderErrors();
 
     try {
       const trimmedEmail = email.trim();
@@ -108,12 +173,18 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     user,
     isLoading,
     isAuthenticated: !!user,
+    signInWithApple,
+    signInWithGoogle,
     sendCode,
     verifyCode,
     signOut,
+    appleSignInLoading,
+    googleSignInLoading,
     sendCodeLoading,
     verifyCodeLoading,
     signOutLoading,
+    appleSignInError,
+    googleSignInError,
     sendCodeError,
     verifyCodeError,
     signOutError,

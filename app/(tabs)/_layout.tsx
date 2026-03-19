@@ -1,12 +1,31 @@
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { useColorScheme } from 'react-native';
+
+import { Colors } from '@/constants/colors';
 
 export default function TabLayout(): React.JSX.Element {
   const { t } = useTranslation('common');
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+
+  const tabBarBackground = isDark ? Colors.darkBgCard : '#F8F7F2';
+  const inactiveTint = isDark ? Colors.textMutedDark : Colors.textSecondary;
+  const activeTint = isDark ? Colors.primaryBright : Colors.primary;
 
   return (
-    <NativeTabs backBehavior="history">
+    <NativeTabs
+      backBehavior="history"
+      backgroundColor={tabBarBackground}
+      badgeBackgroundColor={activeTint}
+      badgeTextColor={Colors.white}
+      iconColor={{ default: inactiveTint, selected: activeTint }}
+      labelStyle={{
+        default: { color: inactiveTint, fontSize: 12, fontWeight: '600' },
+        selected: { color: activeTint, fontSize: 12, fontWeight: '700' },
+      }}
+    >
       <NativeTabs.Trigger name="home">
         <NativeTabs.Trigger.Icon sf="house.fill" md="home" />
         <NativeTabs.Trigger.Label>{t('tabs.home')}</NativeTabs.Trigger.Label>
@@ -14,6 +33,16 @@ export default function TabLayout(): React.JSX.Element {
       <NativeTabs.Trigger name="events">
         <NativeTabs.Trigger.Icon sf="calendar" md="event" />
         <NativeTabs.Trigger.Label>{t('tabs.events')}</NativeTabs.Trigger.Label>
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="qr">
+        <NativeTabs.Trigger.Icon
+          sf={{ default: 'qrcode', selected: 'qrcode' }}
+          md="qr_code_2"
+          selectedColor={activeTint}
+        />
+        <NativeTabs.Trigger.Label selectedStyle={{ color: activeTint }}>
+          {t('tabs.qr')}
+        </NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="perks">
         <NativeTabs.Trigger.Icon sf="gift.fill" md="redeem" />

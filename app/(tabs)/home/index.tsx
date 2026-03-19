@@ -27,7 +27,12 @@ import {
   useNewsData,
   useProfileData,
 } from '@/providers/DataProvider';
-import { Avatar, Card, SectionHeader } from '@/src/components/ui';
+import {
+  Avatar,
+  Card,
+  HeaderGlassButton,
+  SectionHeader,
+} from '@/src/components/ui';
 import { rmTiming } from '@/src/lib/animations/motion';
 import { useScreenEntry } from '@/src/lib/animations/use-screen-entry';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
@@ -310,6 +315,10 @@ export default function HomeScreen(): React.JSX.Element {
     router.push('/events' as never);
   }, [router]);
 
+  const handleProfilePress = useCallback((): void => {
+    router.push('/profile' as never);
+  }, [router]);
+
   const renderFeedItem = useCallback(
     ({ item }: ListRenderItemInfo<HomeFeedRow>): React.JSX.Element => {
       if (item.type === 'section')
@@ -382,8 +391,11 @@ export default function HomeScreen(): React.JSX.Element {
                     {greeting}
                   </Text>
                 </View>
-                <View
-                  className="size-12 items-center justify-center rounded-full border-[2.5px]"
+                <HeaderGlassButton
+                  accessibilityLabel="Open profile"
+                  accessibilityHint="Opens your profile screen"
+                  className="size-12 border-[2.5px]"
+                  onPress={handleProfilePress}
                   style={{ borderColor: `${Colors.primary}40` }}
                   testID="profile-avatar"
                 >
@@ -399,7 +411,7 @@ export default function HomeScreen(): React.JSX.Element {
                       borderWidth: 2.5,
                     }}
                   />
-                </View>
+                </HeaderGlassButton>
               </View>
 
               <Animated.View className="mb-4" style={cardStyle}>

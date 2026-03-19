@@ -40,6 +40,9 @@ const booking = {
   guestsUnit: 'khách',
   full: 'Đầy',
   confirmationMessage: 'Bàn của bạn đã được đặt vào {{date}} lúc {{time}}.',
+  reservationFailedTitle: 'Đặt chỗ thất bại',
+  reservationFailedMessage:
+    'Hiện không thể xác nhận đặt chỗ của bạn. Vui lòng thử lại.',
 } as const;
 
 export default booking;

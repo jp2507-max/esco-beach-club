@@ -1,8 +1,10 @@
+import { useMutation } from '@tanstack/react-query';
 import * as Clipboard from 'expo-clipboard';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Award, Check, Copy, Percent, Star, X } from 'lucide-react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Alert } from 'react-native';
 import {
   cancelAnimation,
   useAnimatedStyle,
@@ -13,7 +15,9 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
-import { usePartnerById } from '@/providers/DataProvider';
+import { claimPartnerRedemption } from '@/lib/api';
+import { usePartnerById, useUserId } from '@/providers/DataProvider';
+import { HeaderGlassButton } from '@/src/components/ui';
 import { motion, rmTiming } from '@/src/lib/animations/motion';
 import { Pressable, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
@@ -28,8 +32,24 @@ export default function PartnerModal(): React.JSX.Element {
   const opacity = useSharedValue(0);
 
   const partner = usePartnerById(id);
+  const userId = useUserId();
   const [copied, setCopied] = useState(false);
   const copyResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const claimMutation = useMutation({
+    mutationFn: async (redemptionMethod: string) => {
+      if (!partner || !userId) {
+        throw new Error('missingPartnerOrUser');
+      }
+
+      return claimPartnerRedemption({
+        partner_code: partner.code,
+        partner_id: partner.id,
+        redemption_method: redemptionMethod,
+        user_id: userId,
+      });
+    },
+  });
 
   useEffect(() => {
     scale.set(withSpring(1, motion.spring.gentle));
@@ -55,12 +75,32 @@ export default function PartnerModal(): React.JSX.Element {
     if (!partner) return;
 
     try {
+      await claimMutation.mutateAsync('code_copy');
       await Clipboard.setStringAsync(partner.code);
       setCopied(true);
       if (copyResetTimerRef.current) clearTimeout(copyResetTimerRef.current);
       copyResetTimerRef.current = setTimeout(() => setCopied(false), 2000);
-    } catch (e) {
-      console.log('Copy error', e);
+    } catch (error: unknown) {
+      console.error('[PartnerModal] Failed to copy redemption code:', error);
+      Alert.alert(
+        t('partner.redemptionFailedTitle'),
+        t('partner.redemptionFailedMessage')
+      );
+    }
+  }
+
+  async function handleClaim(): Promise<void> {
+    if (!partner) return;
+
+    try {
+      await claimMutation.mutateAsync('cta_unlock');
+      router.back();
+    } catch (error: unknown) {
+      console.error('[PartnerModal] Failed to claim redemption:', error);
+      Alert.alert(
+        t('partner.redemptionFailedTitle'),
+        t('partner.redemptionFailedMessage')
+      );
     }
   }
 
@@ -90,15 +130,19 @@ export default function PartnerModal(): React.JSX.Element {
 
   return (
     <View className="flex-1 bg-black/55">
-      <Pressable
-        accessibilityRole="button"
-        className="absolute right-4 z-10 size-9 items-center justify-center rounded-full bg-white/90"
+      <HeaderGlassButton
+        accessibilityLabel={t('partner.maybeLater')}
+        accessibilityHint={t('partner.maybeLaterHint', {
+          defaultValue: 'Returns to previous screen',
+        })}
+        className="absolute right-4 z-10 size-9 border-white/35"
         onPress={() => router.back()}
         style={{ top: insets.top + 12 }}
         testID="close-modal"
+        variant="overlay"
       >
         <X color={Colors.text} size={20} />
-      </Pressable>
+      </HeaderGlassButton>
 
       <View
         className="absolute bottom-0 left-0 right-0 rounded-t-[28px] px-7 pb-10 pt-3"
@@ -188,10 +232,16 @@ export default function PartnerModal(): React.JSX.Element {
           <Pressable
             accessibilityRole="button"
             className="mb-3.5 w-full items-center rounded-[18px] bg-primary py-[17px]"
-            onPress={() => router.back()}
+            disabled={claimMutation.isPending}
+            onPress={() => {
+              void handleClaim();
+            }}
+            style={claimMutation.isPending ? { opacity: 0.7 } : undefined}
           >
             <Text className="text-[17px] font-bold text-white">
-              {t('partner.enjoyMyPerks')}
+              {claimMutation.isPending
+                ? t('partner.claiming')
+                : t('partner.enjoyMyPerks')}
             </Text>
           </Pressable>
 

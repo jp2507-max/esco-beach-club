@@ -13,9 +13,13 @@ const perks = {
     congratulations: '축하합니다!',
     benefitsDescription:
       '{{name}}에서 특별한 혜택을 누리세요. {{description}}.',
+    claiming: '혜택 확인 중...',
     exclusive: '독점',
     discount: '할인',
     vipPerk: 'VIP 혜택',
+    redemptionFailedTitle: '혜택 저장 실패',
+    redemptionFailedMessage:
+      '지금은 혜택을 저장할 수 없습니다. 다시 시도해 주세요.',
     yourDiscountCode: '할인 코드',
     enjoyMyPerks: '혜택 즐기기',
     maybeLater: '나중에',

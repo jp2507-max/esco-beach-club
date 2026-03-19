@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/providers/AuthProvider';
+import { ErrorBanner, SocialAuthButtons } from '@/src/components/ui';
 import { motion } from '@/src/lib/animations/motion';
 import { useEmailCodeAuthFlow } from '@/src/lib/auth/use-email-code-auth-flow';
 import { isAuthErrorKey } from '@/src/lib/auth-errors';
@@ -37,6 +38,12 @@ export default function SignupScreen(): React.JSX.Element {
   const router = useRouter();
   const { t } = useTranslation('auth');
   const {
+    appleSignInError,
+    appleSignInLoading,
+    googleSignInError,
+    googleSignInLoading,
+    signInWithApple,
+    signInWithGoogle,
     sendCode,
     sendCodeError,
     sendCodeLoading,
@@ -77,6 +84,23 @@ export default function SignupScreen(): React.JSX.Element {
   function handlePressOut(): void {
     buttonScale.set(withSpring(1, motion.spring.snappy));
   }
+
+  function handleApplePress(): void {
+    void signInWithApple().catch(() => undefined);
+  }
+
+  function handleGooglePress(): void {
+    void signInWithGoogle().catch(() => undefined);
+  }
+
+  const socialError = appleSignInError ?? googleSignInError;
+  const resolvedError = socialError ?? visibleError;
+
+  const resolvedErrorMessage = resolvedError
+    ? isAuthErrorKey(resolvedError?.message)
+      ? t(resolvedError?.message)
+      : resolvedError?.message
+    : null;
 
   return (
     <View className="flex-1">
@@ -125,28 +149,30 @@ export default function SignupScreen(): React.JSX.Element {
                 : t('signupSubtitle')}
             </Text>
 
-            {visibleError ? (
-              <View className="mb-4 rounded-xl bg-[#FEE2E2] p-3">
-                <Text className="text-[13px] font-medium text-[#DC2626]">
-                  {isAuthErrorKey(visibleError.message)
-                    ? t(visibleError.message)
-                    : visibleError.message}
-                </Text>
-              </View>
-            ) : null}
+            <ErrorBanner className="mb-4" message={resolvedErrorMessage} />
 
             {isCodeStep ? (
               <ControlledTextInput<VerifyCodeFormValues>
+                key="signup-code-input"
+                autoFocus
                 autoCapitalize="none"
-                autoComplete="one-time-code"
+                autoComplete={
+                  Platform.OS === 'android' ? 'sms-otp' : 'one-time-code'
+                }
+                autoCorrect={false}
                 control={codeControl}
                 icon={({ color, size }) => (
                   <ShieldCheck color={color} size={size} />
                 )}
-                keyboardType="number-pad"
+                keyboardType={Platform.OS === 'ios' ? 'number-pad' : 'numeric'}
+                maxLength={6}
                 name="code"
                 placeholder={t('codePlaceholder')}
+                returnKeyType="done"
                 testID="signup-code"
+                textContentType={
+                  Platform.OS === 'ios' ? 'oneTimeCode' : undefined
+                }
               />
             ) : (
               <ControlledTextInput<SignupFormValues>
@@ -207,6 +233,15 @@ export default function SignupScreen(): React.JSX.Element {
                   </Text>
                 </Text>
               </Pressable>
+            ) : null}
+
+            {!isCodeStep ? (
+              <SocialAuthButtons
+                appleLoading={appleSignInLoading}
+                googleLoading={googleSignInLoading}
+                onApplePress={handleApplePress}
+                onGooglePress={handleGooglePress}
+              />
             ) : null}
 
             <View className="my-5 flex-row items-center">

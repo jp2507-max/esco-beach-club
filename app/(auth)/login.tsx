@@ -13,7 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/providers/AuthProvider';
-import { ErrorBanner } from '@/src/components/ui';
+import { ErrorBanner, SocialAuthButtons } from '@/src/components/ui';
 import { motion } from '@/src/lib/animations/motion';
 import { useEmailCodeAuthFlow } from '@/src/lib/auth/use-email-code-auth-flow';
 import { isAuthErrorKey } from '@/src/lib/auth-errors';
@@ -38,6 +38,12 @@ export default function LoginScreen(): React.JSX.Element {
   const router = useRouter();
   const { t } = useTranslation('auth');
   const {
+    appleSignInError,
+    appleSignInLoading,
+    googleSignInError,
+    googleSignInLoading,
+    signInWithApple,
+    signInWithGoogle,
     sendCode,
     sendCodeError,
     sendCodeLoading,
@@ -79,10 +85,21 @@ export default function LoginScreen(): React.JSX.Element {
     buttonScale.set(withSpring(1, motion.spring.snappy));
   }
 
-  const resolvedErrorMessage = visibleError
-    ? isAuthErrorKey(visibleError.message)
-      ? t(visibleError.message)
-      : visibleError.message
+  function handleApplePress(): void {
+    void signInWithApple().catch(() => undefined);
+  }
+
+  function handleGooglePress(): void {
+    void signInWithGoogle().catch(() => undefined);
+  }
+
+  const socialError = appleSignInError ?? googleSignInError;
+  const resolvedError = socialError ?? visibleError;
+
+  const resolvedErrorMessage = resolvedError
+    ? isAuthErrorKey(resolvedError?.message)
+      ? t(resolvedError?.message)
+      : resolvedError?.message
     : null;
 
   return (
@@ -136,19 +153,30 @@ export default function LoginScreen(): React.JSX.Element {
 
             {isCodeStep ? (
               <ControlledTextInput<VerifyCodeFormValues>
+                key="login-code-input"
+                autoFocus
                 autoCapitalize="none"
-                autoComplete="one-time-code"
+                autoComplete={
+                  Platform.OS === 'android' ? 'sms-otp' : 'one-time-code'
+                }
+                autoCorrect={false}
                 control={codeControl}
                 icon={({ color, size }) => (
                   <ShieldCheck color={color} size={size} />
                 )}
-                keyboardType="number-pad"
+                keyboardType={Platform.OS === 'ios' ? 'number-pad' : 'numeric'}
+                maxLength={6}
                 name="code"
                 placeholder={t('codePlaceholder')}
+                returnKeyType="done"
                 testID="login-code"
+                textContentType={
+                  Platform.OS === 'ios' ? 'oneTimeCode' : undefined
+                }
               />
             ) : (
               <ControlledTextInput<EmailFormValues>
+                key="login-email-input"
                 autoCapitalize="none"
                 autoComplete="email"
                 control={control}
@@ -208,6 +236,15 @@ export default function LoginScreen(): React.JSX.Element {
                   </Text>
                 </Text>
               </Pressable>
+            ) : null}
+
+            {!isCodeStep ? (
+              <SocialAuthButtons
+                appleLoading={appleSignInLoading}
+                googleLoading={googleSignInLoading}
+                onApplePress={handleApplePress}
+                onGooglePress={handleGooglePress}
+              />
             ) : null}
 
             <View className="my-5 flex-row items-center">

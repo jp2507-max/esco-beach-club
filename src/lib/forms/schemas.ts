@@ -73,6 +73,31 @@ export const privateEventSchema = z.object({
 export type PrivateEventFormValues = z.infer<typeof privateEventSchema>;
 export type PrivateEventFormInput = z.input<typeof privateEventSchema>;
 
+export const editProfileSchema = z.object({
+  fullName: z
+    .string()
+    .trim()
+    .min(1, { error: v('required') })
+    .max(60, { error: v('profileNameMax') }),
+  bio: z
+    .string()
+    .trim()
+    .max(160, { error: v('profileBioMax') }),
+  memberSince: z
+    .string()
+    .trim()
+    .min(1, { error: v('required') })
+    .regex(/^\d{4}-\d{2}-\d{2}$/, { error: v('invalidDate') })
+    .refine(isValidCalendarDate, { error: v('invalidDate') }),
+  nightsLeft: z
+    .string()
+    .trim()
+    .min(1, { error: v('required') })
+    .regex(/^\d+$/, { error: v('number') }),
+});
+
+export type EditProfileFormValues = z.infer<typeof editProfileSchema>;
+
 export const reviewSchema = z.object({
   rating: z.number().min(1, { error: v('required') }),
   comment: z

@@ -31,6 +31,8 @@ const events = {
   shareEvent: 'Chia sẻ sự kiện',
   likeEvent: 'Thích sự kiện',
   unlikeEvent: 'Bỏ thích sự kiện',
+  saveEvent: 'Lưu sự kiện',
+  removeSavedEvent: 'Xóa sự kiện đã lưu',
   shareMessage: 'Xem {{title}} tại {{location}} vào {{date}} lúc {{time}}!',
   priceTiers: {
     contactForPricing: 'Liên hệ để biết giá',

@@ -8,8 +8,7 @@ const menu = {
   items: {
     c1: {
       name: 'Esco Sunset',
-      description:
-        'Chanh dây, rum, chanh, phủ prosecco & hoa ăn được',
+      description: 'Chanh dây, rum, chanh, phủ prosecco & hoa ăn được',
       tag: 'Đặc trưng',
     },
     c2: {
@@ -23,8 +22,7 @@ const menu = {
     },
     c4: {
       name: 'Smoky Old Fashioned',
-      description:
-        'Bourbon, demerara, angostura, vỏ cam, hun khói tại bàn',
+      description: 'Bourbon, demerara, angostura, vỏ cam, hun khói tại bàn',
     },
     f1: {
       name: 'Truffle Wagyu Sliders',
@@ -41,11 +39,12 @@ const menu = {
     },
     f4: {
       name: 'Mezze Platter',
-      description: 'Hummus, baba ganoush, falafel, bánh pita ấm, za\'atar',
+      description: "Hummus, baba ganoush, falafel, bánh pita ấm, za'atar",
     },
     w1: {
       name: 'Dom Pérignon 2013',
-      description: 'Champagne, Pháp — Thanh lịch với hương hạnh nhân & cam quýt',
+      description:
+        'Champagne, Pháp — Thanh lịch với hương hạnh nhân & cam quýt',
       tag: 'Cao cấp',
     },
     w2: {
