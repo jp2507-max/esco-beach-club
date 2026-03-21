@@ -12,7 +12,9 @@ import { cn } from '@/src/lib/utils';
 import { ActivityIndicator, Pressable, Text, View } from '@/src/tw';
 
 type ProviderButtonProps = {
+  disabled?: boolean;
   icon: React.ReactNode;
+  indicatorColor: string;
   isLoading?: boolean;
   label: string;
   onPress: () => void;
@@ -21,30 +23,29 @@ type ProviderButtonProps = {
 
 type SocialAuthButtonsProps = {
   appleLoading?: boolean;
+  disabled?: boolean;
   googleLoading?: boolean;
   onApplePress: () => void;
   onGooglePress: () => void;
 };
 
 function ProviderButton({
+  disabled = false,
   icon,
+  indicatorColor,
   isLoading = false,
   label,
   onPress,
   testID,
 }: ProviderButtonProps): React.JSX.Element {
-  const colorScheme = useColorScheme();
-  const indicatorColor =
-    colorScheme === 'dark' ? Colors.textPrimaryDark : Colors.text;
-
   return (
     <Pressable
       accessibilityRole="button"
       className={cn(
         'min-h-12 flex-row items-center justify-center rounded-2xl border border-border bg-white px-4 py-3 dark:border-dark-border dark:bg-dark-bg-card',
-        isLoading ? 'opacity-60' : undefined
+        isLoading || disabled ? 'opacity-60' : undefined
       )}
-      disabled={isLoading}
+      disabled={isLoading || disabled}
       onPress={onPress}
       testID={testID}
     >
@@ -64,6 +65,7 @@ function ProviderButton({
 
 export function SocialAuthButtons({
   appleLoading = false,
+  disabled = false,
   googleLoading = false,
   onApplePress,
   onGooglePress,
@@ -104,7 +106,9 @@ export function SocialAuthButtons({
       </View>
       {shouldShowApple ? (
         <ProviderButton
+          disabled={disabled}
           icon={<Apple color={iconColor} size={18} />}
+          indicatorColor={iconColor}
           isLoading={appleLoading}
           label={t('continueWithApple')}
           onPress={onApplePress}
@@ -113,7 +117,9 @@ export function SocialAuthButtons({
       ) : null}
       {shouldShowGoogle ? (
         <ProviderButton
+          disabled={disabled}
           icon={<Chrome color={iconColor} size={18} />}
+          indicatorColor={iconColor}
           isLoading={googleLoading}
           label={t('continueWithGoogle')}
           onPress={onGooglePress}

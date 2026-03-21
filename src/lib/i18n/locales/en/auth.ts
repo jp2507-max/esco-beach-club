@@ -24,6 +24,8 @@ const auth = {
   appleAuthUnavailable: 'Apple Sign In is not available on this device.',
   appleIdTokenMissing: 'Apple did not return an identity token.',
   googleAuthNotConfigured: 'Google Sign-In is not configured yet.',
+  googleOauthClientNotConfigured:
+    'Google sign-in is misconfigured. Please contact support.',
   googleIdTokenMissing: 'Google did not return an identity token.',
   googlePlayServicesUnavailable: 'Google Play Services are unavailable.',
   providerSignInCanceled: 'The sign-in flow was canceled.',

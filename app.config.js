@@ -1,10 +1,7 @@
-const appJson = require('./app.json');
-
-module.exports = () => {
-  const baseConfig = appJson.expo;
+module.exports = ({ config }) => {
   const googleIosUrlScheme =
     process.env.EXPO_PUBLIC_GOOGLE_IOS_URL_SCHEME?.trim();
-  const plugins = baseConfig.plugins.map((plugin) => {
+  const plugins = config.plugins.map((plugin) => {
     if (
       Array.isArray(plugin) ||
       plugin !== '@react-native-google-signin/google-signin'
@@ -25,9 +22,9 @@ module.exports = () => {
   });
 
   return {
-    ...baseConfig,
+    ...config,
     ios: {
-      ...baseConfig.ios,
+      ...config.ios,
       usesAppleSignIn: true,
     },
     plugins,

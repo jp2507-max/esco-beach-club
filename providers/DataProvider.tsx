@@ -22,9 +22,11 @@ import type {
   Profile,
   Referral,
   SavedEvent,
+  StaffAccess,
 } from '@/lib/types';
 import { useAuth } from '@/providers/AuthProvider';
 import { db } from '@/src/lib/instant';
+import { isManagerRole, isStaffRole } from '@/src/lib/loyalty';
 import {
   type InstantRecord,
   mapBookingOccasion,
@@ -39,6 +41,7 @@ import {
   mapProfile,
   mapReferral,
   mapSavedEvent,
+  mapStaffAccess,
 } from '@/src/lib/mappers';
 
 type ProfileData = {
@@ -95,6 +98,13 @@ type MenuContentData = {
   menuItems: MenuItemContent[];
 };
 
+type StaffAccessData = {
+  isManagerUser: boolean;
+  isStaffUser: boolean;
+  staffAccess: StaffAccess | null;
+  staffAccessLoading: boolean;
+};
+
 const ProfileContext = createContext<ProfileData | null>(null);
 const EventsContext = createContext<EventsData | null>(null);
 const NewsContext = createContext<NewsData | null>(null);
@@ -104,6 +114,7 @@ const SavedEventsContext = createContext<SavedEventsData | null>(null);
 const BookingContentContext = createContext<BookingContentData | null>(null);
 const MemberOffersContext = createContext<MemberOffersData | null>(null);
 const MenuContentContext = createContext<MenuContentData | null>(null);
+const StaffAccessContext = createContext<StaffAccessData | null>(null);
 
 const EMPTY_EVENTS: Event[] = [];
 const EMPTY_NEWS: NewsItem[] = [];
@@ -162,6 +173,12 @@ const FALLBACK_MENU_CONTENT: MenuContentData = {
   menuContentLoading: false,
   menuItems: EMPTY_MENU_ITEMS,
 };
+const FALLBACK_STAFF_ACCESS: StaffAccessData = {
+  isManagerUser: false,
+  isStaffUser: false,
+  staffAccess: null,
+  staffAccessLoading: false,
+};
 
 type DataProviderProps = {
   children: React.ReactNode;
@@ -212,6 +229,17 @@ export function DataProvider({
   const eventsQuery = db.useQuery(userId ? { events: {} } : null);
   const newsQuery = db.useQuery(userId ? { news_items: {} } : null);
   const partnersQuery = db.useQuery(userId ? { partners: {} } : null);
+  const staffAccessQuery = db.useQuery(
+    userId
+      ? {
+          staff_access: {
+            $: {
+              where: { 'user.id': userId },
+            },
+          },
+        }
+      : null
+  );
   const bookingOccasionsQuery = db.useQuery(
     userId ? { booking_occasions: {} } : null
   );
@@ -246,6 +274,15 @@ export function DataProvider({
       | undefined;
     return record ? mapProfile(record) : null;
   }, [profileQuery.data, userId]);
+
+  const staffAccess = useMemo(() => {
+    if (!userId) return null;
+
+    const record = staffAccessQuery.data?.staff_access?.[0] as
+      | InstantRecord
+      | undefined;
+    return record ? mapStaffAccess(record) : null;
+  }, [staffAccessQuery.data, userId]);
 
   const events = useMemo(() => {
     if (!userId) return EMPTY_EVENTS;
@@ -338,6 +375,12 @@ export function DataProvider({
 
   const isDismissingRef = useRef(false);
   const isTogglingSavedRef = useRef<Set<string>>(new Set<string>());
+  const pendingSavedToggleTimeoutsRef = useRef<
+    Map<string, ReturnType<typeof setTimeout>>
+  >(new Map());
+  const [pendingSavedToggles, setPendingSavedToggles] = useState<
+    Record<string, boolean>
+  >({});
   const isProvisioningProfileRef = useRef(false);
   const profileProvisionAttemptsRef = useRef<Map<string, number>>(new Map());
 
@@ -408,8 +451,14 @@ export function DataProvider({
   );
 
   const isEventSaved = useCallback(
-    (eventId: string): boolean => savedEventIdSet.has(eventId),
-    [savedEventIdSet]
+    (eventId: string): boolean => {
+      if (eventId in pendingSavedToggles) {
+        return pendingSavedToggles[eventId];
+      }
+
+      return savedEventIdSet.has(eventId);
+    },
+    [pendingSavedToggles, savedEventIdSet]
   );
 
   const savedEventsList = useMemo(
@@ -422,26 +471,101 @@ export function DataProvider({
       if (!userId) return;
       if (isTogglingSavedRef.current.has(eventId)) return;
 
+      const isCurrentlySaved = savedEvents.some(
+        (entry) => entry.event_id === eventId
+      );
+      const shouldBeSaved = !isCurrentlySaved;
+
       const savedEvent = savedEvents.find(
         (entry) => entry.event_id === eventId
       );
       isTogglingSavedRef.current.add(eventId);
 
+      const previousTimeout = pendingSavedToggleTimeoutsRef.current.get(eventId);
+      if (previousTimeout != null) {
+        clearTimeout(previousTimeout);
+      }
+
+      setPendingSavedToggles((previous) => ({
+        ...previous,
+        [eventId]: shouldBeSaved,
+      }));
+
+      const timeoutId = setTimeout(() => {
+        pendingSavedToggleTimeoutsRef.current.delete(eventId);
+        setPendingSavedToggles((previous) => {
+          if (!(eventId in previous)) return previous;
+
+          const next = { ...previous };
+          delete next[eventId];
+          return next;
+        });
+        isTogglingSavedRef.current.delete(eventId);
+      }, 8000);
+
+      pendingSavedToggleTimeoutsRef.current.set(eventId, timeoutId);
+
       try {
         if (savedEvent) {
           await removeSavedEvent(savedEvent.id);
-          return;
+        } else {
+          await saveEvent(userId, eventId);
         }
-
-        await saveEvent(userId, eventId);
       } catch (error: unknown) {
         console.error('[DataProvider] Failed to toggle saved event:', error);
-      } finally {
+        const timeout = pendingSavedToggleTimeoutsRef.current.get(eventId);
+        if (timeout != null) {
+          clearTimeout(timeout);
+        }
+
+        pendingSavedToggleTimeoutsRef.current.delete(eventId);
+        setPendingSavedToggles((previous) => {
+          if (!(eventId in previous)) return previous;
+
+          const next = { ...previous };
+          delete next[eventId];
+          return next;
+        });
         isTogglingSavedRef.current.delete(eventId);
       }
     },
     [savedEvents, userId]
   );
+
+  useEffect(() => {
+    if (!userId) {
+      pendingSavedToggleTimeoutsRef.current.forEach((timeoutId) => {
+        clearTimeout(timeoutId);
+      });
+      pendingSavedToggleTimeoutsRef.current.clear();
+      setPendingSavedToggles({});
+      isTogglingSavedRef.current.clear();
+      return;
+    }
+
+    Object.entries(pendingSavedToggles).forEach(([eventId, shouldBeSaved]) => {
+      const isNowSaved = savedEvents.some(
+        (savedEvent) => savedEvent.event_id === eventId
+      );
+
+      if (isNowSaved === shouldBeSaved) {
+        const timeout = pendingSavedToggleTimeoutsRef.current.get(eventId);
+        if (timeout != null) {
+          clearTimeout(timeout);
+        }
+
+        pendingSavedToggleTimeoutsRef.current.delete(eventId);
+        setPendingSavedToggles((previous) => {
+          if (!(eventId in previous)) return previous;
+
+          const next = { ...previous };
+          delete next[eventId];
+          return next;
+        });
+        isTogglingSavedRef.current.delete(eventId);
+      }
+    });
+  }, [pendingSavedToggles, savedEvents, userId]);
 
   const profileValue = useMemo(
     () => ({
@@ -497,10 +621,13 @@ export function DataProvider({
       isEventSaved,
       savedEvents,
       savedEventsList,
-      savedEventsLoading: Boolean(userId) && savedEventsQuery.isLoading,
+      savedEventsLoading:
+        Boolean(userId) &&
+        (savedEventsQuery.isLoading || eventsQuery.isLoading),
       toggleSavedEvent,
     }),
     [
+      eventsQuery.isLoading,
       isEventSaved,
       savedEvents,
       savedEventsList,
@@ -561,6 +688,16 @@ export function DataProvider({
     ]
   );
 
+  const staffAccessValue = useMemo(
+    () => ({
+      isManagerUser: Boolean(staffAccess?.is_active && isManagerRole(staffAccess.role)),
+      isStaffUser: Boolean(staffAccess?.is_active && isStaffRole(staffAccess.role)),
+      staffAccess,
+      staffAccessLoading: Boolean(userId) && staffAccessQuery.isLoading,
+    }),
+    [staffAccess, staffAccessQuery.isLoading, userId]
+  );
+
   return (
     <ProfileContext.Provider value={profileValue}>
       <EventsContext.Provider value={eventsValue}>
@@ -571,7 +708,9 @@ export function DataProvider({
                 <BookingContentContext.Provider value={bookingContentValue}>
                   <MemberOffersContext.Provider value={memberOffersValue}>
                     <MenuContentContext.Provider value={menuContentValue}>
-                      {children}
+                      <StaffAccessContext.Provider value={staffAccessValue}>
+                        {children}
+                      </StaffAccessContext.Provider>
                     </MenuContentContext.Provider>
                   </MemberOffersContext.Provider>
                 </BookingContentContext.Provider>
@@ -618,6 +757,10 @@ export function useMemberOffersData(): MemberOffersData {
 
 export function useMenuContentData(): MenuContentData {
   return useRequiredContext(MenuContentContext, FALLBACK_MENU_CONTENT);
+}
+
+export function useStaffAccessData(): StaffAccessData {
+  return useRequiredContext(StaffAccessContext, FALLBACK_STAFF_ACCESS);
 }
 
 export function useUserId(): string {

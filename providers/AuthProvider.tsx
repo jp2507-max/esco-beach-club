@@ -13,7 +13,9 @@ type VerifyCodeParams = {
   email: string;
 };
 
-function toError(error: unknown, fallbackMessage: string): Error {
+const DEFAULT_GOOGLE_CLIENT_NAME = 'google';
+
+function extractAuthErrorMessage(error: unknown): string | null {
   if (
     error &&
     typeof error === 'object' &&
@@ -23,11 +25,60 @@ function toError(error: unknown, fallbackMessage: string): Error {
     'message' in error.body &&
     typeof error.body.message === 'string'
   ) {
-    return new Error(error.body.message);
+    return error.body.message;
   }
 
   if (error instanceof Error && error.message) {
-    return error;
+    return error.message;
+  }
+
+  return null;
+}
+
+function mapAuthErrorMessageToKey(message: string): string | null {
+  const normalizedMessage = message.trim().toLowerCase();
+
+  if (
+    normalizedMessage.includes('record not found:') &&
+    normalizedMessage.includes('oauth-client')
+  ) {
+    return 'googleOauthClientNotConfigured';
+  }
+
+  return null;
+}
+
+function shouldRetryGoogleSignInWithDefaultClientName(
+  error: unknown,
+  clientName: string
+): boolean {
+  if (clientName === DEFAULT_GOOGLE_CLIENT_NAME) {
+    return false;
+  }
+
+  const message = extractAuthErrorMessage(error)?.trim().toLowerCase();
+
+  if (!message) {
+    return false;
+  }
+
+  return (
+    message.includes('record not found:') &&
+    (message.includes(clientName.toLowerCase()) ||
+      message.includes('oauth-client'))
+  );
+}
+
+function toError(error: unknown, fallbackMessage: string): Error {
+  const message = extractAuthErrorMessage(error);
+
+  if (message) {
+    const mappedKey = mapAuthErrorMessageToKey(message);
+    if (mappedKey) {
+      return new Error(mappedKey);
+    }
+
+    return new Error(message);
   }
 
   return new Error(fallbackMessage);
@@ -91,10 +142,21 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     try {
       const { clientName, idToken } = await getGoogleIdToken();
 
-      await db.auth.signInWithIdToken({
-        clientName,
-        idToken,
-      });
+      try {
+        await db.auth.signInWithIdToken({
+          clientName,
+          idToken,
+        });
+      } catch (error: unknown) {
+        if (!shouldRetryGoogleSignInWithDefaultClientName(error, clientName)) {
+          throw error;
+        }
+
+        await db.auth.signInWithIdToken({
+          clientName: DEFAULT_GOOGLE_CLIENT_NAME,
+          idToken,
+        });
+      }
     } catch (error: unknown) {
       const nextError = toError(error, 'unableToSignInWithGoogle');
       setGoogleSignInError(nextError);

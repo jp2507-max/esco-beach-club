@@ -1,19 +1,24 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { QrCode } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Colors } from '@/constants/colors';
 import { useProfileData } from '@/providers/DataProvider';
-import { ScrollView, Text, View } from '@/src/tw';
+import { MemberQrCode } from '@/src/components/ui';
+import { Pressable, ScrollView, Text, View } from '@/src/tw';
 
 export default function QrTabScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const { t } = useTranslation('profile');
   const { profile } = useProfileData();
 
   const memberId = profile?.member_id ?? '';
+
+  function handleOpenStaffRoute(): void {
+    router.push('/staff' as never);
+  }
 
   return (
     <View
@@ -57,18 +62,28 @@ export default function QrTabScreen(): React.JSX.Element {
                 width: 220,
               }}
             >
-              <View className="flex-1 items-center justify-center rounded-2xl bg-white dark:bg-dark-bg-card">
-                <QrCode color={Colors.text} size={118} />
-              </View>
+              <MemberQrCode
+                className="flex-1 rounded-2xl"
+                emptyLabel={t('staff.memberNotFound')}
+                memberId={memberId}
+                size={156}
+              />
             </LinearGradient>
           </View>
 
           <Text className="mb-1 text-base font-bold text-text dark:text-text-primary-dark">
             {t('scanAtTable')}
           </Text>
-          <Text className="text-[13px] font-medium text-text-secondary dark:text-text-secondary-dark">
-            {t('refPrefix', { memberId })}
-          </Text>
+          <Pressable
+            accessibilityRole="button"
+            className="items-center"
+            onLongPress={handleOpenStaffRoute}
+            testID="member-qr-hidden-staff-entry"
+          >
+            <Text className="text-[13px] font-medium text-text-secondary dark:text-text-secondary-dark">
+              {t('refPrefix', { memberId })}
+            </Text>
+          </Pressable>
         </View>
       </ScrollView>
     </View>

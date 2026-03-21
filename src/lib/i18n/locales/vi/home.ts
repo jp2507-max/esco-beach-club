@@ -5,7 +5,11 @@ const home = {
     evening: 'Chào buổi tối',
   },
   guest: 'Khách',
-  member: 'Thành viên',
+  tier: {
+    standard: 'Thành viên',
+    vip: 'VIP',
+    owner: 'Người sở hữu',
+  },
   vipStatus: 'Trạng thái VIP',
   seeAll: 'Xem tất cả',
   quickActions: {
@@ -19,6 +23,8 @@ const home = {
   pointsSuffix: '/ {{max}} điểm',
   memberName: 'TÊN THÀNH VIÊN',
   happeningThisWeek: 'Diễn ra tuần này',
+  openProfile: 'Mở hồ sơ',
+  openProfileHint: 'Mở màn hình hồ sơ của bạn',
 } as const;
 
 export default home;

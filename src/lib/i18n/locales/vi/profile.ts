@@ -1,6 +1,11 @@
 const profile = {
   guest: 'Khách',
   memberFallback: 'THÀNH VIÊN',
+  tier: {
+    standard: 'Thành viên',
+    vip: 'VIP',
+    owner: 'Người sở hữu',
+  },
   menu: {
     comingSoon: 'Sắp ra mắt',
     editProfile: 'Chỉnh sửa hồ sơ',
@@ -9,16 +14,20 @@ const profile = {
     membership: 'Hội viên',
     rewards: 'Phần thưởng',
     savedEvents: 'Sự kiện đã lưu',
-    settings: 'Tùy chọn giao diện',
+    settings: 'Cài đặt',
     helpSupport: 'Trợ giúp & hỗ trợ',
     logOut: 'Đăng xuất',
+  },
+  notifications: {
+    title: 'Thông báo',
+    hint: 'Mở thông báo',
   },
   welcomeBack: 'Chào mừng trở lại,',
   edit: 'Chỉnh sửa',
   brandPrefix: 'Esco',
   brandHighlight: 'Life',
   accessPass: 'THẺ TRUY CẬP',
-  scanAtTable: 'Quét tại bàn để được giảm 10%',
+  scanAtTable: 'Quét để tích điểm hội viên',
   refPrefix: 'Mã: {{memberId}}',
   earned: 'ĐÃ NHẬN',
   saved: 'ĐÃ TIẾT KIỆM',
@@ -36,10 +45,55 @@ const profile = {
   contactVipConcierge: 'Liên hệ concierge VIP',
   contactSupport: 'Liên hệ hỗ trợ',
   conciergeMessage: 'Xin chào Esco Life VIP Concierge',
+  helpCenter: {
+    title: 'Trung tâm trợ giúp',
+    heroTitle: 'Chúng tôi có thể hỗ trợ kỳ nghỉ của bạn thế nào?',
+    searchPlaceholder: 'Tìm kiếm trợ giúp...',
+    emailSupport: {
+      title: 'Hỗ trợ qua email',
+      description:
+        'Gửi cho chúng tôi yêu cầu chi tiết và chúng tôi sẽ phản hồi trong vòng 2 giờ.',
+    },
+    categories: {
+      title: 'Danh mục hỗ trợ',
+      booking: 'Đặt chỗ & đặt bàn',
+      membership: 'Hội viên & hạng thẻ',
+      perks: 'Quyền lợi & thưởng',
+      technical: 'Ứng dụng & kỹ thuật',
+    },
+    faq: {
+      title: 'Câu hỏi phổ biến',
+      viewAll: 'Xem tất cả',
+      noResults: 'Chưa có câu hỏi nào phù hợp với tìm kiếm của bạn.',
+      items: {
+        redeemDrink: {
+          question: 'Làm sao để nhận đồ uống miễn phí?',
+          answer:
+            'Hãy xuất trình thẻ hội viên số tại quầy bar Esco Life. Ưu đãi đủ điều kiện sẽ được áp dụng tự động sau khi xác nhận.',
+        },
+        upgradeTier: {
+          question: 'Làm sao để nâng hạng lên Diamond?',
+          answer:
+            'Việc nâng hạng dựa trên điểm tích lũy và lượt lưu trú đủ điều kiện. Vào mục Hội viên để xem tiến độ và lựa chọn nâng hạng.',
+        },
+        modifyCabana: {
+          question: 'Tôi có thể chỉnh sửa đặt chỗ cabana không?',
+          answer:
+            'Có. Hãy mở chi tiết đặt chỗ và gửi yêu cầu cập nhật ít nhất 24 giờ trước thời gian bắt đầu.',
+        },
+        gymHours: {
+          question: 'Giờ hoạt động của phòng gym là gì?',
+          answer:
+            'Phòng gym mở cửa hằng ngày từ 6:00 sáng đến 10:00 tối. Lịch ngày lễ có thể thay đổi và sẽ được thông báo trong ứng dụng.',
+        },
+      },
+    },
+  },
 
   errors: {
     openMail: 'Không thể mở ứng dụng email',
     openWhatsApp: 'Không thể mở WhatsApp',
+    languageChangeFailed: 'Không thể thay đổi ngôn ngữ. Vui lòng thử lại.',
     saveProfileFailed: 'Không thể lưu hồ sơ của bạn. Vui lòng thử lại.',
     signOutFailed: 'Không thể đăng xuất. Vui lòng thử lại.',
   },
@@ -73,6 +127,78 @@ const profile = {
       light: 'Sáng',
       dark: 'Tối',
     },
+    language: {
+      title: 'Ngôn ngữ',
+      subtitle: 'Chọn ngôn ngữ bạn muốn dùng trong ứng dụng.',
+      currentSelection: 'Ngôn ngữ hiện tại',
+      currentSelectionDevice: 'Theo thiết bị ({{language}})',
+      options: {
+        device: 'Theo thiết bị',
+        en: 'English',
+        ko: '한국어',
+        vi: 'Tiếng Việt',
+      },
+    },
+  },
+  staff: {
+    accessDeniedDescription:
+      'Màn hình ẩn này chỉ dành cho tài khoản nhân viên Esco đã được thêm vào allowlist.',
+    accessDeniedTitle: 'Cần quyền nhân viên',
+    allowlistPending:
+      'Hãy nhờ admin thêm tài khoản này vào allowlist nhân viên.',
+    approvalRequired: 'Cần mã PIN quản lý cho giao dịch trên {{amount}}.',
+    award: 'Cộng điểm',
+    awarding: 'Đang cộng điểm...',
+    awardTitle: 'Cộng điểm thành viên',
+    badge: 'Nhân viên',
+    billAmountLabel: 'Giá trị hóa đơn (VND)',
+    billAmountPlaceholder: '100000',
+    cameraPermissionDescription:
+      'Cho phép truy cập camera để nhân viên quét mã QR thành viên tại Esco Beach.',
+    cameraPermissionTitle: 'Cần quyền camera',
+    currentPoints: 'Điểm hiện tại: {{value}}',
+    errors: {
+      billBelowMinimumSpend:
+        'Hóa đơn này chưa đạt mức chi tối thiểu để cộng điểm.',
+      generic: 'Đã xảy ra lỗi. Vui lòng thử lại.',
+      invalidBillAmount: 'Hãy nhập giá trị hóa đơn hợp lệ bằng VND.',
+      invalidQr: 'Mã QR này không phải mã thành viên Esco hợp lệ.',
+      managerApprovalRequired:
+        'Cần mã PIN quản lý hợp lệ cho giao dịch vượt ngưỡng phê duyệt.',
+      memberNotFound: 'Không tìm thấy thành viên với mã này.',
+      staffAccessRequired: 'Tài khoản này chưa được allowlist để cộng điểm.',
+      title: 'Không thể hoàn tất thao tác',
+    },
+    findMember: 'Tìm thành viên',
+    formulaNote: '{{points}} điểm được cộng cho mỗi {{amount}} chi tiêu.',
+    goBack: 'Quay lại',
+    grantPermission: 'Cấp quyền camera',
+    invalidQrTitle: 'Mã QR không hợp lệ',
+    loading: 'Đang kiểm tra quyền nhân viên...',
+    lookupHint: 'Quét mã QR thành viên hoặc nhập mã thành viên thủ công.',
+    managerPinLabel: 'PIN quản lý',
+    managerPinPlaceholder: 'Nhập PIN quản lý',
+    manualEntryNote:
+      'Nếu quét không thành công, hãy nhập mã thành viên thủ công rồi tiếp tục bên dưới.',
+    memberFoundBadge: 'Đã tìm thấy thành viên',
+    memberIdLabel: 'Mã thành viên',
+    memberIdPlaceholder: 'ESCO-XXXXXXXX',
+    memberLookup: 'Tra cứu thành viên',
+    memberNotFound: 'Không có thành viên nào khớp với mã này.',
+    memberNotFoundTitle: 'Không tìm thấy thành viên',
+    memberPendingLookup:
+      'Nhấn Tìm thành viên để xác nhận thành viên này trước khi cộng điểm.',
+    pointsPreviewDescription:
+      'Điểm được làm tròn xuống theo từng bậc chi tiêu trước khi cộng.',
+    pointsPreviewLabel: 'Xem trước điểm',
+    receiptReferenceLabel: 'Mã tham chiếu hóa đơn',
+    receiptReferencePlaceholder: 'Tùy chọn: số bill hoặc hóa đơn',
+    scanAgain: 'Quét lại',
+    subtitle:
+      'Quét QR của khách hoặc nhập mã thành viên để cộng điểm với các biện pháp chống gian lận.',
+    successMessage: '{{name}} đã nhận {{points}} điểm từ hóa đơn {{amount}}.',
+    successTitle: 'Đã cộng điểm',
+    title: 'Máy quét tích điểm',
   },
   invite: {
     codeCopied: 'Đã sao chép!',

@@ -65,6 +65,7 @@ type BookingDayLabelKey = 'today' | BookingDayKey;
 type BookingOccasionTranslationKey = `booking:occasions.${BookingOccasionKey}`;
 type BookingDayTranslationKey = `booking:days.${BookingDayLabelKey}`;
 type BookingMonthTranslationKey = `booking:months.${BookingMonthKey}`;
+type BookingOccasionTranslationKeyFromApi = `booking:occasions.${string}`;
 
 type ResolvedOccasion = {
   label: string;
@@ -108,6 +109,12 @@ function getOccasionTranslationKey(
   value: BookingOccasionKey
 ): BookingOccasionTranslationKey {
   return `booking:occasions.${value}`;
+}
+
+function isBookingOccasionTranslationKeyFromApi(
+  key: unknown
+): key is BookingOccasionTranslationKeyFromApi {
+  return typeof key === 'string' && key.startsWith('booking:occasions.');
 }
 
 function getDayTranslationKey(
@@ -181,7 +188,9 @@ export default function BookingModalScreen(): React.JSX.Element {
     }
 
     return bookingOccasions.map((option) => ({
-      label: t(option.label_key as never),
+      label: isBookingOccasionTranslationKeyFromApi(option.label_key)
+        ? t(option.label_key, { defaultValue: option.value })
+        : option.value,
       value: option.value,
     }));
   }, [bookingOccasions, t]);

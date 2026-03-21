@@ -1,5 +1,6 @@
 import { X } from 'lucide-react-native';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Colors } from '@/constants/colors';
 import { cn } from '@/src/lib/utils';
@@ -30,10 +31,11 @@ function CloseButton({
   onClose: () => void;
   testID?: string;
 }): React.JSX.Element {
+  const { t } = useTranslation('common');
   return (
     <HeaderGlassButton
-      accessibilityLabel="Close"
-      accessibilityHint="Closes this modal"
+      accessibilityLabel={t('modal.closeLabel')}
+      accessibilityHint={t('modal.closeHint')}
       className={cn(
         'size-10 items-center justify-center rounded-full bg-sand dark:bg-dark-bg-card',
         className

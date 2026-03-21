@@ -1,5 +1,11 @@
 import { FlashList, type ListRenderItemInfo } from '@shopify/flash-list';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { Colors } from '@/constants/colors';
 import { useMenuContentData } from '@/providers/DataProvider';
@@ -249,14 +255,17 @@ export default function MenuScreen(): React.JSX.Element {
     }));
   }, [menuCategoryRecords, menuItemRecords]);
 
+  const activeCategoryRef = useRef(activeCategory);
+  activeCategoryRef.current = activeCategory;
+
   useEffect(() => {
-    if (
-      resolvedCategories.length > 0 &&
-      !resolvedCategories.some((category) => category.key === activeCategory)
-    ) {
+    const categoryExists = resolvedCategories.some(
+      (category) => category.key === activeCategoryRef.current
+    );
+    if (resolvedCategories.length > 0 && !categoryExists) {
       setActiveCategory(resolvedCategories[0].key);
     }
-  }, [activeCategory, resolvedCategories]);
+  }, [resolvedCategories]);
 
   const currentItems = useMemo(
     () => resolvedCategories.find((c) => c.key === activeCategory)?.items ?? [],

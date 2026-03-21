@@ -2,28 +2,68 @@ import { id } from '@instantdb/react-native';
 
 import { db } from '@/src/lib/instant';
 import {
+  calculatePointsForAmountVnd,
+  isManagerRole,
+  isStaffRole,
+  loyaltyConfig,
+  loyaltyTransactionSources,
+  loyaltyTransactionStatuses,
+} from '@/src/lib/loyalty';
+import {
   type InstantRecord,
   mapEvent,
+  mapLoyaltyTransaction,
   mapNewsItem,
   mapPartner,
   mapProfile,
   mapReferral,
   mapSavedEvent,
+  mapStaffAccess,
+  mapTableReservation,
 } from '@/src/lib/mappers';
 
 import type {
   Event,
+  LoyaltyTransaction,
   NewsItem,
   Partner,
   PartnerRedemption,
   Profile,
   Referral,
   SavedEvent,
+  StaffAccess,
   TableReservation,
 } from './types';
 
 function nowIso(): string {
   return new Date().toISOString();
+}
+
+function normalizeMemberSince(
+  value: string | null | undefined
+): string | undefined {
+  if (!value) return undefined;
+
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+
+  const parsed = new Date(trimmed);
+  const isValidDate = !Number.isNaN(parsed.getTime());
+
+  if (trimmed.includes('T') || isValidDate) {
+    return parsed.toISOString();
+  }
+
+  const dateOnly = new Date(`${trimmed}T00:00:00.000Z`);
+  if (!Number.isNaN(dateOnly.getTime())) {
+    return dateOnly.toISOString();
+  }
+
+  return undefined;
+}
+
+function buildProfileId(userId: string): string {
+  return `profile-${userId}`;
 }
 
 function buildMemberId(userId: string): string {
@@ -51,7 +91,6 @@ function createProfileDefaults(
   referral_code: string;
   saved: number;
   tier: 'STANDARD';
-  tier_label: string;
   updated_at: string;
 } {
   const createdAt = nowIso();
@@ -77,7 +116,6 @@ function createProfileDefaults(
     referral_code: buildReferralCode(),
     saved: 0,
     tier: 'STANDARD',
-    tier_label: 'Member',
     updated_at: createdAt,
   };
 }
@@ -98,12 +136,28 @@ export async function ensureProfile(params: {
   const current = await fetchProfile(params.userId);
   if (current) return current;
 
-  const profileId = id();
+  const profileId = buildProfileId(params.userId);
   const payload = createProfileDefaults(params.userId, params.email);
 
-  await db.transact(
-    db.tx.profiles[profileId].create(payload).link({ user: params.userId })
-  );
+  try {
+    await db.transact(
+      db.tx.profiles[profileId].create(payload).link({ user: params.userId })
+    );
+  } catch (error) {
+    if (error instanceof Error) {
+      const message = error.message.toLowerCase();
+      const isConflict =
+        message.includes('unique') ||
+        message.includes('already exists') ||
+        message.includes('duplicate');
+
+      if (isConflict) {
+        return fetchProfile(params.userId);
+      }
+    }
+
+    throw error;
+  }
 
   return fetchProfile(params.userId);
 }
@@ -123,6 +177,211 @@ export async function fetchProfile(userId: string): Promise<Profile | null> {
   return profile ? mapProfile(profile) : null;
 }
 
+export async function fetchProfileByMemberId(
+  memberId: string
+): Promise<Profile | null> {
+  const trimmedMemberId = memberId.trim();
+  if (!trimmedMemberId) return null;
+
+  const { data } = await db.queryOnce({
+    profiles: {
+      $: {
+        where: { member_id: trimmedMemberId },
+      },
+    },
+  });
+
+  const profile = data.profiles[0] as InstantRecord | undefined;
+  return profile ? mapProfile(profile) : null;
+}
+
+export async function fetchStaffAccess(
+  userId: string
+): Promise<StaffAccess | null> {
+  if (!userId) return null;
+
+  const { data } = await db.queryOnce({
+    staff_access: {
+      $: {
+        where: { 'user.id': userId },
+      },
+    },
+  });
+
+  const staffAccess = data.staff_access[0] as InstantRecord | undefined;
+  return staffAccess ? mapStaffAccess(staffAccess) : null;
+}
+
+async function fetchActiveManagerByPin(
+  managerPin: string
+): Promise<StaffAccess | null> {
+  const normalizedPin = managerPin.trim();
+  if (!normalizedPin) return null;
+
+  const { data } = await db.queryOnce({
+    staff_access: {
+      $: {
+        where: {
+          approval_pin: normalizedPin,
+          is_active: true,
+          role: 'manager',
+        },
+      },
+    },
+  });
+
+  const managerRecord = data.staff_access[0] as InstantRecord | undefined;
+  return managerRecord ? mapStaffAccess(managerRecord) : null;
+}
+
+function buildManagerPinLabel(staffAccess: StaffAccess): string {
+  return staffAccess.user_id
+    ? `mgr-${staffAccess.user_id.slice(0, 8)}`
+    : `mgr-${staffAccess.id.slice(0, 6)}`;
+}
+
+export async function awardLoyaltyTransaction(params: {
+  billAmountVnd: number;
+  managerPin?: string;
+  memberId: string;
+  receiptReference?: string;
+  staffUserId: string;
+}): Promise<{
+  member: Profile;
+  pointsAwarded: number;
+  transaction: LoyaltyTransaction;
+}> {
+  const memberId = params.memberId.trim();
+  const billAmountVnd = Math.trunc(params.billAmountVnd);
+  const receiptReference = params.receiptReference?.trim() ?? '';
+
+  if (!memberId) {
+    throw new Error('memberNotFound');
+  }
+
+  if (!Number.isFinite(billAmountVnd) || billAmountVnd <= 0) {
+    throw new Error('invalidBillAmount');
+  }
+
+  const pointsAwarded = calculatePointsForAmountVnd(billAmountVnd);
+  if (pointsAwarded <= 0) {
+    throw new Error('billBelowMinimumSpend');
+  }
+
+  const [member, staffAccess] = await Promise.all([
+    fetchProfileByMemberId(memberId),
+    fetchStaffAccess(params.staffUserId),
+  ]);
+
+  if (!member) {
+    throw new Error('memberNotFound');
+  }
+
+  if (
+    !staffAccess ||
+    !staffAccess.is_active ||
+    !isStaffRole(staffAccess.role)
+  ) {
+    throw new Error('staffAccessRequired');
+  }
+
+  const requiresManagerApproval = billAmountVnd > loyaltyConfig.approvalCapVnd;
+  const normalizedManagerPin = params.managerPin?.trim() ?? '';
+  const approvingManager = requiresManagerApproval
+    ? await fetchActiveManagerByPin(normalizedManagerPin)
+    : null;
+
+  if (
+    requiresManagerApproval &&
+    (!approvingManager ||
+      !approvingManager.is_active ||
+      !isManagerRole(approvingManager.role))
+  ) {
+    throw new Error('managerApprovalRequired');
+  }
+
+  const createdAt = nowIso();
+  const transactionId = id();
+  const entryKey = id();
+  const nextPoints = member.points + pointsAwarded;
+  const nextEarned = member.earned + pointsAwarded;
+
+  const createTransaction = db.tx.loyalty_transactions[transactionId]
+    .create({
+      bill_amount_vnd: billAmountVnd,
+      created_at: createdAt,
+      currency: loyaltyConfig.currency,
+      entry_key: entryKey,
+      ...(approvingManager
+        ? { manager_pin_label: buildManagerPinLabel(approvingManager) }
+        : {}),
+      member_id: member.member_id,
+      points_awarded: pointsAwarded,
+      points_rate_per_100k_vnd: loyaltyConfig.pointsAwardedPerStep,
+      ...(receiptReference ? { receipt_reference: receiptReference } : {}),
+      source: loyaltyTransactionSources.manualStaffEntry,
+      status: loyaltyTransactionStatuses.posted,
+      updated_at: createdAt,
+    })
+    .link({
+      member: member.id,
+      ...(approvingManager ? { approved_by: approvingManager.id } : {}),
+      staff_access: staffAccess.id,
+    });
+
+  const updateMemberTotals = db.tx.profiles[member.id].update({
+    earned: nextEarned,
+    points: nextPoints,
+    updated_at: createdAt,
+  });
+
+  await db.transact([createTransaction, updateMemberTotals]);
+
+  const { data } = await db.queryOnce({
+    loyalty_transactions: {
+      $: {
+        where: { id: transactionId },
+      },
+    },
+  });
+
+  const createdTransaction = data.loyalty_transactions[0] as
+    | InstantRecord
+    | undefined;
+
+  return {
+    member: {
+      ...member,
+      earned: nextEarned,
+      points: nextPoints,
+      updated_at: createdAt,
+    },
+    pointsAwarded,
+    transaction: createdTransaction
+      ? mapLoyaltyTransaction(createdTransaction)
+      : {
+          id: transactionId,
+          approved_by_staff_access_id: approvingManager?.id ?? null,
+          bill_amount_vnd: billAmountVnd,
+          created_at: createdAt,
+          currency: loyaltyConfig.currency,
+          entry_key: entryKey,
+          manager_pin_label: approvingManager
+            ? buildManagerPinLabel(approvingManager)
+            : null,
+          member_id: member.member_id,
+          member_profile_id: member.id,
+          points_awarded: pointsAwarded,
+          points_rate_per_100k_vnd: loyaltyConfig.pointsAwardedPerStep,
+          receipt_reference: receiptReference || null,
+          source: loyaltyTransactionSources.manualStaffEntry,
+          staff_access_id: staffAccess.id,
+          status: loyaltyTransactionStatuses.posted,
+          updated_at: createdAt,
+        },
+  };
+}
+
 export async function updateProfile(
   userId: string,
   updates: Partial<Profile>
@@ -137,9 +396,7 @@ export async function updateProfile(
     bio: updates.bio,
     full_name: updates.full_name,
     has_seen_welcome_voucher: updates.has_seen_welcome_voucher,
-    member_since: updates.member_since
-      ? new Date(`${updates.member_since}T00:00:00.000Z`).toISOString()
-      : undefined,
+    member_since: normalizeMemberSince(updates.member_since),
     nights_left: updates.nights_left,
   }) as Partial<
     Pick<
@@ -307,22 +564,53 @@ export async function submitTableReservation(params: {
     .create(payload)
     .link({ owner: params.user_id });
 
-  await db.transact(params.event_id ? tx.link({ event: params.event_id }) : tx);
+  try {
+    await db.transact(
+      params.event_id ? tx.link({ event: params.event_id }) : tx
+    );
 
-  return {
-    id: reservationId,
-    created_at: createdAt,
-    entry_key: entryKey,
-    event_id: params.event_id ?? null,
-    event_title: params.event_title ?? null,
-    occasion: params.occasion,
-    party_size: params.party_size,
-    reservation_date: params.reservation_date,
-    reservation_time: params.reservation_time,
-    source: params.source,
-    status: 'pending',
-    updated_at: createdAt,
-  };
+    return {
+      id: reservationId,
+      created_at: createdAt,
+      entry_key: entryKey,
+      event_id: params.event_id ?? null,
+      event_title: params.event_title ?? null,
+      occasion: params.occasion,
+      party_size: params.party_size,
+      reservation_date: params.reservation_date,
+      reservation_time: params.reservation_time,
+      source: params.source,
+      status: 'pending',
+      updated_at: createdAt,
+    };
+  } catch (error) {
+    if (error instanceof Error) {
+      const message = error.message.toLowerCase();
+      const isConflict =
+        message.includes('unique') ||
+        message.includes('already exists') ||
+        message.includes('duplicate');
+
+      if (isConflict) {
+        const { data } = await db.queryOnce({
+          table_reservations: {
+            $: {
+              where: { entry_key: entryKey },
+            },
+          },
+        });
+
+        const existing = data.table_reservations[0] as
+          | InstantRecord
+          | undefined;
+        if (existing) {
+          return mapTableReservation(existing);
+        }
+      }
+    }
+
+    throw error;
+  }
 }
 
 export async function claimPartnerRedemption(params: {

@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { Calendar, MapPin } from 'lucide-react-native';
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Colors } from '@/constants/colors';
@@ -14,6 +14,7 @@ export default function SavedEventsScreen(): React.JSX.Element {
   const { t } = useTranslation('profile');
   const { savedEventsList, savedEventsLoading, toggleSavedEvent } =
     useSavedEventsData();
+  const [pendingRemoval, setPendingRemoval] = useState<string | null>(null);
 
   if (savedEventsLoading) {
     return (
@@ -103,8 +104,14 @@ export default function SavedEventsScreen(): React.JSX.Element {
               </Text>
               <Button
                 className="mt-4"
-                onPress={() => {
-                  void toggleSavedEvent(event.id);
+                isLoading={pendingRemoval === event.id}
+                onPress={async () => {
+                  setPendingRemoval(event.id);
+                  try {
+                    await toggleSavedEvent(event.id);
+                  } finally {
+                    setPendingRemoval(null);
+                  }
                 }}
                 testID={`remove-saved-event-${event.id}`}
                 variant="outline"

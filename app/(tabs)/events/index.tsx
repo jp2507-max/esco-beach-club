@@ -170,8 +170,6 @@ export default function EventsScreen(): React.JSX.Element {
             }}
             testID={`save-event-${item.id}`}
           >
-            {/* TODO: Implement favorites feature (Tracking ID: #FAV-123) */}
-            {/* Note: intended onPress behavior is to toggle favorite state or open auth if user is not logged in */}
             <Heart
               size={18}
               color={isEventSaved(item.id) ? Colors.primary : Colors.textLight}

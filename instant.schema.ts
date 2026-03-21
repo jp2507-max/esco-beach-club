@@ -96,6 +96,20 @@ const _schema = i.schema({
       terms_key: i.string().optional(),
       title_key: i.string(),
     }),
+    loyalty_transactions: i.entity({
+      bill_amount_vnd: i.number().indexed(),
+      created_at: i.date().indexed().optional(),
+      currency: i.string().indexed(),
+      entry_key: i.string().unique().indexed(),
+      manager_pin_label: i.string().optional(),
+      member_id: i.string().indexed(),
+      points_awarded: i.number(),
+      points_rate_per_100k_vnd: i.number(),
+      receipt_reference: i.string().indexed().optional(),
+      source: i.string().indexed(),
+      status: i.string().indexed(),
+      updated_at: i.date().indexed().optional(),
+    }),
     menu_categories: i.entity({
       created_at: i.date().indexed().optional(),
       is_active: i.boolean().indexed().optional(),
@@ -149,6 +163,13 @@ const _schema = i.schema({
       event_id: i.string().indexed(),
       entry_key: i.string().unique().indexed(),
     }),
+    staff_access: i.entity({
+      approval_pin: i.string().optional(),
+      created_at: i.date().indexed().optional(),
+      is_active: i.boolean().indexed(),
+      role: i.string().indexed(),
+      updated_at: i.date().indexed().optional(),
+    }),
     private_event_types: i.entity({
       created_at: i.date().indexed().optional(),
       is_active: i.boolean().indexed().optional(),
@@ -195,6 +216,42 @@ const _schema = i.schema({
         on: '$users',
         has: 'many',
         label: 'linkedGuestUsers',
+      },
+    },
+    loyaltyTransactionsApprovedBy: {
+      forward: {
+        on: 'loyalty_transactions',
+        has: 'one',
+        label: 'approved_by',
+      },
+      reverse: {
+        on: 'staff_access',
+        has: 'many',
+        label: 'approved_loyalty_transactions',
+      },
+    },
+    loyaltyTransactionsMember: {
+      forward: {
+        on: 'loyalty_transactions',
+        has: 'one',
+        label: 'member',
+      },
+      reverse: {
+        on: 'profiles',
+        has: 'many',
+        label: 'loyalty_transactions',
+      },
+    },
+    loyaltyTransactionsStaffAccess: {
+      forward: {
+        on: 'loyalty_transactions',
+        has: 'one',
+        label: 'staff_access',
+      },
+      reverse: {
+        on: 'staff_access',
+        has: 'many',
+        label: 'loyalty_transactions',
       },
     },
     partnerRedemptionsOwner: {
@@ -296,6 +353,19 @@ const _schema = i.schema({
         on: '$users',
         has: 'many',
         label: 'saved_events',
+      },
+    },
+    staffAccessUser: {
+      forward: {
+        on: 'staff_access',
+        has: 'one',
+        label: 'user',
+        onDelete: 'cascade',
+      },
+      reverse: {
+        on: '$users',
+        has: 'one',
+        label: 'staff_access',
       },
     },
     tableReservationsEvent: {

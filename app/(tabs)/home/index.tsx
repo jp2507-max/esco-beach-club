@@ -237,7 +237,12 @@ export default function HomeScreen(): React.JSX.Element {
   const homeEvents = useHomeEvents();
 
   const userName = profile?.full_name ?? t('guest');
-  const userTier = profile?.tier_label ?? t('member');
+  const userTier =
+    profile?.tier === 'VIP'
+      ? t('tier.vip')
+      : profile?.tier === 'OWNER'
+        ? t('tier.owner')
+        : t('tier.standard');
   const userPoints = profile?.points ?? 0;
   const userMaxPoints =
     profile?.max_points && profile.max_points > 0 ? profile.max_points : 5000;
@@ -392,8 +397,8 @@ export default function HomeScreen(): React.JSX.Element {
                   </Text>
                 </View>
                 <HeaderGlassButton
-                  accessibilityLabel="Open profile"
-                  accessibilityHint="Opens your profile screen"
+                  accessibilityLabel={t('openProfile')}
+                  accessibilityHint={t('openProfileHint')}
                   className="size-12 border-[2.5px]"
                   onPress={handleProfilePress}
                   style={{ borderColor: `${Colors.primary}40` }}

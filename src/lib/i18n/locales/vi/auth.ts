@@ -24,6 +24,8 @@ const auth = {
   appleAuthUnavailable: 'Apple Sign In không khả dụng trên thiết bị này.',
   appleIdTokenMissing: 'Apple không trả về mã thông báo danh tính.',
   googleAuthNotConfigured: 'Google Sign-In chưa được cấu hình.',
+  googleOauthClientNotConfigured:
+    'Cấu hình đăng nhập Google không đúng. Vui lòng liên hệ hỗ trợ.',
   googleIdTokenMissing: 'Google không trả về mã thông báo danh tính.',
   googlePlayServicesUnavailable: 'Google Play Services hiện không khả dụng.',
   providerSignInCanceled: 'Luồng đăng nhập đã bị hủy.',

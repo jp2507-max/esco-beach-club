@@ -72,7 +72,7 @@ export default function PartnerModal(): React.JSX.Element {
   }));
 
   async function handleCopy(): Promise<void> {
-    if (!partner) return;
+    if (!partner || claimMutation.isPending) return;
 
     try {
       await claimMutation.mutateAsync('code_copy');
@@ -90,7 +90,7 @@ export default function PartnerModal(): React.JSX.Element {
   }
 
   async function handleClaim(): Promise<void> {
-    if (!partner) return;
+    if (!partner || claimMutation.isPending) return;
 
     try {
       await claimMutation.mutateAsync('cta_unlock');
@@ -115,9 +115,7 @@ export default function PartnerModal(): React.JSX.Element {
           className="mt-4 self-start"
           accessibilityRole="button"
           accessibilityLabel={t('partner.maybeLater')}
-          accessibilityHint={t('partner.maybeLaterHint', {
-            defaultValue: 'Returns to previous screen',
-          })}
+          accessibilityHint={t('partner.maybeLaterHint')}
           onPress={() => router.back()}
         >
           <Text className="text-sm font-medium text-white/90">
@@ -131,10 +129,8 @@ export default function PartnerModal(): React.JSX.Element {
   return (
     <View className="flex-1 bg-black/55">
       <HeaderGlassButton
-        accessibilityLabel={t('partner.maybeLater')}
-        accessibilityHint={t('partner.maybeLaterHint', {
-          defaultValue: 'Returns to previous screen',
-        })}
+        accessibilityLabel={t('partner.close')}
+        accessibilityHint={t('partner.closeHint')}
         className="absolute right-4 z-10 size-9 border-white/35"
         onPress={() => router.back()}
         style={{ top: insets.top + 12 }}
@@ -216,8 +212,12 @@ export default function PartnerModal(): React.JSX.Element {
               <Pressable
                 accessibilityRole="button"
                 className="size-9 items-center justify-center rounded-xl"
+                disabled={claimMutation.isPending}
                 onPress={handleCopy}
-                style={{ backgroundColor: `${Colors.secondary}15` }}
+                style={[
+                  { backgroundColor: `${Colors.secondary}15` },
+                  claimMutation.isPending && { opacity: 0.5 },
+                ]}
                 testID="copy-discount"
               >
                 {copied ? (

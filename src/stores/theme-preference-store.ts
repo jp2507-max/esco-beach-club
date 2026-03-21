@@ -54,6 +54,11 @@ export const useThemePreferenceStore = create<ThemePreferenceState>()(
     }),
     {
       name: 'theme-preference',
+      onRehydrateStorage: () => (state) => {
+        if (state?.preference) {
+          applyThemePreference(state.preference);
+        }
+      },
       partialize: (state) => ({ preference: state.preference }),
       storage: createJSONStorage(() => mmkvStateStorage),
       version: 1,

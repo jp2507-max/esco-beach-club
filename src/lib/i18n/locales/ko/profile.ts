@@ -1,6 +1,11 @@
 const profile = {
   guest: '게스트',
   memberFallback: '멤버',
+  tier: {
+    standard: '멤버',
+    vip: 'VIP',
+    owner: '오너',
+  },
   menu: {
     comingSoon: '곧 출시',
     editProfile: '프로필 수정',
@@ -9,16 +14,20 @@ const profile = {
     membership: '멤버십',
     rewards: '리워드',
     savedEvents: '저장한 이벤트',
-    settings: '테마 설정',
+    settings: '설정',
     helpSupport: '도움말 및 지원',
     logOut: '로그아웃',
+  },
+  notifications: {
+    title: '알림',
+    hint: '알림 열기',
   },
   welcomeBack: '다시 오신 것을 환영합니다,',
   edit: '수정',
   brandPrefix: 'Esco',
   brandHighlight: 'Life',
   accessPass: '액세스 패스',
-  scanAtTable: '테이블에서 스캔하면 10% 할인',
+  scanAtTable: '스캔하여 멤버 포인트 적립',
   refPrefix: '참조: {{memberId}}',
   earned: '적립',
   saved: '절약',
@@ -36,10 +45,54 @@ const profile = {
   contactVipConcierge: 'VIP 컨시어지 연락',
   contactSupport: '지원팀에 문의',
   conciergeMessage: '안녕하세요, Esco Life VIP 컨시어지입니다',
+  helpCenter: {
+    title: '헬프 센터',
+    heroTitle: '어떤 도움이 필요하신가요?',
+    searchPlaceholder: '도움말 검색...',
+    emailSupport: {
+      title: '이메일 지원',
+      description: '상세 문의를 보내주시면 2시간 내에 답변드리겠습니다.',
+    },
+    categories: {
+      title: '카테고리 둘러보기',
+      booking: '예약 및 부킹',
+      membership: '멤버십 및 등급',
+      perks: '혜택 및 리워드',
+      technical: '앱 및 기술 지원',
+    },
+    faq: {
+      title: '자주 묻는 질문',
+      viewAll: '전체 보기',
+      noResults: '검색 결과와 일치하는 질문이 없습니다.',
+      items: {
+        redeemDrink: {
+          question: '무료 음료는 어떻게 이용하나요?',
+          answer:
+            'Esco Life 바에서 디지털 멤버 카드를 보여주세요. 자격이 확인되면 혜택이 자동 적용됩니다.',
+        },
+        upgradeTier: {
+          question: '다이아몬드 등급으로 어떻게 업그레이드하나요?',
+          answer:
+            '등급은 포인트와 이용 실적 기준으로 업그레이드됩니다. 멤버십 화면에서 진행 상황과 가능 옵션을 확인하세요.',
+        },
+        modifyCabana: {
+          question: '카바나 예약을 변경할 수 있나요?',
+          answer:
+            '네. 예약 상세에서 변경 요청을 제출하실 수 있으며, 시작 시간 24시간 전까지 요청해 주세요.',
+        },
+        gymHours: {
+          question: '헬스장 운영 시간은 어떻게 되나요?',
+          answer:
+            '헬스장은 매일 오전 6시부터 오후 10시까지 운영됩니다. 공휴일 운영 시간은 앱 공지에서 확인할 수 있습니다.',
+        },
+      },
+    },
+  },
 
   errors: {
     openMail: '메일을 열 수 없습니다',
     openWhatsApp: 'WhatsApp을 열 수 없습니다',
+    languageChangeFailed: '언어를 변경할 수 없습니다. 다시 시도해 주세요.',
     saveProfileFailed: '프로필을 저장할 수 없습니다. 다시 시도해 주세요.',
     signOutFailed: '로그아웃할 수 없습니다. 다시 시도해 주세요.',
   },
@@ -73,6 +126,80 @@ const profile = {
       light: '라이트',
       dark: '다크',
     },
+    language: {
+      title: '언어',
+      subtitle: '앱에서 사용할 언어를 선택하세요.',
+      currentSelection: '현재 언어',
+      currentSelectionDevice: '기기 언어 사용 ({{language}})',
+      options: {
+        device: '기기 언어 사용',
+        en: 'English',
+        ko: '한국어',
+        vi: 'Tiếng Việt',
+      },
+    },
+  },
+  staff: {
+    accessDeniedDescription:
+      '이 숨겨진 화면은 허용 목록에 등록된 Esco 직원 계정에서만 사용할 수 있습니다.',
+    accessDeniedTitle: '직원 권한 필요',
+    allowlistPending:
+      '관리자에게 이 계정을 직원 허용 목록에 추가해 달라고 요청하세요.',
+    approvalRequired: '{{amount}} 초과 거래에는 관리자 PIN이 필요합니다.',
+    award: '포인트 적립',
+    awarding: '적립 중...',
+    awardTitle: '회원 포인트 적립',
+    badge: '직원',
+    billAmountLabel: '결제 금액 (VND)',
+    billAmountPlaceholder: '100000',
+    cameraPermissionDescription:
+      'Esco Beach에서 회원 QR 코드를 스캔할 수 있도록 카메라 접근 권한을 허용해 주세요.',
+    cameraPermissionTitle: '카메라 권한 필요',
+    currentPoints: '현재 포인트: {{value}}',
+    errors: {
+      billBelowMinimumSpend:
+        '이 결제 금액은 포인트 적립 최소 금액에 미달합니다.',
+      generic: '문제가 발생했습니다. 다시 시도해 주세요.',
+      invalidBillAmount: 'VND 기준의 올바른 결제 금액을 입력해 주세요.',
+      invalidQr: '이 QR 코드는 유효한 Esco 회원 코드가 아닙니다.',
+      managerApprovalRequired:
+        '승인 한도를 초과하는 거래에는 유효한 관리자 PIN이 필요합니다.',
+      memberNotFound: '해당 ID의 회원을 찾을 수 없습니다.',
+      staffAccessRequired:
+        '이 계정은 포인트 적립용 직원 허용 목록에 등록되어 있지 않습니다.',
+      title: '작업을 완료할 수 없습니다',
+    },
+    findMember: '회원 찾기',
+    formulaNote: '{{amount}} 사용 시마다 {{points}}포인트가 적립됩니다.',
+    goBack: '뒤로 가기',
+    grantPermission: '카메라 권한 허용',
+    invalidQrTitle: '잘못된 QR 코드',
+    loading: '직원 권한 확인 중...',
+    lookupHint: '회원 QR 코드를 스캔하거나 회원 ID를 직접 입력하세요.',
+    managerPinLabel: '관리자 PIN',
+    managerPinPlaceholder: '관리자 PIN 입력',
+    manualEntryNote:
+      '스캔이 실패하면 회원 ID를 직접 입력하고 아래에서 계속 진행하세요.',
+    memberFoundBadge: '회원 확인됨',
+    memberIdLabel: '회원 ID',
+    memberIdPlaceholder: 'ESCO-XXXXXXXX',
+    memberLookup: '회원 조회',
+    memberNotFound: '해당 코드와 일치하는 회원이 없습니다.',
+    memberNotFoundTitle: '회원을 찾을 수 없음',
+    memberPendingLookup:
+      '포인트 적립 전에 회원을 확인하려면 회원 찾기를 눌러 주세요.',
+    pointsPreviewDescription:
+      '포인트는 적립 전에 지출 구간 단위로 내림 처리됩니다.',
+    pointsPreviewLabel: '포인트 미리보기',
+    receiptReferenceLabel: '영수증 참조',
+    receiptReferencePlaceholder: '선택 사항: 영수증 또는 청구 번호',
+    scanAgain: '다시 스캔',
+    subtitle:
+      '고객 QR을 스캔하거나 회원 ID를 입력하여 부정 방지 장치와 함께 포인트를 적립하세요.',
+    successMessage:
+      '{{name}}님에게 {{amount}} 결제로 {{points}}포인트가 적립되었습니다.',
+    successTitle: '포인트 적립 완료',
+    title: '로열티 스캐너',
   },
   invite: {
     codeCopied: '복사됨!',

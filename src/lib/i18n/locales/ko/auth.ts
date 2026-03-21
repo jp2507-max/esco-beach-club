@@ -21,9 +21,11 @@ const auth = {
   verifyJoin: '확인 후 가입',
   codeNotSentTitle: '코드를 보내지 못했습니다',
   verificationFailedTitle: '인증 실패',
-  appleAuthUnavailable: '이 기기에서는 Apple 로그인를 사용할 수 없습니다.',
+  appleAuthUnavailable: '이 기기에서는 Apple 로그인을 사용할 수 없습니다.',
   appleIdTokenMissing: 'Apple에서 신원 토큰을 반환하지 않았습니다.',
   googleAuthNotConfigured: 'Google 로그인이 아직 구성되지 않았습니다.',
+  googleOauthClientNotConfigured:
+    'Google 로그인 구성이 잘못되었습니다. 지원팀에 문의해 주세요.',
   googleIdTokenMissing: 'Google에서 신원 토큰을 반환하지 않았습니다.',
   googlePlayServicesUnavailable: 'Google Play 서비스가 사용할 수 없습니다.',
   providerSignInCanceled: '로그인 흐름이 취소되었습니다.',

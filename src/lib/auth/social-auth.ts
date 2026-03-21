@@ -24,6 +24,15 @@ const googleIosUrlScheme =
 
 let hasConfiguredGoogleSignIn = false;
 
+export function resetGoogleSignIn(): void {
+  if (!hasConfiguredGoogleSignIn) return;
+
+  GoogleSignin.signOut().catch(() => {
+    // ignore reset errors
+  });
+  hasConfiguredGoogleSignIn = false;
+}
+
 type CryptoLike = {
   getRandomValues: (target: Uint8Array) => Uint8Array;
 };
@@ -141,7 +150,9 @@ export async function getGoogleIdToken(): Promise<{
 
   try {
     if (Platform.OS === 'android') {
-      await GoogleSignin.hasPlayServices();
+      await GoogleSignin.hasPlayServices({
+        showPlayServicesUpdateDialog: true,
+      });
     }
 
     const response = await GoogleSignin.signIn();

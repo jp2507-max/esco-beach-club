@@ -23,6 +23,9 @@ const perks = {
     yourDiscountCode: '할인 코드',
     enjoyMyPerks: '혜택 즐기기',
     maybeLater: '나중에',
+    maybeLaterHint: '이전 화면으로 돌아갑니다',
+    close: '닫기',
+    closeHint: '파트너 상세 모달을 닫습니다',
   },
 } as const;
 

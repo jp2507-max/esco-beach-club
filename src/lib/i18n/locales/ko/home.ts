@@ -5,7 +5,11 @@ const home = {
     evening: '좋은 저녁입니다',
   },
   guest: '게스트',
-  member: '멤버',
+  tier: {
+    standard: '멤버',
+    vip: 'VIP',
+    owner: '오너',
+  },
   vipStatus: 'VIP 상태',
   seeAll: '모두 보기',
   quickActions: {
@@ -19,6 +23,8 @@ const home = {
   pointsSuffix: '/ {{max}} pts',
   memberName: '멤버 이름',
   happeningThisWeek: '이번 주 일정',
+  openProfile: '프로필 열기',
+  openProfileHint: '프로필 화면을 엽니다',
 } as const;
 
 export default home;

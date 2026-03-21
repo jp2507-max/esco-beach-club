@@ -5,7 +5,11 @@ const home = {
     evening: 'Good Evening',
   },
   guest: 'Guest',
-  member: 'Member',
+  tier: {
+    standard: 'Member',
+    vip: 'VIP',
+    owner: 'Owner',
+  },
   vipStatus: 'VIP Status',
   seeAll: 'See All',
   quickActions: {
@@ -19,6 +23,8 @@ const home = {
   pointsSuffix: '/ {{max}} pts',
   memberName: 'MEMBER NAME',
   happeningThisWeek: 'Happening This Week',
+  openProfile: 'Open profile',
+  openProfileHint: 'Opens your profile screen',
 } as const;
 
 export default home;

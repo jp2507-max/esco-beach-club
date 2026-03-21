@@ -23,6 +23,9 @@ const perks = {
     yourDiscountCode: 'YOUR DISCOUNT CODE',
     enjoyMyPerks: 'Enjoy my Perks',
     maybeLater: 'Maybe later',
+    maybeLaterHint: 'Returns to previous screen',
+    close: 'Close',
+    closeHint: 'Closes the partner detail modal',
   },
 } as const;
 

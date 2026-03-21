@@ -11,7 +11,6 @@ import {
   HelpCircle,
   LogOut,
   PencilLine,
-  QrCode,
   Settings,
   Star,
   Ticket,
@@ -36,7 +35,7 @@ import {
   useProfileData,
   useSavedEventsCount,
 } from '@/providers/DataProvider';
-import { HeaderGlassButton } from '@/src/components/ui';
+import { HeaderGlassButton, MemberQrCode } from '@/src/components/ui';
 import { Avatar } from '@/src/components/ui/avatar';
 import { rmTiming } from '@/src/lib/animations/motion';
 import { config } from '@/src/lib/config';
@@ -63,6 +62,26 @@ type StatCardProps = {
   progressTrackColor: string;
   value: string;
 };
+
+const welcomeOfferVoucherKeys = [
+  'welcomeGift',
+  'welcomeDiscount',
+  'firstVisit',
+  'validForThirtyDays',
+] as const;
+
+type WelcomeOfferVoucherKey = (typeof welcomeOfferVoucherKeys)[number];
+
+function resolveWelcomeOfferVoucherKey(
+  key: unknown,
+  fallback: WelcomeOfferVoucherKey
+): WelcomeOfferVoucherKey {
+  if (typeof key !== 'string') return fallback;
+  if ((welcomeOfferVoucherKeys as readonly string[]).includes(key)) {
+    return key as WelcomeOfferVoucherKey;
+  }
+  return fallback;
+}
 
 function StatCard({
   accentColor,
@@ -128,7 +147,12 @@ export default function ProfileScreen(): React.JSX.Element {
   const { signOut } = useAuth();
 
   const userName = profile?.full_name ?? t('guest');
-  const tierBadge = profile?.tier_label ?? t('memberFallback');
+  const tierBadge =
+    profile?.tier === 'VIP'
+      ? t('tier.vip')
+      : profile?.tier === 'OWNER'
+        ? t('tier.owner')
+        : t('tier.standard');
   const tierLevel = profile?.tier ?? 'STANDARD';
   const bio = profile?.bio?.trim() ?? '';
   const memberId = profile?.member_id ?? '';
@@ -138,10 +162,22 @@ export default function ProfileScreen(): React.JSX.Element {
   const earned = profile?.earned ?? 0;
   const nightsLeft = profile?.nights_left ?? 0;
   const saved = profile?.saved ?? 0;
-  const welcomeOfferBadgeKey = welcomeOffer?.badge_key ?? 'welcomeGift';
-  const welcomeOfferTitleKey = welcomeOffer?.title_key ?? 'welcomeDiscount';
-  const welcomeOfferSubtitleKey = welcomeOffer?.subtitle_key ?? 'firstVisit';
-  const welcomeOfferTermsKey = welcomeOffer?.terms_key ?? 'validForThirtyDays';
+  const welcomeOfferBadgeKey = resolveWelcomeOfferVoucherKey(
+    welcomeOffer?.badge_key,
+    'welcomeGift'
+  );
+  const welcomeOfferTitleKey = resolveWelcomeOfferVoucherKey(
+    welcomeOffer?.title_key,
+    'welcomeDiscount'
+  );
+  const welcomeOfferSubtitleKey = resolveWelcomeOfferVoucherKey(
+    welcomeOffer?.subtitle_key,
+    'firstVisit'
+  );
+  const welcomeOfferTermsKey = resolveWelcomeOfferVoucherKey(
+    welcomeOffer?.terms_key,
+    'validForThirtyDays'
+  );
   const welcomeOfferCode = welcomeOffer?.code ?? 'WELCOME10';
 
   const [showVoucher, setShowVoucher] = useState<boolean>(false);
@@ -177,11 +213,10 @@ export default function ProfileScreen(): React.JSX.Element {
       },
       {
         color: Colors.primary,
-        disabled: true,
         icon: CreditCard,
         id: 'membership',
         label: t('menu.membership'),
-        route: null,
+        route: '/profile/membership',
       },
       {
         color: '#FF9800',
@@ -200,11 +235,10 @@ export default function ProfileScreen(): React.JSX.Element {
       },
       {
         color: '#7C4DFF',
-        disabled: true,
         icon: HelpCircle,
         id: 'help-support',
         label: t('menu.helpSupport'),
-        route: null,
+        route: '/profile/help-center',
       },
       {
         color: '#EF5350',
@@ -331,7 +365,7 @@ export default function ProfileScreen(): React.JSX.Element {
           </View>
           <HeaderGlassButton
             accessibilityLabel={t('menu.comingSoon')}
-            accessibilityHint={t('menu.comingSoon')}
+            accessibilityHint={t('notifications.hint')}
             className="size-[42px] items-center justify-center rounded-full border border-border bg-white dark:border-dark-border dark:bg-dark-bg-card"
             onPress={() => Alert.alert(t('menu.comingSoon'))}
             testID="notification-bell"
@@ -376,9 +410,12 @@ export default function ProfileScreen(): React.JSX.Element {
                   width: 180,
                 }}
               >
-                <View className="flex-1 items-center justify-center rounded-[16px] bg-white dark:bg-dark-bg-card">
-                  <QrCode color={Colors.text} size={100} />
-                </View>
+                <MemberQrCode
+                  className="flex-1 rounded-[16px]"
+                  emptyLabel={t('memberFallback')}
+                  memberId={memberId}
+                  size={100}
+                />
               </LinearGradient>
             </View>
 
@@ -478,21 +515,21 @@ export default function ProfileScreen(): React.JSX.Element {
               <View className="mb-2 flex-row items-center">
                 <Ticket color={Colors.primary} size={22} />
                 <Text className="ml-2 text-[11px] font-extrabold tracking-[2px] text-primary">
-                  {t(welcomeOfferBadgeKey as never)}
+                  {t(welcomeOfferBadgeKey)}
                 </Text>
               </View>
               <Text className="mb-0.5 text-[42px] font-black text-text dark:text-text-primary-dark">
-                {t(welcomeOfferTitleKey as never)}
+                {t(welcomeOfferTitleKey)}
               </Text>
               <Text className="mb-3.5 text-base font-semibold text-text-secondary dark:text-text-secondary-dark">
-                {t(welcomeOfferSubtitleKey as never)}
+                {t(welcomeOfferSubtitleKey)}
               </Text>
               <View className="mb-3.5 h-px w-4/5 bg-border dark:bg-dark-border" />
               <Text className="mb-1.5 text-lg font-extrabold tracking-[2px] text-secondary">
                 {t('codeLabel', { code: welcomeOfferCode })}
               </Text>
               <Text className="mb-4 text-xs text-text-muted dark:text-text-muted-dark">
-                {t(welcomeOfferTermsKey as never)}
+                {t(welcomeOfferTermsKey)}
               </Text>
               <Pressable
                 accessibilityRole="button"

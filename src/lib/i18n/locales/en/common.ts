@@ -17,6 +17,10 @@ const common = {
     commentMax: 'Comment must be at most 500 characters.',
     invalidDate: 'Please enter a valid date in YYYY-MM-DD format.',
     invalidCode: 'Please enter a 6-digit verification code.',
+    loyaltyManagerPin:
+      'Please enter a valid manager PIN to approve this amount.',
+    loyaltyMinimumSpend:
+      'This bill amount is below the minimum points threshold.',
   },
   back: 'Back',
   rateUs: {
@@ -95,6 +99,8 @@ const common = {
     title: 'Esco Life',
     description:
       'Welcome to Esco Life Beach Club. Enjoy exclusive member benefits.',
+    closeLabel: 'Close',
+    closeHint: 'Closes this modal',
   },
   notFound: {
     title: "This screen doesn't exist.",

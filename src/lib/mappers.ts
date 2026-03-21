@@ -2,6 +2,7 @@ import type {
   BookingOccasionOption,
   BookingTimeSlotOption,
   Event,
+  LoyaltyTransaction,
   MemberOffer,
   MenuCategoryContent,
   MenuItemContent,
@@ -12,6 +13,7 @@ import type {
   Profile,
   Referral,
   SavedEvent,
+  StaffAccess,
   TableReservation,
 } from '@/lib/types';
 
@@ -66,7 +68,6 @@ export function mapProfile(record: InstantRecord): Profile {
     full_name: toStringOr(record.full_name),
     bio: toStringOr(record.bio),
     tier: toTier(record.tier),
-    tier_label: toStringOr(record.tier_label, 'Member'),
     member_id: toStringOr(record.member_id),
     member_since: toIsoString(record.member_since),
     nights_left: toNumber(record.nights_left),
@@ -78,6 +79,68 @@ export function mapProfile(record: InstantRecord): Profile {
     referral_code: toStringOr(record.referral_code),
     has_seen_welcome_voucher: toBoolean(record.has_seen_welcome_voucher),
     created_at: toIsoString(record.created_at),
+    updated_at: toIsoString(record.updated_at),
+  };
+}
+
+export function mapStaffAccess(record: InstantRecord): StaffAccess {
+  return {
+    id: record.id,
+    approval_pin: toNullableString(record.approval_pin),
+    created_at: toIsoString(record.created_at),
+    is_active: toBoolean(record.is_active),
+    role:
+      record.role === 'staff' || record.role === 'manager'
+        ? (record.role as StaffAccess['role'])
+        : null,
+    updated_at: toIsoString(record.updated_at),
+    user_id:
+      typeof record.user === 'object' &&
+      record.user !== null &&
+      'id' in record.user &&
+      typeof record.user.id === 'string'
+        ? record.user.id
+        : null,
+  };
+}
+
+export function mapLoyaltyTransaction(
+  record: InstantRecord
+): LoyaltyTransaction {
+  return {
+    id: record.id,
+    approved_by_staff_access_id:
+      typeof record.approved_by === 'object' &&
+      record.approved_by !== null &&
+      'id' in record.approved_by &&
+      typeof record.approved_by.id === 'string'
+        ? record.approved_by.id
+        : null,
+    bill_amount_vnd: toNumber(record.bill_amount_vnd),
+    created_at: toIsoString(record.created_at),
+    currency: toStringOr(record.currency),
+    entry_key: toStringOr(record.entry_key),
+    manager_pin_label: toNullableString(record.manager_pin_label),
+    member_id: toStringOr(record.member_id),
+    member_profile_id:
+      typeof record.member === 'object' &&
+      record.member !== null &&
+      'id' in record.member &&
+      typeof record.member.id === 'string'
+        ? record.member.id
+        : null,
+    points_awarded: toNumber(record.points_awarded),
+    points_rate_per_100k_vnd: toNumber(record.points_rate_per_100k_vnd),
+    receipt_reference: toNullableString(record.receipt_reference),
+    source: toStringOr(record.source),
+    staff_access_id:
+      typeof record.staff_access === 'object' &&
+      record.staff_access !== null &&
+      'id' in record.staff_access &&
+      typeof record.staff_access.id === 'string'
+        ? record.staff_access.id
+        : null,
+    status: toStringOr(record.status),
     updated_at: toIsoString(record.updated_at),
   };
 }

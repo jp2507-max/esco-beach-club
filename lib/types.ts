@@ -1,11 +1,12 @@
 export type UserTier = 'STANDARD' | 'VIP' | 'OWNER';
 
-export interface Profile {
+export type StaffRole = 'staff' | 'manager';
+
+export type Profile = {
   id: string;
   full_name: string;
   bio: string;
   tier: UserTier;
-  tier_label: string;
   member_id: string;
   member_since: string;
   nights_left: number;
@@ -18,9 +19,9 @@ export interface Profile {
   has_seen_welcome_voucher: boolean;
   created_at: string;
   updated_at: string;
-}
+};
 
-export interface Event {
+export type Event = {
   id: string;
   title: string;
   description: string | null;
@@ -39,16 +40,16 @@ export interface Event {
   member_price: string | null;
   guest_price: string | null;
   created_at: string;
-}
+};
 
-export interface NewsItem {
+export type NewsItem = {
   id: string;
   title: string;
   subtitle: string;
   image: string;
   time_label: string;
   created_at: string;
-}
+};
 
 export type BookingOccasionOption = {
   id: string;
@@ -111,7 +112,7 @@ export type PrivateEventTypeOption = {
   value: string;
 };
 
-export interface Partner {
+export type Partner = {
   id: string;
   name: string;
   category: string;
@@ -121,32 +122,32 @@ export interface Partner {
   image: string;
   code: string;
   created_at: string;
-}
+};
 
-export interface Referral {
+export type Referral = {
   id: string;
   referrer_id: string;
   referred_name: string;
   referred_avatar: string | null;
   status: 'Completed' | 'Pending';
   created_at: string;
-}
+};
 
-export interface Review {
+export type Review = {
   id: string;
   rating: number;
   comment: string | null;
   created_at: string;
-}
+};
 
-export interface SavedEvent {
+export type SavedEvent = {
   id: string;
   event_id: string;
   entry_key: string;
   created_at: string;
-}
+};
 
-export interface PrivateEventInquiry {
+export type PrivateEventInquiry = {
   id: string;
   event_type: string;
   preferred_date: string;
@@ -155,9 +156,9 @@ export interface PrivateEventInquiry {
   contact_email: string | null;
   notes: string | null;
   created_at: string;
-}
+};
 
-export interface TableReservation {
+export type TableReservation = {
   id: string;
   created_at: string;
   entry_key: string;
@@ -170,9 +171,9 @@ export interface TableReservation {
   source: string;
   status: string;
   updated_at: string;
-}
+};
 
-export interface PartnerRedemption {
+export type PartnerRedemption = {
   id: string;
   created_at: string;
   entry_key: string;
@@ -180,4 +181,33 @@ export interface PartnerRedemption {
   partner_id: string;
   redemption_method: string;
   status: string;
-}
+};
+
+export type StaffAccess = {
+  id: string;
+  approval_pin: string | null;
+  created_at: string;
+  is_active: boolean;
+  role: StaffRole | null;
+  updated_at: string;
+  user_id: string | null;
+};
+
+export type LoyaltyTransaction = {
+  id: string;
+  approved_by_staff_access_id: string | null;
+  bill_amount_vnd: number;
+  created_at: string;
+  currency: string;
+  entry_key: string;
+  manager_pin_label: string | null;
+  member_id: string;
+  member_profile_id: string | null;
+  points_awarded: number;
+  points_rate_per_100k_vnd: number;
+  receipt_reference: string | null;
+  source: string;
+  staff_access_id: string | null;
+  status: string;
+  updated_at: string;
+};

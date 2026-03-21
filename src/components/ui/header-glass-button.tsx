@@ -12,7 +12,9 @@ import {
   StyleSheet,
   type ViewStyle,
 } from 'react-native';
+import { useReducedMotion } from 'react-native-reanimated';
 
+import { Colors } from '@/constants/colors';
 import { cn } from '@/src/lib/utils';
 import { Pressable, View } from '@/src/tw';
 
@@ -57,6 +59,8 @@ export function HeaderGlassButton({
 }: HeaderGlassButtonProps): React.JSX.Element {
   const canUseGlass = supportsGlassEffect();
 
+  const isReducedMotion = useReducedMotion();
+
   return (
     <Pressable
       accessibilityHint={accessibilityHint}
@@ -78,16 +82,16 @@ export function HeaderGlassButton({
       {canUseGlass ? (
         <GlassView
           glassEffectStyle={{
-            animate: true,
-            animationDuration: 0.2,
+            animate: !isReducedMotion,
+            animationDuration: isReducedMotion ? 0 : 0.2,
             style: glassStyle,
           }}
           pointerEvents="none"
           style={StyleSheet.absoluteFillObject}
           tintColor={
             variant === 'overlay'
-              ? 'rgba(0,0,0,0.18)'
-              : 'rgba(255,255,255,0.15)'
+              ? Colors.overlayTintDark
+              : Colors.overlayTintLight
           }
         />
       ) : null}

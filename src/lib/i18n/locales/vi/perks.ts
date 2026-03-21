@@ -23,6 +23,9 @@ const perks = {
     yourDiscountCode: 'MÃ GIẢM GIÁ CỦA BẠN',
     enjoyMyPerks: 'Tận hưởng ưu đãi',
     maybeLater: 'Để sau',
+    maybeLaterHint: 'Quay lại màn hình trước',
+    close: 'Đóng',
+    closeHint: 'Đóng cửa sổ chi tiết đối tác',
   },
 } as const;
 

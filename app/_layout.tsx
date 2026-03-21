@@ -246,8 +246,6 @@ function RootLayout(): React.JSX.Element {
   const navigationRef = useNavigationContainerRef();
 
   useEffect(() => {
-    if (!navigationRef) return;
-
     navigationIntegration.registerNavigationContainer(navigationRef);
   }, [navigationRef]);
 

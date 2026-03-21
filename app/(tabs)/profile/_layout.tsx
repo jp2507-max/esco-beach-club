@@ -25,6 +25,14 @@ export default function ProfileStackLayout(): React.JSX.Element {
         name="theme-preference"
         options={{ presentation: 'card', title: t('theme.title') }}
       />
+      <Stack.Screen
+        name="help-center"
+        options={{ presentation: 'card', title: t('menu.helpSupport') }}
+      />
+      <Stack.Screen
+        name="membership"
+        options={{ presentation: 'card', headerShown: false }}
+      />
     </Stack>
   );
 }

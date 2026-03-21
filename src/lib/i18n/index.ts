@@ -2,30 +2,9 @@ import { getLocales } from 'expo-localization';
 import { createInstance } from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
-import authEn from '@/src/lib/i18n/locales/en/auth';
-import bookingEn from '@/src/lib/i18n/locales/en/booking';
-import commonEn from '@/src/lib/i18n/locales/en/common';
-import eventsEn from '@/src/lib/i18n/locales/en/events';
-import homeEn from '@/src/lib/i18n/locales/en/home';
-import menuEn from '@/src/lib/i18n/locales/en/menu';
-import perksEn from '@/src/lib/i18n/locales/en/perks';
-import profileEn from '@/src/lib/i18n/locales/en/profile';
-import authKo from '@/src/lib/i18n/locales/ko/auth';
-import bookingKo from '@/src/lib/i18n/locales/ko/booking';
-import commonKo from '@/src/lib/i18n/locales/ko/common';
-import eventsKo from '@/src/lib/i18n/locales/ko/events';
-import homeKo from '@/src/lib/i18n/locales/ko/home';
-import menuKo from '@/src/lib/i18n/locales/ko/menu';
-import perksKo from '@/src/lib/i18n/locales/ko/perks';
-import profileKo from '@/src/lib/i18n/locales/ko/profile';
-import authVi from '@/src/lib/i18n/locales/vi/auth';
-import bookingVi from '@/src/lib/i18n/locales/vi/booking';
-import commonVi from '@/src/lib/i18n/locales/vi/common';
-import eventsVi from '@/src/lib/i18n/locales/vi/events';
-import homeVi from '@/src/lib/i18n/locales/vi/home';
-import menuVi from '@/src/lib/i18n/locales/vi/menu';
-import perksVi from '@/src/lib/i18n/locales/vi/perks';
-import profileVi from '@/src/lib/i18n/locales/vi/profile';
+import { english } from '@/src/lib/i18n/locales/en';
+import { korean } from '@/src/lib/i18n/locales/ko';
+import { vietnamese } from '@/src/lib/i18n/locales/vi';
 import {
   type AppLanguage,
   appLanguages,
@@ -33,56 +12,72 @@ import {
   defaultNamespace,
   namespaces,
 } from '@/src/lib/i18n/types';
+import {
+  getStoredLanguagePreference,
+  useLanguagePreferenceStore,
+} from '@/src/stores/language-preference-store';
 
 const i18n = createInstance();
 
 export const resources = {
-  en: {
-    auth: authEn,
-    common: commonEn,
-    events: eventsEn,
-    home: homeEn,
-    perks: perksEn,
-    profile: profileEn,
-    booking: bookingEn,
-    menu: menuEn,
-  },
-  ko: {
-    auth: authKo,
-    common: commonKo,
-    events: eventsKo,
-    home: homeKo,
-    perks: perksKo,
-    profile: profileKo,
-    booking: bookingKo,
-    menu: menuKo,
-  },
-  vi: {
-    auth: authVi,
-    common: commonVi,
-    events: eventsVi,
-    home: homeVi,
-    perks: perksVi,
-    profile: profileVi,
-    booking: bookingVi,
-    menu: menuVi,
-  },
+  en: english,
+  ko: korean,
+  vi: vietnamese,
 } as const;
 
 function isSupportedLanguage(language: string): language is AppLanguage {
   return appLanguages.includes(language as AppLanguage);
 }
 
+function findSupportedLanguage(
+  language: string | null | undefined
+): AppLanguage | undefined {
+  if (!language) return undefined;
+
+  const normalizedLanguage = language.toLowerCase();
+  if (isSupportedLanguage(normalizedLanguage)) return normalizedLanguage;
+
+  const languagePrefix = normalizedLanguage.split('-')[0];
+  if (languagePrefix && isSupportedLanguage(languagePrefix)) {
+    return languagePrefix;
+  }
+
+  return undefined;
+}
+
+export function resolveSupportedLanguage(
+  language: string | null | undefined
+): AppLanguage {
+  return findSupportedLanguage(language) ?? defaultLanguage;
+}
+
 function resolveDeviceLanguage(): AppLanguage {
   for (const locale of getLocales()) {
-    const languageCode = locale.languageCode?.toLowerCase();
-    if (languageCode && isSupportedLanguage(languageCode)) return languageCode;
+    const languageCode = findSupportedLanguage(locale.languageCode);
+    if (languageCode) return languageCode;
 
-    const languageTag = locale.languageTag.split('-')[0]?.toLowerCase();
-    if (languageTag && isSupportedLanguage(languageTag)) return languageTag;
+    const languageTag = findSupportedLanguage(locale.languageTag);
+    if (languageTag) return languageTag;
   }
 
   return defaultLanguage;
+}
+
+function resolveInitialLanguage(): AppLanguage {
+  const storedPreference = getStoredLanguagePreference();
+  if (storedPreference) return storedPreference;
+  return resolveDeviceLanguage();
+}
+
+export async function changeAppLanguage(language: AppLanguage): Promise<void> {
+  await i18n.changeLanguage(language);
+  useLanguagePreferenceStore.getState().setOverrideLanguage(language);
+}
+
+export async function changeAppLanguageToDevice(): Promise<void> {
+  const deviceLanguage = resolveDeviceLanguage();
+  await i18n.changeLanguage(deviceLanguage);
+  useLanguagePreferenceStore.getState().setOverrideLanguage(null);
 }
 
 if (!i18n.isInitialized) {
@@ -94,7 +89,7 @@ if (!i18n.isInitialized) {
       interpolation: {
         escapeValue: false,
       },
-      lng: resolveDeviceLanguage(),
+      lng: resolveInitialLanguage(),
       ns: namespaces,
       react: {
         useSuspense: false,
@@ -106,14 +101,6 @@ if (!i18n.isInitialized) {
     .catch((error) => {
       console.error('[i18n] Initialization failed:', error);
     });
-}
-
-declare module 'i18next' {
-  interface CustomTypeOptions {
-    defaultNS: typeof defaultNamespace;
-    resources: (typeof resources)['en'];
-    returnNull: false;
-  }
 }
 
 export default i18n;

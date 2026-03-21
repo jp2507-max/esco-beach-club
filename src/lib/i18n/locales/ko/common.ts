@@ -17,6 +17,9 @@ const common = {
     commentMax: '코멘트는 최대 500자까지 입력 가능합니다.',
     invalidDate: 'YYYY-MM-DD 형식의 유효한 날짜를 입력해 주세요.',
     invalidCode: '6자리의 인증 코드를 입력해 주세요.',
+    loyaltyManagerPin:
+      '이 금액을 승인하려면 유효한 관리자 PIN을 입력해 주세요.',
+    loyaltyMinimumSpend: '이 청구 금액은 포인트 적립 최소 금액보다 낮습니다.',
   },
   back: '뒤로',
   rateUs: {
@@ -92,6 +95,8 @@ const common = {
     title: 'Esco Life',
     description:
       'Esco Life 비치 클럽에 오신 것을 환영합니다. 회원 전용 혜택을 누려보세요.',
+    closeLabel: '닫기',
+    closeHint: '이 모달을 닫습니다',
   },
   notFound: {
     title: '이 화면은 존재하지 않습니다.',

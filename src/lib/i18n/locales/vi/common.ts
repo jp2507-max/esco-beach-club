@@ -17,6 +17,9 @@ const common = {
     commentMax: 'Nhận xét tối đa 500 ký tự.',
     invalidDate: 'Vui lòng nhập ngày hợp lệ theo định dạng YYYY-MM-DD.',
     invalidCode: 'Vui lòng nhập mã xác minh 6 chữ số.',
+    loyaltyManagerPin:
+      'Vui lòng nhập mã PIN quản lý hợp lệ để phê duyệt số tiền này.',
+    loyaltyMinimumSpend: 'Hóa đơn này chưa đạt mức chi tối thiểu để nhận điểm.',
   },
   back: 'Quay lại',
   rateUs: {
@@ -94,6 +97,8 @@ const common = {
     title: 'Esco Life',
     description:
       'Chào mừng đến Esco Life Beach Club. Tận hưởng các ưu đãi dành riêng cho thành viên.',
+    closeLabel: 'Đóng',
+    closeHint: 'Đóng hộp thoại này',
   },
   notFound: {
     title: 'Màn hình này không tồn tại.',

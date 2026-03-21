@@ -71,6 +71,10 @@ export default function SignupScreen(): React.JSX.Element {
     onCodeSubmit,
     handleUseDifferentEmail,
   } = flow;
+
+  const isAuthBusy =
+    primaryLoading || appleSignInLoading || googleSignInLoading;
+
   const buttonScale = useSharedValue(1);
 
   const buttonStyle = useAnimatedStyle(() => ({
@@ -86,10 +90,12 @@ export default function SignupScreen(): React.JSX.Element {
   }
 
   function handleApplePress(): void {
+    if (isAuthBusy) return;
     void signInWithApple().catch(() => undefined);
   }
 
   function handleGooglePress(): void {
+    if (isAuthBusy) return;
     void signInWithGoogle().catch(() => undefined);
   }
 
@@ -191,7 +197,7 @@ export default function SignupScreen(): React.JSX.Element {
               <Pressable
                 accessibilityRole="button"
                 className="mt-1 overflow-hidden rounded-2xl"
-                disabled={primaryLoading}
+                disabled={isAuthBusy}
                 onPress={isCodeStep ? onCodeSubmit : onEmailSubmit}
                 onPressIn={handlePressIn}
                 onPressOut={handlePressOut}
@@ -208,7 +214,7 @@ export default function SignupScreen(): React.JSX.Element {
                     justifyContent: 'center',
                   }}
                 >
-                  {primaryLoading ? (
+                  {isAuthBusy ? (
                     <ActivityIndicator color="#fff" />
                   ) : (
                     <Text className="text-base font-bold tracking-[0.5px] text-white">
@@ -238,6 +244,7 @@ export default function SignupScreen(): React.JSX.Element {
             {!isCodeStep ? (
               <SocialAuthButtons
                 appleLoading={appleSignInLoading}
+                disabled={isAuthBusy}
                 googleLoading={googleSignInLoading}
                 onApplePress={handleApplePress}
                 onGooglePress={handleGooglePress}

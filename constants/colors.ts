@@ -35,6 +35,8 @@ export const Colors = {
   errorDark: '#F87171',
   white: '#FFFFFF',
   black: '#000000',
+  overlayTintDark: 'rgba(0,0,0,0.18)',
+  overlayTintLight: 'rgba(255,255,255,0.15)',
 } as const;
 
 export default Colors;
