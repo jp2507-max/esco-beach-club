@@ -11,11 +11,17 @@ import {
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Linking } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
+import {
+  ProfileSubScreenHeader,
+  SurfaceCard,
+  SurfacePressableCard,
+} from '@/src/components/ui';
 import { config } from '@/src/lib/config';
 import { shadows } from '@/src/lib/styles/shadows';
-import { Pressable, ScrollView, Text, TextInput, View } from '@/src/tw';
+import { ScrollView, Text, TextInput, View } from '@/src/tw';
 import { Image } from '@/src/tw/image';
 
 type CategoryItem = {
@@ -35,6 +41,7 @@ const heroImageUri =
   'https://lh3.googleusercontent.com/aida-public/AB6AXuCqx-opCKhQj_DDor0FWDRq7YSBudye--D99fJ_y0ftf5qJ58zdFDIBjEGBLU5VuPA59YEJek427pcvd6K2oHdd55cHGKhSDbdLDvvI-87XAlxcvi3Mpi4VFxb-kSu-cAneNTHLIyoB2f09nr_AjxoZbp1mOHKNYO74nWpg566yW5neXsrFJqDNzYzZuxGrqeNQYTB-nwn2iQ5MEeL5K1L-Nab1aw0O0dWlfbqlJWmhYGuLbpgQ-lZ9hxMh3wTv3QHB8IVcDxoMCKs3';
 
 export default function HelpCenterScreen(): React.JSX.Element {
+  const insets = useSafeAreaInsets();
   const { t } = useTranslation('profile');
 
   const [expandedFaqId, setExpandedFaqId] = useState<string | null>(null);
@@ -121,10 +128,15 @@ export default function HelpCenterScreen(): React.JSX.Element {
   }
 
   return (
-    <View className="flex-1 bg-background dark:bg-dark-bg">
+    <View
+      className="flex-1 bg-background dark:bg-dark-bg"
+      style={{ paddingTop: insets.top }}
+    >
+      <ProfileSubScreenHeader title={t('menu.helpSupport')} />
+
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
-        contentContainerClassName="px-5 pb-10 pt-4"
+        contentContainerClassName="px-5 pb-10 pt-1"
         showsVerticalScrollIndicator={false}
       >
         <View
@@ -173,9 +185,9 @@ export default function HelpCenterScreen(): React.JSX.Element {
           </View>
         </View>
 
-        <Pressable
+        <SurfacePressableCard
           accessibilityRole="button"
-          className="mb-7 flex-row items-center rounded-3xl border border-border bg-white p-5 dark:border-dark-border dark:bg-dark-bg-card"
+          className="mb-7 flex-row items-center rounded-3xl p-5"
           onPress={handleEmailSupport}
           style={shadows.level2}
           testID="help-center-email-support"
@@ -194,7 +206,7 @@ export default function HelpCenterScreen(): React.JSX.Element {
               {t('helpCenter.emailSupport.description')}
             </Text>
           </View>
-        </Pressable>
+        </SurfacePressableCard>
 
         <View className="mb-8">
           <Text className="mb-4 text-[30px] font-bold tracking-tight text-text dark:text-text-primary-dark">
@@ -205,8 +217,8 @@ export default function HelpCenterScreen(): React.JSX.Element {
             {categoryItems.map((item) => {
               const IconComp = item.icon;
               return (
-                <View
-                  className="w-[48%] items-center rounded-[22px] border border-border bg-white px-4 py-6 dark:border-dark-border dark:bg-dark-bg-card"
+                <SurfaceCard
+                  className="w-[48%] items-center px-4 py-6"
                   key={item.id}
                   style={shadows.level1}
                 >
@@ -219,7 +231,7 @@ export default function HelpCenterScreen(): React.JSX.Element {
                   <Text className="text-center text-lg font-semibold leading-6 text-text dark:text-text-primary-dark">
                     {item.label}
                   </Text>
-                </View>
+                </SurfaceCard>
               );
             })}
           </View>
@@ -236,20 +248,21 @@ export default function HelpCenterScreen(): React.JSX.Element {
           </View>
 
           {filteredFaqItems.length === 0 ? (
-            <View className="rounded-[22px] border border-border bg-white px-5 py-6 dark:border-dark-border dark:bg-dark-bg-card">
+            <SurfaceCard className="px-5 py-6">
               <Text className="text-base text-text-secondary dark:text-text-secondary-dark">
                 {t('helpCenter.faq.noResults')}
               </Text>
-            </View>
+            </SurfaceCard>
           ) : (
             <View className="gap-3">
               {filteredFaqItems.map((faq) => {
                 const isExpanded = expandedFaqId === faq.id;
 
                 return (
-                  <Pressable
+                  <SurfacePressableCard
                     accessibilityRole="button"
-                    className="rounded-[22px] border border-border bg-white px-5 py-4 dark:border-dark-border dark:bg-dark-bg-card"
+                    accessibilityState={{ expanded: isExpanded }}
+                    className="px-5 py-4"
                     key={faq.id}
                     onPress={() => handleToggleFaq(faq.id)}
                     style={shadows.level1}
@@ -276,7 +289,7 @@ export default function HelpCenterScreen(): React.JSX.Element {
                         {faq.answer}
                       </Text>
                     ) : null}
-                  </Pressable>
+                  </SurfacePressableCard>
                 );
               })}
             </View>

@@ -1,9 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
 import {
   Award,
   CalendarCheck,
-  ChevronLeft,
   ChevronRight,
   CreditCard,
   Headphones,
@@ -28,8 +26,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/colors';
 import type { UserTier } from '@/lib/types';
 import { useProfileData } from '@/providers/DataProvider';
-import { Avatar } from '@/src/components/ui/avatar';
-import { rmTiming } from '@/src/lib/animations/motion';
+import { ProfileSubScreenHeader } from '@/src/components/ui';
+import { motion, rmTiming } from '@/src/lib/animations/motion';
 import { shadows } from '@/src/lib/styles/shadows';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
@@ -171,7 +169,6 @@ const MANAGE_ITEMS: ManageItem[] = [
 
 export default function MembershipScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
-  const router = useRouter();
   const { t } = useTranslation('membership');
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
@@ -184,7 +181,7 @@ export default function MembershipScreen(): React.JSX.Element {
   const contentOpacity = useSharedValue(0);
 
   useEffect(() => {
-    heroScale.set(withSpring(1, { damping: 15, stiffness: 120 }));
+    heroScale.set(withSpring(1, motion.spring.gentle));
     heroOpacity.set(withTiming(1, rmTiming(500)));
     contentOpacity.set(withTiming(1, rmTiming(700)));
     return () => {
@@ -232,33 +229,10 @@ export default function MembershipScreen(): React.JSX.Element {
       className="flex-1 bg-background dark:bg-dark-bg"
       style={{ paddingTop: insets.top }}
     >
-      {/* Header */}
-      <View className="flex-row items-center justify-between px-5 pb-3 pt-2">
-        <View className="flex-row items-center gap-3">
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => router.back()}
-            testID="membership-back"
-          >
-            <ChevronLeft
-              color={isDark ? Colors.primaryBright : Colors.primary}
-              size={26}
-            />
-          </Pressable>
-          <Text className="text-2xl font-bold tracking-tight text-primary dark:text-primary-bright">
-            {t('title')}
-          </Text>
-        </View>
-        <View
-          className="size-10 overflow-hidden rounded-full border-2"
-          style={{ borderColor: `${Colors.primary}30` }}
-        >
-          <Avatar className="h-full w-full" uri={profile?.avatar_url} />
-        </View>
-      </View>
+      <ProfileSubScreenHeader testID="membership-back" title={t('title')} />
 
       <ScrollView
-        contentContainerClassName="px-5 pb-10"
+        contentContainerClassName="px-5 pb-10 pt-1"
         showsVerticalScrollIndicator={false}
       >
         {/* ── Section 1: Tier Hero Card ─────────────────────────── */}

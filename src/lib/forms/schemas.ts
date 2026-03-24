@@ -75,6 +75,28 @@ export const privateEventSchema = z.object({
 export type PrivateEventFormValues = z.infer<typeof privateEventSchema>;
 export type PrivateEventFormInput = z.input<typeof privateEventSchema>;
 
+export const profilePhotoActions = ['keep', 'remove', 'upload'] as const;
+
+export const profilePhotoFieldSchema = z
+  .object({
+    action: z.enum(profilePhotoActions),
+    localUri: z.string().trim().nullable(),
+    mimeType: z.string().trim().nullable(),
+    previewUri: z.string().trim().nullable(),
+  })
+  .superRefine((value, context) => {
+    if (value.action === 'upload' && !value.localUri) {
+      context.addIssue({
+        code: 'custom',
+        message: v('required'),
+        path: ['localUri'],
+      });
+    }
+  });
+
+export type ProfilePhotoAction = (typeof profilePhotoActions)[number];
+export type ProfilePhotoFieldValue = z.infer<typeof profilePhotoFieldSchema>;
+
 export const editProfileSchema = z.object({
   fullName: z
     .string()
@@ -102,6 +124,7 @@ export const editProfileSchema = z.object({
     .trim()
     .min(1, { error: v('required') })
     .regex(/^[1-9]\d*$|^0$/, { error: v('number') }),
+  profilePhoto: profilePhotoFieldSchema,
 });
 
 export type EditProfileFormValues = z.infer<typeof editProfileSchema>;
@@ -135,7 +158,10 @@ export const staffLoyaltyAwardSchema = z
       .string()
       .trim()
       .min(1, { error: v('required') }),
-    receiptReference: z.string().trim().optional(),
+    receiptReference: z
+      .string()
+      .trim()
+      .min(1, { error: v('required') }),
   })
   .superRefine((value, context) => {
     const amountVnd = Number.parseInt(value.billAmountVnd, 10);

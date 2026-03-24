@@ -44,9 +44,13 @@ type QrScanPayload = {
 
 const staffErrorMessageByKey = {
   billBelowMinimumSpend: 'staff.errors.billBelowMinimumSpend',
+  invalidLoyaltyServiceResponse: 'staff.errors.invalidLoyaltyServiceResponse',
   invalidBillAmount: 'staff.errors.invalidBillAmount',
+  loyaltyServiceRejectedRequest: 'staff.errors.loyaltyServiceRejectedRequest',
+  loyaltyServiceUnavailable: 'staff.errors.loyaltyServiceUnavailable',
   managerApprovalRequired: 'staff.errors.managerApprovalRequired',
   memberNotFound: 'staff.errors.memberNotFound',
+  receiptReferenceRequired: 'staff.errors.receiptReferenceRequired',
   staffAccessRequired: 'staff.errors.staffAccessRequired',
 } as const;
 

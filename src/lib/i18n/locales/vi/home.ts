@@ -18,6 +18,7 @@ const home = {
   },
   latestNews: 'Tin mới nhất',
   welcomeBack: 'CHÀO MỪNG TRỞ LẠI',
+  welcomeBackName: 'Chào mừng trở lại, {{name}}',
   brandMark: 'ESCO LIFE',
   pointsBalance: 'Điểm tích lũy',
   pointsSuffix: '/ {{max}} điểm',

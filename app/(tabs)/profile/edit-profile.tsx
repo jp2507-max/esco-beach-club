@@ -1,20 +1,28 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
+import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { Calendar, User, Waves } from 'lucide-react-native';
 import React, { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Alert, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
-import { updateProfile } from '@/lib/api';
+import { updateProfile, uploadProfilePhotoAndGetUrl } from '@/lib/api';
 import { useProfileData } from '@/providers/DataProvider';
-import { Button } from '@/src/components/ui';
+import {
+  Button,
+  ProfileSubScreenHeader,
+  SurfaceCard,
+} from '@/src/components/ui';
+import { ControlledProfilePhotoInput } from '@/src/lib/forms/controlled-profile-photo-input';
 import { ControlledTextInput } from '@/src/lib/forms/controlled-text-input';
 import {
   type EditProfileFormValues,
   editProfileSchema,
+  type ProfilePhotoFieldValue,
 } from '@/src/lib/forms/schemas';
 import { cn } from '@/src/lib/utils';
 import {
@@ -37,7 +45,26 @@ function formatDateInput(text: string): string {
   return formatted;
 }
 
+function createProfilePhotoValue(
+  previewUri: string | null
+): ProfilePhotoFieldValue {
+  return {
+    action: 'keep',
+    localUri: null,
+    mimeType: null,
+    previewUri,
+  };
+}
+
+function isPermissionBlocked(permission: {
+  canAskAgain?: boolean;
+  granted: boolean;
+}): boolean {
+  return !permission.granted && permission.canAskAgain === false;
+}
+
 export default function EditProfileScreen(): React.JSX.Element {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { t } = useTranslation('profile');
   const { profile, userId } = useProfileData();
@@ -47,6 +74,7 @@ export default function EditProfileScreen(): React.JSX.Element {
       fullName: '',
       memberSince: '',
       nightsLeft: '0',
+      profilePhoto: createProfilePhotoValue(null),
     },
     mode: 'onBlur',
     resolver: zodResolver(editProfileSchema),
@@ -60,20 +88,134 @@ export default function EditProfileScreen(): React.JSX.Element {
         ? profile.member_since.slice(0, 10)
         : '',
       nightsLeft: String(profile?.nights_left ?? 0),
+      profilePhoto: createProfilePhotoValue(profile?.avatar_url ?? null),
     });
   }, [profile, reset]);
 
+  async function pickImageFromLibrary(
+    current: ProfilePhotoFieldValue
+  ): Promise<ProfilePhotoFieldValue | null> {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permission.granted) {
+      Alert.alert(
+        t('errors.photoPermissionTitle'),
+        isPermissionBlocked(permission)
+          ? t('errors.photoPermissionBlockedDescription')
+          : t('errors.photoLibraryPermissionDescription')
+      );
+      return null;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      mediaTypes: ['images'],
+      quality: 0.8,
+    });
+
+    if (result.canceled) return current;
+
+    const [asset] = result.assets;
+    if (!asset?.uri) {
+      Alert.alert(t('errors.photoSelectionFailed'));
+      return null;
+    }
+
+    return {
+      action: 'upload',
+      localUri: asset.uri,
+      mimeType: asset.mimeType ?? null,
+      previewUri: asset.uri,
+    };
+  }
+
+  async function capturePhoto(
+    current: ProfilePhotoFieldValue
+  ): Promise<ProfilePhotoFieldValue | null> {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+
+    if (!permission.granted) {
+      Alert.alert(
+        t('errors.photoPermissionTitle'),
+        isPermissionBlocked(permission)
+          ? t('errors.photoPermissionBlockedDescription')
+          : t('errors.photoCameraPermissionDescription')
+      );
+      return null;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      mediaTypes: ['images'],
+      quality: 0.8,
+    });
+
+    if (result.canceled) return current;
+
+    const [asset] = result.assets;
+    if (!asset?.uri) {
+      Alert.alert(t('errors.photoSelectionFailed'));
+      return null;
+    }
+
+    return {
+      action: 'upload',
+      localUri: asset.uri,
+      mimeType: asset.mimeType ?? null,
+      previewUri: asset.uri,
+    };
+  }
+
+  async function markPhotoForRemoval(
+    current: ProfilePhotoFieldValue
+  ): Promise<ProfilePhotoFieldValue | null> {
+    if (!current.previewUri) return current;
+
+    return {
+      action: 'remove',
+      localUri: null,
+      mimeType: null,
+      previewUri: null,
+    };
+  }
+
   const saveProfileMutation = useMutation({
-    mutationFn: async (values: EditProfileFormValues) =>
-      updateProfile(userId, {
+    mutationFn: async (values: EditProfileFormValues) => {
+      let avatarUrlUpdate: string | null | undefined = undefined;
+
+      if (values.profilePhoto.action === 'remove') {
+        avatarUrlUpdate = null;
+      }
+
+      if (
+        values.profilePhoto.action === 'upload' &&
+        values.profilePhoto.localUri
+      ) {
+        avatarUrlUpdate = await uploadProfilePhotoAndGetUrl({
+          localUri: values.profilePhoto.localUri,
+          mimeType: values.profilePhoto.mimeType,
+          userId,
+        });
+      }
+
+      return updateProfile(userId, {
+        avatar_url: avatarUrlUpdate,
         bio: values.bio.trim(),
         full_name: values.fullName.trim(),
         member_since: values.memberSince,
         nights_left: Number.parseInt(values.nightsLeft, 10),
-      }),
+      });
+    },
     onError: (error: unknown) => {
+      const errorKey =
+        error instanceof Error && error.message === 'profilePhotoUploadFailed'
+          ? 'errors.photoUploadFailed'
+          : 'errors.saveProfileFailed';
+
       console.error('[EditProfile] Failed to save profile:', error);
-      Alert.alert(t('errors.saveProfileFailed'));
+      Alert.alert(t(errorKey));
     },
     onSuccess: () => {
       router.back();
@@ -89,21 +231,36 @@ export default function EditProfileScreen(): React.JSX.Element {
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       className="flex-1 bg-background dark:bg-dark-bg"
+      style={{ paddingTop: insets.top }}
     >
+      <ProfileSubScreenHeader title={t('editProfile.title')} />
+
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
-        contentContainerClassName="px-5 pb-8 pt-4"
+        contentContainerClassName="px-5 pb-8 pt-1"
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <View className="mb-6 rounded-[22px] border border-border bg-white p-5 dark:border-dark-border dark:bg-dark-bg-card">
-          <Text className="text-xl font-extrabold text-text dark:text-text-primary-dark">
-            {t('editProfile.title')}
-          </Text>
-          <Text className="mt-2 text-sm leading-5 text-text-secondary dark:text-text-secondary-dark">
+        <SurfaceCard className="mb-6 p-5">
+          <Text className="text-sm leading-5 text-text-secondary dark:text-text-secondary-dark">
             {t('editProfile.subtitle')}
           </Text>
-        </View>
+        </SurfaceCard>
+
+        <ControlledProfilePhotoInput<EditProfileFormValues>
+          choosePhotoLabel={t('editProfile.profilePhoto.chooseFromLibrary')}
+          control={control}
+          helperText={t('editProfile.profilePhoto.helper')}
+          isBusy={saveProfileMutation.isPending}
+          label={t('editProfile.profilePhoto.label')}
+          name="profilePhoto"
+          onChoosePhoto={pickImageFromLibrary}
+          onRemovePhoto={markPhotoForRemoval}
+          onTakePhoto={capturePhoto}
+          removePhotoLabel={t('editProfile.profilePhoto.remove')}
+          takePhotoLabel={t('editProfile.profilePhoto.takePhoto')}
+          testIDPrefix="edit-profile-photo"
+        />
 
         <ControlledTextInput<EditProfileFormValues>
           autoCapitalize="words"

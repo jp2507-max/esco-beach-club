@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { Send, Star, X } from 'lucide-react-native';
+import { Send, Star } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -19,7 +19,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/colors';
 import { submitReview } from '@/lib/api';
 import { useUserId } from '@/providers/DataProvider';
-import { HeaderGlassButton } from '@/src/components/ui';
+import { ProfileSubScreenHeader } from '@/src/components/ui';
 import { motion, rmTiming } from '@/src/lib/animations/motion';
 import { ControlledTextInput } from '@/src/lib/forms/controlled-text-input';
 import { type ReviewFormValues, reviewSchema } from '@/src/lib/forms/schemas';
@@ -158,21 +158,11 @@ export default function RateUsScreen(): React.JSX.Element {
       className="flex-1 bg-background dark:bg-dark-bg"
       style={{ paddingTop: insets.top }}
     >
-      <View className="flex-row items-center justify-between px-4 py-3">
-        <HeaderGlassButton
-          accessibilityLabel={t('close')}
-          accessibilityHint={t('back')}
-          className="size-10"
-          onPress={() => router.back()}
-          testID="close-rate"
-        >
-          <X color={Colors.text} size={20} />
-        </HeaderGlassButton>
-        <Text className="text-base font-bold text-text dark:text-text-primary-dark">
-          {t('rateUs.title')}
-        </Text>
-        <View className="w-10" />
-      </View>
+      <ProfileSubScreenHeader
+        className="pb-2"
+        testID="close-rate"
+        title={t('rateUs.title')}
+      />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

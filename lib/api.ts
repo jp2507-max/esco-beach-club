@@ -1,27 +1,5 @@
 import { id } from '@instantdb/react-native';
 
-import { db } from '@/src/lib/instant';
-import {
-  calculatePointsForAmountVnd,
-  isManagerRole,
-  isStaffRole,
-  loyaltyConfig,
-  loyaltyTransactionSources,
-  loyaltyTransactionStatuses,
-} from '@/src/lib/loyalty';
-import {
-  type InstantRecord,
-  mapEvent,
-  mapLoyaltyTransaction,
-  mapNewsItem,
-  mapPartner,
-  mapProfile,
-  mapReferral,
-  mapSavedEvent,
-  mapStaffAccess,
-  mapTableReservation,
-} from '@/src/lib/mappers';
-
 import type {
   Event,
   LoyaltyTransaction,
@@ -33,24 +11,45 @@ import type {
   SavedEvent,
   StaffAccess,
   TableReservation,
-} from './types';
+} from '@/lib/types';
+import { db } from '@/src/lib/instant';
+import {
+  type InstantRecord,
+  mapEvent,
+  mapNewsItem,
+  mapPartner,
+  mapProfile,
+  mapReferral,
+  mapSavedEvent,
+  mapStaffAccess,
+  mapTableReservation,
+} from '@/src/lib/mappers';
 
 function nowIso(): string {
   return new Date().toISOString();
 }
 
+function getTrustedLoyaltyAwardEndpoint(): string {
+  const endpoint = process.env.EXPO_PUBLIC_TRUSTED_LOYALTY_AWARD_URL?.trim();
+  if (!endpoint) {
+    throw new Error('loyaltyServiceUnavailable');
+  }
+
+  return endpoint;
+}
+
 function normalizeMemberSince(
   value: string | null | undefined
-): string | undefined {
-  if (!value) return undefined;
+): string | null | undefined {
+  if (value === undefined || value === null) return undefined;
 
   const trimmed = value.trim();
-  if (!trimmed) return undefined;
+  if (!trimmed) return null;
 
   const parsed = new Date(trimmed);
   const isValidDate = !Number.isNaN(parsed.getTime());
 
-  if (trimmed.includes('T') || isValidDate) {
+  if (isValidDate) {
     return parsed.toISOString();
   }
 
@@ -62,8 +61,75 @@ function normalizeMemberSince(
   return undefined;
 }
 
+function buildProfilePhotoStoragePath(userId: string): string {
+  return `profile-photos/${userId}/avatar`;
+}
+
+function firstFileRecordFromQueryResult(data: unknown): InstantRecord | null {
+  if (!isRecord(data)) return null;
+
+  const files = data.$files;
+  if (!Array.isArray(files)) return null;
+
+  const [first] = files;
+  return isInstantRecord(first) ? first : null;
+}
+
+function resolveUploadedFileId(value: unknown): string | null {
+  if (!isRecord(value)) return null;
+
+  const maybeData = value.data;
+  if (!isRecord(maybeData)) return null;
+
+  return typeof maybeData.id === 'string' ? maybeData.id : null;
+}
+
+async function toFileFromLocalUri(params: {
+  fallbackFileName: string;
+  localUri: string;
+  mimeType?: string | null;
+}): Promise<File> {
+  const response = await fetch(params.localUri);
+  const blob = await response.blob();
+  const contentType = params.mimeType?.trim() || blob.type || 'image/jpeg';
+  return new File([blob], params.fallbackFileName, { type: contentType });
+}
+
+async function resolveUploadedFileUrl(params: {
+  fileId: string | null;
+  path: string;
+}): Promise<string | null> {
+  if (params.fileId) {
+    const byId = await db.queryOnce({
+      $files: {
+        $: {
+          where: { id: params.fileId },
+        },
+      },
+    });
+
+    const fileById = firstFileRecordFromQueryResult(byId.data);
+    if (fileById && typeof fileById.url === 'string') {
+      return fileById.url;
+    }
+  }
+
+  const byPath = await db.queryOnce({
+    $files: {
+      $: {
+        where: { path: params.path },
+      },
+    },
+  });
+
+  const fileByPath = firstFileRecordFromQueryResult(byPath.data);
+  return fileByPath && typeof fileByPath.url === 'string'
+    ? fileByPath.url
+    : null;
+}
+
 function buildProfileId(userId: string): string {
-  return `profile-${userId}`;
+  return userId;
 }
 
 function buildMemberId(userId: string): string {
@@ -72,6 +138,162 @@ function buildMemberId(userId: string): string {
 
 function buildReferralCode(): string {
   return `ESCO-${id().replace(/-/g, '').slice(0, 6).toUpperCase()}`;
+}
+
+function isMemberIdConflict(error: Error): boolean {
+  const message = error.message.toLowerCase();
+  return (
+    message.includes('unique') &&
+    (message.includes('member_id') || message.includes('"member_id"'))
+  );
+}
+
+function isReferralCodeConflict(error: Error): boolean {
+  const message = error.message.toLowerCase();
+  return (
+    message.includes('unique') &&
+    (message.includes('referral_code') || message.includes('"referral_code"'))
+  );
+}
+
+function isProfileIdConflict(error: Error): boolean {
+  const message = error.message.toLowerCase();
+  return (
+    message.includes('unique') &&
+    (message.includes('profiles.id') ||
+      message.includes('"profiles.id"') ||
+      message.includes('primary key'))
+  );
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function isInstantRecord(value: unknown): value is InstantRecord {
+  return isRecord(value) && typeof value.id === 'string';
+}
+
+function firstInstantRecord(value: unknown): InstantRecord | null {
+  if (Array.isArray(value)) {
+    const [first] = value;
+    return isInstantRecord(first) ? first : null;
+  }
+
+  return isInstantRecord(value) ? value : null;
+}
+
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
+}
+
+function isNullableString(value: unknown): value is string | null {
+  return typeof value === 'string' || value === null;
+}
+
+function hasStringFields(
+  value: Record<string, unknown>,
+  fields: readonly string[]
+): boolean {
+  return fields.every((field) => typeof value[field] === 'string');
+}
+
+function hasNumberFields(
+  value: Record<string, unknown>,
+  fields: readonly string[]
+): boolean {
+  return fields.every((field) => isFiniteNumber(value[field]));
+}
+
+function isProfilePayload(value: unknown): value is Profile {
+  if (!isRecord(value)) return false;
+
+  if (
+    value.tier !== 'STANDARD' &&
+    value.tier !== 'VIP' &&
+    value.tier !== 'OWNER'
+  ) {
+    return false;
+  }
+
+  if (!isNullableString(value.avatar_url)) return false;
+  if (typeof value.has_seen_welcome_voucher !== 'boolean') return false;
+
+  return (
+    hasStringFields(value, [
+      'id',
+      'full_name',
+      'bio',
+      'member_id',
+      'member_since',
+      'referral_code',
+      'created_at',
+      'updated_at',
+    ]) &&
+    hasNumberFields(value, [
+      'nights_left',
+      'points',
+      'max_points',
+      'earned',
+      'saved',
+    ])
+  );
+}
+
+function isLoyaltyTransactionPayload(
+  value: unknown
+): value is LoyaltyTransaction {
+  if (!isRecord(value)) return false;
+
+  if (!isNullableString(value.approved_by_staff_access_id)) return false;
+  if (!isNullableString(value.manager_pin_label)) return false;
+  if (!isNullableString(value.member_profile_id)) return false;
+  if (!isNullableString(value.receipt_reference)) return false;
+  if (!isNullableString(value.staff_access_id)) return false;
+
+  return (
+    hasStringFields(value, [
+      'id',
+      'created_at',
+      'currency',
+      'entry_key',
+      'member_id',
+      'source',
+      'status',
+      'updated_at',
+    ]) &&
+    hasNumberFields(value, [
+      'bill_amount_vnd',
+      'points_awarded',
+      'points_rate_per_100k_vnd',
+    ])
+  );
+}
+
+type LoyaltyAwardServiceResponse = {
+  member: Profile;
+  pointsAwarded: number;
+  transaction: LoyaltyTransaction;
+};
+
+function parseLoyaltyAwardServiceResponse(
+  value: unknown
+): LoyaltyAwardServiceResponse | null {
+  if (!isRecord(value)) return null;
+
+  const member = value.member;
+  const pointsAwarded = value.pointsAwarded;
+  const transaction = value.transaction;
+
+  if (!isProfilePayload(member)) return null;
+  if (!isFiniteNumber(pointsAwarded)) return null;
+  if (!isLoyaltyTransactionPayload(transaction)) return null;
+
+  return {
+    member,
+    pointsAwarded,
+    transaction,
+  };
 }
 
 function createProfileDefaults(
@@ -127,6 +349,30 @@ function withoutUndefined<T extends Record<string, unknown>>(
   return Object.fromEntries(entries) as Partial<T>;
 }
 
+async function fetchProfileViaUserLink(
+  userId: string
+): Promise<Profile | null> {
+  if (!userId) return null;
+
+  const { data } = await db.queryOnce({
+    $users: {
+      $: {
+        where: { id: userId },
+      },
+      profile: {},
+    },
+  });
+
+  const userRecord = firstInstantRecord(data.$users);
+  if (!userRecord) return null;
+
+  const linkedProfile = firstInstantRecord(
+    (userRecord as Record<string, unknown>).profile
+  );
+
+  return linkedProfile ? mapProfile(linkedProfile) : null;
+}
+
 export async function ensureProfile(params: {
   userId: string;
   email?: string;
@@ -136,29 +382,71 @@ export async function ensureProfile(params: {
   const current = await fetchProfile(params.userId);
   if (current) return current;
 
-  const profileId = buildProfileId(params.userId);
-  const payload = createProfileDefaults(params.userId, params.email);
+  const maxRetries = 3;
+  let attempt = 0;
 
-  try {
-    await db.transact(
-      db.tx.profiles[profileId].create(payload).link({ user: params.userId })
-    );
-  } catch (error) {
-    if (error instanceof Error) {
-      const message = error.message.toLowerCase();
-      const isConflict =
-        message.includes('unique') ||
-        message.includes('already exists') ||
-        message.includes('duplicate');
+  while (attempt < maxRetries) {
+    attempt++;
 
-      if (isConflict) {
-        return fetchProfile(params.userId);
+    const profileId = buildProfileId(params.userId);
+    const payload = createProfileDefaults(params.userId, params.email);
+
+    try {
+      await db.transact(
+        db.tx.profiles[profileId].create(payload).link({ user: params.userId })
+      );
+      return fetchProfile(params.userId);
+    } catch (error) {
+      if (!(error instanceof Error)) {
+        throw error;
       }
-    }
 
-    throw error;
+      if (isProfileIdConflict(error)) {
+        // Profile ID conflict means the profile already exists for this user
+        const existingProfile = await fetchProfile(params.userId);
+        if (existingProfile) {
+          return existingProfile;
+        }
+        // If no profile exists for this user, this is an unexpected conflict
+        throw error;
+      }
+
+      if (isMemberIdConflict(error)) {
+        // Member ID is deterministic from user ID, so retrying will not change it.
+        const existingProfile = await fetchProfile(params.userId);
+        if (existingProfile) {
+          return existingProfile;
+        }
+        throw error;
+      }
+
+      if (isReferralCodeConflict(error)) {
+        if (attempt < maxRetries) {
+          // Referral code is generated per attempt, so retry can resolve conflicts.
+          continue;
+        }
+        // Max retries reached, check if profile exists for this user
+        const existingProfile = await fetchProfile(params.userId);
+        if (existingProfile) {
+          return existingProfile;
+        }
+        // If no profile exists, this is a genuine constraint violation
+        throw error;
+      }
+
+      if (error.message.toLowerCase().includes('permission denied')) {
+        const existingProfile = await fetchProfile(params.userId);
+        if (existingProfile) {
+          return existingProfile;
+        }
+      }
+
+      // Re-throw non-unique constraint errors
+      throw error;
+    }
   }
 
+  // This should not be reached, but handle gracefully
   return fetchProfile(params.userId);
 }
 
@@ -174,7 +462,11 @@ export async function fetchProfile(userId: string): Promise<Profile | null> {
   });
 
   const profile = data.profiles[0] as InstantRecord | undefined;
-  return profile ? mapProfile(profile) : null;
+  if (profile) {
+    return mapProfile(profile);
+  }
+
+  return fetchProfileViaUserLink(userId);
 }
 
 export async function fetchProfileByMemberId(
@@ -212,34 +504,6 @@ export async function fetchStaffAccess(
   return staffAccess ? mapStaffAccess(staffAccess) : null;
 }
 
-async function fetchActiveManagerByPin(
-  managerPin: string
-): Promise<StaffAccess | null> {
-  const normalizedPin = managerPin.trim();
-  if (!normalizedPin) return null;
-
-  const { data } = await db.queryOnce({
-    staff_access: {
-      $: {
-        where: {
-          approval_pin: normalizedPin,
-          is_active: true,
-          role: 'manager',
-        },
-      },
-    },
-  });
-
-  const managerRecord = data.staff_access[0] as InstantRecord | undefined;
-  return managerRecord ? mapStaffAccess(managerRecord) : null;
-}
-
-function buildManagerPinLabel(staffAccess: StaffAccess): string {
-  return staffAccess.user_id
-    ? `mgr-${staffAccess.user_id.slice(0, 8)}`
-    : `mgr-${staffAccess.id.slice(0, 6)}`;
-}
-
 export async function awardLoyaltyTransaction(params: {
   billAmountVnd: number;
   managerPin?: string;
@@ -263,123 +527,55 @@ export async function awardLoyaltyTransaction(params: {
     throw new Error('invalidBillAmount');
   }
 
-  const pointsAwarded = calculatePointsForAmountVnd(billAmountVnd);
-  if (pointsAwarded <= 0) {
-    throw new Error('billBelowMinimumSpend');
+  if (!receiptReference) {
+    throw new Error('receiptReferenceRequired');
   }
 
-  const [member, staffAccess] = await Promise.all([
-    fetchProfileByMemberId(memberId),
-    fetchStaffAccess(params.staffUserId),
-  ]);
-
-  if (!member) {
-    throw new Error('memberNotFound');
-  }
-
-  if (
-    !staffAccess ||
-    !staffAccess.is_active ||
-    !isStaffRole(staffAccess.role)
-  ) {
-    throw new Error('staffAccessRequired');
-  }
-
-  const requiresManagerApproval = billAmountVnd > loyaltyConfig.approvalCapVnd;
-  const normalizedManagerPin = params.managerPin?.trim() ?? '';
-  const approvingManager = requiresManagerApproval
-    ? await fetchActiveManagerByPin(normalizedManagerPin)
-    : null;
-
-  if (
-    requiresManagerApproval &&
-    (!approvingManager ||
-      !approvingManager.is_active ||
-      !isManagerRole(approvingManager.role))
-  ) {
-    throw new Error('managerApprovalRequired');
-  }
-
-  const createdAt = nowIso();
-  const transactionId = id();
-  const entryKey = id();
-  const nextPoints = member.points + pointsAwarded;
-  const nextEarned = member.earned + pointsAwarded;
-
-  const createTransaction = db.tx.loyalty_transactions[transactionId]
-    .create({
-      bill_amount_vnd: billAmountVnd,
-      created_at: createdAt,
-      currency: loyaltyConfig.currency,
-      entry_key: entryKey,
-      ...(approvingManager
-        ? { manager_pin_label: buildManagerPinLabel(approvingManager) }
-        : {}),
-      member_id: member.member_id,
-      points_awarded: pointsAwarded,
-      points_rate_per_100k_vnd: loyaltyConfig.pointsAwardedPerStep,
-      ...(receiptReference ? { receipt_reference: receiptReference } : {}),
-      source: loyaltyTransactionSources.manualStaffEntry,
-      status: loyaltyTransactionStatuses.posted,
-      updated_at: createdAt,
-    })
-    .link({
-      member: member.id,
-      ...(approvingManager ? { approved_by: approvingManager.id } : {}),
-      staff_access: staffAccess.id,
-    });
-
-  const updateMemberTotals = db.tx.profiles[member.id].update({
-    earned: nextEarned,
-    points: nextPoints,
-    updated_at: createdAt,
-  });
-
-  await db.transact([createTransaction, updateMemberTotals]);
-
-  const { data } = await db.queryOnce({
-    loyalty_transactions: {
-      $: {
-        where: { id: transactionId },
+  let response: Response;
+  try {
+    response = await fetch(getTrustedLoyaltyAwardEndpoint(), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-    },
-  });
+      body: JSON.stringify({
+        billAmountVnd,
+        managerPin: params.managerPin?.trim() ?? '',
+        memberId,
+        receiptReference,
+        staffUserId: params.staffUserId,
+      }),
+    });
+  } catch {
+    throw new Error('loyaltyServiceUnavailable');
+  }
 
-  const createdTransaction = data.loyalty_transactions[0] as
-    | InstantRecord
-    | undefined;
+  let payload: unknown = null;
+  try {
+    payload = await response.json();
+  } catch {
+    payload = null;
+  }
 
-  return {
-    member: {
-      ...member,
-      earned: nextEarned,
-      points: nextPoints,
-      updated_at: createdAt,
-    },
-    pointsAwarded,
-    transaction: createdTransaction
-      ? mapLoyaltyTransaction(createdTransaction)
-      : {
-          id: transactionId,
-          approved_by_staff_access_id: approvingManager?.id ?? null,
-          bill_amount_vnd: billAmountVnd,
-          created_at: createdAt,
-          currency: loyaltyConfig.currency,
-          entry_key: entryKey,
-          manager_pin_label: approvingManager
-            ? buildManagerPinLabel(approvingManager)
-            : null,
-          member_id: member.member_id,
-          member_profile_id: member.id,
-          points_awarded: pointsAwarded,
-          points_rate_per_100k_vnd: loyaltyConfig.pointsAwardedPerStep,
-          receipt_reference: receiptReference || null,
-          source: loyaltyTransactionSources.manualStaffEntry,
-          staff_access_id: staffAccess.id,
-          status: loyaltyTransactionStatuses.posted,
-          updated_at: createdAt,
-        },
-  };
+  if (!response.ok) {
+    if (
+      payload &&
+      typeof payload === 'object' &&
+      'error' in payload &&
+      typeof payload.error === 'string'
+    ) {
+      throw new Error(payload.error);
+    }
+
+    throw new Error('loyaltyServiceRejectedRequest');
+  }
+
+  const parsedPayload = parseLoyaltyAwardServiceResponse(payload);
+  if (!parsedPayload) {
+    throw new Error('invalidLoyaltyServiceResponse');
+  }
+
+  return parsedPayload;
 }
 
 export async function updateProfile(
@@ -398,17 +594,14 @@ export async function updateProfile(
     has_seen_welcome_voucher: updates.has_seen_welcome_voucher,
     member_since: normalizeMemberSince(updates.member_since),
     nights_left: updates.nights_left,
-  }) as Partial<
-    Pick<
-      Profile,
-      | 'avatar_url'
-      | 'bio'
-      | 'full_name'
-      | 'has_seen_welcome_voucher'
-      | 'member_since'
-      | 'nights_left'
-    >
-  >;
+  }) as {
+    avatar_url?: Profile['avatar_url'];
+    bio?: Profile['bio'];
+    full_name?: Profile['full_name'];
+    has_seen_welcome_voucher?: Profile['has_seen_welcome_voucher'];
+    member_since?: string | null;
+    nights_left?: Profile['nights_left'];
+  };
 
   if (Object.keys(sanitizedUpdates).length === 0) {
     return current;
@@ -420,11 +613,62 @@ export async function updateProfile(
     })
   );
 
-  return {
-    ...current,
-    ...sanitizedUpdates,
-    id: current.id,
-  };
+  return fetchProfile(userId);
+}
+
+export async function uploadProfilePhotoAndGetUrl(params: {
+  localUri: string;
+  mimeType?: string | null;
+  userId: string;
+}): Promise<string> {
+  if (!params.userId.trim()) {
+    throw new Error('missingUserId');
+  }
+
+  if (!params.localUri.trim()) {
+    throw new Error('missingPhotoUri');
+  }
+
+  const path = buildProfilePhotoStoragePath(params.userId);
+  const file = await toFileFromLocalUri({
+    fallbackFileName: `${params.userId}-avatar.jpg`,
+    localUri: params.localUri,
+    mimeType: params.mimeType,
+  });
+
+  const uploadResult = await db.storage.uploadFile(path, file, {
+    contentType: file.type,
+  });
+  const uploadedFileId = resolveUploadedFileId(uploadResult);
+  const uploadedUrl = await resolveUploadedFileUrl({
+    fileId: uploadedFileId,
+    path,
+  });
+
+  if (!uploadedUrl) {
+    throw new Error('profilePhotoUploadFailed');
+  }
+
+  return uploadedUrl;
+}
+
+export async function updateProfilePhotoFromLocalAsset(params: {
+  localUri: string;
+  mimeType?: string | null;
+  userId: string;
+}): Promise<Profile | null> {
+  const avatarUrl = await uploadProfilePhotoAndGetUrl(params);
+  return updateProfile(params.userId, {
+    avatar_url: avatarUrl,
+  });
+}
+
+export async function removeProfilePhoto(
+  userId: string
+): Promise<Profile | null> {
+  return updateProfile(userId, {
+    avatar_url: null,
+  });
 }
 
 export async function fetchEvents(): Promise<Event[]> {
@@ -504,22 +748,49 @@ export async function saveEvent(
   const savedEventId = id();
   const entryKey = `${userId}:${eventId}`;
 
-  await db.transact(
-    db.tx.saved_events[savedEventId]
-      .create({
-        created_at: createdAt,
-        entry_key: entryKey,
-        event_id: eventId,
-      })
-      .link({ event: eventId, owner: userId })
-  );
+  const tx = db.tx.saved_events[savedEventId]
+    .create({
+      created_at: createdAt,
+      entry_key: entryKey,
+      event_id: eventId,
+    })
+    .link({ event: eventId, owner: userId });
 
-  return {
-    id: savedEventId,
-    created_at: createdAt,
-    entry_key: entryKey,
-    event_id: eventId,
-  };
+  try {
+    await db.transact(tx);
+
+    return {
+      id: savedEventId,
+      created_at: createdAt,
+      entry_key: entryKey,
+      event_id: eventId,
+    };
+  } catch (error) {
+    if (error instanceof Error) {
+      const message = error.message.toLowerCase();
+      const isConflict =
+        message.includes('unique') ||
+        message.includes('already exists') ||
+        message.includes('duplicate');
+
+      if (isConflict) {
+        const { data } = await db.queryOnce({
+          saved_events: {
+            $: {
+              where: { entry_key: entryKey },
+            },
+          },
+        });
+
+        const existing = data.saved_events[0] as InstantRecord | undefined;
+        if (existing) {
+          return mapSavedEvent(existing);
+        }
+      }
+    }
+
+    throw error;
+  }
 }
 
 export async function removeSavedEvent(savedEventId: string): Promise<void> {
@@ -613,17 +884,49 @@ export async function submitTableReservation(params: {
   }
 }
 
+function mapPartnerRedemptionFromInstantRecord(
+  current: InstantRecord,
+  fallbacks: {
+    user_id: string;
+    partner_id: string;
+    redemption_method: string;
+  }
+): PartnerRedemption {
+  return {
+    id: current.id,
+    created_at:
+      typeof current.created_at === 'string' ? current.created_at : nowIso(),
+    entry_key:
+      typeof current.entry_key === 'string'
+        ? current.entry_key
+        : `${fallbacks.user_id}:${fallbacks.partner_id}:${fallbacks.redemption_method}`,
+    partner_code:
+      typeof current.partner_code === 'string' ? current.partner_code : null,
+    partner_id:
+      typeof current.partner_id === 'string'
+        ? current.partner_id
+        : fallbacks.partner_id,
+    redemption_method:
+      typeof current.redemption_method === 'string'
+        ? current.redemption_method
+        : fallbacks.redemption_method,
+    status: typeof current.status === 'string' ? current.status : 'claimed',
+  };
+}
+
 export async function claimPartnerRedemption(params: {
   user_id: string;
   partner_id: string;
   partner_code?: string | null;
   redemption_method: string;
 }): Promise<PartnerRedemption> {
+  const entryKey = `${params.user_id}:${params.partner_id}:${params.redemption_method}`;
+
   const existing = await db.queryOnce({
     partner_redemptions: {
       $: {
         where: {
-          entry_key: `${params.user_id}:${params.partner_id}:${params.redemption_method}`,
+          entry_key: entryKey,
         },
       },
     },
@@ -633,31 +936,11 @@ export async function claimPartnerRedemption(params: {
     | InstantRecord
     | undefined;
   if (current) {
-    return {
-      id: current.id,
-      created_at:
-        typeof current.created_at === 'string' ? current.created_at : nowIso(),
-      entry_key:
-        typeof current.entry_key === 'string'
-          ? current.entry_key
-          : `${params.user_id}:${params.partner_id}:${params.redemption_method}`,
-      partner_code:
-        typeof current.partner_code === 'string' ? current.partner_code : null,
-      partner_id:
-        typeof current.partner_id === 'string'
-          ? current.partner_id
-          : params.partner_id,
-      redemption_method:
-        typeof current.redemption_method === 'string'
-          ? current.redemption_method
-          : params.redemption_method,
-      status: typeof current.status === 'string' ? current.status : 'claimed',
-    };
+    return mapPartnerRedemptionFromInstantRecord(current, params);
   }
 
   const createdAt = nowIso();
   const redemptionId = id();
-  const entryKey = `${params.user_id}:${params.partner_id}:${params.redemption_method}`;
   const payload = {
     created_at: createdAt,
     entry_key: entryKey,
@@ -667,11 +950,40 @@ export async function claimPartnerRedemption(params: {
     ...(params.partner_code ? { partner_code: params.partner_code } : {}),
   };
 
-  await db.transact(
-    db.tx.partner_redemptions[redemptionId]
-      .create(payload)
-      .link({ owner: params.user_id, partner: params.partner_id })
-  );
+  try {
+    await db.transact(
+      db.tx.partner_redemptions[redemptionId]
+        .create(payload)
+        .link({ owner: params.user_id, partner: params.partner_id })
+    );
+  } catch (error) {
+    if (error instanceof Error) {
+      const message = error.message.toLowerCase();
+      const isConflict =
+        message.includes('unique') ||
+        message.includes('already exists') ||
+        message.includes('duplicate');
+
+      if (isConflict) {
+        const { data } = await db.queryOnce({
+          partner_redemptions: {
+            $: {
+              where: { entry_key: entryKey },
+            },
+          },
+        });
+
+        const existingRow = data.partner_redemptions[0] as
+          | InstantRecord
+          | undefined;
+        if (existingRow) {
+          return mapPartnerRedemptionFromInstantRecord(existingRow, params);
+        }
+      }
+    }
+
+    throw error;
+  }
 
   return {
     id: redemptionId,

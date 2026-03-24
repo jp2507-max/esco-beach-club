@@ -22,6 +22,7 @@ const common = {
     loyaltyMinimumSpend: '이 청구 금액은 포인트 적립 최소 금액보다 낮습니다.',
   },
   back: '뒤로',
+  backHint: '이전 화면으로 돌아갑니다',
   rateUs: {
     title: '경험을 평가해 주세요',
     howWasVisit: '방문은 어떠셨나요?',

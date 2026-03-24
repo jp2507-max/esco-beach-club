@@ -86,7 +86,6 @@ export function mapProfile(record: InstantRecord): Profile {
 export function mapStaffAccess(record: InstantRecord): StaffAccess {
   return {
     id: record.id,
-    approval_pin: toNullableString(record.approval_pin),
     created_at: toIsoString(record.created_at),
     is_active: toBoolean(record.is_active),
     role:

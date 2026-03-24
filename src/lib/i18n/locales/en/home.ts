@@ -18,6 +18,7 @@ const home = {
   },
   latestNews: 'Latest News',
   welcomeBack: 'WELCOME BACK',
+  welcomeBackName: 'Welcome back, {{name}}',
   brandMark: 'ESCO LIFE',
   pointsBalance: 'Points Balance',
   pointsSuffix: '/ {{max}} pts',

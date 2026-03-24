@@ -47,7 +47,7 @@ const profile = {
   conciergeMessage: 'Hi Esco Life VIP Concierge',
   helpCenter: {
     title: 'Help Center',
-    heroTitle: 'How can we assist your stay?',
+    heroTitle: 'How can we assist with your stay?',
     searchPlaceholder: 'Search for help...',
     emailSupport: {
       title: 'Email Support',
@@ -93,6 +93,16 @@ const profile = {
     openMail: 'Could not open mail',
     openWhatsApp: 'Could not open WhatsApp',
     languageChangeFailed: 'Could not change language. Please try again.',
+    photoPermissionTitle: 'Permission required',
+    photoPermissionBlockedDescription:
+      'Photo permissions are blocked. Enable camera and photos access in your device settings.',
+    photoLibraryPermissionDescription:
+      'Please allow photo library access to choose a profile photo.',
+    photoCameraPermissionDescription:
+      'Please allow camera access to take a profile photo.',
+    photoSelectionFailed:
+      'Could not read the selected photo. Please try again.',
+    photoUploadFailed: 'Could not upload your profile photo. Please try again.',
     saveProfileFailed: 'Could not save your profile. Please try again.',
     signOutFailed: 'Could not sign out. Please try again.',
   },
@@ -106,6 +116,13 @@ const profile = {
     memberSincePlaceholder: 'YYYY-MM-DD',
     nightsLeft: 'Nights left',
     nightsLeftPlaceholder: '0',
+    profilePhoto: {
+      label: 'Profile photo',
+      helper: 'Choose how your profile photo appears to members.',
+      takePhoto: 'Take photo',
+      chooseFromLibrary: 'Choose from library',
+      remove: 'Remove photo',
+    },
     save: 'Save Changes',
     saving: 'Saving...',
   },
@@ -161,10 +178,18 @@ const profile = {
         'This bill does not meet the minimum spend required to award points.',
       generic: 'Something went wrong. Please try again.',
       invalidBillAmount: 'Enter a valid bill amount in VND.',
+      invalidLoyaltyServiceResponse:
+        'The loyalty service returned an invalid response. Please try again.',
       invalidQr: 'This QR code is not a valid Esco member code.',
+      loyaltyServiceRejectedRequest:
+        'The loyalty service rejected this request. Please review the bill details and try again.',
+      loyaltyServiceUnavailable:
+        'The loyalty service is currently unavailable. Please try again shortly.',
       managerApprovalRequired:
         'A valid manager PIN is required for transactions above the approval cap.',
       memberNotFound: 'We could not find a member for that ID.',
+      receiptReferenceRequired:
+        'A receipt or bill reference is required to award points securely.',
       staffAccessRequired:
         'This account is not allowlisted for staff point awards.',
       title: 'Unable to complete action',
@@ -192,7 +217,7 @@ const profile = {
       'Points are rounded down to full spend steps before being awarded.',
     pointsPreviewLabel: 'Points preview',
     receiptReferenceLabel: 'Receipt reference',
-    receiptReferencePlaceholder: 'Optional receipt or bill number',
+    receiptReferencePlaceholder: 'Receipt or bill number',
     scanAgain: 'Scan again',
     subtitle:
       'Scan a customer QR or enter their member ID to award points with fraud controls.',

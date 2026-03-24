@@ -2,8 +2,10 @@ import { Check, Languages, Monitor, Moon, Sun } from 'lucide-react-native';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
+import { ProfileSubScreenHeader, SurfaceCard } from '@/src/components/ui';
 import {
   changeAppLanguage,
   changeAppLanguageToDevice,
@@ -17,7 +19,7 @@ import {
   themePreferences,
   useThemePreferenceStore,
 } from '@/src/stores/theme-preference-store';
-import { Pressable, Text, View } from '@/src/tw';
+import { Pressable, ScrollView, Text, View } from '@/src/tw';
 
 const THEME_ICONS: Record<ThemePreference, typeof Monitor> = {
   dark: Moon,
@@ -43,6 +45,7 @@ const LANGUAGE_OPTION_LABEL_KEYS: Record<
 };
 
 export default function ThemePreferenceScreen(): React.JSX.Element {
+  const insets = useSafeAreaInsets();
   const { i18n, t } = useTranslation('profile');
   const preference = useThemePreferenceStore((state) => state.preference);
   const setPreference = useThemePreferenceStore((state) => state.setPreference);
@@ -74,119 +77,127 @@ export default function ThemePreferenceScreen(): React.JSX.Element {
   }
 
   return (
-    <View className="flex-1 bg-background px-5 pt-4 dark:bg-dark-bg">
-      <View className="mb-6 rounded-[22px] border border-border bg-white p-5 dark:border-dark-border dark:bg-dark-bg-card">
-        <Text className="text-xl font-extrabold text-text dark:text-text-primary-dark">
-          {t('theme.title')}
-        </Text>
-        <Text className="mt-2 text-sm leading-5 text-text-secondary dark:text-text-secondary-dark">
-          {t('theme.subtitle')}
-        </Text>
-        <Text className="mt-4 text-xs font-semibold uppercase tracking-[1px] text-text-muted dark:text-text-muted-dark">
-          {t('theme.currentSelection')}
-        </Text>
-        <Text className="mt-1 text-base font-bold text-primary dark:text-primary-bright">
-          {t(getThemePreferenceLabelKey(preference))}
-        </Text>
-      </View>
+    <View
+      className="flex-1 bg-background dark:bg-dark-bg"
+      style={{ paddingTop: insets.top }}
+    >
+      <ProfileSubScreenHeader title={t('theme.title')} />
 
-      <View className="overflow-hidden rounded-[22px] border border-border bg-white dark:border-dark-border dark:bg-dark-bg-card">
-        {themePreferences.map((option, index) => {
-          const isSelected = option === preference;
-          const Icon = THEME_ICONS[option];
-          return (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{ selected: isSelected }}
-              className={
-                index < themePreferences.length - 1
-                  ? 'flex-row items-center border-b border-border px-4 py-4 dark:border-dark-border'
-                  : 'flex-row items-center px-4 py-4'
-              }
-              key={option}
-              onPress={() => setPreference(option)}
-              testID={`theme-option-${option}`}
-            >
-              <View
-                className="mr-3 size-11 items-center justify-center rounded-[14px]"
-                style={{
-                  backgroundColor: isSelected
-                    ? `${Colors.primary}15`
-                    : `${Colors.secondary}10`,
-                }}
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerClassName="px-5 pb-8 pt-1"
+        showsVerticalScrollIndicator={false}
+      >
+        <SurfaceCard className="mb-6 p-5">
+          <Text className="text-sm leading-5 text-text-secondary dark:text-text-secondary-dark">
+            {t('theme.subtitle')}
+          </Text>
+          <Text className="mt-4 text-xs font-semibold uppercase tracking-[1px] text-text-muted dark:text-text-muted-dark">
+            {t('theme.currentSelection')}
+          </Text>
+          <Text className="mt-1 text-base font-bold text-primary dark:text-primary-bright">
+            {t(getThemePreferenceLabelKey(preference))}
+          </Text>
+        </SurfaceCard>
+
+        <SurfaceCard className="overflow-hidden">
+          {themePreferences.map((option, index) => {
+            const isSelected = option === preference;
+            const Icon = THEME_ICONS[option];
+            return (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ selected: isSelected }}
+                className={
+                  index < themePreferences.length - 1
+                    ? 'flex-row items-center border-b border-border px-4 py-4 dark:border-dark-border'
+                    : 'flex-row items-center px-4 py-4'
+                }
+                key={option}
+                onPress={() => setPreference(option)}
+                testID={`theme-option-${option}`}
               >
-                <Icon
-                  color={isSelected ? Colors.primary : Colors.secondary}
-                  size={20}
-                />
-              </View>
-              <View className="flex-1">
-                <Text className="text-[15px] font-semibold text-text dark:text-text-primary-dark">
-                  {t(getThemePreferenceLabelKey(option))}
-                </Text>
-              </View>
-              {isSelected ? <Check color={Colors.primary} size={18} /> : null}
-            </Pressable>
-          );
-        })}
-      </View>
+                <View
+                  className="mr-3 size-11 items-center justify-center rounded-[14px]"
+                  style={{
+                    backgroundColor: isSelected
+                      ? `${Colors.primary}15`
+                      : `${Colors.secondary}10`,
+                  }}
+                >
+                  <Icon
+                    color={isSelected ? Colors.primary : Colors.secondary}
+                    size={20}
+                  />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-[15px] font-semibold text-text dark:text-text-primary-dark">
+                    {t(getThemePreferenceLabelKey(option))}
+                  </Text>
+                </View>
+                {isSelected ? <Check color={Colors.primary} size={18} /> : null}
+              </Pressable>
+            );
+          })}
+        </SurfaceCard>
 
-      <View className="mb-6 mt-6 rounded-[22px] border border-border bg-white p-5 dark:border-dark-border dark:bg-dark-bg-card">
-        <View className="flex-row items-center">
-          <View
-            className="mr-3 size-11 items-center justify-center rounded-[14px]"
-            style={{ backgroundColor: `${Colors.primary}15` }}
-          >
-            <Languages color={Colors.primary} size={20} />
-          </View>
-          <View className="flex-1">
-            <Text className="text-xl font-extrabold text-text dark:text-text-primary-dark">
-              {t('theme.language.title')}
-            </Text>
-            <Text className="mt-1 text-sm leading-5 text-text-secondary dark:text-text-secondary-dark">
-              {t('theme.language.subtitle')}
-            </Text>
-          </View>
-        </View>
-
-        <Text className="mt-4 text-xs font-semibold uppercase tracking-[1px] text-text-muted dark:text-text-muted-dark">
-          {t('theme.language.currentSelection')}
-        </Text>
-        <Text className="mt-1 text-base font-bold text-primary dark:text-primary-bright">
-          {currentLanguageLabel}
-        </Text>
-      </View>
-
-      <View className="overflow-hidden rounded-[22px] border border-border bg-white dark:border-dark-border dark:bg-dark-bg-card">
-        {languageOptions.map((option, index) => {
-          const isSelected =
-            option === 'device'
-              ? overrideLanguage == null
-              : option === overrideLanguage;
-
-          return (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{ selected: isSelected }}
-              className={
-                index < languageOptions.length - 1
-                  ? 'flex-row items-center border-b border-border px-4 py-4 dark:border-dark-border'
-                  : 'flex-row items-center px-4 py-4'
-              }
-              key={option}
-              onPress={() => handleLanguageOptionPress(option)}
-              testID={`language-option-${option}`}
+        <SurfaceCard className="mb-6 mt-6 p-5">
+          <View className="flex-row items-center">
+            <View
+              className="mr-3 size-11 items-center justify-center rounded-[14px]"
+              style={{ backgroundColor: `${Colors.primary}15` }}
             >
-              <View className="flex-1">
-                <Text className="text-[15px] font-semibold text-text dark:text-text-primary-dark">
-                  {t(LANGUAGE_OPTION_LABEL_KEYS[option])}
-                </Text>
-              </View>
-              {isSelected ? <Check color={Colors.primary} size={18} /> : null}
-            </Pressable>
-          );
-        })}
-      </View>
+              <Languages color={Colors.primary} size={20} />
+            </View>
+            <View className="flex-1">
+              <Text className="text-xl font-extrabold text-text dark:text-text-primary-dark">
+                {t('theme.language.title')}
+              </Text>
+              <Text className="mt-1 text-sm leading-5 text-text-secondary dark:text-text-secondary-dark">
+                {t('theme.language.subtitle')}
+              </Text>
+            </View>
+          </View>
+
+          <Text className="mt-4 text-xs font-semibold uppercase tracking-[1px] text-text-muted dark:text-text-muted-dark">
+            {t('theme.language.currentSelection')}
+          </Text>
+          <Text className="mt-1 text-base font-bold text-primary dark:text-primary-bright">
+            {currentLanguageLabel}
+          </Text>
+        </SurfaceCard>
+
+        <SurfaceCard className="overflow-hidden">
+          {languageOptions.map((option, index) => {
+            const isSelected =
+              option === 'device'
+                ? overrideLanguage == null
+                : option === overrideLanguage;
+
+            return (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ selected: isSelected }}
+                className={
+                  index < languageOptions.length - 1
+                    ? 'flex-row items-center border-b border-border px-4 py-4 dark:border-dark-border'
+                    : 'flex-row items-center px-4 py-4'
+                }
+                key={option}
+                onPress={() => handleLanguageOptionPress(option)}
+                testID={`language-option-${option}`}
+              >
+                <View className="flex-1">
+                  <Text className="text-[15px] font-semibold text-text dark:text-text-primary-dark">
+                    {t(LANGUAGE_OPTION_LABEL_KEYS[option])}
+                  </Text>
+                </View>
+                {isSelected ? <Check color={Colors.primary} size={18} /> : null}
+              </Pressable>
+            );
+          })}
+        </SurfaceCard>
+      </ScrollView>
     </View>
   );
 }

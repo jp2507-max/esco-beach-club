@@ -1,4 +1,4 @@
-import { Apple, Chrome } from 'lucide-react-native';
+import { Apple } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useColorScheme } from 'react-native';
@@ -118,7 +118,14 @@ export function SocialAuthButtons({
       {shouldShowGoogle ? (
         <ProviderButton
           disabled={disabled}
-          icon={<Chrome color={iconColor} size={18} />}
+          icon={
+            <Text
+              className="text-[18px] font-bold"
+              style={{ color: '#4285F4' }}
+            >
+              G
+            </Text>
+          }
           indicatorColor={iconColor}
           isLoading={googleLoading}
           label={t('continueWithGoogle')}

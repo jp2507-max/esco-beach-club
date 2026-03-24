@@ -7,11 +7,11 @@ const booking = {
   confirmReservation: '예약 확인',
   reserving: '예약 중...',
   occasions: {
-    'Date Night': '데이트',
-    Birthday: '생일',
-    Business: '비즈니스',
-    Casual: '캐주얼',
-    Celebration: '축하',
+    dateNight: '데이트',
+    birthday: '생일',
+    business: '비즈니스',
+    casual: '캐주얼',
+    celebration: '축하',
   },
   days: {
     today: '오늘',

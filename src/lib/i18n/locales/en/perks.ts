@@ -7,6 +7,16 @@ const perks = {
     dining: 'Dining',
     wellness: 'Wellness',
   },
+  danangCta: {
+    badge: 'Featured city guide',
+    title: 'Da Nang 365',
+    description:
+      'Explore curated local picks, events, and must-visit spots across the city.',
+    action: 'Open Da Nang 365',
+    hint: 'Opens Da Nang 365 in your browser',
+    openFailedTitle: 'Unable to open link',
+    openFailedBody: 'Please try again in a moment.',
+  },
   partner: {
     notFound: 'Partner not found',
     unlocked: 'UNLOCKED',

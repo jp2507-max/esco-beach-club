@@ -34,11 +34,11 @@ const TIME_SLOTS = [
 ];
 
 const OCCASIONS = [
-  'Date Night',
-  'Birthday',
-  'Business',
-  'Casual',
-  'Celebration',
+  'dateNight',
+  'birthday',
+  'business',
+  'casual',
+  'celebration',
 ] as const;
 
 const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
@@ -109,6 +109,17 @@ function getOccasionTranslationKey(
   value: BookingOccasionKey
 ): BookingOccasionTranslationKey {
   return `booking:occasions.${value}`;
+}
+
+function getOccasionLabel(value: BookingOccasionKey): string {
+  const labels: Record<BookingOccasionKey, string> = {
+    dateNight: 'Date Night',
+    birthday: 'Birthday',
+    business: 'Business',
+    casual: 'Casual',
+    celebration: 'Celebration',
+  };
+  return labels[value];
 }
 
 function isBookingOccasionTranslationKeyFromApi(
@@ -182,7 +193,9 @@ export default function BookingModalScreen(): React.JSX.Element {
   const resolvedOccasions = useMemo<ResolvedOccasion[]>(() => {
     if (bookingOccasions.length === 0) {
       return OCCASIONS.map((value) => ({
-        label: t(getOccasionTranslationKey(value)),
+        label: t(getOccasionTranslationKey(value), {
+          defaultValue: getOccasionLabel(value),
+        }),
         value,
       }));
     }
@@ -195,7 +208,31 @@ export default function BookingModalScreen(): React.JSX.Element {
     }));
   }, [bookingOccasions, t]);
 
-  const canConfirm = selectedTime !== null && occasion !== null;
+  const isSelectedTimeValid = useMemo(
+    () =>
+      selectedTime !== null &&
+      resolvedTimeSlots.some(
+        (slot) => slot.time === selectedTime && slot.available
+      ),
+    [resolvedTimeSlots, selectedTime]
+  );
+
+  const isOccasionValid = useMemo(
+    () =>
+      occasion !== null &&
+      resolvedOccasions.some((option) => option.value === occasion),
+    [occasion, resolvedOccasions]
+  );
+
+  const canConfirm = isSelectedTimeValid && isOccasionValid;
+
+  useEffect(() => {
+    if (selectedTime && !isSelectedTimeValid) setSelectedTime(null);
+  }, [isSelectedTimeValid, selectedTime]);
+
+  useEffect(() => {
+    if (occasion && !isOccasionValid) setOccasion(null);
+  }, [isOccasionValid, occasion]);
 
   function getConfirmationDate(): string {
     return (

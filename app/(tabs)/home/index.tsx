@@ -39,19 +39,6 @@ import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 import { Image } from '@/src/tw/image';
 
-function getGreeting(
-  hour: number,
-  greetings: {
-    afternoon: string;
-    evening: string;
-    morning: string;
-  }
-): string {
-  if (hour < 12) return greetings.morning;
-  if (hour < 17) return greetings.afternoon;
-  return greetings.evening;
-}
-
 type QuickAction = {
   color: string;
   id: string;
@@ -249,11 +236,6 @@ export default function HomeScreen(): React.JSX.Element {
   const tierLevel = profile?.tier ?? 'STANDARD';
   const vipStatus =
     tierLevel === 'VIP' || tierLevel === 'OWNER' ? t('vipStatus') : '';
-  const greeting = getGreeting(new Date().getHours(), {
-    afternoon: t('greetings.afternoon'),
-    evening: t('greetings.evening'),
-    morning: t('greetings.morning'),
-  });
 
   const safeMaxPoints = Math.max(userMaxPoints, 1);
   const progressWidth =
@@ -389,23 +371,20 @@ export default function HomeScreen(): React.JSX.Element {
             <View className="px-5">
               <View className="flex-row items-center justify-between pb-5 pt-4">
                 <View>
-                  <Text className="mb-1 text-xs font-bold tracking-[1.5px] text-primary">
-                    {t('welcomeBack')}
-                  </Text>
                   <Text className="text-[28px] font-extrabold text-text dark:text-text-primary-dark">
-                    {greeting}
+                    {t('welcomeBackName', { name: userName })}
                   </Text>
                 </View>
                 <HeaderGlassButton
                   accessibilityLabel={t('openProfile')}
                   accessibilityHint={t('openProfileHint')}
-                  className="size-12 border-[2.5px]"
+                  className="size-12 border-white/35 dark:border-white/20"
+                  glassStyle="regular"
                   onPress={handleProfilePress}
-                  style={{ borderColor: `${Colors.primary}40` }}
                   testID="profile-avatar"
                 >
                   <Avatar
-                    className="size-10.5 rounded-full"
+                    className="size-9.5 rounded-full"
                     uri={profile?.avatar_url}
                   />
                   <View

@@ -7,11 +7,11 @@ const booking = {
   confirmReservation: 'Confirm Reservation',
   reserving: 'Reserving...',
   occasions: {
-    'Date Night': 'Date Night',
-    Birthday: 'Birthday',
-    Business: 'Business',
-    Casual: 'Casual',
-    Celebration: 'Celebration',
+    dateNight: 'Date Night',
+    birthday: 'Birthday',
+    business: 'Business',
+    casual: 'Casual',
+    celebration: 'Celebration',
   },
   days: {
     today: 'Today',

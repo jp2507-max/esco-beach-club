@@ -1,9 +1,10 @@
 import { FlashList, type ListRenderItemInfo } from '@shopify/flash-list';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useRouter } from 'expo-router';
-import { SlidersHorizontal } from 'lucide-react-native';
+import { Compass, ExternalLink } from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useWindowDimensions } from 'react-native';
+import { Alert, Linking, useWindowDimensions } from 'react-native';
 
 import { Colors } from '@/constants/colors';
 import type { Partner } from '@/lib/types';
@@ -21,6 +22,8 @@ const partnerCategories = [
   { labelKey: 'categories.wellness', value: 'Wellness' },
 ] as const;
 
+const DANANG_365_URL = 'https://danang365.com/en/home/';
+
 export default function PerksScreen(): React.JSX.Element {
   const router = useRouter();
   const { t } = useTranslation('perks');
@@ -28,26 +31,11 @@ export default function PerksScreen(): React.JSX.Element {
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const cardWidth = (width - 52) / 2;
   const listContentContainerStyle = useMemo(
-    () => ({ paddingBottom: 20, paddingHorizontal: 16, paddingTop: 8 }),
+    () => ({ paddingBottom: 20, paddingHorizontal: 16, paddingTop: 16 }),
     []
   );
 
   const filtered = useFilteredPartners(activeCategory);
-
-  const renderHeaderRight = useCallback(
-    () => (
-      <View
-        accessibilityLabel={t('filters', { defaultValue: 'Filters' })}
-        accessibilityHint={t('filtersHint', {
-          defaultValue: 'Filter partners by category',
-        })}
-        className="size-9 items-center justify-center rounded-xl border border-border bg-white dark:border-dark-border dark:bg-dark-bg-card"
-      >
-        <SlidersHorizontal size={18} color={Colors.text} />
-      </View>
-    ),
-    [t]
-  );
 
   const handlePartnerPress = useCallback(
     (partner: Partner): void => {
@@ -55,6 +43,16 @@ export default function PerksScreen(): React.JSX.Element {
     },
     [router]
   );
+
+  const handleOpenDanangGuide = useCallback((): void => {
+    Linking.openURL(DANANG_365_URL).catch((error: unknown) => {
+      console.error('[Perks] Failed to open Da Nang 365 link:', error);
+      Alert.alert(
+        t('danangCta.openFailedTitle'),
+        t('danangCta.openFailedBody')
+      );
+    });
+  }, [t]);
 
   const renderCard = useCallback(
     ({ item }: ListRenderItemInfo<Partner>): React.JSX.Element => (
@@ -103,28 +101,12 @@ export default function PerksScreen(): React.JSX.Element {
     <View className="flex-1 bg-background dark:bg-dark-bg">
       <Stack.Screen
         options={{
-          headerRight: renderHeaderRight,
+          headerLargeTitle: true,
+          headerRight: () => null,
+          headerSearchBarOptions: undefined,
           title: t('title'),
         }}
       />
-
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        contentContainerClassName="items-center gap-2 px-5"
-        horizontal={true}
-        showsHorizontalScrollIndicator={false}
-        style={{ marginBottom: 8, marginTop: 12, maxHeight: 48 }}
-      >
-        {partnerCategories.map((category) => (
-          <CategoryChip
-            key={category.value}
-            isActive={activeCategory === category.value}
-            label={t(category.labelKey)}
-            onPress={() => setActiveCategory(category.value)}
-            testID={`cat-${category.value}`}
-          />
-        ))}
-      </ScrollView>
 
       <FlashList
         contentInsetAdjustmentBehavior="automatic"
@@ -132,6 +114,77 @@ export default function PerksScreen(): React.JSX.Element {
         data={filtered}
         extraData={cardWidth}
         keyExtractor={(item) => item.id}
+        ListHeaderComponent={
+          <>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerClassName="mb-4 gap-2"
+            >
+              {partnerCategories.map((category) => (
+                <CategoryChip
+                  key={category.value}
+                  isActive={activeCategory === category.value}
+                  label={t(category.labelKey)}
+                  onPress={() => setActiveCategory(category.value)}
+                  testID={`cat-${category.value}`}
+                />
+              ))}
+            </ScrollView>
+
+            <Pressable
+              accessibilityHint={t('danangCta.hint')}
+              accessibilityLabel={t('danangCta.action')}
+              accessibilityRole="button"
+              className="mb-4 overflow-hidden rounded-[20px] border border-border bg-card dark:border-dark-border dark:bg-dark-bg-card"
+              onPress={handleOpenDanangGuide}
+              style={shadows.level2}
+              testID="danang-365-cta"
+            >
+              <LinearGradient
+                colors={['rgba(233,30,99,0.08)', 'rgba(0,150,136,0.1)']}
+                end={{ x: 1, y: 1 }}
+                start={{ x: 0, y: 0 }}
+                style={{
+                  bottom: 0,
+                  left: 0,
+                  position: 'absolute',
+                  right: 0,
+                  top: 0,
+                }}
+              />
+
+              <View className="p-4">
+                <View className="mb-2 flex-row items-center">
+                  <View className="mr-2 size-8 items-center justify-center rounded-full bg-primary/15">
+                    <Compass color={Colors.primary} size={16} />
+                  </View>
+                  <Text className="text-xs font-bold uppercase tracking-[1px] text-primary dark:text-primary-bright">
+                    {t('danangCta.badge')}
+                  </Text>
+                </View>
+
+                <Text className="text-xl font-extrabold text-text dark:text-text-primary-dark">
+                  {t('danangCta.title')}
+                </Text>
+                <Text className="mt-1.5 text-sm leading-5 text-text-secondary dark:text-text-secondary-dark">
+                  {t('danangCta.description')}
+                </Text>
+
+                <View className="mt-4 self-start flex-row items-center rounded-full bg-primary px-3.5 py-2">
+                  <Text className="text-xs font-bold text-white">
+                    {t('danangCta.action')}
+                  </Text>
+                  <ExternalLink
+                    color={Colors.white}
+                    size={14}
+                    style={{ marginLeft: 6 }}
+                  />
+                </View>
+              </View>
+            </Pressable>
+          </>
+        }
         numColumns={2}
         renderItem={renderCard}
         showsVerticalScrollIndicator={false}

@@ -23,6 +23,7 @@ const common = {
       'This bill amount is below the minimum points threshold.',
   },
   back: 'Back',
+  backHint: 'Returns to the previous screen',
   rateUs: {
     title: 'Rate Your Experience',
     howWasVisit: 'How was your visit?',

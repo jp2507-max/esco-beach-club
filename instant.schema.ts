@@ -164,7 +164,6 @@ const _schema = i.schema({
       entry_key: i.string().unique().indexed(),
     }),
     staff_access: i.entity({
-      approval_pin: i.string().optional(),
       created_at: i.date().indexed().optional(),
       is_active: i.boolean().indexed(),
       role: i.string().indexed(),

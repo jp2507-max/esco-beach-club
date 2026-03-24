@@ -184,6 +184,23 @@ type DataProviderProps = {
   children: React.ReactNode;
 };
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function isInstantRecord(value: unknown): value is InstantRecord {
+  return isRecord(value) && typeof value.id === 'string';
+}
+
+function firstInstantRecord(value: unknown): InstantRecord | null {
+  if (Array.isArray(value)) {
+    const [first] = value;
+    return isInstantRecord(first) ? first : null;
+  }
+
+  return isInstantRecord(value) ? value : null;
+}
+
 function useRequiredContext<T>(
   context: React.Context<T | null>,
   fallback: T
@@ -198,7 +215,7 @@ function useRequiredContext<T>(
 export function DataProvider({
   children,
 }: DataProviderProps): React.JSX.Element {
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const userId = user?.id ?? '';
   const [isProvisioningProfile, setIsProvisioningProfile] =
     useState<boolean>(false);
@@ -210,6 +227,18 @@ export function DataProvider({
             $: {
               where: { 'user.id': userId },
             },
+          },
+        }
+      : null
+  );
+  const profileViaUserQuery = db.useQuery(
+    userId
+      ? {
+          $users: {
+            $: {
+              where: { id: userId },
+            },
+            profile: {},
           },
         }
       : null
@@ -269,11 +298,15 @@ export function DataProvider({
   const profile = useMemo(() => {
     if (!userId) return null;
 
-    const record = profileQuery.data?.profiles?.[0] as
-      | InstantRecord
-      | undefined;
+    const directRecord = firstInstantRecord(profileQuery.data?.profiles);
+    const userRecord = firstInstantRecord(profileViaUserQuery.data?.$users);
+    const linkedRecord = firstInstantRecord(
+      (userRecord as Record<string, unknown> | null)?.profile
+    );
+    const record = directRecord ?? linkedRecord;
+
     return record ? mapProfile(record) : null;
-  }, [profileQuery.data, userId]);
+  }, [profileQuery.data, profileViaUserQuery.data, userId]);
 
   const staffAccess = useMemo(() => {
     if (!userId) return null;
@@ -385,6 +418,10 @@ export function DataProvider({
   const profileProvisionAttemptsRef = useRef<Map<string, number>>(new Map());
 
   useEffect(() => {
+    if (isAuthLoading) {
+      return;
+    }
+
     if (!userId) {
       profileProvisionAttemptsRef.current.clear();
       return;
@@ -395,7 +432,7 @@ export function DataProvider({
       return;
     }
 
-    if (profileQuery.isLoading) return;
+    if (profileQuery.isLoading || profileViaUserQuery.isLoading) return;
     if (isProvisioningProfileRef.current) return;
 
     const attemptCount = profileProvisionAttemptsRef.current.get(userId) ?? 0;
@@ -415,13 +452,26 @@ export function DataProvider({
         }
       })
       .catch((error: unknown) => {
-        console.error('[DataProvider] Failed to provision profile:', error);
+        console.error('[DataProvider] Failed to provision profile:', {
+          error,
+          isAuthLoading,
+          profileQueryLoading: profileQuery.isLoading,
+          profileViaUserQueryLoading: profileViaUserQuery.isLoading,
+          userId,
+        });
       })
       .finally(() => {
         isProvisioningProfileRef.current = false;
         setIsProvisioningProfile(false);
       });
-  }, [profile, profileQuery.isLoading, user?.email, userId]);
+  }, [
+    isAuthLoading,
+    profile,
+    profileQuery.isLoading,
+    profileViaUserQuery.isLoading,
+    user?.email,
+    userId,
+  ]);
 
   const dismissVoucher = useCallback((): void => {
     if (!profile || profile.has_seen_welcome_voucher) return;
@@ -481,7 +531,8 @@ export function DataProvider({
       );
       isTogglingSavedRef.current.add(eventId);
 
-      const previousTimeout = pendingSavedToggleTimeoutsRef.current.get(eventId);
+      const previousTimeout =
+        pendingSavedToggleTimeoutsRef.current.get(eventId);
       if (previousTimeout != null) {
         clearTimeout(previousTimeout);
       }
@@ -572,7 +623,10 @@ export function DataProvider({
       dismissVoucher,
       profile,
       profileLoading:
-        Boolean(userId) && (profileQuery.isLoading || isProvisioningProfile),
+        Boolean(userId) &&
+        (profileQuery.isLoading ||
+          profileViaUserQuery.isLoading ||
+          isProvisioningProfile),
       userId,
     }),
     [
@@ -580,6 +634,7 @@ export function DataProvider({
       isProvisioningProfile,
       profile,
       profileQuery.isLoading,
+      profileViaUserQuery.isLoading,
       userId,
     ]
   );
@@ -690,8 +745,12 @@ export function DataProvider({
 
   const staffAccessValue = useMemo(
     () => ({
-      isManagerUser: Boolean(staffAccess?.is_active && isManagerRole(staffAccess.role)),
-      isStaffUser: Boolean(staffAccess?.is_active && isStaffRole(staffAccess.role)),
+      isManagerUser: Boolean(
+        staffAccess?.is_active && isManagerRole(staffAccess.role)
+      ),
+      isStaffUser: Boolean(
+        staffAccess?.is_active && isStaffRole(staffAccess.role)
+      ),
       staffAccess,
       staffAccessLoading: Boolean(userId) && staffAccessQuery.isLoading,
     }),

@@ -22,10 +22,7 @@ import { Colors } from '@/constants/colors';
 import { AuthProvider, useAuth } from '@/providers/AuthProvider';
 import { DataProvider } from '@/providers/DataProvider';
 import { configureGoogleSignIn } from '@/src/lib/auth/social-auth';
-import {
-  applyThemePreference,
-  useThemePreferenceStore,
-} from '@/src/stores/theme-preference-store';
+import { useThemePreferenceStore } from '@/src/stores/theme-preference-store';
 import { ActivityIndicator, View } from '@/src/tw';
 
 const navigationIntegration = Sentry.reactNavigationIntegration({
@@ -182,15 +179,11 @@ function ReactQueryLifecycle(): null {
 }
 
 function AuthRuntimeBootstrap(): null {
-  const preference = useThemePreferenceStore((state) => state.preference);
+  useThemePreferenceStore((state) => state.preference);
 
   useEffect(() => {
     configureGoogleSignIn();
   }, []);
-
-  useEffect(() => {
-    applyThemePreference(preference);
-  }, [preference]);
 
   return null;
 }

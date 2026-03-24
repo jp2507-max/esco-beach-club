@@ -13,10 +13,12 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
+      "deploymentTarget": "15.6",
       "supportsTablet": false,
       "bundleIdentifier": "com.escobeachclub.app",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIDesignRequiresCompatibility": false
       }
     },
     "android": {
@@ -32,6 +34,14 @@
     "plugins": [
       "expo-router",
       "expo-image",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Esco Beach Club to access your photos so you can update your profile photo.",
+          "cameraPermission": "Allow Esco Beach Club to access your camera so you can take a profile photo.",
+          "microphonePermission": false
+        }
+      ],
       [
         "expo-camera",
         {

@@ -94,6 +94,15 @@ const profile = {
     openMail: 'Không thể mở ứng dụng email',
     openWhatsApp: 'Không thể mở WhatsApp',
     languageChangeFailed: 'Không thể thay đổi ngôn ngữ. Vui lòng thử lại.',
+    photoPermissionTitle: 'Cần cấp quyền',
+    photoPermissionBlockedDescription:
+      'Quyền truy cập ảnh đã bị chặn. Hãy bật quyền Camera và Ảnh trong phần cài đặt thiết bị.',
+    photoLibraryPermissionDescription:
+      'Vui lòng cho phép truy cập thư viện ảnh để chọn ảnh hồ sơ.',
+    photoCameraPermissionDescription:
+      'Vui lòng cho phép truy cập camera để chụp ảnh hồ sơ.',
+    photoSelectionFailed: 'Không thể đọc ảnh đã chọn. Vui lòng thử lại.',
+    photoUploadFailed: 'Không thể tải ảnh hồ sơ lên. Vui lòng thử lại.',
     saveProfileFailed: 'Không thể lưu hồ sơ của bạn. Vui lòng thử lại.',
     signOutFailed: 'Không thể đăng xuất. Vui lòng thử lại.',
   },
@@ -107,6 +116,13 @@ const profile = {
     memberSincePlaceholder: 'YYYY-MM-DD',
     nightsLeft: 'Đêm còn lại',
     nightsLeftPlaceholder: '0',
+    profilePhoto: {
+      label: 'Ảnh hồ sơ',
+      helper: 'Chọn cách ảnh hồ sơ của bạn hiển thị với thành viên.',
+      takePhoto: 'Chụp ảnh',
+      chooseFromLibrary: 'Chọn từ thư viện',
+      remove: 'Xóa ảnh',
+    },
     save: 'Lưu thay đổi',
     saving: 'Đang lưu...',
   },
@@ -162,10 +178,18 @@ const profile = {
         'Hóa đơn này chưa đạt mức chi tối thiểu để cộng điểm.',
       generic: 'Đã xảy ra lỗi. Vui lòng thử lại.',
       invalidBillAmount: 'Hãy nhập giá trị hóa đơn hợp lệ bằng VND.',
+      invalidLoyaltyServiceResponse:
+        'Dịch vụ loyalty trả về phản hồi không hợp lệ. Vui lòng thử lại.',
       invalidQr: 'Mã QR này không phải mã thành viên Esco hợp lệ.',
+      loyaltyServiceRejectedRequest:
+        'Dịch vụ loyalty đã từ chối yêu cầu này. Vui lòng kiểm tra thông tin hóa đơn và thử lại.',
+      loyaltyServiceUnavailable:
+        'Dịch vụ loyalty hiện không khả dụng. Vui lòng thử lại sau ít phút.',
       managerApprovalRequired:
         'Cần mã PIN quản lý hợp lệ cho giao dịch vượt ngưỡng phê duyệt.',
       memberNotFound: 'Không tìm thấy thành viên với mã này.',
+      receiptReferenceRequired:
+        'Cần mã tham chiếu hóa đơn để cộng điểm an toàn.',
       staffAccessRequired: 'Tài khoản này chưa được allowlist để cộng điểm.',
       title: 'Không thể hoàn tất thao tác',
     },
@@ -192,7 +216,7 @@ const profile = {
       'Điểm được làm tròn xuống theo từng bậc chi tiêu trước khi cộng.',
     pointsPreviewLabel: 'Xem trước điểm',
     receiptReferenceLabel: 'Mã tham chiếu hóa đơn',
-    receiptReferencePlaceholder: 'Tùy chọn: số bill hoặc hóa đơn',
+    receiptReferencePlaceholder: 'Số bill hoặc hóa đơn',
     scanAgain: 'Quét lại',
     subtitle:
       'Quét QR của khách hoặc nhập mã thành viên để cộng điểm với các biện pháp chống gian lận.',

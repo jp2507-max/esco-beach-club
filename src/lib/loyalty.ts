@@ -29,9 +29,12 @@ export const loyaltyConfig = {
   version: 'v1',
 } as const;
 
+/** QR payload versions accepted by `parseMemberQrValue` (`esco:member:<version>:...`). */
+export const SUPPORTED_MEMBER_QR_VERSIONS = ['v1'] as const;
+
 export type MemberQrPayload = {
   memberId: string;
-  version: string;
+  version: (typeof SUPPORTED_MEMBER_QR_VERSIONS)[number];
 };
 
 export function buildMemberQrValue(memberId: string): string {
@@ -47,12 +50,17 @@ export function parseMemberQrValue(value: string): MemberQrPayload | null {
   const [prefix, kind, version, ...rest] = trimmedValue.split(':');
   if (prefix !== 'esco' || kind !== 'member' || !version) return null;
 
+  const supportedVersion = SUPPORTED_MEMBER_QR_VERSIONS.find(
+    (v) => v === version
+  );
+  if (supportedVersion === undefined) return null;
+
   const memberId = rest.join(':').trim();
   if (!memberId) return null;
 
   return {
     memberId,
-    version,
+    version: supportedVersion,
   };
 }
 

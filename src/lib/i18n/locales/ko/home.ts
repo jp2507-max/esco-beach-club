@@ -18,6 +18,7 @@ const home = {
   },
   latestNews: '최신 소식',
   welcomeBack: '다시 오신 것을 환영합니다',
+  welcomeBackName: '{{name}}님, 다시 오신 것을 환영합니다',
   brandMark: 'ESCO LIFE',
   pointsBalance: '포인트 잔액',
   pointsSuffix: '/ {{max}} pts',

@@ -93,6 +93,17 @@ const profile = {
     openMail: '메일을 열 수 없습니다',
     openWhatsApp: 'WhatsApp을 열 수 없습니다',
     languageChangeFailed: '언어를 변경할 수 없습니다. 다시 시도해 주세요.',
+    photoPermissionTitle: '권한이 필요합니다',
+    photoPermissionBlockedDescription:
+      '사진 권한이 차단되어 있습니다. 기기 설정에서 카메라 및 사진 접근 권한을 허용해 주세요.',
+    photoLibraryPermissionDescription:
+      '프로필 사진을 선택하려면 사진 보관함 접근 권한이 필요합니다.',
+    photoCameraPermissionDescription:
+      '프로필 사진을 촬영하려면 카메라 접근 권한이 필요합니다.',
+    photoSelectionFailed:
+      '선택한 사진을 불러오지 못했습니다. 다시 시도해 주세요.',
+    photoUploadFailed:
+      '프로필 사진을 업로드할 수 없습니다. 다시 시도해 주세요.',
     saveProfileFailed: '프로필을 저장할 수 없습니다. 다시 시도해 주세요.',
     signOutFailed: '로그아웃할 수 없습니다. 다시 시도해 주세요.',
   },
@@ -106,6 +117,13 @@ const profile = {
     memberSincePlaceholder: 'YYYY-MM-DD',
     nightsLeft: '남은 숙박',
     nightsLeftPlaceholder: '0',
+    profilePhoto: {
+      label: '프로필 사진',
+      helper: '회원에게 표시될 프로필 사진을 설정하세요.',
+      takePhoto: '사진 촬영',
+      chooseFromLibrary: '앨범에서 선택',
+      remove: '사진 제거',
+    },
     save: '변경사항 저장',
     saving: '저장 중...',
   },
@@ -161,10 +179,18 @@ const profile = {
         '이 결제 금액은 포인트 적립 최소 금액에 미달합니다.',
       generic: '문제가 발생했습니다. 다시 시도해 주세요.',
       invalidBillAmount: 'VND 기준의 올바른 결제 금액을 입력해 주세요.',
+      invalidLoyaltyServiceResponse:
+        '로열티 서비스 응답이 올바르지 않습니다. 다시 시도해 주세요.',
       invalidQr: '이 QR 코드는 유효한 Esco 회원 코드가 아닙니다.',
+      loyaltyServiceRejectedRequest:
+        '로열티 서비스에서 요청을 거부했습니다. 결제 정보를 확인한 뒤 다시 시도해 주세요.',
+      loyaltyServiceUnavailable:
+        '로열티 서비스를 현재 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.',
       managerApprovalRequired:
         '승인 한도를 초과하는 거래에는 유효한 관리자 PIN이 필요합니다.',
       memberNotFound: '해당 ID의 회원을 찾을 수 없습니다.',
+      receiptReferenceRequired:
+        '보안 적립을 위해 영수증 또는 청구 참조 번호가 필요합니다.',
       staffAccessRequired:
         '이 계정은 포인트 적립용 직원 허용 목록에 등록되어 있지 않습니다.',
       title: '작업을 완료할 수 없습니다',
@@ -192,7 +218,7 @@ const profile = {
       '포인트는 적립 전에 지출 구간 단위로 내림 처리됩니다.',
     pointsPreviewLabel: '포인트 미리보기',
     receiptReferenceLabel: '영수증 참조',
-    receiptReferencePlaceholder: '선택 사항: 영수증 또는 청구 번호',
+    receiptReferencePlaceholder: '영수증 또는 청구 번호',
     scanAgain: '다시 스캔',
     subtitle:
       '고객 QR을 스캔하거나 회원 ID를 입력하여 부정 방지 장치와 함께 포인트를 적립하세요.',

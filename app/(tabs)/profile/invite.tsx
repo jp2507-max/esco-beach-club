@@ -25,6 +25,7 @@ import {
   useReferralProgress,
   useReferralsData,
 } from '@/providers/DataProvider';
+import { ProfileSubScreenHeader } from '@/src/components/ui';
 import { rmTiming } from '@/src/lib/animations/motion';
 import { shadows } from '@/src/lib/styles/shadows';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
@@ -159,15 +160,17 @@ export default function InviteScreen(): React.JSX.Element {
   }
 
   return (
-    <View className="flex-1 bg-[#FFF8F5]">
+    <View className="flex-1 bg-[#FFF8F5]" style={{ paddingTop: insets.top }}>
       <View
         className="absolute left-0 right-0 top-0 h-[250px] rounded-b-[60px]"
         style={{ backgroundColor: '#FCE4EC40' }}
       />
 
+      <ProfileSubScreenHeader className="pb-2" title={t('menu.inviteEarn')} />
+
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
-        contentContainerClassName="px-5 pt-4"
+        contentContainerClassName="px-5 pt-1"
         showsVerticalScrollIndicator={false}
       >
         <Animated.View style={fadeStyle}>

@@ -22,6 +22,7 @@ const common = {
     loyaltyMinimumSpend: 'Hóa đơn này chưa đạt mức chi tối thiểu để nhận điểm.',
   },
   back: 'Quay lại',
+  backHint: 'Quay về màn hình trước',
   rateUs: {
     title: 'Đánh giá trải nghiệm của bạn',
     howWasVisit: 'Chuyến thăm của bạn thế nào?',

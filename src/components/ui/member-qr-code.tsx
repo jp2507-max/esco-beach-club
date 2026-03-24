@@ -1,5 +1,4 @@
 import React from 'react';
-import { useColorScheme } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 
 import { Colors } from '@/constants/colors';
@@ -20,8 +19,6 @@ export function MemberQrCode({
   memberId,
   size = 180,
 }: MemberQrCodeProps): React.JSX.Element {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
   const qrValue = buildMemberQrValue(memberId);
 
   return (
@@ -35,8 +32,8 @@ export function MemberQrCode({
         <QRCode
           value={qrValue}
           size={size}
-          color={isDark ? Colors.textPrimaryDark : Colors.text}
-          backgroundColor="transparent"
+          color={Colors.text}
+          backgroundColor={Colors.white}
         />
       ) : (
         <Text className="text-center text-sm font-semibold text-text-secondary dark:text-text-secondary-dark">

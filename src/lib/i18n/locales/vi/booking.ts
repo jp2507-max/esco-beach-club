@@ -7,11 +7,11 @@ const booking = {
   confirmReservation: 'Xác nhận đặt chỗ',
   reserving: 'Đang đặt chỗ...',
   occasions: {
-    'Date Night': 'Hẹn hò',
-    Birthday: 'Sinh nhật',
-    Business: 'Công việc',
-    Casual: 'Thông thường',
-    Celebration: 'Kỷ niệm',
+    dateNight: 'Hẹn hò',
+    birthday: 'Sinh nhật',
+    business: 'Công việc',
+    casual: 'Thông thường',
+    celebration: 'Kỷ niệm',
   },
   days: {
     today: 'Hôm nay',

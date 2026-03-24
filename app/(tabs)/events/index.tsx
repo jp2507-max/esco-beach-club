@@ -1,23 +1,24 @@
 import { FlashList, type ListRenderItemInfo } from '@shopify/flash-list';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useRouter } from 'expo-router';
-import {
-  Calendar,
-  Heart,
-  PartyPopper,
-  SlidersHorizontal,
-} from 'lucide-react-native';
-import React, { useCallback, useDeferredValue, useMemo, useState } from 'react';
+import { Calendar, Heart, PartyPopper } from 'lucide-react-native';
+import React, {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Colors } from '@/constants/colors';
 import type { Event } from '@/lib/types';
+import { useEventsData, useSavedEventsData } from '@/providers/DataProvider';
 import {
-  useEventsData,
-  useProfileData,
-  useSavedEventsData,
-} from '@/providers/DataProvider';
-import { Avatar, CategoryChip } from '@/src/components/ui';
+  CategoryChip,
+  WeekStrip,
+  type WeekStripItem,
+} from '@/src/components/ui';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Image } from '@/src/tw/image';
 
@@ -29,33 +30,230 @@ const eventCategories = [
   { labelKey: 'categories.dining', value: 'Dining' },
 ] as const;
 
+type WeekDayOption = WeekStripItem & {
+  aliases: string[];
+  isToday: boolean;
+};
+
+const MONTH_TOKEN_TO_INDEX: Record<string, number> = {
+  apr: 3,
+  aug: 7,
+  dec: 11,
+  feb: 1,
+  jan: 0,
+  jul: 6,
+  jun: 5,
+  mar: 2,
+  may: 4,
+  nov: 10,
+  oct: 9,
+  sep: 8,
+};
+
+function normalizeDayToken(value: string): string {
+  return value.toLocaleLowerCase().replace(/[^\p{L}]/gu, '');
+}
+
+function startOfDay(date: Date): Date {
+  const localDay = new Date(date);
+  localDay.setHours(0, 0, 0, 0);
+  return localDay;
+}
+
+function getDayKey(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function getStartOfWeek(referenceDate: Date): Date {
+  const day = startOfDay(referenceDate);
+  const currentDay = day.getDay();
+  const offsetFromMonday = (currentDay + 6) % 7;
+  day.setDate(day.getDate() - offsetFromMonday);
+  return day;
+}
+
+function parseEventDate(dateText: string, now: Date): Date | null {
+  if (!dateText.trim()) return null;
+
+  const isoDateOnlyMatch = dateText.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (isoDateOnlyMatch) {
+    const year = Number.parseInt(isoDateOnlyMatch[1], 10);
+    const month = Number.parseInt(isoDateOnlyMatch[2], 10);
+    const day = Number.parseInt(isoDateOnlyMatch[3], 10);
+    const parsed = new Date(year, month - 1, day);
+    return Number.isNaN(parsed.getTime()) ? null : startOfDay(parsed);
+  }
+
+  const shortWeekdayMonthMatch = dateText.match(
+    /^[A-Za-z]{3,9},\s*([A-Za-z]{3,9})\.?\s+(\d{1,2})(?:,\s*(\d{4}))?$/
+  );
+  if (shortWeekdayMonthMatch) {
+    const monthToken = shortWeekdayMonthMatch[1].slice(0, 3).toLowerCase();
+    const monthIndex = MONTH_TOKEN_TO_INDEX[monthToken];
+    const day = Number.parseInt(shortWeekdayMonthMatch[2], 10);
+    const year = shortWeekdayMonthMatch[3]
+      ? Number.parseInt(shortWeekdayMonthMatch[3], 10)
+      : now.getFullYear();
+
+    if (monthIndex !== undefined) {
+      const parsed = new Date(year, monthIndex, day);
+      if (!Number.isNaN(parsed.getTime())) {
+        return startOfDay(parsed);
+      }
+    }
+  }
+
+  const hasExplicitYear = /\b\d{4}\b/.test(dateText);
+  if (!hasExplicitYear) {
+    return null;
+  }
+
+  const parsed = new Date(dateText);
+  if (Number.isNaN(parsed.getTime())) return null;
+
+  return startOfDay(parsed);
+}
+
+function buildCurrentWeek(
+  locale: string,
+  referenceDate: Date
+): WeekDayOption[] {
+  const start = getStartOfWeek(referenceDate);
+  const todayKey = getDayKey(startOfDay(referenceDate));
+  const shortFormatter = new Intl.DateTimeFormat(locale, { weekday: 'short' });
+  const fullFormatter = new Intl.DateTimeFormat(locale, {
+    day: 'numeric',
+    month: 'long',
+    weekday: 'long',
+  });
+  const englishShortFormatter = new Intl.DateTimeFormat('en-US', {
+    weekday: 'short',
+  });
+  const englishFullFormatter = new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+  });
+
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(start);
+    date.setDate(start.getDate() + index);
+
+    const key = getDayKey(date);
+    const localizedShort = shortFormatter.format(date);
+    const englishShort = englishShortFormatter.format(date);
+    const englishFull = englishFullFormatter.format(date);
+
+    return {
+      aliases: [localizedShort, englishShort, englishFull].map(
+        normalizeDayToken
+      ),
+      dateLabel: String(date.getDate()),
+      fullLabel: fullFormatter.format(date),
+      isToday: key === todayKey,
+      key,
+      shortLabel: localizedShort,
+    };
+  });
+}
+
+function resolveEventDayKey(
+  event: Event,
+  weekDays: readonly WeekDayOption[],
+  now: Date
+): string | null {
+  const parsedDate = parseEventDate(event.date, now);
+  if (parsedDate) {
+    const parsedKey = getDayKey(parsedDate);
+    if (weekDays.some((day) => day.key === parsedKey)) {
+      return parsedKey;
+    }
+  }
+
+  if (!event.day_label) return null;
+
+  const dayToken = normalizeDayToken(event.day_label);
+  if (!dayToken) return null;
+
+  const matchedWeekDay = weekDays.find((day) =>
+    day.aliases.some(
+      (alias) => dayToken.startsWith(alias) || alias.startsWith(dayToken)
+    )
+  );
+
+  return matchedWeekDay?.key ?? null;
+}
+
 export default function EventsScreen(): React.JSX.Element {
   const [activeCategory, setActiveCategory] = useState<string>('All Events');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [now, setNow] = useState<Date>(() => new Date());
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const router = useRouter();
-  const { t } = useTranslation('events');
+  const { i18n, t } = useTranslation('events');
 
   const { events } = useEventsData();
-  const { profile } = useProfileData();
   const { isEventSaved, toggleSavedEvent } = useSavedEventsData();
 
-  const renderHeaderRight = useCallback(
-    () => (
-      <View className="flex-row items-center">
-        <View className="mr-2 size-9 items-center justify-center rounded-xl border border-border bg-white dark:border-dark-border dark:bg-dark-bg-card">
-          <SlidersHorizontal size={18} color={Colors.text} />
-        </View>
-        <View className="size-10 items-center justify-center rounded-full border-[2.5px] border-primary/25">
-          <Avatar
-            className="size-8.5 rounded-full"
-            uri={profile?.avatar_url}
-            recyclingKey={`events-header-avatar-${profile?.avatar_url}`}
-          />
-        </View>
-      </View>
-    ),
-    [profile]
+  useEffect(() => {
+    function msUntilMidnight(): number {
+      const nextMidnight = new Date();
+      nextMidnight.setHours(24, 0, 0, 0);
+      return Math.max(nextMidnight.getTime() - Date.now(), 1000);
+    }
+
+    const timeout = setTimeout(() => {
+      setNow(new Date());
+    }, msUntilMidnight());
+
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [now]);
+
+  const weekDays = useMemo(
+    () => buildCurrentWeek(i18n.resolvedLanguage ?? i18n.language ?? 'en', now),
+    [i18n.language, i18n.resolvedLanguage, now]
+  );
+
+  const [selectedDayKey, setSelectedDayKey] = useState<string>(() => {
+    const today = weekDays.find((day) => day.isToday);
+    return today?.key ?? weekDays[0]?.key ?? '';
+  });
+
+  useEffect(() => {
+    setSelectedDayKey((current) => {
+      if (weekDays.some((day) => day.key === current)) {
+        return current;
+      }
+
+      const today = weekDays.find((day) => day.isToday);
+      return today?.key ?? weekDays[0]?.key ?? '';
+    });
+  }, [weekDays]);
+
+  const daysWithEvents = useMemo(() => {
+    const daySet = new Set<string>();
+    for (const event of events) {
+      const dayKey = resolveEventDayKey(event, weekDays, now);
+      if (dayKey) daySet.add(dayKey);
+    }
+    return daySet;
+  }, [events, now, weekDays]);
+
+  const selectedDay = useMemo(
+    () => weekDays.find((day) => day.key === selectedDayKey) ?? null,
+    [selectedDayKey, weekDays]
+  );
+
+  const weekStripItems = useMemo(
+    () =>
+      weekDays.map((day) => ({
+        ...day,
+        showIndicator: daysWithEvents.has(day.key),
+      })),
+    [daysWithEvents, weekDays]
   );
 
   const filteredEvents = useMemo(() => {
@@ -66,8 +264,11 @@ export default function EventsScreen(): React.JSX.Element {
       const isCategoryMatch =
         isAllCategory ||
         event.category?.toLowerCase() === activeCategory.toLowerCase();
+      const isSelectedDayMatch =
+        resolveEventDayKey(event, weekDays, now) === selectedDayKey;
 
       if (!isCategoryMatch) return false;
+      if (!isSelectedDayMatch) return false;
       if (!normalizedQuery) return true;
 
       const searchableContent = [
@@ -81,7 +282,14 @@ export default function EventsScreen(): React.JSX.Element {
 
       return searchableContent.includes(normalizedQuery);
     });
-  }, [activeCategory, deferredSearchQuery, events]);
+  }, [
+    activeCategory,
+    deferredSearchQuery,
+    events,
+    now,
+    selectedDayKey,
+    weekDays,
+  ]);
 
   const listContentContainerStyle = useMemo(
     () => ({ paddingBottom: 20, paddingHorizontal: 20, paddingTop: 16 }),
@@ -155,13 +363,7 @@ export default function EventsScreen(): React.JSX.Element {
               isEventSaved(item.id) ? t('removeSavedEvent') : t('saveEvent')
             }
             accessibilityHint={
-              isEventSaved(item.id)
-                ? t('unlikeEventHint', {
-                    defaultValue: 'Removes this event from your saved list',
-                  })
-                : t('likeEventHint', {
-                    defaultValue: 'Adds this event to your saved list',
-                  })
+              isEventSaved(item.id) ? t('unlikeEventHint') : t('likeEventHint')
             }
             accessibilityRole="button"
             className="p-1"
@@ -176,9 +378,18 @@ export default function EventsScreen(): React.JSX.Element {
               fill={isEventSaved(item.id) ? Colors.primary : 'transparent'}
             />
           </Pressable>
-          <Text className="text-lg font-bold text-text dark:text-text-primary-dark">
-            {item.price}
-          </Text>
+          <Pressable
+            accessibilityLabel={t('openEventPrice', { title: item.title })}
+            accessibilityHint={t('openEventPriceHint')}
+            accessibilityRole="button"
+            className="items-end px-1 py-0.5"
+            onPress={() => openEvent(item.id)}
+            testID={`open-event-price-${item.id}`}
+          >
+            <Text className="text-lg font-bold text-text dark:text-text-primary-dark">
+              {item.price}
+            </Text>
+          </Pressable>
         </View>
       </View>
     ),
@@ -190,7 +401,7 @@ export default function EventsScreen(): React.JSX.Element {
       <Stack.Screen
         options={{
           headerLargeTitle: true,
-          headerRight: renderHeaderRight,
+          headerRight: () => null,
           title: t('title'),
         }}
       />
@@ -209,6 +420,27 @@ export default function EventsScreen(): React.JSX.Element {
         contentContainerStyle={listContentContainerStyle}
         ListHeaderComponent={
           <>
+            <View className="mb-3 flex-row items-center justify-between">
+              <Text className="text-sm font-bold uppercase tracking-[1px] text-text-muted dark:text-text-muted-dark">
+                {t('weekStrip.title')}
+              </Text>
+              <Text className="text-sm font-semibold text-text dark:text-text-primary-dark">
+                {selectedDay?.fullLabel ?? ''}
+              </Text>
+            </View>
+
+            <WeekStrip
+              accessibilityHint={t('weekStrip.selectDayHint')}
+              getAccessibilityLabel={(item) =>
+                t('weekStrip.selectDay', {
+                  day: item.fullLabel,
+                })
+              }
+              items={weekStripItems}
+              onSelect={setSelectedDayKey}
+              selectedKey={selectedDayKey}
+            />
+
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -297,13 +529,8 @@ export default function EventsScreen(): React.JSX.Element {
                   }
                   accessibilityHint={
                     isEventSaved(featuredEvent.id)
-                      ? t('unlikeEventHint', {
-                          defaultValue:
-                            'Removes this event from your saved list',
-                        })
-                      : t('likeEventHint', {
-                          defaultValue: 'Adds this event to your saved list',
-                        })
+                      ? t('unlikeEventHint')
+                      : t('likeEventHint')
                   }
                   accessibilityRole="button"
                   className="absolute left-3.5 top-3.5 size-10 items-center justify-center rounded-full"
@@ -333,6 +560,19 @@ export default function EventsScreen(): React.JSX.Element {
         }
         ListFooterComponent={
           <>
+            {filteredEvents.length === 0 ? (
+              <View className="mb-3 rounded-2xl border border-border bg-card p-4 dark:border-dark-border dark:bg-dark-bg-card">
+                <Text className="text-base font-bold text-text dark:text-text-primary-dark">
+                  {t('noEventsForDayTitle')}
+                </Text>
+                <Text className="mt-1.5 text-sm text-text-secondary dark:text-text-secondary-dark">
+                  {t('noEventsForDayDescription', {
+                    day: selectedDay?.fullLabel ?? '',
+                  })}
+                </Text>
+              </View>
+            ) : null}
+
             <Pressable
               accessibilityRole="button"
               className="mt-2 flex-row items-center gap-3.5 rounded-2xl border border-border bg-card p-4 dark:border-dark-border dark:bg-dark-bg-card"

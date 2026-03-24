@@ -51,29 +51,41 @@ const rules = {
   $users: {
     allow: {
       view: 'auth.id == data.id',
-      create: 'false',
+      create: 'true',
       delete: 'false',
       update: 'false',
+    },
+  },
+  $files: {
+    bind: {
+      isOwnerPath:
+        "auth.id != null && data.path.startsWith('profile-photos/' + auth.id + '/')",
+    },
+    allow: {
+      view: 'isOwnerPath',
+      create: 'isOwnerPath',
+      update: 'isOwnerPath',
+      delete: 'isOwnerPath',
     },
   },
   profiles: {
     bind: {
       authHasActiveStaffRole:
         "auth.id != null && ('staff' in auth.ref('$user.staff_access.role') || 'manager' in auth.ref('$user.staff_access.role')) && true in auth.ref('$user.staff_access.is_active')",
+      isLinkedProfile:
+        "auth.id != null && data.id in auth.ref('$user.profile.id')",
       isOwner: "auth.id != null && auth.id in data.ref('user.id')",
+      isOwnerOrLinkedProfile: 'isOwner || isLinkedProfile',
       onlySafeProfileFields:
         "request.modifiedFields.all(field, field in ['full_name', 'avatar_url', 'has_seen_welcome_voucher', 'bio', 'member_since', 'nights_left'])",
-      onlyLoyaltyProfileFields:
-        "request.modifiedFields.all(field, field in ['points', 'earned', 'updated_at'])",
       canCreateOwnedProfile:
-        "auth.id != null && auth.id in data.ref('user.id') && size(data.ref('user.profile.id')) == 0",
+        "auth.id != null && auth.id in data.ref('user.id')",
     },
     allow: {
-      view: 'isOwner || authHasActiveStaffRole',
+      view: 'isOwnerOrLinkedProfile || authHasActiveStaffRole',
       create: 'canCreateOwnedProfile',
       delete: 'false',
-      update:
-        '(isOwner && onlySafeProfileFields) || (authHasActiveStaffRole && onlyLoyaltyProfileFields)',
+      update: 'isOwnerOrLinkedProfile && onlySafeProfileFields',
     },
   },
   table_reservations: {
@@ -137,8 +149,7 @@ const rules = {
     },
     allow: {
       view: 'isMemberOwner || authHasActiveStaffRole',
-      create:
-        'authHasActiveStaffRole && authMatchesStaffAccess && hasActiveStaffAccess && hasMember && isPostedStatus && usesSupportedCurrency && usesSupportedSource && validApprovalShape',
+      create: 'false',
       delete: 'false',
       update: 'false',
     },
@@ -205,9 +216,6 @@ const rules = {
       create: 'false',
       delete: 'false',
       update: 'false',
-    },
-    fields: {
-      approval_pin: 'isOwner',
     },
   },
 } satisfies InstantRules;

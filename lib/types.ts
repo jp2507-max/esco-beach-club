@@ -185,7 +185,6 @@ export type PartnerRedemption = {
 
 export type StaffAccess = {
   id: string;
-  approval_pin: string | null;
   created_at: string;
   is_active: boolean;
   role: StaffRole | null;

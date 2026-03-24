@@ -17,12 +17,27 @@ const appleClientName =
 const googleClientName =
   process.env.EXPO_PUBLIC_INSTANT_GOOGLE_CLIENT_NAME?.trim() ||
   DEFAULT_GOOGLE_CLIENT_NAME;
+const googleIosInstantClientName =
+  process.env.EXPO_PUBLIC_INSTANT_GOOGLE_IOS_CLIENT_NAME?.trim();
+const googleWebInstantClientName =
+  process.env.EXPO_PUBLIC_INSTANT_GOOGLE_WEB_CLIENT_NAME?.trim();
 const googleWebClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID?.trim();
 const googleIosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID?.trim();
 const googleIosUrlScheme =
   process.env.EXPO_PUBLIC_GOOGLE_IOS_URL_SCHEME?.trim();
 
 let hasConfiguredGoogleSignIn = false;
+
+export type GoogleSignInAudience = 'ios' | 'web';
+
+type ConfigureGoogleSignInOptions = {
+  forceReconfigure?: boolean;
+};
+
+type GetGoogleIdTokenOptions = {
+  audience?: GoogleSignInAudience;
+  forceReconfigure?: boolean;
+};
 
 export function resetGoogleSignIn(): void {
   if (!hasConfiguredGoogleSignIn) return;
@@ -56,24 +71,75 @@ function createNonce(): string {
 
 function hasGoogleSignInPlatformConfig(): boolean {
   if (Platform.OS === 'web') return false;
-  if (!googleWebClientId) return false;
 
   if (Platform.OS === 'ios') {
-    return !!googleIosUrlScheme;
+    const hasAudienceClientId = !!googleIosClientId || !!googleWebClientId;
+    return !!googleIosUrlScheme && hasAudienceClientId;
   }
 
-  return true;
+  return !!googleWebClientId;
 }
 
-export function configureGoogleSignIn(): void {
-  if (hasConfiguredGoogleSignIn || !hasGoogleSignInPlatformConfig()) {
+function getDefaultGoogleAudience(): GoogleSignInAudience {
+  if (Platform.OS === 'ios' && googleIosClientId) {
+    return 'ios';
+  }
+
+  return 'web';
+}
+
+function canConfigureGoogleAudience(audience: GoogleSignInAudience): boolean {
+  if (audience === 'ios') {
+    return Platform.OS === 'ios' && !!googleIosClientId;
+  }
+
+  return !!googleWebClientId;
+}
+
+function getGoogleInstantClientName(audience: GoogleSignInAudience): string {
+  if (audience === 'ios') {
+    return googleIosInstantClientName || googleClientName;
+  }
+
+  return googleWebInstantClientName || googleClientName;
+}
+
+export function canTryGoogleAudienceFallback(): boolean {
+  return Platform.OS === 'ios' && !!googleIosClientId && !!googleWebClientId;
+}
+
+export function configureGoogleSignIn(
+  audience: GoogleSignInAudience = getDefaultGoogleAudience(),
+  options?: ConfigureGoogleSignInOptions
+): void {
+  if (options?.forceReconfigure) {
+    resetGoogleSignIn();
+  }
+
+  if (
+    hasConfiguredGoogleSignIn ||
+    !hasGoogleSignInPlatformConfig() ||
+    !canConfigureGoogleAudience(audience)
+  ) {
     return;
   }
 
-  GoogleSignin.configure({
-    webClientId: googleWebClientId,
-    ...(googleIosClientId ? { iosClientId: googleIosClientId } : {}),
-  });
+  if (Platform.OS === 'ios') {
+    if (audience === 'ios' && googleIosClientId) {
+      GoogleSignin.configure({
+        iosClientId: googleIosClientId,
+      });
+    } else if (googleWebClientId) {
+      GoogleSignin.configure({
+        webClientId: googleWebClientId,
+        ...(googleIosClientId ? { iosClientId: googleIosClientId } : {}),
+      });
+    }
+  } else {
+    GoogleSignin.configure({
+      webClientId: googleWebClientId,
+    });
+  }
 
   hasConfiguredGoogleSignIn = true;
 }
@@ -141,12 +207,33 @@ export async function getAppleIdToken(): Promise<{
 export async function getGoogleIdToken(): Promise<{
   clientName: string;
   idToken: string;
+  audience: GoogleSignInAudience;
 }> {
+  const audience = getDefaultGoogleAudience();
+
+  return getGoogleIdTokenWithOptions({ audience });
+}
+
+export async function getGoogleIdTokenWithOptions(
+  options: GetGoogleIdTokenOptions
+): Promise<{
+  clientName: string;
+  idToken: string;
+  audience: GoogleSignInAudience;
+}> {
+  const audience = options.audience ?? getDefaultGoogleAudience();
+
   if (!hasGoogleSignInPlatformConfig()) {
     throw new Error('googleAuthNotConfigured');
   }
 
-  configureGoogleSignIn();
+  if (!canConfigureGoogleAudience(audience)) {
+    throw new Error('googleAuthNotConfigured');
+  }
+
+  configureGoogleSignIn(audience, {
+    forceReconfigure: options.forceReconfigure,
+  });
 
   try {
     if (Platform.OS === 'android') {
@@ -163,10 +250,32 @@ export async function getGoogleIdToken(): Promise<{
     }
 
     return {
-      clientName: googleClientName,
+      clientName: getGoogleInstantClientName(audience),
       idToken,
+      audience,
     };
   } catch (error: unknown) {
+    const normalizedErrorMessage =
+      error instanceof Error ? error.message.trim().toLowerCase() : null;
+
+    if (Platform.OS === 'ios' && normalizedErrorMessage) {
+      const isMissingIosUrlScheme =
+        normalizedErrorMessage.includes(
+          'missing support for the following url schemes'
+        ) ||
+        normalizedErrorMessage.includes(
+          'your app is missing support for the following url schemes'
+        );
+
+      const isMissingGoogleClientConfig =
+        normalizedErrorMessage.includes('no active configuration') &&
+        normalizedErrorMessage.includes('google');
+
+      if (isMissingIosUrlScheme || isMissingGoogleClientConfig) {
+        throw new Error('googleAuthNotConfigured');
+      }
+    }
+
     if (isErrorWithCode(error)) {
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
         throw new Error('providerSignInCanceled');

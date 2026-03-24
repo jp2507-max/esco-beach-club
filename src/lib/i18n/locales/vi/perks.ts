@@ -7,6 +7,16 @@ const perks = {
     dining: 'Ẩm thực',
     wellness: 'Chăm sóc sức khỏe',
   },
+  danangCta: {
+    badge: 'Cẩm nang thành phố nổi bật',
+    title: 'Da Nang 365',
+    description:
+      'Khám phá các địa điểm chọn lọc, sự kiện và điểm đến không thể bỏ lỡ.',
+    action: 'Mở Da Nang 365',
+    hint: 'Mở Da Nang 365 trong trình duyệt của bạn',
+    openFailedTitle: 'Không thể mở liên kết',
+    openFailedBody: 'Vui lòng thử lại sau ít phút.',
+  },
   partner: {
     notFound: 'Không tìm thấy đối tác',
     unlocked: 'ĐÃ MỞ KHÓA',

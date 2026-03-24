@@ -1,4 +1,3 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import {
   Bell,
@@ -18,7 +17,7 @@ import {
 } from 'lucide-react-native';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Linking } from 'react-native';
+import { Alert, Linking, useColorScheme } from 'react-native';
 import {
   cancelAnimation,
   useAnimatedStyle,
@@ -35,11 +34,10 @@ import {
   useProfileData,
   useSavedEventsCount,
 } from '@/providers/DataProvider';
-import { HeaderGlassButton, MemberQrCode } from '@/src/components/ui';
+import { HeaderGlassButton } from '@/src/components/ui';
 import { Avatar } from '@/src/components/ui/avatar';
 import { rmTiming } from '@/src/lib/animations/motion';
 import { config } from '@/src/lib/config';
-import { shadows } from '@/src/lib/styles/shadows';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 
@@ -122,24 +120,10 @@ export default function ProfileScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { t } = useTranslation('profile');
-  const scale = useSharedValue(0.9);
-  const fade = useSharedValue(0);
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const voucherScale = useSharedValue(0.9);
   const voucherOpacity = useSharedValue(0);
-
-  useEffect(() => {
-    scale.set(
-      withSpring(1, {
-        damping: 15,
-        stiffness: 120,
-      })
-    );
-    fade.set(withTiming(1, rmTiming(600)));
-    return () => {
-      cancelAnimation(scale);
-      cancelAnimation(fade);
-    };
-  }, [fade, scale]);
 
   const { profile, dismissVoucher } = useProfileData();
   const { welcomeOffer } = useMemberOffersData();
@@ -155,7 +139,6 @@ export default function ProfileScreen(): React.JSX.Element {
         : t('tier.standard');
   const tierLevel = profile?.tier ?? 'STANDARD';
   const bio = profile?.bio?.trim() ?? '';
-  const memberId = profile?.member_id ?? '';
   const memberSince = profile?.member_since
     ? profile.member_since.slice(0, 10)
     : '—';
@@ -274,11 +257,6 @@ export default function ProfileScreen(): React.JSX.Element {
 
   const isVIP = tierLevel === 'VIP' || tierLevel === 'OWNER';
 
-  const accessCardStyle = useAnimatedStyle(() => ({
-    opacity: fade.get(),
-    transform: [{ scale: scale.get() }],
-  }));
-
   const voucherStyle = useAnimatedStyle(() => ({
     opacity: voucherOpacity.get(),
     transform: [{ scale: voucherScale.get() }],
@@ -366,11 +344,15 @@ export default function ProfileScreen(): React.JSX.Element {
           <HeaderGlassButton
             accessibilityLabel={t('menu.comingSoon')}
             accessibilityHint={t('notifications.hint')}
-            className="size-[42px] items-center justify-center rounded-full border border-border bg-white dark:border-dark-border dark:bg-dark-bg-card"
+            className="size-10.5 border-white/35 dark:border-white/20"
+            glassStyle="regular"
             onPress={() => Alert.alert(t('menu.comingSoon'))}
             testID="notification-bell"
           >
-            <Bell color={Colors.text} size={20} />
+            <Bell
+              color={isDark ? Colors.textPrimaryDark : Colors.text}
+              size={20}
+            />
           </HeaderGlassButton>
         </View>
 
@@ -382,51 +364,6 @@ export default function ProfileScreen(): React.JSX.Element {
             </Text>
           </View>
         </View>
-
-        <Animated.View className="mb-5" style={accessCardStyle}>
-          <View
-            className="items-center rounded-[24px] bg-white p-6 dark:bg-dark-bg-card"
-            style={shadows.level3}
-          >
-            <View className="mb-5 items-center">
-              <Text className="text-2xl font-extrabold text-text dark:text-text-primary-dark">
-                {t('brandPrefix')}
-                <Text className="text-primary">{t('brandHighlight')}</Text>
-              </Text>
-              <Text className="mt-1 text-[11px] font-semibold tracking-[3px] text-text-secondary dark:text-text-secondary-dark">
-                {t('accessPass')}
-              </Text>
-            </View>
-
-            <View className="mb-5">
-              <LinearGradient
-                colors={['#E91E63', '#9C27B0', '#00BCD4']}
-                start={{ x: 0, y: 1 }}
-                end={{ x: 1, y: 0 }}
-                style={{
-                  borderRadius: 20,
-                  height: 180,
-                  padding: 5,
-                  width: 180,
-                }}
-              >
-                <MemberQrCode
-                  className="flex-1 rounded-[16px]"
-                  emptyLabel={t('memberFallback')}
-                  memberId={memberId}
-                  size={100}
-                />
-              </LinearGradient>
-            </View>
-
-            <Text className="mb-1 text-base font-bold text-text dark:text-text-primary-dark">
-              {t('scanAtTable')}
-            </Text>
-            <Text className="text-[13px] font-medium text-text-secondary dark:text-text-secondary-dark">
-              {t('refPrefix', { memberId })}
-            </Text>
-          </View>
-        </Animated.View>
 
         <View className="mb-5 flex-row">
           <View className="mr-3 flex-1">

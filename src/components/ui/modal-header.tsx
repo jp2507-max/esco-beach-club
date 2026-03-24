@@ -37,7 +37,7 @@ function CloseButton({
       accessibilityLabel={t('modal.closeLabel')}
       accessibilityHint={t('modal.closeHint')}
       className={cn(
-        'size-10 items-center justify-center rounded-full bg-sand dark:bg-dark-bg-card',
+        'size-10 items-center justify-center rounded-full',
         className
       )}
       onPress={onClose}
