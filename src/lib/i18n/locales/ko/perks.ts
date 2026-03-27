@@ -16,6 +16,46 @@ const perks = {
     openFailedTitle: '링크를 열 수 없습니다',
     openFailedBody: '잠시 후 다시 시도해 주세요.',
   },
+  history: {
+    title: '혜택 내역',
+    openAction: '내역',
+    openHint: '혜택 이용 내역 화면을 엽니다',
+    backAction: '뒤로',
+    backHint: '혜택 화면으로 돌아갑니다',
+    recentActivity: '최근 활동',
+    fullArchive: '전체 내역 보기',
+    hero: {
+      status: 'EXCLUSIVE STATUS',
+      total: '{{count}} Perks',
+      subtitle: '올해 잠금 해제됨',
+    },
+    status: {
+      used: '사용됨',
+      expired: '만료됨',
+    },
+    items: {
+      grandMarinaResort: {
+        name: 'Grand Marina Resort',
+        date: '2026년 10월 24일',
+        perk: '객실 업그레이드 20% 할인',
+      },
+      saffronSkyDining: {
+        name: 'Saffron Sky Dining',
+        date: '2026년 10월 12일',
+        perk: '테이스팅 메뉴 무료 제공',
+      },
+      azureAirways: {
+        name: 'Azure Airways',
+        date: '2026년 9월 30일',
+        perk: '라운지 이용권',
+      },
+      velvetSandsSpa: {
+        name: 'Velvet Sands Spa',
+        date: '2026년 8월 15일',
+        perk: '60분 딥티슈 세션',
+      },
+    },
+  },
   partner: {
     notFound: '파트너를 찾을 수 없습니다',
     unlocked: '잠금 해제됨',

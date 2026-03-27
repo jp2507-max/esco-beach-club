@@ -40,9 +40,60 @@ export const verifyCodeSchema = z.object({
 
 export type VerifyCodeFormValues = z.infer<typeof verifyCodeSchema>;
 
-export const signupSchema = emailAuthSchema;
+export const signupSchema = emailAuthSchema.extend({
+  dateOfBirth: z
+    .string()
+    .trim()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, { error: v('invalidDate') })
+    .refine(isValidCalendarDate, { error: v('invalidDate') }),
+  displayName: z
+    .string()
+    .trim()
+    .min(2, { error: v('required') })
+    .max(60, { error: v('profileNameMax') }),
+});
 
 export type SignupFormValues = z.infer<typeof signupSchema>;
+
+export const onboardingBasicsSchema = z.object({
+  dateOfBirth: z
+    .string()
+    .trim()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, { error: v('invalidDate') })
+    .refine(isValidCalendarDate, { error: v('invalidDate') }),
+  displayName: z
+    .string()
+    .trim()
+    .min(2, { error: v('required') })
+    .max(60, { error: v('profileNameMax') }),
+});
+
+export type OnboardingBasicsFormValues = z.infer<typeof onboardingBasicsSchema>;
+
+export const onboardingLocalIdentitySchema = z.object({
+  acceptedPrivacyPolicy: z
+    .boolean()
+    .refine((value) => value === true, { error: v('required') }),
+  acceptedTerms: z
+    .boolean()
+    .refine((value) => value === true, { error: v('required') }),
+  residencyStatus: z.enum(['citizen', 'visitor'], { error: v('required') }),
+});
+
+export type OnboardingLocalIdentityFormValues = z.infer<
+  typeof onboardingLocalIdentitySchema
+>;
+
+export const onboardingFinalDetailsSchema = z.object({
+  avatarLocalUri: z.string().trim().nullable(),
+  avatarMimeType: z.string().trim().nullable(),
+  locationServicesEnabled: z.boolean(),
+  stayInformedEnabled: z.boolean(),
+});
+
+export type OnboardingFinalDetailsFormValues = z.infer<
+  typeof onboardingFinalDetailsSchema
+>;
 
 export const privateEventSchema = z.object({
   eventType: z

@@ -13,11 +13,12 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "deploymentTarget": "15.6",
       "supportsTablet": false,
       "bundleIdentifier": "com.escobeachclub.app",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
+        "NSLocationWhenInUseUsageDescription": "Allow Esco Beach Club to access your location so we can show nearby events, partner perks, and venue updates.",
+        "NSUserNotificationUsageDescription": "Allow Esco Beach Club to send booking updates, event reminders, and exclusive member offers.",
         "UIDesignRequiresCompatibility": false
       }
     },
@@ -26,6 +27,11 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "POST_NOTIFICATIONS"
+      ],
       "package": "com.escobeachclub.app"
     },
     "web": {
@@ -48,6 +54,13 @@
           "cameraPermission": "Allow Esco Beach Club to access your camera so staff can scan member QR codes."
         }
       ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow Esco Beach Club to access your location so we can show nearby events, partner perks, and venue updates."
+        }
+      ],
+      "expo-notifications",
       "expo-localization",
       "expo-web-browser",
       [
@@ -58,7 +71,8 @@
           "organization": "canabro"
         }
       ],
-      "@react-native-google-signin/google-signin"
+      "@react-native-google-signin/google-signin",
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true,

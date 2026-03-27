@@ -10,6 +10,7 @@ import {
   HelpCircle,
   LogOut,
   PencilLine,
+  RefreshCw,
   Settings,
   Star,
   Ticket,
@@ -224,6 +225,13 @@ export default function ProfileScreen(): React.JSX.Element {
         route: '/profile/help-center',
       },
       {
+        color: '#00A884',
+        icon: RefreshCw,
+        id: 'restart-onboarding',
+        label: t('menu.restartOnboarding'),
+        route: '/onboarding-welcome',
+      },
+      {
         color: '#EF5350',
         icon: LogOut,
         id: 'log-out',
@@ -291,6 +299,23 @@ export default function ProfileScreen(): React.JSX.Element {
         console.error('Sign out error:', error);
         Alert.alert(t('errors.signOutFailed'));
       }
+      return;
+    }
+    if (item.id === 'restart-onboarding') {
+      Alert.alert(
+        t('restartOnboarding.confirmTitle'),
+        t('restartOnboarding.confirmMessage'),
+        [
+          {
+            style: 'cancel',
+            text: t('restartOnboarding.cancel'),
+          },
+          {
+            onPress: () => router.push('/onboarding-welcome' as never),
+            text: t('restartOnboarding.start'),
+          },
+        ]
+      );
       return;
     }
     if (item.route) router.push(item.route as never);

@@ -444,14 +444,17 @@ export function DataProvider({
 
     isProvisioningProfileRef.current = true;
     setIsProvisioningProfile(true);
+    let isMounted = true;
 
     void ensureProfile({ email: user?.email ?? undefined, userId })
       .then((nextProfile) => {
+        if (!isMounted) return;
         if (nextProfile) {
           profileProvisionAttemptsRef.current.delete(userId);
         }
       })
       .catch((error: unknown) => {
+        if (!isMounted) return;
         console.error('[DataProvider] Failed to provision profile:', {
           error,
           isAuthLoading,
@@ -461,9 +464,14 @@ export function DataProvider({
         });
       })
       .finally(() => {
+        if (!isMounted) return;
         isProvisioningProfileRef.current = false;
         setIsProvisioningProfile(false);
       });
+
+    return () => {
+      isMounted = false;
+    };
   }, [
     isAuthLoading,
     profile,

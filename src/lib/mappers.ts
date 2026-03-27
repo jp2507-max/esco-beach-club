@@ -7,6 +7,7 @@ import type {
   MenuCategoryContent,
   MenuItemContent,
   NewsItem,
+  OnboardingPermissionStatus,
   Partner,
   PartnerRedemption,
   PrivateEventTypeOption,
@@ -16,6 +17,7 @@ import type {
   StaffAccess,
   TableReservation,
 } from '@/lib/types';
+import { onboardingPermissionStatuses } from '@/lib/types';
 
 export type InstantRecord = {
   id: string;
@@ -50,6 +52,11 @@ export function toIsoString(value: unknown): string {
   return Number.isNaN(parsed.getTime()) ? '' : parsed.toISOString();
 }
 
+export function toNullableIsoString(value: unknown): string | null {
+  const isoValue = toIsoString(value);
+  return isoValue || null;
+}
+
 export function toTier(value: unknown): Profile['tier'] {
   const str = String(value);
   if (str === 'VIP' || str === 'OWNER' || str === 'STANDARD')
@@ -62,10 +69,28 @@ export function toReferralStatus(value: unknown): Referral['status'] {
   return str === 'Completed' ? 'Completed' : 'Pending';
 }
 
+export function toOnboardingPermissionStatus(
+  value: unknown
+): OnboardingPermissionStatus {
+  const normalized =
+    typeof value === 'string' ? value.trim().toUpperCase() : '';
+
+  if (normalized === onboardingPermissionStatuses.granted) {
+    return onboardingPermissionStatuses.granted;
+  }
+
+  if (normalized === onboardingPermissionStatuses.denied) {
+    return onboardingPermissionStatuses.denied;
+  }
+
+  return onboardingPermissionStatuses.undetermined;
+}
+
 export function mapProfile(record: InstantRecord): Profile {
   return {
     id: record.id,
     full_name: toStringOr(record.full_name),
+    date_of_birth: toNullableString(record.date_of_birth),
     bio: toStringOr(record.bio),
     tier: toTier(record.tier),
     member_id: toStringOr(record.member_id),
@@ -76,6 +101,19 @@ export function mapProfile(record: InstantRecord): Profile {
     earned: toNumber(record.earned),
     saved: toNumber(record.saved),
     avatar_url: toNullableString(record.avatar_url),
+    is_danang_citizen:
+      typeof record.is_danang_citizen === 'boolean'
+        ? record.is_danang_citizen
+        : null,
+    location_permission_status: toOnboardingPermissionStatus(
+      record.location_permission_status
+    ),
+    push_notification_permission_status: toOnboardingPermissionStatus(
+      record.push_notification_permission_status
+    ),
+    onboarding_completed_at: toNullableIsoString(
+      record.onboarding_completed_at
+    ),
     referral_code: toStringOr(record.referral_code),
     has_seen_welcome_voucher: toBoolean(record.has_seen_welcome_voucher),
     created_at: toIsoString(record.created_at),

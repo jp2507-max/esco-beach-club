@@ -96,6 +96,7 @@ const common = {
     profile: 'Profile',
   },
   close: 'Close',
+  done: 'Done',
   modal: {
     title: 'Esco Life',
     description:

@@ -17,6 +17,46 @@ const perks = {
     openFailedTitle: 'Unable to open link',
     openFailedBody: 'Please try again in a moment.',
   },
+  history: {
+    title: 'Perk History',
+    openAction: 'History',
+    openHint: 'Opens your perk history screen',
+    backAction: 'Back',
+    backHint: 'Returns to the perks screen',
+    recentActivity: 'Recent Activity',
+    fullArchive: 'View Full Archive',
+    hero: {
+      status: 'Exclusive Status',
+      total: '{{count}} Perks',
+      subtitle: 'Unlocked this year',
+    },
+    status: {
+      used: 'Used',
+      expired: 'Expired',
+    },
+    items: {
+      grandMarinaResort: {
+        name: 'Grand Marina Resort',
+        date: 'Oct 24, 2026',
+        perk: '-20% Room Upgrade',
+      },
+      saffronSkyDining: {
+        name: 'Saffron Sky Dining',
+        date: 'Oct 12, 2026',
+        perk: 'Complimentary Tasting Menu',
+      },
+      azureAirways: {
+        name: 'Azure Airways',
+        date: 'Sep 30, 2026',
+        perk: 'Lounge Access Pass',
+      },
+      velvetSandsSpa: {
+        name: 'Velvet Sands Spa',
+        date: 'Aug 15, 2026',
+        perk: '60m Deep Tissue Session',
+      },
+    },
+  },
   partner: {
     notFound: 'Partner not found',
     unlocked: 'UNLOCKED',

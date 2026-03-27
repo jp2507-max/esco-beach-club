@@ -16,7 +16,15 @@ const profile = {
     savedEvents: 'Sự kiện đã lưu',
     settings: 'Cài đặt',
     helpSupport: 'Trợ giúp & hỗ trợ',
+    restartOnboarding: 'Bắt đầu lại onboarding',
     logOut: 'Đăng xuất',
+  },
+  restartOnboarding: {
+    confirmTitle: 'Bắt đầu lại onboarding?',
+    confirmMessage:
+      'Chúng tôi sẽ đưa bạn quay lại luồng onboarding để cập nhật các lựa chọn thiết lập.',
+    cancel: 'Hủy',
+    start: 'Bắt đầu',
   },
   notifications: {
     title: 'Thông báo',

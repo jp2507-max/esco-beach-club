@@ -64,6 +64,7 @@ export default function StaffScanScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { t } = useTranslation('profile');
+  const { t: tCommon } = useTranslation('common');
   const { isStaffUser, staffAccess, staffAccessLoading } = useStaffAccessData();
   const [permission, requestPermission] = useCameraPermissions();
   const [cameraActive, setCameraActive] = useState<boolean>(true);
@@ -147,6 +148,7 @@ export default function StaffScanScreen(): React.JSX.Element {
       const payload = parseMemberQrValue(data);
       if (!payload) {
         setCameraActive(false);
+        isScannerLockedRef.current = false;
         Alert.alert(t('staff.invalidQrTitle'), t('staff.errors.invalidQr'));
         return;
       }
@@ -233,7 +235,11 @@ export default function StaffScanScreen(): React.JSX.Element {
         style={{ paddingTop: insets.top }}
       >
         <View className="mb-4 flex-row items-center justify-between pt-3">
-          <Pressable accessibilityRole="button" onPress={handleBack}>
+          <Pressable
+            accessibilityLabel={tCommon('back')}
+            accessibilityRole="button"
+            onPress={handleBack}
+          >
             <ArrowLeft color={Colors.text} size={22} />
           </Pressable>
         </View>
@@ -267,7 +273,11 @@ export default function StaffScanScreen(): React.JSX.Element {
         showsVerticalScrollIndicator={false}
       >
         <View className="mb-4 flex-row items-center justify-between">
-          <Pressable accessibilityRole="button" onPress={handleBack}>
+          <Pressable
+            accessibilityLabel={tCommon('back')}
+            accessibilityRole="button"
+            onPress={handleBack}
+          >
             <ArrowLeft color={Colors.text} size={22} />
           </Pressable>
           <View className="items-end">

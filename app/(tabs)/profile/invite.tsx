@@ -160,7 +160,7 @@ export default function InviteScreen(): React.JSX.Element {
   }
 
   return (
-    <View className="flex-1 bg-[#FFF8F5]" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-[#FFF8F5] dark:bg-dark-bg" style={{ paddingTop: insets.top }}>
       <View
         className="absolute left-0 right-0 top-0 h-[250px] rounded-b-[60px]"
         style={{ backgroundColor: '#FCE4EC40' }}

@@ -68,7 +68,12 @@ export default function EditProfileScreen(): React.JSX.Element {
   const router = useRouter();
   const { t } = useTranslation('profile');
   const { profile, userId } = useProfileData();
-  const { control, handleSubmit, reset } = useForm<EditProfileFormValues>({
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { isDirty },
+  } = useForm<EditProfileFormValues>({
     defaultValues: {
       bio: '',
       fullName: '',
@@ -81,6 +86,8 @@ export default function EditProfileScreen(): React.JSX.Element {
   });
 
   useEffect(() => {
+    if (isDirty) return;
+
     reset({
       bio: profile?.bio ?? '',
       fullName: profile?.full_name ?? '',
@@ -90,7 +97,7 @@ export default function EditProfileScreen(): React.JSX.Element {
       nightsLeft: String(profile?.nights_left ?? 0),
       profilePhoto: createProfilePhotoValue(profile?.avatar_url ?? null),
     });
-  }, [profile, reset]);
+  }, [isDirty, profile, reset]);
 
   async function pickImageFromLibrary(
     current: ProfilePhotoFieldValue

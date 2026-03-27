@@ -51,7 +51,8 @@ const rules = {
   $users: {
     allow: {
       view: 'auth.id == data.id',
-      create: 'true',
+      create:
+        'data.display_name != null && data.display_name.size() >= 2 && data.display_name.size() <= 60',
       delete: 'false',
       update: 'false',
     },
@@ -77,7 +78,7 @@ const rules = {
       isOwner: "auth.id != null && auth.id in data.ref('user.id')",
       isOwnerOrLinkedProfile: 'isOwner || isLinkedProfile',
       onlySafeProfileFields:
-        "request.modifiedFields.all(field, field in ['full_name', 'avatar_url', 'has_seen_welcome_voucher', 'bio', 'member_since', 'nights_left'])",
+        "request.modifiedFields.all(field, field in ['full_name', 'avatar_url', 'has_seen_welcome_voucher', 'bio', 'member_since', 'nights_left', 'date_of_birth', 'is_danang_citizen', 'location_permission_status', 'push_notification_permission_status', 'onboarding_completed_at'])",
       canCreateOwnedProfile:
         "auth.id != null && auth.id in data.ref('user.id')",
     },

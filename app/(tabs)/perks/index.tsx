@@ -1,7 +1,7 @@
 import { FlashList, type ListRenderItemInfo } from '@shopify/flash-list';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useRouter } from 'expo-router';
-import { Compass, ExternalLink } from 'lucide-react-native';
+import { Compass, ExternalLink, History } from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Linking, useWindowDimensions } from 'react-native';
@@ -54,6 +54,10 @@ export default function PerksScreen(): React.JSX.Element {
     });
   }, [t]);
 
+  const handleOpenHistory = useCallback((): void => {
+    router.push('/perks/history');
+  }, [router]);
+
   const renderCard = useCallback(
     ({ item }: ListRenderItemInfo<Partner>): React.JSX.Element => (
       <Pressable
@@ -102,7 +106,22 @@ export default function PerksScreen(): React.JSX.Element {
       <Stack.Screen
         options={{
           headerLargeTitle: true,
-          headerRight: () => null,
+          headerRight: () => (
+            <Pressable
+              accessibilityHint={t('history.openHint')}
+              accessibilityLabel={t('history.openAction')}
+              accessibilityRole="button"
+              className="flex-row items-center rounded-full border border-border bg-card px-3 py-1.5 dark:border-dark-border dark:bg-dark-bg-card"
+              onPress={handleOpenHistory}
+              style={shadows.level1}
+              testID="perks-history-link"
+            >
+              <History color={Colors.primary} size={14} />
+              <Text className="ml-1 text-xs font-bold text-primary dark:text-primary-bright">
+                {t('history.openAction')}
+              </Text>
+            </Pressable>
+          ),
           headerSearchBarOptions: undefined,
           title: t('title'),
         }}

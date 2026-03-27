@@ -51,7 +51,7 @@ const MONTH_TOKEN_TO_INDEX: Record<string, number> = {
 };
 
 function normalizeDayToken(value: string): string {
-  return value.toLocaleLowerCase().replace(/[^\p{L}]/gu, '');
+  return value.toLocaleLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
 }
 
 function startOfDay(date: Date): Date {
@@ -75,6 +75,21 @@ function getStartOfWeek(referenceDate: Date): Date {
   return day;
 }
 
+function createValidLocalDate(
+  year: number,
+  monthIndex: number,
+  day: number
+): Date | null {
+  const parsed = new Date(year, monthIndex, day);
+  const isValid =
+    !Number.isNaN(parsed.getTime()) &&
+    parsed.getFullYear() === year &&
+    parsed.getMonth() === monthIndex &&
+    parsed.getDate() === day;
+
+  return isValid ? parsed : null;
+}
+
 function parseEventDate(dateText: string, now: Date): Date | null {
   if (!dateText.trim()) return null;
 
@@ -83,8 +98,8 @@ function parseEventDate(dateText: string, now: Date): Date | null {
     const year = Number.parseInt(isoDateOnlyMatch[1], 10);
     const month = Number.parseInt(isoDateOnlyMatch[2], 10);
     const day = Number.parseInt(isoDateOnlyMatch[3], 10);
-    const parsed = new Date(year, month - 1, day);
-    return Number.isNaN(parsed.getTime()) ? null : startOfDay(parsed);
+    const parsed = createValidLocalDate(year, month - 1, day);
+    return parsed ? startOfDay(parsed) : null;
   }
 
   const shortWeekdayMonthMatch = dateText.match(
@@ -94,14 +109,45 @@ function parseEventDate(dateText: string, now: Date): Date | null {
     const monthToken = shortWeekdayMonthMatch[1].slice(0, 3).toLowerCase();
     const monthIndex = MONTH_TOKEN_TO_INDEX[monthToken];
     const day = Number.parseInt(shortWeekdayMonthMatch[2], 10);
-    const year = shortWeekdayMonthMatch[3]
-      ? Number.parseInt(shortWeekdayMonthMatch[3], 10)
-      : now.getFullYear();
-
     if (monthIndex !== undefined) {
-      const parsed = new Date(year, monthIndex, day);
-      if (!Number.isNaN(parsed.getTime())) {
-        return startOfDay(parsed);
+      const explicitYear = shortWeekdayMonthMatch[3];
+      if (explicitYear) {
+        const parsed = createValidLocalDate(
+          Number.parseInt(explicitYear, 10),
+          monthIndex,
+          day
+        );
+        if (parsed) {
+          return startOfDay(parsed);
+        }
+      } else {
+        const weekStart = getStartOfWeek(now);
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+
+        const currentYear = now.getFullYear();
+        for (const candidateYear of [
+          currentYear,
+          currentYear - 1,
+          currentYear + 1,
+        ]) {
+          const candidateRaw = createValidLocalDate(
+            candidateYear,
+            monthIndex,
+            day
+          );
+          if (!candidateRaw) continue;
+
+          const candidate = startOfDay(candidateRaw);
+          if (candidate >= weekStart && candidate <= weekEnd) {
+            return candidate;
+          }
+        }
+        // Fallback to current year if no match within range
+        const fallback = createValidLocalDate(currentYear, monthIndex, day);
+        if (fallback) {
+          return startOfDay(fallback);
+        }
       }
     }
   }
@@ -489,13 +535,19 @@ export default function EventsScreen(): React.JSX.Element {
                     }}
                   />
                   {featuredEvent.badge ? (
-                    <View className="absolute right-3.5 top-3.5 rounded-lg bg-[#FF9800] px-3 py-1.25">
+                    <View
+                      className="absolute right-3.5 top-3.5 rounded-lg px-3 py-1.25"
+                      style={{ backgroundColor: Colors.warning }}
+                    >
                       <Text className="text-[10px] font-extrabold tracking-[0.5px] text-white">
                         {featuredEvent.badge}
                       </Text>
                     </View>
                   ) : null}
-                  <View className="absolute bottom-12.5 right-4 items-center rounded-xl bg-[#FF9800] px-3.5 py-2">
+                  <View
+                    className="absolute bottom-12.5 right-4 items-center rounded-xl px-3.5 py-2"
+                    style={{ backgroundColor: Colors.warning }}
+                  >
                     <Text className="text-[9px] font-bold tracking-[0.5px] text-white/80">
                       {t('featuredPrice')}
                     </Text>

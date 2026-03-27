@@ -172,6 +172,7 @@ export function HeaderGlassButton({
 
   const effectiveGlassStyle: GlassStyle =
     canUseGlass && isFocused && isGlassReady ? glassStyle : 'none';
+  const shouldAnimateGlass = !isReducedMotion && effectiveGlassStyle !== 'none';
 
   return (
     <Pressable
@@ -193,8 +194,8 @@ export function HeaderGlassButton({
         <GlassView
           key={`glass-${isFocused ? 'focused' : 'blurred'}-${isGlassReady ? 'ready' : 'init'}-${effectiveGlassStyle}`}
           glassEffectStyle={{
-            animate: !isReducedMotion,
-            animationDuration: isReducedMotion ? 0 : 0.2,
+            animate: shouldAnimateGlass,
+            animationDuration: shouldAnimateGlass ? 0.2 : 0,
             style: effectiveGlassStyle,
           }}
           pointerEvents="none"

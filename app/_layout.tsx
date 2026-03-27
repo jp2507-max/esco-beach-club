@@ -216,12 +216,10 @@ function RootLayoutNav() {
 
   return (
     <Stack screenOptions={{ headerBackTitle: t('back') }}>
-      <Stack.Protected guard={!isAuthenticated}>
-        <Stack.Screen
-          name="(auth)"
-          options={{ headerShown: false, animation: 'fade' }}
-        />
-      </Stack.Protected>
+      <Stack.Screen
+        name="(auth)"
+        options={{ headerShown: false, animation: 'fade' }}
+      />
       <Stack.Protected guard={isAuthenticated}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen

@@ -94,6 +94,7 @@ const common = {
     profile: 'Hồ sơ',
   },
   close: 'Đóng',
+  done: 'Xong',
   modal: {
     title: 'Esco Life',
     description:

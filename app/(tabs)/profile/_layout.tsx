@@ -29,7 +29,7 @@ export default function ProfileStackLayout(): React.JSX.Element {
       />
       <Stack.Screen
         name="membership"
-        options={{ presentation: 'card', headerShown: false }}
+        options={{ headerShown: false, presentation: 'card' }}
       />
     </Stack>
   );

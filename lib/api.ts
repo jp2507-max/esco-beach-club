@@ -4,6 +4,7 @@ import type {
   Event,
   LoyaltyTransaction,
   NewsItem,
+  OnboardingPermissionStatus,
   Partner,
   PartnerRedemption,
   Profile,
@@ -12,6 +13,7 @@ import type {
   StaffAccess,
   TableReservation,
 } from '@/lib/types';
+import { onboardingPermissionStatuses } from '@/lib/types';
 import { db } from '@/src/lib/instant';
 import {
   type InstantRecord,
@@ -56,6 +58,67 @@ function normalizeMemberSince(
   const dateOnly = new Date(`${trimmed}T00:00:00.000Z`);
   if (!Number.isNaN(dateOnly.getTime())) {
     return dateOnly.toISOString();
+  }
+
+  return undefined;
+}
+
+function normalizeDateOfBirth(
+  value: string | null | undefined
+): string | null | undefined {
+  if (value === undefined || value === null) return undefined;
+
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(trimmed);
+  if (!match) return undefined;
+
+  const year = Number.parseInt(match[1], 10);
+  const month = Number.parseInt(match[2], 10);
+  const day = Number.parseInt(match[3], 10);
+
+  const normalizedDate = new Date(Date.UTC(year, month - 1, day));
+  const isValidDate =
+    normalizedDate.getUTCFullYear() === year &&
+    normalizedDate.getUTCMonth() === month - 1 &&
+    normalizedDate.getUTCDate() === day;
+
+  return isValidDate ? `${match[1]}-${match[2]}-${match[3]}` : undefined;
+}
+
+function normalizeOnboardingCompletedAt(
+  value: string | null | undefined
+): string | null | undefined {
+  if (value === undefined || value === null) return value;
+
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  const parsed = new Date(trimmed);
+  if (Number.isNaN(parsed.getTime())) {
+    return undefined;
+  }
+
+  return parsed.toISOString();
+}
+
+function normalizePermissionStatus(
+  value: string | undefined
+): OnboardingPermissionStatus | undefined {
+  if (value === undefined) return undefined;
+
+  const normalized = value.trim().toUpperCase();
+  if (normalized === onboardingPermissionStatuses.granted) {
+    return onboardingPermissionStatuses.granted;
+  }
+
+  if (normalized === onboardingPermissionStatuses.denied) {
+    return onboardingPermissionStatuses.denied;
+  }
+
+  if (normalized === onboardingPermissionStatuses.undetermined) {
+    return onboardingPermissionStatuses.undetermined;
   }
 
   return undefined;
@@ -191,6 +254,16 @@ function isNullableString(value: unknown): value is string | null {
   return typeof value === 'string' || value === null;
 }
 
+function isSupportedPermissionStatus(value: unknown): boolean {
+  if (value === undefined) return true;
+
+  return (
+    value === onboardingPermissionStatuses.undetermined ||
+    value === onboardingPermissionStatuses.granted ||
+    value === onboardingPermissionStatuses.denied
+  );
+}
+
 function hasStringFields(
   value: Record<string, unknown>,
   fields: readonly string[]
@@ -217,6 +290,28 @@ function isProfilePayload(value: unknown): value is Profile {
   }
 
   if (!isNullableString(value.avatar_url)) return false;
+  if ('date_of_birth' in value && !isNullableString(value.date_of_birth)) {
+    return false;
+  }
+  if (
+    'is_danang_citizen' in value &&
+    value.is_danang_citizen !== null &&
+    typeof value.is_danang_citizen !== 'boolean'
+  ) {
+    return false;
+  }
+  if (!isSupportedPermissionStatus(value.location_permission_status)) {
+    return false;
+  }
+  if (!isSupportedPermissionStatus(value.push_notification_permission_status)) {
+    return false;
+  }
+  if (
+    'onboarding_completed_at' in value &&
+    !isNullableString(value.onboarding_completed_at)
+  ) {
+    return false;
+  }
   if (typeof value.has_seen_welcome_voucher !== 'boolean') return false;
 
   return (
@@ -289,8 +384,44 @@ function parseLoyaltyAwardServiceResponse(
   if (!isFiniteNumber(pointsAwarded)) return null;
   if (!isLoyaltyTransactionPayload(transaction)) return null;
 
+  const dateOfBirth =
+    'date_of_birth' in member && isNullableString(member.date_of_birth)
+      ? member.date_of_birth
+      : null;
+  const isDanangCitizen =
+    'is_danang_citizen' in member &&
+    (typeof member.is_danang_citizen === 'boolean' ||
+      member.is_danang_citizen === null)
+      ? member.is_danang_citizen
+      : null;
+  const locationPermissionStatus = normalizePermissionStatus(
+    typeof member.location_permission_status === 'string'
+      ? member.location_permission_status
+      : undefined
+  );
+  const pushNotificationPermissionStatus = normalizePermissionStatus(
+    typeof member.push_notification_permission_status === 'string'
+      ? member.push_notification_permission_status
+      : undefined
+  );
+  const onboardingCompletedAt =
+    'onboarding_completed_at' in member &&
+    isNullableString(member.onboarding_completed_at)
+      ? (normalizeOnboardingCompletedAt(member.onboarding_completed_at) ?? null)
+      : null;
+
   return {
-    member,
+    member: {
+      ...member,
+      date_of_birth: dateOfBirth,
+      is_danang_citizen: isDanangCitizen,
+      location_permission_status:
+        locationPermissionStatus ?? onboardingPermissionStatuses.undetermined,
+      push_notification_permission_status:
+        pushNotificationPermissionStatus ??
+        onboardingPermissionStatuses.undetermined,
+      onboarding_completed_at: onboardingCompletedAt,
+    },
     pointsAwarded,
     transaction,
   };
@@ -298,43 +429,58 @@ function parseLoyaltyAwardServiceResponse(
 
 function createProfileDefaults(
   userId: string,
-  email?: string
+  email?: string,
+  displayName?: string,
+  dateOfBirth?: string
 ): {
   bio: string;
   created_at: string;
+  date_of_birth: string | null;
   earned: number;
   full_name: string;
   has_seen_welcome_voucher: boolean;
+  is_danang_citizen: boolean | null;
+  location_permission_status: OnboardingPermissionStatus;
   max_points: number;
   member_id: string;
   member_since: string;
   nights_left: number;
+  onboarding_completed_at: string | null;
   points: number;
+  push_notification_permission_status: OnboardingPermissionStatus;
   referral_code: string;
   saved: number;
   tier: 'STANDARD';
   updated_at: string;
 } {
   const createdAt = nowIso();
+  const normalizedDisplayName = displayName?.trim() ?? '';
   const emailPrefix = email?.split('@')[0]?.trim() ?? '';
-  const displayName = emailPrefix
+  const fallbackDisplayName = emailPrefix
     ? emailPrefix
         .replace(/[._-]+/g, ' ')
         .replace(/\s+/g, ' ')
         .trim()
     : '';
+  const normalizedDateOfBirth = normalizeDateOfBirth(dateOfBirth);
 
   return {
     bio: '',
     created_at: createdAt,
+    date_of_birth: normalizedDateOfBirth ?? null,
     earned: 0,
-    full_name: displayName,
+    full_name: normalizedDisplayName || fallbackDisplayName,
     has_seen_welcome_voucher: false,
+    is_danang_citizen: null,
+    location_permission_status: onboardingPermissionStatuses.undetermined,
     max_points: 5000,
     member_id: buildMemberId(userId),
     member_since: createdAt,
     nights_left: 0,
+    onboarding_completed_at: null,
     points: 0,
+    push_notification_permission_status:
+      onboardingPermissionStatuses.undetermined,
     referral_code: buildReferralCode(),
     saved: 0,
     tier: 'STANDARD',
@@ -376,6 +522,8 @@ async function fetchProfileViaUserLink(
 export async function ensureProfile(params: {
   userId: string;
   email?: string;
+  displayName?: string;
+  dateOfBirth?: string;
 }): Promise<Profile | null> {
   if (!params.userId) return null;
 
@@ -389,7 +537,12 @@ export async function ensureProfile(params: {
     attempt++;
 
     const profileId = buildProfileId(params.userId);
-    const payload = createProfileDefaults(params.userId, params.email);
+    const payload = createProfileDefaults(
+      params.userId,
+      params.email,
+      params.displayName,
+      params.dateOfBirth
+    );
 
     try {
       await db.transact(
@@ -590,17 +743,33 @@ export async function updateProfile(
   const sanitizedUpdates = withoutUndefined({
     avatar_url: updates.avatar_url,
     bio: updates.bio,
+    date_of_birth: normalizeDateOfBirth(updates.date_of_birth),
     full_name: updates.full_name,
     has_seen_welcome_voucher: updates.has_seen_welcome_voucher,
+    is_danang_citizen: updates.is_danang_citizen,
+    location_permission_status: normalizePermissionStatus(
+      updates.location_permission_status
+    ),
     member_since: normalizeMemberSince(updates.member_since),
     nights_left: updates.nights_left,
+    onboarding_completed_at: normalizeOnboardingCompletedAt(
+      updates.onboarding_completed_at
+    ),
+    push_notification_permission_status: normalizePermissionStatus(
+      updates.push_notification_permission_status
+    ),
   }) as {
     avatar_url?: Profile['avatar_url'];
     bio?: Profile['bio'];
+    date_of_birth?: Profile['date_of_birth'];
     full_name?: Profile['full_name'];
     has_seen_welcome_voucher?: Profile['has_seen_welcome_voucher'];
+    is_danang_citizen?: Profile['is_danang_citizen'];
+    location_permission_status?: Profile['location_permission_status'];
     member_since?: string | null;
     nights_left?: Profile['nights_left'];
+    onboarding_completed_at?: string | null;
+    push_notification_permission_status?: Profile['push_notification_permission_status'];
   };
 
   if (Object.keys(sanitizedUpdates).length === 0) {

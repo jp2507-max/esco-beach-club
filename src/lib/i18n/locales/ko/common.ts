@@ -92,6 +92,7 @@ const common = {
     profile: '프로필',
   },
   close: '닫기',
+  done: '완료',
   modal: {
     title: 'Esco Life',
     description:

@@ -20,7 +20,7 @@ export default function SavedEventsScreen(): React.JSX.Element {
   const { t } = useTranslation('profile');
   const { savedEventsList, savedEventsLoading, toggleSavedEvent } =
     useSavedEventsData();
-  const [pendingRemoval, setPendingRemoval] = useState<string | null>(null);
+  const [pendingRemovals, setPendingRemovals] = useState<Set<string>>(new Set());
 
   if (savedEventsLoading) {
     return (
@@ -115,13 +115,17 @@ export default function SavedEventsScreen(): React.JSX.Element {
                 </Text>
                 <Button
                   className="mt-4"
-                  isLoading={pendingRemoval === event.id}
+                  isLoading={pendingRemovals.has(event.id)}
                   onPress={async () => {
-                    setPendingRemoval(event.id);
+                    setPendingRemovals((prev) => new Set(prev).add(event.id));
                     try {
                       await toggleSavedEvent(event.id);
                     } finally {
-                      setPendingRemoval(null);
+                      setPendingRemovals((prev) => {
+                        const next = new Set(prev);
+                        next.delete(event.id);
+                        return next;
+                      });
                     }
                   }}
                   testID={`remove-saved-event-${event.id}`}

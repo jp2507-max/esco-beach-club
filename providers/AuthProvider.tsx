@@ -2,6 +2,15 @@ import createContextHook from '@nkzw/create-context-hook';
 import { useState } from 'react';
 
 import {
+  ensureProfile,
+  updateProfile,
+  uploadProfilePhotoAndGetUrl,
+} from '@/lib/api';
+import {
+  type OnboardingPermissionStatus,
+  onboardingPermissionStatuses,
+} from '@/lib/types';
+import {
   canTryGoogleAudienceFallback,
   getAppleIdToken,
   getGoogleIdToken,
@@ -17,6 +26,24 @@ type SendCodeParams = {
 type VerifyCodeParams = {
   code: string;
   email: string;
+  onboardingData?: SignupOnboardingData;
+};
+
+export type SignupOnboardingData = {
+  avatarLocalUri?: string;
+  avatarMimeType?: string;
+  dateOfBirth: string;
+  displayName: string;
+  hasCompletedSetup?: boolean;
+  hasAcceptedPrivacyPolicy?: boolean;
+  hasAcceptedTerms?: boolean;
+  isDanangCitizen?: boolean;
+  locationPermissionStatus?: OnboardingPermissionStatus;
+  pushNotificationPermissionStatus?: OnboardingPermissionStatus;
+};
+
+type SignInProviderParams = {
+  onboardingData?: SignupOnboardingData;
 };
 
 const DEFAULT_GOOGLE_CLIENT_NAME = 'google';
@@ -110,6 +137,315 @@ function extractAuthErrorMessage(error: unknown): string | null {
   }
 
   return null;
+}
+
+function normalizeDisplayNameForCreate(
+  value: string | null | undefined
+): string {
+  const trimmed = value?.trim().replace(/\s+/g, ' ');
+
+  if (!trimmed) return '';
+
+  return trimmed.slice(0, 60);
+}
+
+function deriveDisplayNameFromEmail(email: string | null | undefined): string {
+  if (!email) return '';
+
+  const emailPrefix = email.split('@')[0]?.trim() ?? '';
+  if (!emailPrefix) return '';
+
+  const normalized = emailPrefix
+    .replace(/[._-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  return normalizeDisplayNameForCreate(normalized);
+}
+
+function deriveDisplayNameFromIdToken(idToken: string): string {
+  const payload = decodeJwtPayload(idToken);
+  if (!payload) return '';
+
+  const directClaims = [
+    payload.name,
+    payload.given_name,
+    payload.preferred_username,
+    payload.nickname,
+  ];
+
+  for (const claim of directClaims) {
+    if (typeof claim !== 'string') continue;
+
+    const normalized = normalizeDisplayNameForCreate(claim);
+    if (normalized.length >= 2) return normalized;
+  }
+
+  const claimEmail = typeof payload.email === 'string' ? payload.email : null;
+  return deriveDisplayNameFromEmail(claimEmail);
+}
+
+function resolveDisplayNameForCreate(params: {
+  onboardingDisplayName?: string;
+  email?: string | null;
+  idToken?: string;
+}): string {
+  const fromOnboarding = normalizeDisplayNameForCreate(
+    params.onboardingDisplayName
+  );
+  if (fromOnboarding.length >= 2) return fromOnboarding;
+
+  if (params.idToken) {
+    const fromIdToken = deriveDisplayNameFromIdToken(params.idToken);
+    if (fromIdToken.length >= 2) return fromIdToken;
+  }
+
+  const fromEmail = deriveDisplayNameFromEmail(params.email);
+  if (fromEmail.length >= 2) return fromEmail;
+
+  return 'Member';
+}
+
+function isValidCalendarDate(value: string): boolean {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return false;
+
+  const year = Number.parseInt(match[1], 10);
+  const month = Number.parseInt(match[2], 10);
+  const day = Number.parseInt(match[3], 10);
+
+  const date = new Date(Date.UTC(year, month - 1, day));
+
+  return (
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day
+  );
+}
+
+function nowIso(): string {
+  return new Date().toISOString();
+}
+
+function normalizeOnboardingPermissionStatus(
+  value: string | undefined
+): OnboardingPermissionStatus | undefined {
+  if (!value) return undefined;
+
+  const normalized = value.trim().toUpperCase();
+
+  if (normalized === onboardingPermissionStatuses.granted) {
+    return onboardingPermissionStatuses.granted;
+  }
+
+  if (normalized === onboardingPermissionStatuses.denied) {
+    return onboardingPermissionStatuses.denied;
+  }
+
+  if (normalized === onboardingPermissionStatuses.undetermined) {
+    return onboardingPermissionStatuses.undetermined;
+  }
+
+  return undefined;
+}
+
+function normalizeSignupOnboardingData(
+  value?: SignupOnboardingData
+): SignupOnboardingData | null {
+  if (!value) return null;
+
+  const normalizedDisplayName = value.displayName.trim();
+  const normalizedDateOfBirth = value.dateOfBirth.trim();
+
+  const hasValidDisplayName =
+    normalizedDisplayName.length >= 2 && normalizedDisplayName.length <= 60;
+
+  if (!hasValidDisplayName || !isValidCalendarDate(normalizedDateOfBirth)) {
+    return null;
+  }
+
+  const normalizedCitizenValue =
+    typeof value.isDanangCitizen === 'boolean' ? value.isDanangCitizen : null;
+  const locationPermissionStatus = normalizeOnboardingPermissionStatus(
+    value.locationPermissionStatus
+  );
+  const pushNotificationPermissionStatus = normalizeOnboardingPermissionStatus(
+    value.pushNotificationPermissionStatus
+  );
+
+  const hasAcceptedTerms = value.hasAcceptedTerms === true;
+  const hasAcceptedPrivacyPolicy = value.hasAcceptedPrivacyPolicy === true;
+  const hasCompletedSetup = value.hasCompletedSetup === true;
+  const avatarLocalUri = value.avatarLocalUri?.trim() || undefined;
+  const avatarMimeType = value.avatarMimeType?.trim() || undefined;
+
+  return {
+    dateOfBirth: normalizedDateOfBirth,
+    displayName: normalizedDisplayName,
+    ...(avatarLocalUri ? { avatarLocalUri } : {}),
+    ...(avatarMimeType ? { avatarMimeType } : {}),
+    ...(hasCompletedSetup ? { hasCompletedSetup } : {}),
+    ...(normalizedCitizenValue !== null
+      ? { isDanangCitizen: normalizedCitizenValue }
+      : {}),
+    ...(locationPermissionStatus ? { locationPermissionStatus } : {}),
+    ...(pushNotificationPermissionStatus
+      ? { pushNotificationPermissionStatus }
+      : {}),
+    ...(hasAcceptedTerms ? { hasAcceptedTerms } : {}),
+    ...(hasAcceptedPrivacyPolicy ? { hasAcceptedPrivacyPolicy } : {}),
+  };
+}
+
+function hasRequiredSignupConsent(
+  onboardingData: SignupOnboardingData | null
+): boolean {
+  return (
+    onboardingData?.hasAcceptedTerms === true &&
+    onboardingData?.hasAcceptedPrivacyPolicy === true
+  );
+}
+
+function extractSignInUser(result: unknown): {
+  created: boolean;
+  email: string | null;
+  id: string | null;
+} {
+  if (!result || typeof result !== 'object') {
+    return { created: false, email: null, id: null };
+  }
+
+  const created =
+    'created' in result && typeof result.created === 'boolean'
+      ? result.created
+      : false;
+
+  const userRecord =
+    'user' in result && result.user && typeof result.user === 'object'
+      ? result.user
+      : null;
+
+  if (!userRecord) {
+    return { created, email: null, id: null };
+  }
+
+  const id =
+    'id' in userRecord && typeof userRecord.id === 'string'
+      ? userRecord.id
+      : null;
+  const email =
+    'email' in userRecord && typeof userRecord.email === 'string'
+      ? userRecord.email
+      : null;
+
+  return {
+    created,
+    email,
+    id,
+  };
+}
+
+async function applyOnboardingProfileDataForNewUser(params: {
+  onboardingData: SignupOnboardingData | null;
+  signInResult: unknown;
+}): Promise<void> {
+  if (!params.onboardingData) return;
+
+  const signInUser = extractSignInUser(params.signInResult);
+  if (!signInUser.created || !signInUser.id) return;
+
+  const profile = await ensureProfile({
+    userId: signInUser.id,
+    email: signInUser.email ?? undefined,
+    displayName: params.onboardingData.displayName,
+    dateOfBirth: params.onboardingData.dateOfBirth,
+  });
+
+  if (!profile) return;
+
+  const needsDateOfBirthUpdate =
+    profile.date_of_birth !== params.onboardingData.dateOfBirth;
+  const needsFullNameUpdate =
+    profile.full_name !== params.onboardingData.displayName;
+  const hasCitizenData =
+    typeof params.onboardingData.isDanangCitizen === 'boolean';
+  const needsCitizenUpdate =
+    hasCitizenData &&
+    profile.is_danang_citizen !== params.onboardingData.isDanangCitizen;
+  const hasLocationPermissionStatus =
+    params.onboardingData.locationPermissionStatus !== undefined;
+  const needsLocationPermissionStatusUpdate =
+    hasLocationPermissionStatus &&
+    profile.location_permission_status !==
+      params.onboardingData.locationPermissionStatus;
+  const hasPushPermissionStatus =
+    params.onboardingData.pushNotificationPermissionStatus !== undefined;
+  const needsPushPermissionStatusUpdate =
+    hasPushPermissionStatus &&
+    profile.push_notification_permission_status !==
+      params.onboardingData.pushNotificationPermissionStatus;
+  const hasCompletedIdentityOnboarding =
+    params.onboardingData.hasCompletedSetup === true;
+  const needsCompletedAtUpdate =
+    hasCompletedIdentityOnboarding && !profile.onboarding_completed_at;
+
+  let avatarUrlFromUpload: string | undefined;
+
+  if (params.onboardingData.avatarLocalUri) {
+    try {
+      avatarUrlFromUpload = await uploadProfilePhotoAndGetUrl({
+        localUri: params.onboardingData.avatarLocalUri,
+        mimeType: params.onboardingData.avatarMimeType,
+        userId: signInUser.id,
+      });
+    } catch (error: unknown) {
+      console.error('[AuthProvider] Failed to upload onboarding avatar:', {
+        error,
+      });
+    }
+  }
+
+  const needsAvatarUpdate =
+    avatarUrlFromUpload !== undefined &&
+    profile.avatar_url !== avatarUrlFromUpload;
+
+  if (
+    !needsDateOfBirthUpdate &&
+    !needsFullNameUpdate &&
+    !needsCitizenUpdate &&
+    !needsLocationPermissionStatusUpdate &&
+    !needsPushPermissionStatusUpdate &&
+    !needsAvatarUpdate &&
+    !needsCompletedAtUpdate
+  ) {
+    return;
+  }
+
+  await updateProfile(signInUser.id, {
+    ...(needsAvatarUpdate ? { avatar_url: avatarUrlFromUpload } : {}),
+    ...(needsDateOfBirthUpdate
+      ? { date_of_birth: params.onboardingData.dateOfBirth }
+      : {}),
+    ...(needsFullNameUpdate
+      ? { full_name: params.onboardingData.displayName }
+      : {}),
+    ...(needsCitizenUpdate
+      ? { is_danang_citizen: params.onboardingData.isDanangCitizen }
+      : {}),
+    ...(needsLocationPermissionStatusUpdate
+      ? {
+          location_permission_status:
+            params.onboardingData.locationPermissionStatus,
+        }
+      : {}),
+    ...(needsPushPermissionStatusUpdate
+      ? {
+          push_notification_permission_status:
+            params.onboardingData.pushNotificationPermissionStatus,
+        }
+      : {}),
+    ...(needsCompletedAtUpdate ? { onboarding_completed_at: nowIso() } : {}),
+  });
 }
 
 type MapAuthErrorOptions = {
@@ -252,7 +588,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     setVerifyCodeError(null);
   }
 
-  async function signInWithApple(): Promise<void> {
+  async function signInWithApple(params?: SignInProviderParams): Promise<void> {
     setAppleSignInLoading(true);
     setAppleSignInError(null);
     setGoogleSignInError(null);
@@ -260,11 +596,35 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
 
     try {
       const { clientName, idToken, nonce } = await getAppleIdToken();
+      const hasSignupOnboardingPayload = params?.onboardingData !== undefined;
 
-      await db.auth.signInWithIdToken({
+      const onboardingData = normalizeSignupOnboardingData(
+        params?.onboardingData
+      );
+      if (
+        hasSignupOnboardingPayload &&
+        !hasRequiredSignupConsent(onboardingData)
+      ) {
+        throw new Error('signupConsentRequired');
+      }
+      const displayNameForCreate = resolveDisplayNameForCreate({
+        idToken,
+        onboardingDisplayName: onboardingData?.displayName,
+      });
+      const createFields = {
+        display_name: displayNameForCreate,
+      };
+
+      const signInResult: unknown = await db.auth.signInWithIdToken({
         clientName,
         idToken,
         nonce,
+        ...(createFields ? { extraFields: createFields } : {}),
+      });
+
+      await applyOnboardingProfileDataForNewUser({
+        onboardingData,
+        signInResult,
       });
     } catch (error: unknown) {
       const nextError = toError(error, 'unableToSignInWithApple');
@@ -275,22 +635,43 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     }
   }
 
-  async function signInWithGoogle(): Promise<void> {
+  async function signInWithGoogle(
+    params?: SignInProviderParams
+  ): Promise<void> {
     setGoogleSignInLoading(true);
     setGoogleSignInError(null);
     setAppleSignInError(null);
     resetEmailErrors();
 
     try {
+      const hasSignupOnboardingPayload = params?.onboardingData !== undefined;
+      const onboardingData = normalizeSignupOnboardingData(
+        params?.onboardingData
+      );
+      if (
+        hasSignupOnboardingPayload &&
+        !hasRequiredSignupConsent(onboardingData)
+      ) {
+        throw new Error('signupConsentRequired');
+      }
       const primaryToken = await getGoogleIdToken();
       const { clientName, idToken } = primaryToken;
       const primaryTokenNonce = getIdTokenNonceClaim(idToken);
+      const primaryDisplayNameForCreate = resolveDisplayNameForCreate({
+        idToken,
+        onboardingDisplayName: onboardingData?.displayName,
+      });
+      const primaryCreateFields = {
+        display_name: primaryDisplayNameForCreate,
+      };
+      let signInResult: unknown = null;
 
       try {
-        await db.auth.signInWithIdToken({
+        signInResult = await db.auth.signInWithIdToken({
           clientName,
           idToken,
           ...(primaryTokenNonce ? { nonce: primaryTokenNonce } : {}),
+          ...(primaryCreateFields ? { extraFields: primaryCreateFields } : {}),
         });
       } catch (error: unknown) {
         if (__DEV__) {
@@ -322,6 +703,13 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
             const fallbackTokenNonce = getIdTokenNonceClaim(
               fallbackToken.idToken
             );
+            const fallbackDisplayNameForCreate = resolveDisplayNameForCreate({
+              idToken: fallbackToken.idToken,
+              onboardingDisplayName: onboardingData?.displayName,
+            });
+            const fallbackCreateFields = {
+              display_name: fallbackDisplayNameForCreate,
+            };
 
             if (__DEV__) {
               console.error(
@@ -337,10 +725,18 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
               );
             }
 
-            await db.auth.signInWithIdToken({
+            signInResult = await db.auth.signInWithIdToken({
               clientName: fallbackToken.clientName,
               idToken: fallbackToken.idToken,
               ...(fallbackTokenNonce ? { nonce: fallbackTokenNonce } : {}),
+              ...(fallbackCreateFields
+                ? { extraFields: fallbackCreateFields }
+                : {}),
+            });
+
+            await applyOnboardingProfileDataForNewUser({
+              onboardingData,
+              signInResult,
             });
 
             return;
@@ -349,12 +745,18 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
           throw error;
         }
 
-        await db.auth.signInWithIdToken({
+        signInResult = await db.auth.signInWithIdToken({
           clientName: DEFAULT_GOOGLE_CLIENT_NAME,
           idToken,
           ...(primaryTokenNonce ? { nonce: primaryTokenNonce } : {}),
+          ...(primaryCreateFields ? { extraFields: primaryCreateFields } : {}),
         });
       }
+
+      await applyOnboardingProfileDataForNewUser({
+        onboardingData,
+        signInResult,
+      });
     } catch (error: unknown) {
       if (__DEV__) {
         console.error('[AuthProvider] Google sign-in flow failed', {
@@ -396,7 +798,11 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     }
   }
 
-  async function verifyCode({ code, email }: VerifyCodeParams): Promise<void> {
+  async function verifyCode({
+    code,
+    email,
+    onboardingData: rawOnboardingData,
+  }: VerifyCodeParams): Promise<void> {
     setVerifyCodeLoading(true);
     setVerifyCodeError(null);
     resetProviderErrors();
@@ -409,9 +815,30 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         throw new Error('emailAndCodeRequired');
       }
 
-      await db.auth.signInWithMagicCode({
+      const hasSignupOnboardingPayload = rawOnboardingData !== undefined;
+      const onboardingData = normalizeSignupOnboardingData(rawOnboardingData);
+      if (
+        hasSignupOnboardingPayload &&
+        !hasRequiredSignupConsent(onboardingData)
+      ) {
+        throw new Error('signupConsentRequired');
+      }
+      const displayNameForCreate = resolveDisplayNameForCreate({
+        email: trimmedEmail,
+        onboardingDisplayName: onboardingData?.displayName,
+      });
+      const createFields = {
+        display_name: displayNameForCreate,
+      };
+      const signInResult: unknown = await db.auth.signInWithMagicCode({
         code: trimmedCode,
         email: trimmedEmail,
+        ...(createFields ? { extraFields: createFields } : {}),
+      });
+
+      await applyOnboardingProfileDataForNewUser({
+        onboardingData,
+        signInResult,
       });
     } catch (error: unknown) {
       const nextError = toError(error, 'unableToVerifyCode');

@@ -44,7 +44,7 @@ type TierConfig = {
 const TIER_CONFIG: Record<UserTier, TierConfig> = {
   STANDARD: {
     benefits: ['memberEvents', 'discountDining'],
-    gradient: [Colors.secondary, '#4DB6AC'] as const,
+    gradient: [Colors.secondary, Colors.tealLight] as const,
     nextTierKey: 'nextStandard',
     tierKey: 'standard',
   },
@@ -169,7 +169,7 @@ const MANAGE_ITEMS: ManageItem[] = [
 
 export default function MembershipScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
-  const { t } = useTranslation('membership');
+  const { t, i18n } = useTranslation('membership');
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
 
@@ -204,9 +204,20 @@ export default function MembershipScreen(): React.JSX.Element {
   const tierLevel: UserTier = profile?.tier ?? 'STANDARD';
   const tierConfig = TIER_CONFIG[tierLevel];
   const userName = profile?.full_name ?? '—';
-  const memberSince = profile?.member_since
-    ? profile.member_since.slice(0, 10)
-    : '—';
+  const memberSince = useMemo(() => {
+    if (!profile?.member_since) return '—';
+    try {
+      const date = new Date(profile.member_since);
+      return new Intl.DateTimeFormat(i18n.language, {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      }).format(date);
+    } catch (err) {
+      console.error('[Membership] Date format failed', err);
+      return profile.member_since.slice(0, 10);
+    }
+  }, [profile?.member_since, i18n.language]);
   const points = profile?.points ?? 0;
   const maxPoints = profile?.max_points ?? 10000;
   const progressPercent =
@@ -397,7 +408,7 @@ export default function MembershipScreen(): React.JSX.Element {
                       style={{
                         backgroundColor: isDark
                           ? Colors.darkBgElevated
-                          : '#F5F4EC',
+                          : Colors.sand,
                       }}
                     >
                       <IconComp color={item.color} size={20} />

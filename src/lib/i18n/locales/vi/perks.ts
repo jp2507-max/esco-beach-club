@@ -17,6 +17,46 @@ const perks = {
     openFailedTitle: 'Không thể mở liên kết',
     openFailedBody: 'Vui lòng thử lại sau ít phút.',
   },
+  history: {
+    title: 'Lịch sử ưu đãi',
+    openAction: 'Lịch sử',
+    openHint: 'Mở màn hình lịch sử ưu đãi của bạn',
+    backAction: 'Quay lại',
+    backHint: 'Quay lại màn hình ưu đãi',
+    recentActivity: 'Hoạt động gần đây',
+    fullArchive: 'Xem toàn bộ lịch sử',
+    hero: {
+      status: 'TRẠNG THÁI ĐẶC QUYỀN',
+      total: '{{count}} Ưu đãi',
+      subtitle: 'Đã mở khóa trong năm nay',
+    },
+    status: {
+      used: 'Đã dùng',
+      expired: 'Hết hạn',
+    },
+    items: {
+      grandMarinaResort: {
+        name: 'Grand Marina Resort',
+        date: '24 Thg 10, 2026',
+        perk: 'Nâng hạng phòng giảm 20%',
+      },
+      saffronSkyDining: {
+        name: 'Saffron Sky Dining',
+        date: '12 Thg 10, 2026',
+        perk: 'Tặng thực đơn tasting',
+      },
+      azureAirways: {
+        name: 'Azure Airways',
+        date: '30 Thg 9, 2026',
+        perk: 'Vé vào phòng chờ',
+      },
+      velvetSandsSpa: {
+        name: 'Velvet Sands Spa',
+        date: '15 Thg 8, 2026',
+        perk: 'Liệu trình deep tissue 60 phút',
+      },
+    },
+  },
   partner: {
     notFound: 'Không tìm thấy đối tác',
     unlocked: 'ĐÃ MỞ KHÓA',

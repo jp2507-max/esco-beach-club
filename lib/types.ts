@@ -2,9 +2,19 @@ export type UserTier = 'STANDARD' | 'VIP' | 'OWNER';
 
 export type StaffRole = 'staff' | 'manager';
 
+export const onboardingPermissionStatuses = {
+  denied: 'DENIED',
+  granted: 'GRANTED',
+  undetermined: 'UNDETERMINED',
+} as const;
+
+export type OnboardingPermissionStatus =
+  (typeof onboardingPermissionStatuses)[keyof typeof onboardingPermissionStatuses];
+
 export type Profile = {
   id: string;
   full_name: string;
+  date_of_birth: string | null;
   bio: string;
   tier: UserTier;
   member_id: string;
@@ -15,6 +25,10 @@ export type Profile = {
   earned: number;
   saved: number;
   avatar_url: string | null;
+  is_danang_citizen: boolean | null;
+  location_permission_status: OnboardingPermissionStatus;
+  push_notification_permission_status: OnboardingPermissionStatus;
+  onboarding_completed_at: string | null;
   referral_code: string;
   has_seen_welcome_voucher: boolean;
   created_at: string;

@@ -16,7 +16,15 @@ const profile = {
     savedEvents: 'Saved Events',
     settings: 'Settings',
     helpSupport: 'Help & Support',
+    restartOnboarding: 'Restart Onboarding',
     logOut: 'Log Out',
+  },
+  restartOnboarding: {
+    confirmTitle: 'Restart onboarding?',
+    confirmMessage:
+      'We will take you back through the onboarding flow to update your setup choices.',
+    cancel: 'Cancel',
+    start: 'Start',
   },
   notifications: {
     title: 'Notifications',

@@ -265,7 +265,7 @@ export default function LoginScreen(): React.JSX.Element {
             <Pressable
               accessibilityRole="button"
               className="items-center"
-              onPress={() => router.push('/signup')}
+              onPress={() => router.push('/onboarding-welcome')}
               testID="login-go-signup"
             >
               <Text className="text-sm text-text-secondary dark:text-text-secondary-dark">
