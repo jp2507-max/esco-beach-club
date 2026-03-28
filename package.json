@@ -82,8 +82,7 @@
     "tailwind-merge": "^3.5.0",
     "uniwind": "^1.5.0",
     "zod": "^4.3.6",
-    "zustand": "^5.0.2",
-    "@rork-ai/toolkit-sdk": "latest"
+    "zustand": "^5.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
