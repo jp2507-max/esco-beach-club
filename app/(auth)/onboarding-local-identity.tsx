@@ -5,17 +5,21 @@ import { ArrowRight, Check, MapPin } from 'lucide-react-native';
 import React from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { Alert } from 'react-native';
+import { Alert, Linking } from 'react-native';
+import { FadeIn, FadeInUp } from 'react-native-reanimated';
 
 import { Colors } from '@/constants/colors';
 import { OnboardingHeader } from '@/src/components/onboarding/onboarding-header';
 import { InfoDot } from '@/src/components/ui';
+import { motion, withRM } from '@/src/lib/animations/motion';
+import { useButtonPress } from '@/src/lib/animations/use-button-press';
 import {
   type OnboardingLocalIdentityFormValues,
   onboardingLocalIdentitySchema,
 } from '@/src/lib/forms/schemas';
 import { shadows } from '@/src/lib/styles/shadows';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
+import { Animated } from '@/src/tw/animated';
 
 type OnboardingBasicsSearchParams = {
   onboardingDateOfBirth?: string | string[];
@@ -32,10 +36,18 @@ function readSingleSearchParam(
   return value;
 }
 
+const BANNER_DELAY = 80;
+const RADIO_BASE_DELAY = 220;
+const RADIO_STAGGER = 100;
+const CONSENTS_DELAY = 480;
+const CONSENT_STAGGER = 90;
+const CTA_DELAY = 720;
+
 export default function OnboardingLocalIdentityScreen(): React.JSX.Element {
   const router = useRouter();
   const searchParams = useLocalSearchParams<OnboardingBasicsSearchParams>();
   const { t } = useTranslation('auth');
+  const ctaButton = useButtonPress();
 
   function showInfoAlert(title: string, message: string): void {
     Alert.alert(title, message);
@@ -93,17 +105,26 @@ export default function OnboardingLocalIdentityScreen(): React.JSX.Element {
         contentContainerClassName="flex-grow px-5 pb-6"
         showsVerticalScrollIndicator={false}
       >
-        <View className="mb-2 overflow-hidden rounded-2xl bg-primary-fixed/50 px-4 py-2 dark:bg-primary/20">
+        <Animated.View
+          entering={withRM(FadeIn.duration(motion.dur.md).delay(BANNER_DELAY))}
+          className="mb-2 overflow-hidden rounded-2xl bg-primary-fixed/50 px-4 py-2 dark:bg-primary/20"
+        >
           <View className="pointer-events-none absolute -left-10 -top-10 size-40 rounded-full bg-primary/12 dark:bg-primary-bright/18" />
-          <Text className="mb-0.5 text-center text-[22px] font-extrabold leading-7 text-text dark:text-text-primary-dark">
+          <Text className="mb-0.5 text-center text-[24px] font-extrabold leading-7 text-text dark:text-text-primary-dark">
             {t('onboardingLocalIdentityTitle')}
           </Text>
           <Text className="text-center text-[13px] leading-5 text-text-secondary dark:text-text-secondary-dark">
             {t('onboardingLocalIdentitySubtitle')}
           </Text>
-        </View>
+        </Animated.View>
 
-        <View
+        <Animated.View
+          entering={withRM(
+            FadeInUp.springify()
+              .damping(18)
+              .stiffness(140)
+              .delay(RADIO_BASE_DELAY)
+          )}
           className="mb-3 rounded-3xl border border-border bg-white p-4 dark:border-dark-border dark:bg-dark-bg-card"
           style={shadows.level4}
         >
@@ -147,226 +168,320 @@ export default function OnboardingLocalIdentityScreen(): React.JSX.Element {
 
               return (
                 <View className="gap-2">
-                  <Pressable
-                    accessibilityRole="radio"
-                    accessibilityState={{ selected: isCitizenSelected }}
-                    className={`flex-row items-center gap-3 rounded-2xl border px-4 py-3 ${
-                      isCitizenSelected
-                        ? 'border-primary bg-primary/5 dark:border-primary-bright dark:bg-primary-bright/15'
-                        : 'border-border bg-surface dark:border-dark-border dark:bg-dark-bg-elevated'
-                    }`}
-                    onPress={() => field.onChange('citizen')}
-                    testID="onboarding-local-identity-citizen"
+                  <Animated.View
+                    entering={withRM(
+                      FadeInUp.duration(motion.dur.sm).delay(
+                        RADIO_BASE_DELAY + RADIO_STAGGER
+                      )
+                    )}
                   >
-                    <View
-                      className={`size-5 items-center justify-center rounded-full border-2 ${
+                    <Pressable
+                      accessibilityRole="radio"
+                      accessibilityState={{ selected: isCitizenSelected }}
+                      className={`flex-row items-center gap-3 rounded-2xl border px-4 py-3 ${
                         isCitizenSelected
-                          ? 'border-primary dark:border-primary-bright'
-                          : 'border-border dark:border-dark-border'
+                          ? 'border-primary bg-primary/5 dark:border-primary-bright dark:bg-primary-bright/15'
+                          : 'border-border bg-surface dark:border-dark-border dark:bg-dark-bg-elevated'
                       }`}
+                      onPress={() => field.onChange('citizen')}
+                      testID="onboarding-local-identity-citizen"
                     >
-                      {isCitizenSelected ? (
-                        <Check
-                          className="text-primary dark:text-primary-bright"
-                          size={12}
-                        />
-                      ) : null}
-                    </View>
-                    <View className="flex-1">
-                      <Text className="text-[15px] font-bold text-text dark:text-text-primary-dark">
-                        {t('onboardingLocalIdentityCitizenTitle')}
-                      </Text>
-                      <Text className="text-[12px] leading-4 text-text-secondary dark:text-text-secondary-dark">
-                        {t('onboardingLocalIdentityCitizenDescription')}
-                      </Text>
-                    </View>
-                  </Pressable>
+                      <View
+                        className={`size-5 items-center justify-center rounded-full border-2 ${
+                          isCitizenSelected
+                            ? 'border-primary dark:border-primary-bright'
+                            : 'border-border dark:border-dark-border'
+                        }`}
+                      >
+                        {isCitizenSelected ? (
+                          <Check
+                            className="text-primary dark:text-primary-bright"
+                            size={12}
+                          />
+                        ) : null}
+                      </View>
+                      <View className="flex-1">
+                        <Text className="text-[15px] font-bold text-text dark:text-text-primary-dark">
+                          {t('onboardingLocalIdentityCitizenTitle')}
+                        </Text>
+                        <Text className="text-[12px] leading-4 text-text-secondary dark:text-text-secondary-dark">
+                          {t('onboardingLocalIdentityCitizenDescription')}
+                        </Text>
+                      </View>
+                    </Pressable>
+                  </Animated.View>
 
-                  <Pressable
-                    accessibilityRole="radio"
-                    accessibilityState={{ selected: isVisitorSelected }}
-                    className={`flex-row items-center gap-3 rounded-2xl border px-4 py-3 ${
-                      isVisitorSelected
-                        ? 'border-primary bg-primary/5 dark:border-primary-bright dark:bg-primary-bright/15'
-                        : 'border-border bg-surface dark:border-dark-border dark:bg-dark-bg-elevated'
-                    }`}
-                    onPress={() => field.onChange('visitor')}
-                    testID="onboarding-local-identity-visitor"
+                  <Animated.View
+                    entering={withRM(
+                      FadeInUp.duration(motion.dur.sm).delay(
+                        RADIO_BASE_DELAY + RADIO_STAGGER * 2
+                      )
+                    )}
                   >
-                    <View
-                      className={`size-5 items-center justify-center rounded-full border-2 ${
+                    <Pressable
+                      accessibilityRole="radio"
+                      accessibilityState={{ selected: isVisitorSelected }}
+                      className={`flex-row items-center gap-3 rounded-2xl border px-4 py-3 ${
                         isVisitorSelected
-                          ? 'border-primary dark:border-primary-bright'
-                          : 'border-border dark:border-dark-border'
+                          ? 'border-primary bg-primary/5 dark:border-primary-bright dark:bg-primary-bright/15'
+                          : 'border-border bg-surface dark:border-dark-border dark:bg-dark-bg-elevated'
                       }`}
+                      onPress={() => field.onChange('visitor')}
+                      testID="onboarding-local-identity-visitor"
                     >
-                      {isVisitorSelected ? (
-                        <Check
-                          className="text-primary dark:text-primary-bright"
-                          size={12}
-                        />
-                      ) : null}
-                    </View>
-                    <View className="flex-1">
-                      <Text className="text-[15px] font-bold text-text dark:text-text-primary-dark">
-                        {t('onboardingLocalIdentityVisitorTitle')}
-                      </Text>
-                      <Text className="text-[12px] leading-4 text-text-secondary dark:text-text-secondary-dark">
-                        {t('onboardingLocalIdentityVisitorDescription')}
-                      </Text>
-                    </View>
-                  </Pressable>
+                      <View
+                        className={`size-5 items-center justify-center rounded-full border-2 ${
+                          isVisitorSelected
+                            ? 'border-primary dark:border-primary-bright'
+                            : 'border-border dark:border-dark-border'
+                        }`}
+                      >
+                        {isVisitorSelected ? (
+                          <Check
+                            className="text-primary dark:text-primary-bright"
+                            size={12}
+                          />
+                        ) : null}
+                      </View>
+                      <View className="flex-1">
+                        <Text className="text-[15px] font-bold text-text dark:text-text-primary-dark">
+                          {t('onboardingLocalIdentityVisitorTitle')}
+                        </Text>
+                        <Text className="text-[12px] leading-4 text-text-secondary dark:text-text-secondary-dark">
+                          {t('onboardingLocalIdentityVisitorDescription')}
+                        </Text>
+                      </View>
+                    </Pressable>
+                  </Animated.View>
                 </View>
               );
             }}
           />
-        </View>
+        </Animated.View>
 
-        <View className="mb-3">
+        <Animated.View
+          entering={withRM(
+            FadeIn.duration(motion.dur.md).delay(CONSENTS_DELAY)
+          )}
+          className="mb-3"
+        >
           <View className="mb-2 flex-row items-center gap-2 px-1">
             <View className="h-px flex-1 bg-border/60 dark:bg-dark-border/70" />
-            <Text className="text-[10px] font-bold uppercase tracking-[3px] text-text-muted dark:text-text-muted-dark">
+            <Text className="text-[10px] font-bold uppercase tracking-[2.5px] text-text-muted dark:text-text-muted-dark">
               {t('onboardingLocalIdentityLegalConsentsTitle')}
             </Text>
             <View className="h-px flex-1 bg-border/60 dark:bg-dark-border/70" />
           </View>
 
           <View className="gap-2">
-            <Controller
-              control={control}
-              name="acceptedTerms"
-              render={({ field }) => (
-                <Pressable
-                  accessibilityRole="checkbox"
-                  accessibilityState={{ checked: field.value }}
-                  className="rounded-2xl border border-border bg-white px-4 py-3 dark:border-dark-border dark:bg-dark-bg-card"
-                  onPress={() => field.onChange(!field.value)}
-                  testID="onboarding-local-identity-terms"
-                >
-                  <View className="flex-row items-start gap-3">
-                    <View
-                      className={`mt-0.5 size-5 items-center justify-center rounded-md border ${
-                        field.value
-                          ? 'border-primary bg-primary dark:border-primary-bright dark:bg-primary-bright'
-                          : 'border-border dark:border-dark-border'
-                      }`}
-                    >
-                      {field.value ? <Check color="#fff" size={12} /> : null}
-                    </View>
-
-                    <View className="flex-1">
-                      <View className="flex-row items-center gap-1.5">
-                        <Text className="text-[14px] font-semibold leading-5 text-text dark:text-text-primary-dark">
-                          {t('onboardingLocalIdentityTermsTitle')}
-                        </Text>
-                        <InfoDot
-                          accessibilityHint={t('onboardingInfoButtonHint')}
-                          accessibilityLabel={t('onboardingInfoButtonLabel')}
-                          onPress={() =>
-                            showInfoAlert(
-                              t('onboardingLocalIdentityTermsInfoTitle'),
-                              t('onboardingLocalIdentityTermsInfoMessage')
-                            )
-                          }
-                          size="sm"
-                          testID="onboarding-local-identity-terms-info"
-                        />
-                      </View>
-                      <Text className="text-[12px] leading-4 text-text-secondary dark:text-text-secondary-dark">
-                        {t('onboardingLocalIdentityTermsDescriptionPrefix')}{' '}
-                        <Text className="text-primary dark:text-primary-bright">
-                          {t('onboardingLocalIdentityTermsLinkText')}
-                        </Text>{' '}
-                        {t('onboardingLocalIdentityTermsDescriptionSuffix')}
-                      </Text>
-                    </View>
-                  </View>
-                </Pressable>
+            <Animated.View
+              entering={withRM(
+                FadeInUp.duration(motion.dur.sm).delay(
+                  CONSENTS_DELAY + CONSENT_STAGGER
+                )
               )}
-            />
-
-            <Controller
-              control={control}
-              name="acceptedPrivacyPolicy"
-              render={({ field }) => (
-                <Pressable
-                  accessibilityRole="checkbox"
-                  accessibilityState={{ checked: field.value }}
-                  className="rounded-2xl border border-border bg-white px-4 py-3 dark:border-dark-border dark:bg-dark-bg-card"
-                  onPress={() => field.onChange(!field.value)}
-                  testID="onboarding-local-identity-privacy"
-                >
-                  <View className="flex-row items-start gap-3">
-                    <View
-                      className={`mt-0.5 size-5 items-center justify-center rounded-md border ${
-                        field.value
-                          ? 'border-primary bg-primary dark:border-primary-bright dark:bg-primary-bright'
-                          : 'border-border dark:border-dark-border'
-                      }`}
-                    >
-                      {field.value ? <Check color="#fff" size={12} /> : null}
-                    </View>
-
-                    <View className="flex-1">
-                      <View className="flex-row items-center gap-1.5">
-                        <Text className="text-[14px] font-semibold leading-5 text-text dark:text-text-primary-dark">
-                          {t('onboardingLocalIdentityPrivacyTitle')}
-                        </Text>
-                        <InfoDot
-                          accessibilityHint={t('onboardingInfoButtonHint')}
-                          accessibilityLabel={t('onboardingInfoButtonLabel')}
-                          onPress={() =>
-                            showInfoAlert(
-                              t('onboardingLocalIdentityPrivacyInfoTitle'),
-                              t('onboardingLocalIdentityPrivacyInfoMessage')
-                            )
-                          }
-                          size="sm"
-                          testID="onboarding-local-identity-privacy-info"
-                        />
-                      </View>
-                      <Text className="text-[12px] leading-4 text-text-secondary dark:text-text-secondary-dark">
-                        {t('onboardingLocalIdentityPrivacyDescriptionPrefix')}{' '}
-                        <Text className="text-primary dark:text-primary-bright">
-                          {t('onboardingLocalIdentityPrivacyLinkText')}
-                        </Text>{' '}
-                        {t('onboardingLocalIdentityPrivacyDescriptionSuffix')}
-                      </Text>
-                    </View>
-                  </View>
-                </Pressable>
-              )}
-            />
-          </View>
-        </View>
-
-        <View className="mt-auto">
-          <Pressable
-            accessibilityRole="button"
-            className="overflow-hidden rounded-full"
-            onPress={onSubmit}
-            testID="onboarding-local-identity-continue"
-          >
-            <LinearGradient
-              colors={[Colors.primary, '#C2185B']}
-              end={{ x: 1, y: 0 }}
-              start={{ x: 0, y: 0 }}
-              style={{
-                alignItems: 'center',
-                borderRadius: 999,
-                height: 50,
-                justifyContent: 'center',
-              }}
             >
-              <View className="flex-row items-center gap-2.5">
-                <Text className="text-[16px] font-bold text-white">
-                  {t('onboardingLocalIdentityContinue')}
-                </Text>
-                <ArrowRight color="#ffffff" size={20} />
-              </View>
-            </LinearGradient>
-          </Pressable>
-        </View>
+              <Controller
+                control={control}
+                name="acceptedTerms"
+                render={({ field }) => (
+                  <Pressable
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: field.value }}
+                    className="rounded-2xl border border-border bg-white px-4 py-3 dark:border-dark-border dark:bg-dark-bg-card"
+                    onPress={() => field.onChange(!field.value)}
+                    testID="onboarding-local-identity-terms"
+                  >
+                    <View className="flex-row items-start gap-3">
+                      <View
+                        className={`mt-0.5 size-5 items-center justify-center rounded-md border ${
+                          field.value
+                            ? 'border-primary bg-primary dark:border-primary-bright dark:bg-primary-bright'
+                            : 'border-border dark:border-dark-border'
+                        }`}
+                      >
+                        {field.value ? <Check color="#fff" size={12} /> : null}
+                      </View>
+
+                      <View className="flex-1">
+                        <View className="flex-row items-center gap-1.5">
+                          <Text className="text-[14px] font-semibold leading-5 text-text dark:text-text-primary-dark">
+                            {t('onboardingLocalIdentityTermsTitle')}
+                          </Text>
+                          <InfoDot
+                            accessibilityHint={t('onboardingInfoButtonHint')}
+                            accessibilityLabel={t('onboardingInfoButtonLabel')}
+                            onPress={() =>
+                              showInfoAlert(
+                                t('onboardingLocalIdentityTermsInfoTitle'),
+                                t('onboardingLocalIdentityTermsInfoMessage')
+                              )
+                            }
+                            size="sm"
+                            testID="onboarding-local-identity-terms-info"
+                          />
+                        </View>
+                        <View className="flex-row flex-wrap items-center">
+                          <Text className="text-[12px] leading-4 text-text-secondary dark:text-text-secondary-dark">
+                            {t(
+                              'onboardingLocalIdentityTermsDescriptionPrefix'
+                            )}{' '}
+                          </Text>
+                          <Pressable
+                            accessible={true}
+                            accessibilityHint={t('onboardingInfoButtonHint')}
+                            accessibilityLabel={t(
+                              'onboardingLocalIdentityTermsLinkText'
+                            )}
+                            accessibilityRole="link"
+                            className="rounded-sm"
+                            hitSlop={6}
+                            onPress={(event) => {
+                              event.stopPropagation();
+                              void Linking.openURL(
+                                'https://esco-beach-club.com/terms'
+                              );
+                            }}
+                          >
+                            <Text className="text-[12px] leading-4 text-primary dark:text-primary-bright">
+                              {t('onboardingLocalIdentityTermsLinkText')}
+                            </Text>
+                          </Pressable>
+                          <Text className="text-[12px] leading-4 text-text-secondary dark:text-text-secondary-dark">
+                            {' '}
+                            {t('onboardingLocalIdentityTermsDescriptionSuffix')}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  </Pressable>
+                )}
+              />
+            </Animated.View>
+
+            <Animated.View
+              entering={withRM(
+                FadeInUp.duration(motion.dur.sm).delay(
+                  CONSENTS_DELAY + CONSENT_STAGGER * 2
+                )
+              )}
+            >
+              <Controller
+                control={control}
+                name="acceptedPrivacyPolicy"
+                render={({ field }) => (
+                  <Pressable
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: field.value }}
+                    className="rounded-2xl border border-border bg-white px-4 py-3 dark:border-dark-border dark:bg-dark-bg-card"
+                    onPress={() => field.onChange(!field.value)}
+                    testID="onboarding-local-identity-privacy"
+                  >
+                    <View className="flex-row items-start gap-3">
+                      <View
+                        className={`mt-0.5 size-5 items-center justify-center rounded-md border ${
+                          field.value
+                            ? 'border-primary bg-primary dark:border-primary-bright dark:bg-primary-bright'
+                            : 'border-border dark:border-dark-border'
+                        }`}
+                      >
+                        {field.value ? <Check color="#fff" size={12} /> : null}
+                      </View>
+
+                      <View className="flex-1">
+                        <View className="flex-row items-center gap-1.5">
+                          <Text className="text-[14px] font-semibold leading-5 text-text dark:text-text-primary-dark">
+                            {t('onboardingLocalIdentityPrivacyTitle')}
+                          </Text>
+                          <InfoDot
+                            accessibilityHint={t('onboardingInfoButtonHint')}
+                            accessibilityLabel={t('onboardingInfoButtonLabel')}
+                            onPress={() =>
+                              showInfoAlert(
+                                t('onboardingLocalIdentityPrivacyInfoTitle'),
+                                t('onboardingLocalIdentityPrivacyInfoMessage')
+                              )
+                            }
+                            size="sm"
+                            testID="onboarding-local-identity-privacy-info"
+                          />
+                        </View>
+                        <View className="flex-row flex-wrap items-center">
+                          <Text className="text-[12px] leading-4 text-text-secondary dark:text-text-secondary-dark">
+                            {t(
+                              'onboardingLocalIdentityPrivacyDescriptionPrefix'
+                            )}{' '}
+                          </Text>
+                          <Pressable
+                            accessible={true}
+                            accessibilityHint={t('onboardingInfoButtonHint')}
+                            accessibilityLabel={t(
+                              'onboardingLocalIdentityPrivacyLinkText'
+                            )}
+                            accessibilityRole="link"
+                            className="rounded-sm"
+                            hitSlop={6}
+                            onPress={(event) => {
+                              event.stopPropagation();
+                              void Linking.openURL(
+                                'https://esco-beach-club.com/privacy'
+                              );
+                            }}
+                          >
+                            <Text className="text-[12px] leading-4 text-primary dark:text-primary-bright">
+                              {t('onboardingLocalIdentityPrivacyLinkText')}
+                            </Text>
+                          </Pressable>
+                          <Text className="text-[12px] leading-4 text-text-secondary dark:text-text-secondary-dark">
+                            {' '}
+                            {t(
+                              'onboardingLocalIdentityPrivacyDescriptionSuffix'
+                            )}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  </Pressable>
+                )}
+              />
+            </Animated.View>
+          </View>
+        </Animated.View>
+
+        <Animated.View
+          entering={withRM(FadeInUp.duration(motion.dur.md).delay(CTA_DELAY))}
+          className="mt-auto"
+        >
+          <Animated.View style={ctaButton.animatedStyle}>
+            <Pressable
+              accessibilityRole="button"
+              className="overflow-hidden rounded-full"
+              onPress={onSubmit}
+              onPressIn={ctaButton.handlePressIn}
+              onPressOut={ctaButton.handlePressOut}
+              testID="onboarding-local-identity-continue"
+            >
+              <LinearGradient
+                colors={Colors.gradientPrimary}
+                end={{ x: 1, y: 0 }}
+                start={{ x: 0, y: 0 }}
+                style={{
+                  alignItems: 'center',
+                  borderRadius: 999,
+                  height: 54,
+                  justifyContent: 'center',
+                }}
+              >
+                <View className="flex-row items-center gap-2.5">
+                  <Text className="text-[17px] font-bold text-white">
+                    {t('onboardingLocalIdentityContinue')}
+                  </Text>
+                  <ArrowRight color="#ffffff" size={22} />
+                </View>
+              </LinearGradient>
+            </Pressable>
+          </Animated.View>
+        </Animated.View>
       </ScrollView>
     </View>
   );

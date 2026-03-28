@@ -1,10 +1,12 @@
 import React from 'react';
 
+import { cn } from '@/src/lib/utils';
 import { Pressable, Text } from '@/src/tw';
 
 type InfoDotProps = {
   accessibilityHint?: string;
   accessibilityLabel: string;
+  className?: string;
   onPress: () => void;
   size?: 'md' | 'sm';
   testID?: string;
@@ -13,6 +15,7 @@ type InfoDotProps = {
 export function InfoDot({
   accessibilityHint,
   accessibilityLabel,
+  className,
   onPress,
   size = 'sm',
   testID,
@@ -32,7 +35,7 @@ export function InfoDot({
       accessibilityHint={accessibilityHint}
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
-      className={containerClassName}
+      className={cn(containerClassName, className)}
       onPress={onPress}
       testID={testID}
     >

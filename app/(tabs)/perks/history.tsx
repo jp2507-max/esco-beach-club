@@ -40,6 +40,7 @@ const historyCategories = [
   { labelKey: 'categories.dining', value: 'dining' },
 ] as const satisfies readonly { labelKey: string; value: HistoryCategory }[];
 
+// TODO: Replace with API call - fetch history items from backend
 const historyItems = [
   {
     category: 'hotels',
@@ -79,6 +80,7 @@ const historyItems = [
   },
 ] as const satisfies readonly PerkHistoryItem[];
 
+// TODO: Derive from API response or user profile
 const totalUnlockedPerks = 12;
 
 function HistoryItemIcon({ icon }: { icon: HistoryIcon }): React.JSX.Element {

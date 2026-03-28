@@ -193,6 +193,7 @@ const auth = {
   onboardingWelcomePointGlobalTitle: 'Mạng lưới toàn cầu',
   onboardingWelcomePointGlobalDescription:
     'Truy cập ưu đãi tại hơn 40 quốc gia và 6 châu lục.',
+  genericError: 'Đã có lỗi xảy ra. Vui lòng thử lại hoặc liên hệ hỗ trợ.',
 } as const;
 
 export default auth;

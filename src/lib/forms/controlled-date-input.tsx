@@ -62,7 +62,11 @@ const DEFAULT_MIN_YEAR = 1920;
 
 function getDefaultMaxDate(): Date {
   const now = new Date();
-  return new Date(now.getFullYear() - MIN_AGE_YEARS, now.getMonth(), now.getDate());
+  return new Date(
+    now.getFullYear() - MIN_AGE_YEARS,
+    now.getMonth(),
+    now.getDate()
+  );
 }
 
 function getDefaultMinDate(): Date {
@@ -175,11 +179,15 @@ export function ControlledDateInput<TFieldValues extends FieldValues>({
                 onRequestClose={handleConfirm}
               >
                 <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={t('close')}
+                  accessibilityHint={t('datePicker.dismissHint')}
+                  accessible={true}
                   className="flex-1"
                   onPress={handleConfirm}
                 >
                   <View className="flex-1" />
-                  <View className="rounded-t-3xl bg-white pb-8 dark:bg-dark-bg-card">
+                  <View className="rounded-t-3xl bg-card pb-8 dark:bg-dark-bg-card">
                     <View className="flex-row items-center justify-between border-b border-border/50 px-5 py-3 dark:border-dark-border/50">
                       <View className="w-16" />
                       <Text className="text-[15px] font-bold text-text dark:text-text-primary-dark">

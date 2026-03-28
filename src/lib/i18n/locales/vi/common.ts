@@ -94,6 +94,9 @@ const common = {
     profile: 'Hồ sơ',
   },
   close: 'Đóng',
+  datePicker: {
+    dismissHint: 'Nhấn đúp để đóng bộ chọn ngày mà không thay đổi ngày',
+  },
   done: 'Xong',
   modal: {
     title: 'Esco Life',

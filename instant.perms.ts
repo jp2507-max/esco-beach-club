@@ -52,7 +52,7 @@ const rules = {
     allow: {
       view: 'auth.id == data.id',
       create:
-        'data.display_name != null && data.display_name.size() >= 2 && data.display_name.size() <= 60',
+        'auth.id == data.id && data.display_name != null && data.display_name.size() >= 2 && data.display_name.size() <= 60',
       delete: 'false',
       update: 'false',
     },

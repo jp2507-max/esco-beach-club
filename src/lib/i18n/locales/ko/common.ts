@@ -92,6 +92,9 @@ const common = {
     profile: '프로필',
   },
   close: '닫기',
+  datePicker: {
+    dismissHint: '더블 탭하여 날짜 변경 없이 날짜 선택기를 닫기',
+  },
   done: '완료',
   modal: {
     title: 'Esco Life',

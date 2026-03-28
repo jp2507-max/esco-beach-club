@@ -192,6 +192,7 @@ const auth = {
   onboardingWelcomePointGlobalTitle: 'Global Network',
   onboardingWelcomePointGlobalDescription:
     'Access rewards across 40+ countries and 6 continents.',
+  genericError: 'Something went wrong. Please try again or contact support.',
 } as const;
 
 export default auth;

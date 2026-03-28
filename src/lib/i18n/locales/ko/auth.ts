@@ -189,6 +189,7 @@ const auth = {
   onboardingWelcomePointGlobalTitle: '글로벌 네트워크',
   onboardingWelcomePointGlobalDescription:
     '40개국 이상, 6개 대륙에서 리워드를 누리세요.',
+  genericError: '문제가 발생했습니다. 다시 시도하거나 지원팀에 문의해 주세요.',
 } as const;
 
 export default auth;

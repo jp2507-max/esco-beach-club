@@ -25,8 +25,8 @@ const perks = {
     recentActivity: '최근 활동',
     fullArchive: '전체 내역 보기',
     hero: {
-      status: 'EXCLUSIVE STATUS',
-      total: '{{count}} Perks',
+      status: '독점 상태',
+      total: '{{count}}개 혜택',
       subtitle: '올해 잠금 해제됨',
     },
     status: {

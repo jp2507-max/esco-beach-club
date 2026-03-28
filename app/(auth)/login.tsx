@@ -102,11 +102,37 @@ export default function LoginScreen(): React.JSX.Element {
   const socialError = appleSignInError ?? googleSignInError;
   const resolvedError = socialError ?? visibleError;
 
-  const resolvedErrorMessage = resolvedError
-    ? isAuthErrorKey(resolvedError?.message)
-      ? t(resolvedError?.message)
-      : resolvedError?.message
-    : null;
+  const unrecognizedErrorMessage = React.useMemo(() => {
+    if (!resolvedError) return null;
+    const message = resolvedError.message;
+    return isAuthErrorKey(message) ? null : message;
+  }, [resolvedError]);
+
+  const lastLoggedUnrecognizedErrorRef = React.useRef<string | null>(null);
+
+  React.useEffect(() => {
+    if (!unrecognizedErrorMessage) {
+      lastLoggedUnrecognizedErrorRef.current = null;
+      return;
+    }
+
+    if (lastLoggedUnrecognizedErrorRef.current === unrecognizedErrorMessage)
+      return;
+
+    console.error(
+      '[AuthError] Unrecognized message:',
+      unrecognizedErrorMessage
+    );
+    lastLoggedUnrecognizedErrorRef.current = unrecognizedErrorMessage;
+  }, [unrecognizedErrorMessage]);
+
+  const resolvedErrorMessage = React.useMemo(() => {
+    if (!resolvedError) return null;
+    const message = resolvedError.message;
+    if (isAuthErrorKey(message)) return t(message);
+
+    return t('genericError');
+  }, [resolvedError, t]);
 
   return (
     <View className="flex-1">

@@ -26,9 +26,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/colors';
 import type { UserTier } from '@/lib/types';
 import { useProfileData } from '@/providers/DataProvider';
-import { ProfileSubScreenHeader } from '@/src/components/ui';
+import { Badge, ProfileSubScreenHeader } from '@/src/components/ui';
 import { motion, rmTiming } from '@/src/lib/animations/motion';
+import { db } from '@/src/lib/instant';
+import { type InstantRecord, mapLoyaltyTransaction } from '@/src/lib/mappers';
 import { shadows } from '@/src/lib/styles/shadows';
+import { cn } from '@/src/lib/utils';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 
@@ -231,6 +234,50 @@ export default function MembershipScreen(): React.JSX.Element {
     [tierConfig.benefits]
   );
 
+  // Fetch real activity data (Loyalty Transactions)
+  const profileId = profile?.id;
+  const { data: activityData } = db.useQuery(
+    profileId
+      ? {
+          profiles: {
+            $: {
+              where: { id: profileId },
+            },
+            loyalty_transactions: {
+              $: {
+                order: { created_at: 'desc' },
+                limit: 5,
+              },
+            },
+          } as const,
+        }
+      : null
+  );
+
+  const activities = useMemo(() => {
+    if (!activityData?.profiles?.[0]) return [];
+    const rawTxs =
+      (activityData.profiles[0].loyalty_transactions as
+        | InstantRecord[]
+        | undefined) ?? [];
+    const txs = rawTxs.map(mapLoyaltyTransaction);
+
+    return txs.map((tx) => {
+      const createdAt = tx.created_at ? new Date(tx.created_at) : new Date();
+      const diffMs = Math.max(0, new Date().getTime() - createdAt.getTime());
+      const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+      return {
+        id: tx.id,
+        type: 'points_earned' as const,
+        points: tx.points_awarded || 0,
+        daysAgo: days,
+      };
+    });
+  }, [activityData]);
+
+  const hasActivity = activities.length > 0;
+
   function handleManagePress(): void {
     Alert.alert(t('comingSoon'));
   }
@@ -429,48 +476,69 @@ export default function MembershipScreen(): React.JSX.Element {
 
         {/* ── Section 4: Recent Activity ────────────────────────── */}
         <Animated.View className="mb-4" style={fadeStyle}>
-          <Text className="mb-4 px-1 text-lg font-bold tracking-tight text-secondary dark:text-teal-light">
-            {t('activity.title')}
-          </Text>
+          <View className="mb-4 flex-row items-center justify-between px-1">
+            <Text className="text-lg font-bold tracking-tight text-secondary dark:text-teal-light">
+              {t('activity.title')}
+            </Text>
+            {!hasActivity && (
+              <Badge label={t('activity.sampleData')} tone="neutral" />
+            )}
+          </View>
 
           <View className="overflow-hidden rounded-2xl border border-border bg-white dark:border-dark-border dark:bg-dark-bg-card">
-            {/* Tier upgrade activity */}
-            <View className="flex-row items-start gap-3.5 border-b border-border p-5 dark:border-dark-border">
-              <View
-                className="mt-1.5 size-2.5 rounded-full"
-                style={{ backgroundColor: Colors.primary }}
-              />
-              <View className="flex-1">
-                <Text className="text-sm font-bold text-text dark:text-text-primary-dark">
-                  {t('activity.tierUpgraded')}
-                </Text>
-                <Text className="mt-0.5 text-xs text-text-secondary dark:text-text-secondary-dark">
-                  {t('activity.tierUpgradedDesc', { tier: tierLabel })}
-                </Text>
-                <Text className="mt-1.5 text-[10px] font-bold uppercase tracking-[1px] text-text-muted dark:text-text-muted-dark">
-                  {t('activity.daysAgo', { count: 2 })}
-                </Text>
+            {hasActivity ? (
+              activities.map(
+                (
+                  item: { daysAgo: number; id: string; points: number },
+                  index: number
+                ) => (
+                  <View
+                    key={item.id}
+                    className={cn(
+                      'flex-row items-start gap-3.5 p-5',
+                      index < activities.length - 1 &&
+                        'border-b border-border dark:border-dark-border'
+                    )}
+                  >
+                    <View
+                      className="mt-1.5 size-2.5 rounded-full"
+                      style={{ backgroundColor: Colors.secondary }}
+                    />
+                    <View className="flex-1">
+                      <Text className="text-sm font-bold text-text dark:text-text-primary-dark">
+                        {t('activity.pointsEarned')}
+                      </Text>
+                      <Text className="mt-0.5 text-xs text-text-secondary dark:text-text-secondary-dark">
+                        {t('activity.pointsEarnedDesc', {
+                          points: item.points,
+                        })}
+                      </Text>
+                      <Text className="mt-1.5 text-[10px] font-bold uppercase tracking-[1px] text-text-muted dark:text-text-muted-dark">
+                        {t('activity.daysAgo', { count: item.daysAgo })}
+                      </Text>
+                    </View>
+                  </View>
+                )
+              )
+            ) : (
+              <View className="flex-row items-start gap-3.5 p-5">
+                <View
+                  className="mt-1.5 size-2.5 rounded-full"
+                  style={{ backgroundColor: Colors.secondary }}
+                />
+                <View className="flex-1">
+                  <Text className="text-sm font-bold text-text dark:text-text-primary-dark">
+                    {t('activity.pointsEarned')}
+                  </Text>
+                  <Text className="mt-0.5 text-xs text-text-secondary dark:text-text-secondary-dark">
+                    {t('activity.pointsEarnedDesc', { points: '—' })}
+                  </Text>
+                  <Text className="mt-1.5 text-[10px] font-bold uppercase tracking-[1px] text-text-muted dark:text-text-muted-dark">
+                    {t('activity.daysAgo', { count: 0 })}
+                  </Text>
+                </View>
               </View>
-            </View>
-
-            {/* Points earned activity */}
-            <View className="flex-row items-start gap-3.5 p-5">
-              <View
-                className="mt-1.5 size-2.5 rounded-full"
-                style={{ backgroundColor: Colors.secondary }}
-              />
-              <View className="flex-1">
-                <Text className="text-sm font-bold text-text dark:text-text-primary-dark">
-                  {t('activity.pointsEarned')}
-                </Text>
-                <Text className="mt-0.5 text-xs text-text-secondary dark:text-text-secondary-dark">
-                  {t('activity.pointsEarnedDesc', { points: 450 })}
-                </Text>
-                <Text className="mt-1.5 text-[10px] font-bold uppercase tracking-[1px] text-text-muted dark:text-text-muted-dark">
-                  {t('activity.daysAgo', { count: 4 })}
-                </Text>
-              </View>
-            </View>
+            )}
           </View>
         </Animated.View>
 

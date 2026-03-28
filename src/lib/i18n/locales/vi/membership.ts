@@ -39,6 +39,7 @@ const membership = {
     pointsEarned: 'Điểm tích lũy',
     pointsEarnedDesc: '+{{points}} điểm từ hoạt động gần đây.',
     daysAgo: '{{count}} ngày trước',
+    sampleData: 'Dữ liệu mẫu',
   },
   comingSoon: 'Sắp ra mắt',
 } as const;

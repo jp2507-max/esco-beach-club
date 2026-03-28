@@ -6,6 +6,7 @@ import { ArrowRight, Bell, Check, MapPin } from 'lucide-react-native';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Linking } from 'react-native';
+import { FadeIn, FadeInUp } from 'react-native-reanimated';
 
 import { Colors } from '@/constants/colors';
 import {
@@ -14,7 +15,11 @@ import {
 } from '@/lib/types';
 import { OnboardingHeader } from '@/src/components/onboarding/onboarding-header';
 import { InfoDot } from '@/src/components/ui';
+import { motion, withRM } from '@/src/lib/animations/motion';
+import { useButtonPress } from '@/src/lib/animations/use-button-press';
+import { shadows } from '@/src/lib/styles/shadows';
 import { ActivityIndicator, Pressable, Text, View } from '@/src/tw';
+import { Animated } from '@/src/tw/animated';
 
 type OnboardingPermissionsSearchParams = {
   onboardingDateOfBirth?: string | string[];
@@ -68,11 +73,17 @@ function mapExpoPermissionStatus(
   return onboardingPermissionStatuses.undetermined;
 }
 
+const TITLE_DELAY = 80;
+const CARD_BASE_DELAY = 200;
+const CARD_STAGGER = 140;
+const CTA_DELAY = 540;
+
 export default function OnboardingPermissionsScreen(): React.JSX.Element {
   const router = useRouter();
   const { t } = useTranslation('auth');
   const searchParams =
     useLocalSearchParams<OnboardingPermissionsSearchParams>();
+  const ctaButton = useButtonPress();
 
   const [locationStatus, setLocationStatus] =
     React.useState<OnboardingPermissionStatus>(
@@ -142,6 +153,7 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
   }
 
   async function requestLocationPermission(): Promise<void> {
+    if (isBusy) return;
     setIsRequestingLocation(true);
 
     try {
@@ -167,6 +179,7 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
   }
 
   async function requestPushPermission(): Promise<void> {
+    if (isBusy) return;
     setIsRequestingPush(true);
 
     try {
@@ -219,8 +232,8 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
 
   function handleNotNow(): void {
     continueToFinalDetails({
-      location: onboardingPermissionStatuses.undetermined,
-      push: onboardingPermissionStatuses.undetermined,
+      location: locationStatus,
+      push: pushStatus,
     });
   }
 
@@ -235,17 +248,29 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
       />
 
       <View className="flex-1 px-5 pb-6">
-        <View className="mb-3 rounded-2xl bg-primary-fixed/45 px-4 py-2 dark:bg-primary/20">
-          <Text className="text-center text-[22px] font-extrabold leading-7 text-text dark:text-text-primary-dark">
+        <Animated.View
+          entering={withRM(FadeIn.duration(motion.dur.md).delay(TITLE_DELAY))}
+          className="mb-3 rounded-2xl bg-primary-fixed/45 px-4 py-2 dark:bg-primary/20"
+        >
+          <Text className="text-center text-[24px] font-extrabold leading-7 text-text dark:text-text-primary-dark">
             {t('onboardingPermissionsTitle')}
           </Text>
           <Text className="mt-0.5 text-center text-[13px] leading-5 text-text-secondary dark:text-text-secondary-dark">
             {t('onboardingPermissionsSubtitle')}
           </Text>
-        </View>
+        </Animated.View>
 
         <View className="gap-2.5">
-          <View className="rounded-2xl border border-border bg-white p-4 dark:border-dark-border dark:bg-dark-bg-card">
+          <Animated.View
+            entering={withRM(
+              FadeInUp.springify()
+                .damping(18)
+                .stiffness(140)
+                .delay(CARD_BASE_DELAY)
+            )}
+            className="rounded-2xl border border-border bg-white p-4 dark:border-dark-border dark:bg-dark-bg-card"
+            style={shadows.level2}
+          >
             <View className="mb-3 flex-row items-start justify-between gap-2">
               <View className="flex-1 flex-row items-start gap-2.5">
                 <View className="size-9 items-center justify-center rounded-full bg-secondary-fixed/45 dark:bg-secondary/25">
@@ -288,7 +313,7 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
             <Pressable
               accessibilityRole="button"
               className="overflow-hidden rounded-full"
-              disabled={isRequestingLocation}
+              disabled={isBusy}
               onPress={requestLocationPermission}
               testID="onboarding-permissions-enable-location"
             >
@@ -325,9 +350,18 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
                 </Text>
               </Pressable>
             ) : null}
-          </View>
+          </Animated.View>
 
-          <View className="rounded-2xl border border-border bg-white p-4 dark:border-dark-border dark:bg-dark-bg-card">
+          <Animated.View
+            entering={withRM(
+              FadeInUp.springify()
+                .damping(18)
+                .stiffness(140)
+                .delay(CARD_BASE_DELAY + CARD_STAGGER)
+            )}
+            className="rounded-2xl border border-border bg-white p-4 dark:border-dark-border dark:bg-dark-bg-card"
+            style={shadows.level2}
+          >
             <View className="mb-3 flex-row items-start justify-between gap-2">
               <View className="flex-1 flex-row items-start gap-2.5">
                 <View className="size-9 items-center justify-center rounded-full bg-primary-fixed dark:bg-primary/20">
@@ -370,12 +404,12 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
             <Pressable
               accessibilityRole="button"
               className="overflow-hidden rounded-full"
-              disabled={isRequestingPush}
+              disabled={isBusy}
               onPress={requestPushPermission}
               testID="onboarding-permissions-enable-push"
             >
               <LinearGradient
-                colors={['#BC004B', '#C00053', '#A5004B']}
+                colors={Colors.gradientPrimary}
                 end={{ x: 1, y: 0 }}
                 start={{ x: 0, y: 0 }}
                 style={{
@@ -407,49 +441,62 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
                 </Text>
               </Pressable>
             ) : null}
-          </View>
+          </Animated.View>
         </View>
 
-        <View className="mt-auto gap-3">
-          <Pressable
-            accessibilityRole="button"
-            className="overflow-hidden rounded-full"
-            disabled={isBusy}
-            onPress={handleContinue}
-            testID="onboarding-permissions-continue"
-          >
-            <LinearGradient
-              colors={[Colors.primary, '#C2185B']}
-              end={{ x: 1, y: 0 }}
-              start={{ x: 0, y: 0 }}
-              style={{
-                alignItems: 'center',
-                borderRadius: 999,
-                height: 50,
-                justifyContent: 'center',
-              }}
+        <Animated.View
+          entering={withRM(FadeInUp.duration(motion.dur.md).delay(CTA_DELAY))}
+          className="mt-auto gap-3"
+        >
+          <Animated.View style={ctaButton.animatedStyle}>
+            <Pressable
+              accessibilityRole="button"
+              className="overflow-hidden rounded-full"
+              disabled={isBusy}
+              onPress={handleContinue}
+              onPressIn={ctaButton.handlePressIn}
+              onPressOut={ctaButton.handlePressOut}
+              testID="onboarding-permissions-continue"
             >
-              <View className="flex-row items-center gap-2.5">
-                <Text className="text-[16px] font-bold text-white">
-                  {t('onboardingPermissionsContinue')}
-                </Text>
-                <ArrowRight color="#ffffff" size={20} />
-              </View>
-            </LinearGradient>
-          </Pressable>
+              <LinearGradient
+                colors={Colors.gradientPrimary}
+                end={{ x: 1, y: 0 }}
+                start={{ x: 0, y: 0 }}
+                style={{
+                  alignItems: 'center',
+                  borderRadius: 999,
+                  height: 54,
+                  justifyContent: 'center',
+                }}
+              >
+                <View className="flex-row items-center gap-2.5">
+                  <Text className="text-[17px] font-bold text-white">
+                    {t('onboardingPermissionsContinue')}
+                  </Text>
+                  <ArrowRight color="#ffffff" size={22} />
+                </View>
+              </LinearGradient>
+            </Pressable>
+          </Animated.View>
 
           <Pressable
             accessibilityRole="button"
             className="items-center"
+            disabled={isBusy}
             onPress={handleNotNow}
             testID="onboarding-permissions-not-now"
           >
-            <Text className="text-[15px] font-bold text-secondary dark:text-secondary-fixed">
+            <Text className="text-[16px] font-bold text-secondary dark:text-secondary-fixed">
               {t('onboardingPermissionsNotNow')}
             </Text>
           </Pressable>
 
-          <View className="flex-row items-center justify-center gap-2">
+          <Animated.View
+            entering={withRM(
+              FadeIn.duration(motion.dur.md).delay(CTA_DELAY + 120)
+            )}
+            className="flex-row items-center justify-center gap-2"
+          >
             <Check
               className="text-primary dark:text-primary-bright"
               size={14}
@@ -457,8 +504,8 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
             <Text className="text-[12px] text-text-muted dark:text-text-muted-dark">
               {t('onboardingPermissionsPrivacyNote')}
             </Text>
-          </View>
-        </View>
+          </Animated.View>
+        </Animated.View>
       </View>
     </View>
   );

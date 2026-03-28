@@ -120,6 +120,7 @@ export default function SignupScreen(): React.JSX.Element {
     onboardingTermsAccepted?: string;
   }>();
   const { t } = useTranslation('auth');
+  const { t: tCommon } = useTranslation('common');
   const {
     appleSignInError,
     appleSignInLoading,
@@ -413,6 +414,7 @@ export default function SignupScreen(): React.JSX.Element {
           <View className="mb-7 flex-row items-center justify-between">
             <View className="flex-row items-center gap-3">
               <Pressable
+                accessibilityLabel={tCommon('back')}
                 accessibilityRole="button"
                 className="size-10 items-center justify-center rounded-full"
                 onPress={() => router.back()}

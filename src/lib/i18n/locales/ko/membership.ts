@@ -39,6 +39,7 @@ const membership = {
     pointsEarned: '포인트 적립',
     pointsEarnedDesc: '최근 활동에서 +{{points}} 포인트.',
     daysAgo: '{{count}}일 전',
+    sampleData: '샘플 데이터',
   },
   comingSoon: '곧 출시',
 } as const;

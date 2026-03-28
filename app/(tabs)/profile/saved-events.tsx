@@ -20,7 +20,9 @@ export default function SavedEventsScreen(): React.JSX.Element {
   const { t } = useTranslation('profile');
   const { savedEventsList, savedEventsLoading, toggleSavedEvent } =
     useSavedEventsData();
-  const [pendingRemovals, setPendingRemovals] = useState<Set<string>>(new Set());
+  const [pendingRemovals, setPendingRemovals] = useState<Set<string>>(
+    new Set()
+  );
 
   if (savedEventsLoading) {
     return (

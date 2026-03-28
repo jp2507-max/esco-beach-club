@@ -39,6 +39,7 @@ const membership = {
     pointsEarned: 'Points Earned',
     pointsEarnedDesc: '+{{points}} points from recent activity.',
     daysAgo: '{{count}} days ago',
+    sampleData: 'Sample Content',
   },
   comingSoon: 'Coming soon',
 } as const;

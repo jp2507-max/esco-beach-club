@@ -16,6 +16,7 @@ export const AUTH_ERROR_KEYS = [
   'unableToSignInWithGoogle',
   'unableToVerifyCode',
   'unableToSignOut',
+  'genericError',
 ] as const;
 
 export type AuthErrorKey = (typeof AUTH_ERROR_KEYS)[number];

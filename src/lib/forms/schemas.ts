@@ -16,6 +16,19 @@ function isValidCalendarDate(s: string): boolean {
   );
 }
 
+// Shared field validators
+const dateOfBirthField = z
+  .string()
+  .trim()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, { error: v('invalidDate') })
+  .refine(isValidCalendarDate, { error: v('invalidDate') });
+
+const displayNameField = z
+  .string()
+  .trim()
+  .min(2, { error: v('required') })
+  .max(60, { error: v('profileNameMax') });
+
 /** Shared schema for email-code auth (login/signup). */
 export const emailAuthSchema = z.object({
   email: z
@@ -41,31 +54,15 @@ export const verifyCodeSchema = z.object({
 export type VerifyCodeFormValues = z.infer<typeof verifyCodeSchema>;
 
 export const signupSchema = emailAuthSchema.extend({
-  dateOfBirth: z
-    .string()
-    .trim()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, { error: v('invalidDate') })
-    .refine(isValidCalendarDate, { error: v('invalidDate') }),
-  displayName: z
-    .string()
-    .trim()
-    .min(2, { error: v('required') })
-    .max(60, { error: v('profileNameMax') }),
+  dateOfBirth: dateOfBirthField,
+  displayName: displayNameField,
 });
 
 export type SignupFormValues = z.infer<typeof signupSchema>;
 
 export const onboardingBasicsSchema = z.object({
-  dateOfBirth: z
-    .string()
-    .trim()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, { error: v('invalidDate') })
-    .refine(isValidCalendarDate, { error: v('invalidDate') }),
-  displayName: z
-    .string()
-    .trim()
-    .min(2, { error: v('required') })
-    .max(60, { error: v('profileNameMax') }),
+  dateOfBirth: dateOfBirthField,
+  displayName: displayNameField,
 });
 
 export type OnboardingBasicsFormValues = z.infer<typeof onboardingBasicsSchema>;

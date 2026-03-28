@@ -1,16 +1,32 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowRight, Sparkles, Ticket } from 'lucide-react-native';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert } from 'react-native';
+import {
+  cancelAnimation,
+  FadeIn,
+  FadeInUp,
+  ReduceMotion,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
+  ZoomIn,
+} from 'react-native-reanimated';
 
+import { Colors } from '@/constants/colors';
 import { updateProfile } from '@/lib/api';
 import { onboardingPermissionStatuses } from '@/lib/types';
 import { useAuth } from '@/providers/AuthProvider';
 import { useProfileData } from '@/providers/DataProvider';
 import { OnboardingHeader } from '@/src/components/onboarding/onboarding-header';
+import { motion, withRM } from '@/src/lib/animations/motion';
+import { useButtonPress } from '@/src/lib/animations/use-button-press';
 import { Pressable, Text, View } from '@/src/tw';
+import { Animated } from '@/src/tw/animated';
 import { Image } from '@/src/tw/image';
 
 const WELCOME_COCKTAIL_IMAGE_URI =
@@ -71,12 +87,88 @@ function readSingleSearchParam(
   return value;
 }
 
+const ICON_DELAY = 100;
+const TITLE_DELAY = 260;
+const CARD_DELAY = 440;
+const CTA_DELAY = 680;
+
+function FloatingDot({
+  className,
+  delay,
+  amplitude,
+}: {
+  amplitude: number;
+  className: string;
+  delay: number;
+}): React.JSX.Element {
+  const translateY = useSharedValue(0);
+
+  useEffect(() => {
+    translateY.set(
+      withRepeat(
+        withSequence(
+          withTiming(amplitude, {
+            duration: 2400,
+            reduceMotion: ReduceMotion.System,
+          }),
+          withTiming(-amplitude, {
+            duration: 2400,
+            reduceMotion: ReduceMotion.System,
+          })
+        ),
+        -1,
+        true
+      )
+    );
+    return () => cancelAnimation(translateY);
+  }, [amplitude, translateY]);
+
+  const dotStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.get() }],
+  }));
+
+  return (
+    <Animated.View
+      entering={withRM(FadeIn.duration(motion.dur.xl).delay(delay))}
+      style={dotStyle}
+      className={className}
+    />
+  );
+}
+
 export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
   const { profile } = useProfileData();
   const { t } = useTranslation('auth');
   const searchParams = useLocalSearchParams<OnboardingLocalIdentityParams>();
+  const ctaButton = useButtonPress();
+
+  const sparkleScale = useSharedValue(1);
+
+  useEffect(() => {
+    sparkleScale.set(
+      withRepeat(
+        withSequence(
+          withTiming(1.15, {
+            duration: 900,
+            reduceMotion: ReduceMotion.System,
+          }),
+          withTiming(1, {
+            duration: 900,
+            reduceMotion: ReduceMotion.System,
+          })
+        ),
+        -1,
+        true
+      )
+    );
+    return () => cancelAnimation(sparkleScale);
+  }, [sparkleScale]);
+
+  const sparkleStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: sparkleScale.get() }],
+  }));
 
   async function persistAuthenticatedOnboardingChoices(
     isSetupCompleted: boolean
@@ -229,21 +321,43 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
 
   return (
     <View className="flex-1 bg-background dark:bg-dark-bg">
-      <LinearGradient
-        colors={[
-          'rgba(251,249,241,0.98)',
-          'rgba(251,249,241,0.98)',
-          'rgba(117,87,0,0.05)',
-        ]}
-        style={{ bottom: 0, left: 0, position: 'absolute', right: 0, top: 0 }}
-      />
+      <View className="absolute inset-0 dark:hidden">
+        <LinearGradient
+          colors={[
+            'rgba(251,249,241,0.98)',
+            'rgba(251,249,241,0.98)',
+            'rgba(117,87,0,0.05)',
+          ]}
+          style={{ bottom: 0, left: 0, position: 'absolute', right: 0, top: 0 }}
+        />
+      </View>
 
-      <View className="pointer-events-none absolute inset-0 opacity-45">
-        <View className="absolute left-10 top-20 size-4 rounded-full bg-primary/50" />
-        <View className="absolute right-16 top-55 size-3 rounded-sm bg-secondary/50" />
-        <View className="absolute left-24 top-120 h-5 w-2 rounded-full bg-warning/45" />
-        <View className="absolute right-24 top-110 size-3 rounded-full bg-primary/40" />
-        <View className="absolute bottom-20 right-8 size-6 rounded-full bg-border/70 dark:bg-dark-border/60" />
+      <View className="pointer-events-none absolute inset-0 opacity-45 dark:opacity-25">
+        <FloatingDot
+          className="absolute left-10 top-20 size-4 rounded-full bg-primary/50 dark:bg-primary-bright/40"
+          delay={200}
+          amplitude={6}
+        />
+        <FloatingDot
+          className="absolute right-16 top-55 size-3 rounded-sm bg-secondary/50 dark:bg-secondary/30"
+          delay={400}
+          amplitude={8}
+        />
+        <FloatingDot
+          className="absolute left-24 top-120 h-5 w-2 rounded-full bg-warning/45 dark:bg-warning-dark/30"
+          delay={300}
+          amplitude={5}
+        />
+        <FloatingDot
+          className="absolute right-24 top-110 size-3 rounded-full bg-primary/40 dark:bg-primary-bright/30"
+          delay={500}
+          amplitude={7}
+        />
+        <FloatingDot
+          className="absolute bottom-20 right-8 size-6 rounded-full bg-border/70 dark:bg-dark-border/60"
+          delay={350}
+          amplitude={4}
+        />
       </View>
 
       <OnboardingHeader
@@ -254,23 +368,46 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
 
       <View className="flex-1 px-6 pb-12">
         <View className="items-center">
-          <View className="mb-4 size-14 items-center justify-center rounded-full bg-primary-fixed dark:bg-primary/20">
+          <Animated.View
+            entering={withRM(
+              ZoomIn.springify().damping(12).stiffness(160).delay(ICON_DELAY)
+            )}
+            style={sparkleStyle}
+            className="mb-4 size-14 items-center justify-center rounded-full bg-primary-fixed dark:bg-primary/20"
+          >
             <Sparkles
               className="text-primary dark:text-primary-bright"
               size={24}
             />
-          </View>
+          </Animated.View>
 
-          <Text className="text-center text-[32px] font-extrabold leading-9 text-text dark:text-text-primary-dark">
-            {t('onboardingClubWelcomeTitle')}
-          </Text>
+          <Animated.View
+            entering={withRM(
+              FadeInUp.springify().damping(18).stiffness(140).delay(TITLE_DELAY)
+            )}
+          >
+            <Text className="text-center text-[28px] font-extrabold leading-9 text-text dark:text-text-primary-dark">
+              {t('onboardingClubWelcomeTitle')}
+            </Text>
+          </Animated.View>
 
-          <Text className="mt-3 px-2 text-center text-[15px] leading-6 text-text-secondary dark:text-text-secondary-dark">
-            {t('onboardingClubWelcomeSubtitle')}
-          </Text>
+          <Animated.View
+            entering={withRM(
+              FadeIn.duration(motion.dur.md).delay(TITLE_DELAY + 100)
+            )}
+          >
+            <Text className="mt-3 px-2 text-center text-[15px] leading-6 text-text-secondary dark:text-text-secondary-dark">
+              {t('onboardingClubWelcomeSubtitle')}
+            </Text>
+          </Animated.View>
         </View>
 
-        <View className="mt-6 overflow-hidden rounded-[36px] border border-border/70 bg-white/92 p-5 dark:border-dark-border dark:bg-dark-bg-card/90">
+        <Animated.View
+          entering={withRM(
+            FadeInUp.springify().damping(16).stiffness(120).delay(CARD_DELAY)
+          )}
+          className="mt-6 overflow-hidden rounded-3xl border border-border/70 bg-white/92 p-5 dark:border-dark-border dark:bg-dark-bg-card/90"
+        >
           <Image
             className="absolute inset-0 h-full w-full opacity-14"
             source={{ uri: WELCOME_COCKTAIL_IMAGE_URI }}
@@ -288,12 +425,28 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
               {t('onboardingClubRewardTitle')}
             </Text>
 
-            <View className="mt-5 w-full rounded-[30px] border-2 border-dashed border-border-light bg-surface-container-low px-4 py-3 dark:border-dark-border dark:bg-dark-bg-elevated">
+            <Animated.View
+              entering={withRM(
+                FadeInUp.springify()
+                  .damping(14)
+                  .stiffness(130)
+                  .delay(CARD_DELAY + 180)
+              )}
+              className="mt-5 w-full rounded-2xl border-2 border-dashed border-border-light bg-surface-container-low px-4 py-3 dark:border-dark-border dark:bg-dark-bg-elevated"
+            >
               <View className="flex-row items-center justify-between gap-3">
                 <View className="flex-row items-center gap-3">
-                  <View className="size-16 items-center justify-center rounded-xl bg-primary dark:bg-primary-bright">
+                  <Animated.View
+                    entering={withRM(
+                      ZoomIn.springify()
+                        .damping(12)
+                        .stiffness(160)
+                        .delay(CARD_DELAY + 320)
+                    )}
+                    className="size-16 items-center justify-center rounded-xl bg-primary dark:bg-primary-bright"
+                  >
                     <Ticket color="#ffffff" size={22} />
-                  </View>
+                  </Animated.View>
 
                   <View>
                     <Text className="text-[17px] font-bold text-text dark:text-text-primary-dark">
@@ -305,52 +458,74 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
                   </View>
                 </View>
 
-                <View className="size-12 rounded-md border border-border/80 dark:border-dark-border" />
+                <View className="size-12 items-center justify-center rounded-xl bg-gold/15">
+                  <Sparkles className="text-gold" size={18} />
+                </View>
               </View>
-            </View>
+            </Animated.View>
 
-            <Text className="mt-5 px-2 text-center text-[14px] leading-6 text-text-secondary dark:text-text-secondary-dark">
-              {t('onboardingClubVoucherInstruction')}
-            </Text>
-          </View>
-        </View>
-
-        <Pressable
-          accessibilityRole="button"
-          className="mt-8 overflow-hidden rounded-full"
-          onPress={handleCompleteSetup}
-          testID="onboarding-final-details-complete"
-        >
-          <LinearGradient
-            colors={['#BC004B', '#C00053', '#A5004B']}
-            end={{ x: 1, y: 0 }}
-            start={{ x: 0, y: 0 }}
-            style={{
-              alignItems: 'center',
-              borderRadius: 999,
-              height: 54,
-              justifyContent: 'center',
-            }}
-          >
-            <View className="flex-row items-center gap-2">
-              <Text className="text-[17px] font-bold text-white">
-                {t('onboardingClubPrimaryCta')}
+            <Animated.View
+              entering={withRM(
+                FadeIn.duration(motion.dur.md).delay(CARD_DELAY + 400)
+              )}
+            >
+              <Text className="mt-5 px-2 text-center text-[14px] leading-6 text-text-secondary dark:text-text-secondary-dark">
+                {t('onboardingClubVoucherInstruction')}
               </Text>
-              <ArrowRight color="#ffffff" size={22} />
-            </View>
-          </LinearGradient>
-        </Pressable>
+            </Animated.View>
+          </View>
+        </Animated.View>
 
-        <Pressable
-          accessibilityRole="button"
-          className="mt-5 items-center"
-          onPress={handleDoThisLater}
-          testID="onboarding-final-details-later"
+        <Animated.View
+          entering={withRM(FadeInUp.duration(motion.dur.md).delay(CTA_DELAY))}
         >
-          <Text className="text-[16px] font-bold text-secondary dark:text-secondary-fixed">
-            {t('onboardingClubSecondaryCta')}
-          </Text>
-        </Pressable>
+          <Animated.View style={ctaButton.animatedStyle}>
+            <Pressable
+              accessibilityRole="button"
+              className="mt-8 overflow-hidden rounded-full"
+              onPress={handleCompleteSetup}
+              onPressIn={ctaButton.handlePressIn}
+              onPressOut={ctaButton.handlePressOut}
+              testID="onboarding-final-details-complete"
+            >
+              <LinearGradient
+                colors={Colors.gradientPrimary}
+                end={{ x: 1, y: 0 }}
+                start={{ x: 0, y: 0 }}
+                style={{
+                  alignItems: 'center',
+                  borderRadius: 999,
+                  height: 54,
+                  justifyContent: 'center',
+                }}
+              >
+                <View className="flex-row items-center gap-2">
+                  <Text className="text-[17px] font-bold text-white">
+                    {t('onboardingClubPrimaryCta')}
+                  </Text>
+                  <ArrowRight color="#ffffff" size={22} />
+                </View>
+              </LinearGradient>
+            </Pressable>
+          </Animated.View>
+        </Animated.View>
+
+        <Animated.View
+          entering={withRM(
+            FadeIn.duration(motion.dur.md).delay(CTA_DELAY + 100)
+          )}
+        >
+          <Pressable
+            accessibilityRole="button"
+            className="mt-5 items-center"
+            onPress={handleDoThisLater}
+            testID="onboarding-final-details-later"
+          >
+            <Text className="text-[16px] font-bold text-secondary dark:text-secondary-fixed">
+              {t('onboardingClubSecondaryCta')}
+            </Text>
+          </Pressable>
+        </Animated.View>
       </View>
     </View>
   );

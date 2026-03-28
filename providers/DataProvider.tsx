@@ -424,6 +424,8 @@ export function DataProvider({
 
     if (!userId) {
       profileProvisionAttemptsRef.current.clear();
+      isProvisioningProfileRef.current = false;
+      setIsProvisioningProfile(false);
       return;
     }
 
@@ -471,6 +473,8 @@ export function DataProvider({
 
     return () => {
       isMounted = false;
+      isProvisioningProfileRef.current = false;
+      setIsProvisioningProfile(false);
     };
   }, [
     isAuthLoading,
@@ -593,12 +597,18 @@ export function DataProvider({
 
   useEffect(() => {
     if (!userId) {
-      pendingSavedToggleTimeoutsRef.current.forEach((timeoutId) => {
-        clearTimeout(timeoutId);
-      });
-      pendingSavedToggleTimeoutsRef.current.clear();
-      setPendingSavedToggles({});
-      isTogglingSavedRef.current.clear();
+      if (pendingSavedToggleTimeoutsRef.current.size > 0) {
+        pendingSavedToggleTimeoutsRef.current.forEach((timeoutId) => {
+          clearTimeout(timeoutId);
+        });
+        pendingSavedToggleTimeoutsRef.current.clear();
+      }
+      setPendingSavedToggles((previous) =>
+        Object.keys(previous).length === 0 ? previous : {}
+      );
+      if (isTogglingSavedRef.current.size > 0) {
+        isTogglingSavedRef.current.clear();
+      }
       return;
     }
 

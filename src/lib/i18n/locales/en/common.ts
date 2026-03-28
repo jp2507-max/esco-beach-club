@@ -96,6 +96,9 @@ const common = {
     profile: 'Profile',
   },
   close: 'Close',
+  datePicker: {
+    dismissHint: 'Double tap to close the date picker without changing the date',
+  },
   done: 'Done',
   modal: {
     title: 'Esco Life',

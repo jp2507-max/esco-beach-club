@@ -8,7 +8,13 @@ import {
   ShieldCheck,
   UserRound,
 } from 'lucide-react-native';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Alert } from 'react-native';
@@ -89,6 +95,14 @@ export default function StaffScanScreen(): React.JSX.Element {
 
   const billAmountInput = watch('billAmountVnd');
   const memberIdInput = watch('memberId');
+
+  useEffect(() => {
+    const trimmedMemberId = memberIdInput.trim();
+    if (selectedMember && selectedMember.member_id !== trimmedMemberId) {
+      setSelectedMember(null);
+      setAwardSummary(null);
+    }
+  }, [memberIdInput, selectedMember]);
   const billAmountVnd = Number.parseInt(billAmountInput || '0', 10);
   const requiresManagerPin = billAmountVnd > loyaltyConfig.approvalCapVnd;
   const pointsPreview = calculatePointsForAmountVnd(billAmountVnd);
@@ -114,6 +128,7 @@ export default function StaffScanScreen(): React.JSX.Element {
       const nextMemberId = (overrideMemberId ?? getValues('memberId')).trim();
       if (!nextMemberId) {
         setSelectedMember(null);
+        setAwardSummary(null);
         return;
       }
 
@@ -122,6 +137,7 @@ export default function StaffScanScreen(): React.JSX.Element {
         const member = await fetchProfileByMemberId(nextMemberId);
         if (!member) {
           setSelectedMember(null);
+          setAwardSummary(null);
           Alert.alert(
             t('staff.memberNotFoundTitle'),
             t('staff.memberNotFound')
@@ -165,6 +181,12 @@ export default function StaffScanScreen(): React.JSX.Element {
   );
 
   const handleAwardSubmit = handleSubmit(async (values) => {
+    const trimmedMemberId = values.memberId.trim();
+    if (!selectedMember || selectedMember.member_id !== trimmedMemberId) {
+      Alert.alert(t('staff.errors.title'), t('staff.memberPendingLookup'));
+      return;
+    }
+
     if (!staffAccess?.user_id) {
       Alert.alert(
         t('staff.errors.title'),
@@ -236,6 +258,7 @@ export default function StaffScanScreen(): React.JSX.Element {
       >
         <View className="mb-4 flex-row items-center justify-between pt-3">
           <Pressable
+            accessibilityHint={tCommon('backHint')}
             accessibilityLabel={tCommon('back')}
             accessibilityRole="button"
             onPress={handleBack}
@@ -274,6 +297,7 @@ export default function StaffScanScreen(): React.JSX.Element {
       >
         <View className="mb-4 flex-row items-center justify-between">
           <Pressable
+            accessibilityHint={tCommon('backHint')}
             accessibilityLabel={tCommon('back')}
             accessibilityRole="button"
             onPress={handleBack}

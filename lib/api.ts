@@ -685,12 +685,15 @@ export async function awardLoyaltyTransaction(params: {
   }
 
   let response: Response;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
   try {
     response = await fetch(getTrustedLoyaltyAwardEndpoint(), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
+      signal: controller.signal,
       body: JSON.stringify({
         billAmountVnd,
         managerPin: params.managerPin?.trim() ?? '',
@@ -699,8 +702,13 @@ export async function awardLoyaltyTransaction(params: {
         staffUserId: params.staffUserId,
       }),
     });
-  } catch {
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('loyaltyServiceUnavailable');
+    }
     throw new Error('loyaltyServiceUnavailable');
+  } finally {
+    clearTimeout(timeoutId);
   }
 
   let payload: unknown = null;
@@ -779,6 +787,7 @@ export async function updateProfile(
   await db.transact(
     db.tx.profiles[current.id].update({
       ...sanitizedUpdates,
+      updated_at: nowIso(),
     })
   );
 
