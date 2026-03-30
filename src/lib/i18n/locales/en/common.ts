@@ -12,6 +12,7 @@ const common = {
     min: 'Must be at least {{min}}.',
     max: 'Must be at most {{max}}.',
     maxCharacters: 'Must be at most {{count}} characters.',
+    profileNameMin: 'Name must be at least 2 characters.',
     profileNameMax: 'Name must be at most 60 characters.',
     profileBioMax: 'Bio must be at most 160 characters.',
     commentMax: 'Comment must be at most 500 characters.',

@@ -27,7 +27,7 @@ const dateOfBirthField = z
 const displayNameField = z
   .string()
   .trim()
-  .min(2, { error: v('required') })
+  .min(2, { error: v('profileNameMin') })
   .max(60, { error: v('profileNameMax') });
 
 /** Shared schema for email-code auth (login/signup). */

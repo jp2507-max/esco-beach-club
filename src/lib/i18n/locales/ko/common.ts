@@ -12,6 +12,7 @@ const common = {
     min: '최소 {{min}} 이상이어야 합니다.',
     max: '최대 {{max}} 이하여야 합니다.',
     maxCharacters: '최대 {{count}}자까지 입력 가능합니다.',
+    profileNameMin: '이름은 최소 2자 이상 입력해 주세요.',
     profileNameMax: '이름은 최대 60자까지 입력 가능합니다.',
     profileBioMax: '소개는 최대 160자까지 입력 가능합니다.',
     commentMax: '코멘트는 최대 500자까지 입력 가능합니다.',

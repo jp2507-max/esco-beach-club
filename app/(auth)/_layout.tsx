@@ -16,6 +16,8 @@ export default function AuthLayout(): React.JSX.Element {
         />
       </Stack.Protected>
 
+      {/* Onboarding is intentionally outside Stack.Protected: signed-in members use
+          Profile → restart onboarding without signing out. */}
       <Stack.Screen
         name="onboarding-welcome"
         options={{ animation: 'slide_from_right' }}

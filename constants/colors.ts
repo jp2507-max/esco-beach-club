@@ -45,6 +45,19 @@ export const Colors = {
   black: '#000000',
   overlayTintDark: 'rgba(0,0,0,0.18)',
   overlayTintLight: 'rgba(255,255,255,0.15)',
+  /** Poster-style default avatar illustration (no semantic theme mapping). */
+  avatarFallback: {
+    base: '#f3b68e',
+    gradient: ['#f17963', '#f9b36b', '#8ee5e0'] as const,
+    highlight: 'rgba(255, 255, 255, 0.25)',
+    discTeal: 'rgba(16, 184, 200, 0.2)',
+    wave: 'rgba(90, 211, 224, 0.75)',
+    chin: '#f4a77c',
+    cheek: '#f7c49b',
+    nose: '#d28a58',
+    faceLight: '#ffd9bc',
+    feature: 'rgba(143, 90, 54, 0.85)',
+  },
 } as const;
 
 export default Colors;

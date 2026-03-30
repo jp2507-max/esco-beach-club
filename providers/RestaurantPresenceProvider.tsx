@@ -3,10 +3,7 @@ import * as Notifications from 'expo-notifications';
 import React from 'react';
 import { AppState, type AppStateStatus, Platform } from 'react-native';
 
-import {
-  type OnboardingPermissionStatus,
-  onboardingPermissionStatuses,
-} from '@/lib/types';
+import { onboardingPermissionStatuses } from '@/lib/types';
 import { useProfileData } from '@/providers/DataProvider';
 import { config } from '@/src/lib/config';
 import {
@@ -19,28 +16,13 @@ import {
   configureNotificationPresentation,
   ensureVenueUpsellNotificationChannel,
 } from '@/src/lib/notifications';
+import { toOnboardingPermissionStatus } from '@/src/lib/mappers';
 import { captureHandledError } from '@/src/lib/monitoring';
 import { useRestaurantPresenceStore } from '@/src/stores/restaurant-presence-store';
 
 type RestaurantPresenceProviderProps = {
   children: React.ReactNode;
 };
-
-function mapExpoPermissionStatus(
-  status: string | null | undefined
-): OnboardingPermissionStatus {
-  const normalized = status?.trim().toLowerCase();
-
-  if (normalized === 'granted') {
-    return onboardingPermissionStatuses.granted;
-  }
-
-  if (normalized === 'denied') {
-    return onboardingPermissionStatuses.denied;
-  }
-
-  return onboardingPermissionStatuses.undetermined;
-}
 
 export function RestaurantPresenceProvider({
   children,
@@ -53,10 +35,12 @@ export function RestaurantPresenceProvider({
     const foregroundLocationPermission =
       await Location.getForegroundPermissionsAsync();
     const notificationsPermission = await Notifications.getPermissionsAsync();
-    const foregroundLocationStatus = mapExpoPermissionStatus(
+    const foregroundLocationStatus = toOnboardingPermissionStatus(
       foregroundLocationPermission.status
     );
-    const pushStatus = mapExpoPermissionStatus(notificationsPermission.status);
+    const pushStatus = toOnboardingPermissionStatus(
+      notificationsPermission.status
+    );
     const backgroundLocationStatus =
       await syncBackgroundLocationPermissionStatus();
     const hasGeofenceConfig = config.restaurantPresence.geofence !== null;

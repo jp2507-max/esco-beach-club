@@ -12,6 +12,7 @@ const common = {
     min: 'Phải có ít nhất {{min}}.',
     max: 'Không được vượt quá {{max}}.',
     maxCharacters: 'Tối đa {{count}} ký tự.',
+    profileNameMin: 'Tên phải có ít nhất 2 ký tự.',
     profileNameMax: 'Tên tối đa 60 ký tự.',
     profileBioMax: 'Tiểu sử tối đa 160 ký tự.',
     commentMax: 'Nhận xét tối đa 500 ký tự.',

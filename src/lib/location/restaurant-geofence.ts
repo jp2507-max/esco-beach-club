@@ -4,6 +4,7 @@ import { Platform } from 'react-native';
 
 import { onboardingPermissionStatuses } from '@/lib/types';
 import { config } from '@/src/lib/config';
+import { toOnboardingPermissionStatus } from '@/src/lib/mappers';
 import {
   addMonitoringBreadcrumb,
   captureHandledError,
@@ -18,22 +19,6 @@ import {
 } from '@/src/stores/restaurant-presence-store';
 
 export const RESTAURANT_GEOFENCE_TASK_NAME = 'restaurant-venue-geofence';
-
-function mapExpoPermissionStatus(
-  status: string | null | undefined
-): (typeof onboardingPermissionStatuses)[keyof typeof onboardingPermissionStatuses] {
-  const normalized = status?.trim().toLowerCase();
-
-  if (normalized === 'granted') {
-    return onboardingPermissionStatuses.granted;
-  }
-
-  if (normalized === 'denied') {
-    return onboardingPermissionStatuses.denied;
-  }
-
-  return onboardingPermissionStatuses.undetermined;
-}
 
 function getRestaurantRegion(): Location.LocationRegion | null {
   const geofence = config.restaurantPresence.geofence;
@@ -163,7 +148,7 @@ export async function syncBackgroundLocationPermissionStatus(): Promise<
   }
 
   const permission = await Location.getBackgroundPermissionsAsync();
-  const status = mapExpoPermissionStatus(permission.status);
+  const status = toOnboardingPermissionStatus(permission.status);
   useRestaurantPresenceStore.getState().setBackgroundLocationStatus(status);
   return status;
 }
