@@ -125,9 +125,7 @@ export function MemberCard({
           <View
             className={cn(
               'items-center justify-center rounded-md bg-white/92',
-              isCompact
-                ? 'size-14 p-1.5'
-                : 'size-[168px] rounded-xl p-2.5'
+              isCompact ? 'size-14 p-1.5' : 'size-[168px] rounded-xl p-2.5'
             )}
           >
             <MemberQrCode

@@ -3,7 +3,10 @@ import * as Notifications from 'expo-notifications';
 import React from 'react';
 import { AppState, type AppStateStatus, Platform } from 'react-native';
 
-import { onboardingPermissionStatuses } from '@/lib/types';
+import {
+  type OnboardingPermissionStatus,
+  onboardingPermissionStatuses,
+} from '@/lib/types';
 import { useProfileData } from '@/providers/DataProvider';
 import { config } from '@/src/lib/config';
 import {
@@ -25,7 +28,7 @@ type RestaurantPresenceProviderProps = {
 
 function mapExpoPermissionStatus(
   status: string | null | undefined
-): typeof onboardingPermissionStatuses[keyof typeof onboardingPermissionStatuses] {
+): OnboardingPermissionStatus {
   const normalized = status?.trim().toLowerCase();
 
   if (normalized === 'granted') {

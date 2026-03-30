@@ -1,6 +1,7 @@
 import { ArrowLeft } from 'lucide-react-native';
 import { type ReactNode, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useColorScheme } from 'react-native';
 import {
   FadeIn,
   FadeInUp,
@@ -11,6 +12,7 @@ import {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Colors } from '@/constants/colors';
 import { motion, withRM } from '@/src/lib/animations/motion';
 import { Pressable, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
@@ -69,6 +71,8 @@ export function OnboardingHeader({
   const { t } = useTranslation('auth');
   const { t: tCommon } = useTranslation('common');
   const insets = useSafeAreaInsets();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
 
   return (
     <View className="px-5 pb-3" style={{ paddingTop: insets.top + 6 }}>
@@ -85,7 +89,7 @@ export function OnboardingHeader({
           testID={`${testIDPrefix}-back`}
         >
           <ArrowLeft
-            className="text-primary dark:text-primary-bright"
+            color={isDark ? Colors.primaryBright : Colors.primary}
             size={20}
           />
         </Pressable>

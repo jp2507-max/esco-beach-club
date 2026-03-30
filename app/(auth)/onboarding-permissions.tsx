@@ -83,10 +83,6 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
         searchParams.onboardingLocationPermissionStatus
       )
     );
-  const [backgroundLocationStatus, setBackgroundLocationStatus] =
-    React.useState<OnboardingPermissionStatus>(
-      onboardingPermissionStatuses.undetermined
-    );
   const [pushStatus, setPushStatus] =
     React.useState<OnboardingPermissionStatus>(
       parseOnboardingPermissionStatus(
@@ -105,23 +101,16 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
 
     void (async () => {
       try {
-        const [
-          foregroundLocationPermission,
-          backgroundPermission,
-          notificationsPermission,
-        ] = await Promise.all([
-          Location.getForegroundPermissionsAsync(),
-          Location.getBackgroundPermissionsAsync(),
-          Notifications.getPermissionsAsync(),
-        ]);
+        const [foregroundLocationPermission, notificationsPermission] =
+          await Promise.all([
+            Location.getForegroundPermissionsAsync(),
+            Notifications.getPermissionsAsync(),
+          ]);
 
         if (!isMounted) return;
 
         setLocationStatus(
           mapExpoPermissionStatus(foregroundLocationPermission.status)
-        );
-        setBackgroundLocationStatus(
-          mapExpoPermissionStatus(backgroundPermission.status)
         );
         setPushStatus(mapExpoPermissionStatus(notificationsPermission.status));
       } catch {
@@ -227,7 +216,6 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
       setLocationStatus(nextLocationStatus);
 
       if (nextLocationStatus !== onboardingPermissionStatuses.granted) {
-        setBackgroundLocationStatus(onboardingPermissionStatuses.undetermined);
         return;
       }
 
@@ -238,23 +226,16 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
       );
 
       if (currentBackgroundStatus === onboardingPermissionStatuses.granted) {
-        setBackgroundLocationStatus(onboardingPermissionStatuses.granted);
         return;
       }
 
       const shouldRequestBackground = await confirmBackgroundLocationRequest();
 
       if (!shouldRequestBackground) {
-        setBackgroundLocationStatus(currentBackgroundStatus);
         return;
       }
 
-      const requestedBackgroundPermission =
-        await Location.requestBackgroundPermissionsAsync();
-
-      setBackgroundLocationStatus(
-        mapExpoPermissionStatus(requestedBackgroundPermission.status)
-      );
+      await Location.requestBackgroundPermissionsAsync();
     } catch {
       Alert.alert(
         t('onboardingPermissionsErrorTitle'),
