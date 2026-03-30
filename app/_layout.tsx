@@ -1,4 +1,5 @@
 import '@/src/lib/i18n';
+import '@/src/lib/location/restaurant-geofence';
 import '../global.css';
 
 import NetInfo from '@react-native-community/netinfo';
@@ -21,9 +22,10 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Colors } from '@/constants/colors';
 import { AuthProvider, useAuth } from '@/providers/AuthProvider';
 import { DataProvider } from '@/providers/DataProvider';
+import { RestaurantPresenceProvider } from '@/providers/RestaurantPresenceProvider';
 import { configureGoogleSignIn } from '@/src/lib/auth/social-auth';
 import { useThemePreferenceStore } from '@/src/stores/theme-preference-store';
-import { ActivityIndicator, View } from '@/src/tw';
+import { ActivityIndicator, Text, View } from '@/src/tw';
 
 const navigationIntegration = Sentry.reactNavigationIntegration({
   enableTimeToInitialDisplay: !isRunningInExpoGo(),
@@ -155,6 +157,21 @@ function AppLoadingScreen() {
   );
 }
 
+function AppErrorFallback(): React.JSX.Element {
+  const { t } = useTranslation('common');
+
+  return (
+    <View className="flex-1 items-center justify-center bg-background px-6 dark:bg-dark-bg">
+      <Text className="text-center text-2xl font-extrabold text-text dark:text-text-primary-dark">
+        {t('appError.title')}
+      </Text>
+      <Text className="mt-3 text-center text-sm leading-6 text-text-secondary dark:text-text-secondary-dark">
+        {t('appError.description')}
+      </Text>
+    </View>
+  );
+}
+
 function ReactQueryLifecycle(): null {
   useEffect(() => {
     if (Platform.OS === 'web') return;
@@ -197,7 +214,11 @@ function AuthenticatedDataProvider({
 
   if (!isAuthenticated) return <>{children}</>;
 
-  return <DataProvider>{children}</DataProvider>;
+  return (
+    <DataProvider>
+      <RestaurantPresenceProvider>{children}</RestaurantPresenceProvider>
+    </DataProvider>
+  );
 }
 
 function RootLayoutNav() {
@@ -246,9 +267,16 @@ function RootLayout(): React.JSX.Element {
       <AuthRuntimeBootstrap />
       <GestureHandlerRootView style={{ flex: 1 }}>
         <AuthProvider>
-          <AuthenticatedDataProvider>
-            <RootLayoutNav />
-          </AuthenticatedDataProvider>
+          <Sentry.ErrorBoundary
+            beforeCapture={(scope) => {
+              scope.setTag('component_boundary', 'root_layout');
+            }}
+            fallback={<AppErrorFallback />}
+          >
+            <AuthenticatedDataProvider>
+              <RootLayoutNav />
+            </AuthenticatedDataProvider>
+          </Sentry.ErrorBoundary>
         </AuthProvider>
       </GestureHandlerRootView>
     </QueryClientProvider>

@@ -19,7 +19,7 @@ const common = {
     invalidCode: 'Vui lòng nhập mã xác minh 6 chữ số.',
     loyaltyManagerPin:
       'Vui lòng nhập mã PIN quản lý hợp lệ để phê duyệt số tiền này.',
-    loyaltyMinimumSpend: 'Hóa đơn này chưa đạt mức chi tối thiểu để nhận điểm.',
+    loyaltyMinimumSpend: 'Hóa đơn này chưa đạt ngưỡng cashback tối thiểu.',
   },
   back: 'Quay lại',
   backHint: 'Quay về màn hình trước',
@@ -45,6 +45,11 @@ const common = {
     guest: 'Khách',
     subtitle: 'Đặt chỗ của bạn đã được xác nhận.',
     title: 'Mọi thứ đã sẵn sàng, {{name}}!',
+  },
+  appError: {
+    title: 'Đã xảy ra sự cố ngoài dự kiến',
+    description:
+      'Vui lòng mở lại ứng dụng hoặc thử lại sau ít phút. Đội ngũ của chúng tôi đã được thông báo.',
   },
   menu: 'Thực đơn',
   privateEvent: {

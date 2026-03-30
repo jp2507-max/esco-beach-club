@@ -37,6 +37,7 @@ import {
   verifyCodeSchema,
 } from '@/src/lib/forms/schemas';
 import { shadows } from '@/src/lib/styles/shadows';
+import { parseOnboardingMemberSegmentSearchParam } from '@/src/lib/utils/member-segment';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -108,15 +109,13 @@ export default function SignupScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const searchParams = useLocalSearchParams<{
-    onboardingAvatarLocalUri?: string;
-    onboardingAvatarMimeType?: string;
     onboardingCompletedSetup?: string;
     onboardingDateOfBirth?: string;
     onboardingDisplayName?: string;
     onboardingLocationPermissionStatus?: string;
     onboardingPrivacyAccepted?: string;
     onboardingPushPermissionStatus?: string;
-    onboardingResident?: string;
+    onboardingSegment?: string;
     onboardingTermsAccepted?: string;
   }>();
   const { t } = useTranslation('auth');
@@ -141,14 +140,12 @@ export default function SignupScreen(): React.JSX.Element {
   const [onboardingData, setOnboardingData] =
     React.useState<SignupOnboardingData | null>(null);
 
-  const onboardingIdentityParams = React.useMemo(
-    () => ({
-      avatarLocalUri: parseOptionalSearchParam(
-        searchParams.onboardingAvatarLocalUri
-      ),
-      avatarMimeType: parseOptionalSearchParam(
-        searchParams.onboardingAvatarMimeType
-      ),
+  const onboardingIdentityParams = React.useMemo(() => {
+    const memberSegment = parseOnboardingMemberSegmentSearchParam(
+      searchParams.onboardingSegment
+    );
+
+    return {
       hasCompletedSetup:
         parseBooleanSearchParam(searchParams.onboardingCompletedSetup) === true,
       hasAcceptedPrivacyPolicy:
@@ -156,25 +153,22 @@ export default function SignupScreen(): React.JSX.Element {
         true,
       hasAcceptedTerms:
         parseBooleanSearchParam(searchParams.onboardingTermsAccepted) === true,
-      isDanangCitizen: parseBooleanSearchParam(searchParams.onboardingResident),
+      memberSegment,
       locationPermissionStatus: parsePermissionStatusSearchParam(
         searchParams.onboardingLocationPermissionStatus
       ),
       pushNotificationPermissionStatus: parsePermissionStatusSearchParam(
         searchParams.onboardingPushPermissionStatus
       ),
-    }),
-    [
-      searchParams.onboardingAvatarLocalUri,
-      searchParams.onboardingAvatarMimeType,
-      searchParams.onboardingCompletedSetup,
-      searchParams.onboardingLocationPermissionStatus,
-      searchParams.onboardingPrivacyAccepted,
-      searchParams.onboardingPushPermissionStatus,
-      searchParams.onboardingResident,
-      searchParams.onboardingTermsAccepted,
-    ]
-  );
+    };
+  }, [
+    searchParams.onboardingCompletedSetup,
+    searchParams.onboardingLocationPermissionStatus,
+    searchParams.onboardingPrivacyAccepted,
+    searchParams.onboardingPushPermissionStatus,
+    searchParams.onboardingSegment,
+    searchParams.onboardingTermsAccepted,
+  ]);
 
   const prefilledDateOfBirth = React.useMemo(
     () => parseOptionalSearchParam(searchParams.onboardingDateOfBirth) ?? '',
@@ -192,12 +186,6 @@ export default function SignupScreen(): React.JSX.Element {
     return {
       dateOfBirth: values.dateOfBirth,
       displayName: values.displayName,
-      ...(onboardingIdentityParams.avatarLocalUri
-        ? { avatarLocalUri: onboardingIdentityParams.avatarLocalUri }
-        : {}),
-      ...(onboardingIdentityParams.avatarMimeType
-        ? { avatarMimeType: onboardingIdentityParams.avatarMimeType }
-        : {}),
       ...(onboardingIdentityParams.hasAcceptedTerms
         ? { hasAcceptedTerms: true }
         : {}),
@@ -207,8 +195,8 @@ export default function SignupScreen(): React.JSX.Element {
       ...(onboardingIdentityParams.hasCompletedSetup
         ? { hasCompletedSetup: true }
         : {}),
-      ...(onboardingIdentityParams.isDanangCitizen !== undefined
-        ? { isDanangCitizen: onboardingIdentityParams.isDanangCitizen }
+      ...(onboardingIdentityParams.memberSegment
+        ? { memberSegment: onboardingIdentityParams.memberSegment }
         : {}),
       ...(onboardingIdentityParams.locationPermissionStatus
         ? {
@@ -414,6 +402,7 @@ export default function SignupScreen(): React.JSX.Element {
           <View className="mb-7 flex-row items-center justify-between">
             <View className="flex-row items-center gap-3">
               <Pressable
+                accessibilityHint={tCommon('backHint')}
                 accessibilityLabel={tCommon('back')}
                 accessibilityRole="button"
                 className="size-10 items-center justify-center rounded-full"

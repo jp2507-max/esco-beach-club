@@ -1,16 +1,16 @@
-export type UserTier = 'STANDARD' | 'VIP' | 'OWNER';
+export type RewardTierKey = 'ESCO_LIFE_MEMBER';
 
 export const mockUser = {
   name: 'Alex Anderson',
   firstName: 'Alex',
-  tier: 'Gold Member',
-  tierBadge: 'PLATINUM MEMBER',
-  tierLevel: 'VIP' as UserTier,
+  tier: 'Esco Life Member',
+  tierBadge: 'ESCO LIFE MEMBER',
+  tierLevel: 'ESCO_LIFE_MEMBER' as RewardTierKey,
   memberId: '#8829-PLT',
-  points: 1250,
-  maxPoints: 5000,
-  vipStatus: 'VIP Status',
-  earned: 1240,
+  cashbackPoints: 1250,
+  cashbackTargetPoints: 0,
+  lifetimeTierLabel: 'Lifetime Tier',
+  cashbackEarned: 1240,
   saved: 145,
   avatar:
     'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face',

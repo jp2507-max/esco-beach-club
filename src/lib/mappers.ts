@@ -2,22 +2,28 @@ import type {
   BookingOccasionOption,
   BookingTimeSlotOption,
   Event,
-  LoyaltyTransaction,
   MemberOffer,
+  MemberSegment,
   MenuCategoryContent,
   MenuItemContent,
   NewsItem,
   OnboardingPermissionStatus,
   Partner,
   PartnerRedemption,
+  PrivateEventInquiry,
   PrivateEventTypeOption,
   Profile,
   Referral,
+  RewardTransaction,
   SavedEvent,
   StaffAccess,
   TableReservation,
 } from '@/lib/types';
-import { onboardingPermissionStatuses } from '@/lib/types';
+import {
+  memberSegments,
+  onboardingPermissionStatuses,
+  rewardTierKeys,
+} from '@/lib/types';
 
 export type InstantRecord = {
   id: string;
@@ -57,7 +63,10 @@ export function toNullableIsoString(value: unknown): string | null {
   return isoValue || null;
 }
 
-export function toForeignKeyId(record: InstantRecord, key: string): string | null {
+export function toForeignKeyId(
+  record: InstantRecord,
+  key: string
+): string | null {
   const nested = record[key];
   if (
     typeof nested === 'object' &&
@@ -70,11 +79,22 @@ export function toForeignKeyId(record: InstantRecord, key: string): string | nul
   return null;
 }
 
-export function toTier(value: unknown): Profile['tier'] {
-  const str = String(value);
-  if (str === 'VIP' || str === 'OWNER' || str === 'STANDARD')
-    return str as Profile['tier'];
-  return 'STANDARD';
+export function toRewardTierKey(value: unknown): Profile['lifetime_tier_key'] {
+  if (value === rewardTierKeys.escoLifeMember) {
+    return rewardTierKeys.escoLifeMember;
+  }
+
+  return rewardTierKeys.escoLifeMember;
+}
+
+export function toNullableRewardTierKey(
+  value: unknown
+): Profile['next_tier_key'] {
+  if (value === rewardTierKeys.escoLifeMember) {
+    return rewardTierKeys.escoLifeMember;
+  }
+
+  return null;
 }
 
 export function toReferralStatus(value: unknown): Referral['status'] {
@@ -99,25 +119,47 @@ export function toOnboardingPermissionStatus(
   return onboardingPermissionStatuses.undetermined;
 }
 
+function toMemberSegment(value: unknown): MemberSegment | null {
+  const normalized =
+    typeof value === 'string' ? value.trim().toUpperCase() : '';
+
+  if (normalized === memberSegments.local) {
+    return memberSegments.local;
+  }
+
+  if (normalized === memberSegments.foreigner) {
+    return memberSegments.foreigner;
+  }
+
+  return null;
+}
+
 export function mapProfile(record: InstantRecord): Profile {
   return {
     id: record.id,
     full_name: toStringOr(record.full_name),
     date_of_birth: toNullableString(record.date_of_birth),
     bio: toStringOr(record.bio),
-    tier: toTier(record.tier),
     member_id: toStringOr(record.member_id),
     member_since: toIsoString(record.member_since),
     nights_left: toNumber(record.nights_left),
-    points: toNumber(record.points),
-    max_points: toNumber(record.max_points),
-    earned: toNumber(record.earned),
+    cashback_points_balance: toNumber(record.cashback_points_balance),
+    cashback_points_lifetime_earned: toNumber(
+      record.cashback_points_lifetime_earned
+    ),
+    lifetime_tier_key: toRewardTierKey(record.lifetime_tier_key),
+    next_tier_key: toNullableRewardTierKey(record.next_tier_key),
+    tier_progress_points: toNumber(record.tier_progress_points),
+    tier_progress_target_points: toNumber(record.tier_progress_target_points),
+    tier_progress_started_at: toNullableIsoString(
+      record.tier_progress_started_at
+    ),
+    tier_progress_expires_at: toNullableIsoString(
+      record.tier_progress_expires_at
+    ),
     saved: toNumber(record.saved),
     avatar_url: toNullableString(record.avatar_url),
-    is_danang_citizen:
-      typeof record.is_danang_citizen === 'boolean'
-        ? record.is_danang_citizen
-        : null,
+    member_segment: toMemberSegment(record.member_segment),
     location_permission_status: toOnboardingPermissionStatus(
       record.location_permission_status
     ),
@@ -148,25 +190,24 @@ export function mapStaffAccess(record: InstantRecord): StaffAccess {
   };
 }
 
-export function mapLoyaltyTransaction(
-  record: InstantRecord
-): LoyaltyTransaction {
+export function mapRewardTransaction(record: InstantRecord): RewardTransaction {
   return {
     id: record.id,
-    approved_by_staff_access_id: toForeignKeyId(record, 'approved_by'),
-    bill_amount_vnd: toNumber(record.bill_amount_vnd),
+    amount_vnd: toNumber(record.amount_vnd),
+    cashback_points_delta: toNumber(record.cashback_points_delta),
     created_at: toIsoString(record.created_at),
-    currency: toStringOr(record.currency),
     entry_key: toStringOr(record.entry_key),
-    manager_pin_label: toNullableString(record.manager_pin_label),
+    event_type: toStringOr(
+      record.event_type
+    ) as RewardTransaction['event_type'],
+    external_event_id: toStringOr(record.external_event_id),
     member_id: toStringOr(record.member_id),
     member_profile_id: toForeignKeyId(record, 'member'),
-    points_awarded: toNumber(record.points_awarded),
-    points_rate_per_100k_vnd: toNumber(record.points_rate_per_100k_vnd),
-    receipt_reference: toNullableString(record.receipt_reference),
-    source: toStringOr(record.source),
-    staff_access_id: toForeignKeyId(record, 'staff_access'),
-    status: toStringOr(record.status),
+    occurred_at: toIsoString(record.occurred_at),
+    reference: toNullableString(record.reference),
+    source: toStringOr(record.source) as RewardTransaction['source'],
+    status: toStringOr(record.status) as RewardTransaction['status'],
+    tier_progress_points_delta: toNumber(record.tier_progress_points_delta),
     updated_at: toIsoString(record.updated_at),
   };
 }
@@ -332,6 +373,22 @@ export function mapTableReservation(record: InstantRecord): TableReservation {
     source: toStringOr(record.source),
     status: toStringOr(record.status),
     updated_at: toIsoString(record.updated_at),
+  };
+}
+
+export function mapPrivateEventInquiry(
+  record: InstantRecord
+): PrivateEventInquiry {
+  return {
+    id: record.id,
+    entry_key: toStringOr(record.entry_key),
+    event_type: toStringOr(record.event_type),
+    preferred_date: toStringOr(record.preferred_date),
+    estimated_pax: toNumber(record.estimated_pax),
+    contact_name: toNullableString(record.contact_name),
+    contact_email: toNullableString(record.contact_email),
+    notes: toNullableString(record.notes),
+    created_at: toIsoString(record.created_at),
   };
 }
 

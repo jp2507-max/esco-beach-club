@@ -194,9 +194,7 @@ export default function EventDetailsScreen(): React.JSX.Element {
               className="mr-2.5"
               onPress={handleShare}
               accessibilityLabel={t('shareEvent')}
-              accessibilityHint={t('shareEventHint', {
-                defaultValue: 'Opens share sheet',
-              })}
+              accessibilityHint={t('shareEventHint')}
               testID="share-btn"
               variant="overlay"
             >
@@ -208,11 +206,7 @@ export default function EventDetailsScreen(): React.JSX.Element {
                 isLiked ? t('removeSavedEvent') : t('saveEvent')
               }
               accessibilityHint={
-                isLiked
-                  ? t('unlikeEventHint', {
-                      defaultValue: 'Removes from favourites',
-                    })
-                  : t('likeEventHint', { defaultValue: 'Adds to favourites' })
+                isLiked ? t('unlikeEventHint') : t('likeEventHint')
               }
               accessibilityState={{ selected: isLiked }}
               testID="like-btn"

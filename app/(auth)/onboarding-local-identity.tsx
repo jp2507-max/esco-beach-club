@@ -18,6 +18,7 @@ import {
   onboardingLocalIdentitySchema,
 } from '@/src/lib/forms/schemas';
 import { shadows } from '@/src/lib/styles/shadows';
+import { readSingleSearchParam } from '@/src/lib/utils/search-params';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 
@@ -25,16 +26,6 @@ type OnboardingBasicsSearchParams = {
   onboardingDateOfBirth?: string | string[];
   onboardingDisplayName?: string | string[];
 };
-
-function readSingleSearchParam(
-  value: string | string[] | undefined
-): string | undefined {
-  if (Array.isArray(value)) {
-    return value[0];
-  }
-
-  return value;
-}
 
 const BANNER_DELAY = 80;
 const RADIO_BASE_DELAY = 220;
@@ -57,7 +48,7 @@ export default function OnboardingLocalIdentityScreen(): React.JSX.Element {
     defaultValues: {
       acceptedPrivacyPolicy: false,
       acceptedTerms: false,
-      residencyStatus: undefined,
+      memberSegment: undefined,
     },
     mode: 'onBlur',
     resolver: zodResolver(onboardingLocalIdentitySchema),
@@ -76,8 +67,8 @@ export default function OnboardingLocalIdentityScreen(): React.JSX.Element {
       params: {
         ...(onboardingDateOfBirth ? { onboardingDateOfBirth } : {}),
         ...(onboardingDisplayName ? { onboardingDisplayName } : {}),
+        onboardingSegment: values.memberSegment,
         onboardingPrivacyAccepted: values.acceptedPrivacyPolicy ? '1' : '0',
-        onboardingResident: values.residencyStatus === 'citizen' ? '1' : '0',
         onboardingTermsAccepted: values.acceptedTerms ? '1' : '0',
       },
     });
@@ -161,10 +152,10 @@ export default function OnboardingLocalIdentityScreen(): React.JSX.Element {
 
           <Controller
             control={control}
-            name="residencyStatus"
+            name="memberSegment"
             render={({ field }) => {
-              const isCitizenSelected = field.value === 'citizen';
-              const isVisitorSelected = field.value === 'visitor';
+              const isLocalSelected = field.value === 'LOCAL';
+              const isForeignerSelected = field.value === 'FOREIGNER';
 
               return (
                 <View className="gap-2">
@@ -177,23 +168,23 @@ export default function OnboardingLocalIdentityScreen(): React.JSX.Element {
                   >
                     <Pressable
                       accessibilityRole="radio"
-                      accessibilityState={{ selected: isCitizenSelected }}
+                      accessibilityState={{ selected: isLocalSelected }}
                       className={`flex-row items-center gap-3 rounded-2xl border px-4 py-3 ${
-                        isCitizenSelected
+                        isLocalSelected
                           ? 'border-primary bg-primary/5 dark:border-primary-bright dark:bg-primary-bright/15'
                           : 'border-border bg-surface dark:border-dark-border dark:bg-dark-bg-elevated'
                       }`}
-                      onPress={() => field.onChange('citizen')}
-                      testID="onboarding-local-identity-citizen"
+                      onPress={() => field.onChange('LOCAL')}
+                      testID="onboarding-local-identity-local"
                     >
                       <View
                         className={`size-5 items-center justify-center rounded-full border-2 ${
-                          isCitizenSelected
+                          isLocalSelected
                             ? 'border-primary dark:border-primary-bright'
                             : 'border-border dark:border-dark-border'
                         }`}
                       >
-                        {isCitizenSelected ? (
+                        {isLocalSelected ? (
                           <Check
                             className="text-primary dark:text-primary-bright"
                             size={12}
@@ -202,10 +193,10 @@ export default function OnboardingLocalIdentityScreen(): React.JSX.Element {
                       </View>
                       <View className="flex-1">
                         <Text className="text-[15px] font-bold text-text dark:text-text-primary-dark">
-                          {t('onboardingLocalIdentityCitizenTitle')}
+                          {t('onboardingLocalIdentityLocalTitle')}
                         </Text>
                         <Text className="text-[12px] leading-4 text-text-secondary dark:text-text-secondary-dark">
-                          {t('onboardingLocalIdentityCitizenDescription')}
+                          {t('onboardingLocalIdentityLocalDescription')}
                         </Text>
                       </View>
                     </Pressable>
@@ -220,23 +211,23 @@ export default function OnboardingLocalIdentityScreen(): React.JSX.Element {
                   >
                     <Pressable
                       accessibilityRole="radio"
-                      accessibilityState={{ selected: isVisitorSelected }}
+                      accessibilityState={{ selected: isForeignerSelected }}
                       className={`flex-row items-center gap-3 rounded-2xl border px-4 py-3 ${
-                        isVisitorSelected
+                        isForeignerSelected
                           ? 'border-primary bg-primary/5 dark:border-primary-bright dark:bg-primary-bright/15'
                           : 'border-border bg-surface dark:border-dark-border dark:bg-dark-bg-elevated'
                       }`}
-                      onPress={() => field.onChange('visitor')}
-                      testID="onboarding-local-identity-visitor"
+                      onPress={() => field.onChange('FOREIGNER')}
+                      testID="onboarding-local-identity-foreigner"
                     >
                       <View
                         className={`size-5 items-center justify-center rounded-full border-2 ${
-                          isVisitorSelected
+                          isForeignerSelected
                             ? 'border-primary dark:border-primary-bright'
                             : 'border-border dark:border-dark-border'
                         }`}
                       >
-                        {isVisitorSelected ? (
+                        {isForeignerSelected ? (
                           <Check
                             className="text-primary dark:text-primary-bright"
                             size={12}
@@ -245,10 +236,10 @@ export default function OnboardingLocalIdentityScreen(): React.JSX.Element {
                       </View>
                       <View className="flex-1">
                         <Text className="text-[15px] font-bold text-text dark:text-text-primary-dark">
-                          {t('onboardingLocalIdentityVisitorTitle')}
+                          {t('onboardingLocalIdentityForeignerTitle')}
                         </Text>
                         <Text className="text-[12px] leading-4 text-text-secondary dark:text-text-secondary-dark">
-                          {t('onboardingLocalIdentityVisitorDescription')}
+                          {t('onboardingLocalIdentityForeignerDescription')}
                         </Text>
                       </View>
                     </Pressable>
@@ -300,7 +291,9 @@ export default function OnboardingLocalIdentityScreen(): React.JSX.Element {
                             : 'border-border dark:border-dark-border'
                         }`}
                       >
-                        {field.value ? <Check color="#fff" size={12} /> : null}
+                        {field.value ? (
+                          <Check color={Colors.white} size={12} />
+                        ) : null}
                       </View>
 
                       <View className="flex-1">
@@ -385,7 +378,9 @@ export default function OnboardingLocalIdentityScreen(): React.JSX.Element {
                             : 'border-border dark:border-dark-border'
                         }`}
                       >
-                        {field.value ? <Check color="#fff" size={12} /> : null}
+                        {field.value ? (
+                          <Check color={Colors.white} size={12} />
+                        ) : null}
                       </View>
 
                       <View className="flex-1">

@@ -19,7 +19,7 @@ import {
   WeekStrip,
   type WeekStripItem,
 } from '@/src/components/ui';
-import { Pressable, ScrollView, Text, View } from '@/src/tw';
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Image } from '@/src/tw/image';
 
 const eventCategories = [
@@ -239,7 +239,7 @@ export default function EventsScreen(): React.JSX.Element {
   const router = useRouter();
   const { i18n, t } = useTranslation('events');
 
-  const { events } = useEventsData();
+  const { events, eventsLoading } = useEventsData();
   const { isEventSaved, toggleSavedEvent } = useSavedEventsData();
 
   useEffect(() => {
@@ -612,7 +612,14 @@ export default function EventsScreen(): React.JSX.Element {
         }
         ListFooterComponent={
           <>
-            {filteredEvents.length === 0 ? (
+            {eventsLoading ? (
+              <View className="mb-3 items-center rounded-2xl border border-border bg-card p-6 dark:border-dark-border dark:bg-dark-bg-card">
+                <ActivityIndicator color={Colors.primary} size="large" />
+                <Text className="mt-3 text-sm font-medium text-text-secondary dark:text-text-secondary-dark">
+                  {t('loading')}
+                </Text>
+              </View>
+            ) : filteredEvents.length === 0 ? (
               <View className="mb-3 rounded-2xl border border-border bg-card p-4 dark:border-dark-border dark:bg-dark-bg-card">
                 <Text className="text-base font-bold text-text dark:text-text-primary-dark">
                   {t('noEventsForDayTitle')}

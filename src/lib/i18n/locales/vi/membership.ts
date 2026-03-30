@@ -3,16 +3,19 @@ const membership = {
   tierCard: {
     currentTier: 'Hạng hiện tại',
     memberSince: 'Thành viên từ {{date}}',
+    cashbackBalance: 'Số dư cashback',
+    cashbackPoints: '{{value}} điểm cashback',
     progressTo: 'Tiến tới {{nextTier}}',
-    pointsLabel: '{{current}} / {{max}} pts',
+    progressPoints: '{{current}} / {{target}} pts',
+    progressExpires: 'Tiến độ sẽ đặt lại vào {{date}}',
+    progressResetsMonthly:
+      'Tiến độ lên hạng theo tháng sẽ đặt lại sau 1 tháng.',
+    nextTierComingSoon: 'Hạng tiếp theo sắp ra mắt',
+    progressUnavailable:
+      'Tiến độ lên hạng sẽ xuất hiện tại đây khi hạng tiếp theo được cấu hình.',
   },
   tiers: {
-    standard: 'Thành viên',
-    vip: 'VIP',
-    owner: 'Bạch kim',
-    nextStandard: 'VIP',
-    nextVip: 'Bạch kim',
-    nextOwner: 'Kim cương',
+    escoLifeMember: 'Thành viên Esco Life',
   },
   benefits: {
     title: 'Quyền lợi',
@@ -34,11 +37,23 @@ const membership = {
   },
   activity: {
     title: 'Hoạt động gần đây',
-    tierUpgraded: 'Nâng cấp hạng',
-    tierUpgradedDesc: 'Chúc mừng! Bạn đã đạt hạng {{tier}}.',
-    pointsEarned: 'Điểm tích lũy',
-    pointsEarnedDesc: '+{{points}} điểm từ hoạt động gần đây.',
+    cashbackAdjusted: 'Điều chỉnh cashback thủ công',
+    cashbackAdjustedDesc:
+      '{{points}} điểm cashback đã được thay đổi bằng điều chỉnh thủ công.',
+    cashbackEarned: 'Cashback đã ghi nhận',
+    cashbackEarnedDesc:
+      '+{{points}} điểm cashback từ giao dịch đủ điều kiện gần đây.',
+    cashbackReversed: 'Cashback đã đảo ngược',
+    cashbackReversedDesc:
+      '-{{points}} điểm cashback sau khi hoàn tiền hoặc hủy giao dịch.',
     daysAgo: '{{count}} ngày trước',
+    loading: 'Đang tải hoạt động gần đây...',
+    emptyTitle: 'Chưa có hoạt động thành viên',
+    emptyDescription:
+      'Hoạt động cashback mới và tiến độ hạng theo tháng sẽ xuất hiện tại đây sau giao dịch đủ điều kiện tiếp theo của bạn.',
+    progressReset: 'Đặt lại tiến độ hạng',
+    progressResetDesc:
+      'Chu kỳ tiến độ hạng theo tháng của bạn đã được đặt lại.',
     sampleData: 'Dữ liệu mẫu',
   },
   comingSoon: 'Sắp ra mắt',

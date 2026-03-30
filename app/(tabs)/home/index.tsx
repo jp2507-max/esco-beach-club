@@ -6,7 +6,6 @@ import {
   Clock,
   MapPin,
   UtensilsCrossed,
-  Wifi,
   Wine,
 } from 'lucide-react-native';
 import React, { useCallback, useEffect, useMemo } from 'react';
@@ -23,19 +22,22 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/colors';
 import type { Event, NewsItem } from '@/lib/types';
 import {
+  useEventsData,
   useHomeEvents,
+  useMemberSummary,
   useNewsData,
-  useProfileData,
 } from '@/providers/DataProvider';
 import {
   Avatar,
   Card,
   HeaderGlassButton,
+  MemberCard,
   SectionHeader,
 } from '@/src/components/ui';
 import { rmTiming } from '@/src/lib/animations/motion';
 import { useScreenEntry } from '@/src/lib/animations/use-screen-entry';
-import { Pressable, ScrollView, Text, View } from '@/src/tw';
+import { getRewardTierLabelKey } from '@/src/lib/loyalty';
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 import { Image } from '@/src/tw/image';
 
@@ -219,27 +221,16 @@ export default function HomeScreen(): React.JSX.Element {
     transform: [{ scale: cardScale.get() }],
   }));
 
-  const { profile } = useProfileData();
-  const { news } = useNewsData();
+  const { eventsLoading } = useEventsData();
+  const { news, newsLoading } = useNewsData();
   const homeEvents = useHomeEvents();
+  const memberSummary = useMemberSummary();
 
-  const userName = profile?.full_name ?? t('guest');
-  const userTier =
-    profile?.tier === 'VIP'
-      ? t('tier.vip')
-      : profile?.tier === 'OWNER'
-        ? t('tier.owner')
-        : t('tier.standard');
-  const userPoints = profile?.points ?? 0;
-  const userMaxPoints =
-    profile?.max_points && profile.max_points > 0 ? profile.max_points : 5000;
-  const tierLevel = profile?.tier ?? 'STANDARD';
-  const vipStatus =
-    tierLevel === 'VIP' || tierLevel === 'OWNER' ? t('vipStatus') : '';
-
-  const safeMaxPoints = Math.max(userMaxPoints, 1);
-  const progressWidth =
-    `${Math.min((userPoints / safeMaxPoints) * 100, 100)}%` as `${number}%`;
+  const userName = memberSummary.fullName || t('guest');
+  const userTier = t(
+    `tier.${getRewardTierLabelKey(memberSummary.lifetimeTierKey)}`
+  );
+  const isFeedLoading = eventsLoading || newsLoading;
 
   const quickActions = useMemo<QuickAction[]>(
     () => [
@@ -268,11 +259,15 @@ export default function HomeScreen(): React.JSX.Element {
         id: `event-${event.id}`,
         type: 'event' as const,
       })),
-      {
-        id: 'section-news',
-        title: t('latestNews'),
-        type: 'section' as const,
-      },
+      ...(news.length > 0
+        ? [
+            {
+              id: 'section-news',
+              title: t('latestNews'),
+              type: 'section' as const,
+            },
+          ]
+        : []),
       ...news.map((item) => ({
         id: `news-${item.id}`,
         item,
@@ -385,7 +380,7 @@ export default function HomeScreen(): React.JSX.Element {
                 >
                   <Avatar
                     className="size-9.5 rounded-full"
-                    uri={profile?.avatar_url}
+                    uri={memberSummary.avatarUrl}
                   />
                   <View
                     className="absolute -bottom-px -right-px size-3.5 rounded-full"
@@ -399,92 +394,21 @@ export default function HomeScreen(): React.JSX.Element {
               </View>
 
               <Animated.View className="mb-4" style={cardStyle}>
-                <LinearGradient
-                  colors={['#E91E63', '#F06292', '#FF9800']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={{ borderRadius: 20, overflow: 'hidden', padding: 22 }}
-                >
-                  <View className="mb-2 flex-row items-center justify-between">
-                    <Text className="text-xs font-extrabold tracking-[2px] text-white/85">
-                      {t('brandMark')}
-                    </Text>
-                    <Wifi color="rgba(255,255,255,0.8)" size={24} />
-                  </View>
-
-                  <View className="mb-1 flex-row items-start justify-between">
-                    <View>
-                      <Text className="text-2xl font-extrabold text-white">
-                        {userTier}
-                      </Text>
-                      <Text className="mt-0.5 text-xs font-medium text-white/75">
-                        {t('pointsBalance')}
-                      </Text>
-                    </View>
-                    <Text className="mt-1 text-xs font-semibold text-white/70">
-                      {vipStatus}
-                    </Text>
-                  </View>
-
-                  <View className="mb-2 mt-2 flex-row items-baseline">
-                    <Text className="text-[40px] font-extrabold text-white">
-                      {userPoints.toLocaleString()}
-                    </Text>
-                    <Text className="ml-1.5 text-sm font-medium text-white/60">
-                      {t('pointsSuffix', {
-                        max: userMaxPoints.toLocaleString(),
-                      })}
-                    </Text>
-                  </View>
-
-                  <View className="mb-4 h-1.5 rounded-full bg-white/25">
-                    <View
-                      className="h-1.5 rounded-full bg-white"
-                      style={{ width: progressWidth }}
-                    />
-                  </View>
-
-                  <View className="flex-row items-end justify-between">
-                    <View>
-                      <Text className="text-[10px] font-semibold tracking-[1px] text-white/55">
-                        {t('memberName')}
-                      </Text>
-                      <Text className="mt-1 text-base font-bold text-white">
-                        {userName}
-                      </Text>
-                    </View>
-                    <View className="size-10 items-center justify-center rounded-md bg-white/85">
-                      <View className="h-6 w-6 flex-row flex-wrap">
-                        {Array.from({ length: 9 }).map((_, i) => (
-                          <View
-                            key={`qr-${i}`}
-                            className="m-px size-1.5 rounded-[1px]"
-                            style={{
-                              backgroundColor: i % 3 === 0 ? '#333' : '#ccc',
-                            }}
-                          />
-                        ))}
-                      </View>
-                    </View>
-                  </View>
-
-                  <View
-                    className="absolute size-37.5 rounded-full"
-                    style={{
-                      backgroundColor: 'rgba(255,255,255,0.08)',
-                      right: -30,
-                      top: -30,
-                    }}
-                  />
-                  <View
-                    className="absolute size-25 rounded-full"
-                    style={{
-                      backgroundColor: 'rgba(255,255,255,0.06)',
-                      bottom: -20,
-                      left: 50,
-                    }}
-                  />
-                </LinearGradient>
+                <MemberCard
+                  copy={{
+                    balanceLabel: t('cashbackBalance'),
+                    balanceSuffix: t('cashbackSuffix'),
+                    brandLabel: t('brandMark'),
+                    emptyQrLabel: t('guest'),
+                    memberNameLabel: t('memberName'),
+                    statusLabel: t('lifetimeTier'),
+                  }}
+                  cashbackPoints={memberSummary.cashbackBalancePoints}
+                  memberId={memberSummary.memberId}
+                  memberName={userName}
+                  tierProgressPercent={memberSummary.tierProgressPercent}
+                  tierLabel={userTier}
+                />
               </Animated.View>
 
               <Animated.View className="mb-6" style={sectionStyle}>
@@ -511,6 +435,25 @@ export default function HomeScreen(): React.JSX.Element {
               onActionPress={handleSeeAllEvents}
             />
           </>
+        }
+        ListEmptyComponent={
+          isFeedLoading ? (
+            <View className="items-center px-5 py-12">
+              <ActivityIndicator color={Colors.primary} size="large" />
+              <Text className="mt-4 text-sm font-medium text-text-secondary dark:text-text-secondary-dark">
+                {t('loading')}
+              </Text>
+            </View>
+          ) : (
+            <View className="px-5 py-12">
+              <Text className="text-center text-lg font-bold text-text dark:text-text-primary-dark">
+                {t('emptyTitle')}
+              </Text>
+              <Text className="mt-2 text-center text-sm leading-6 text-text-secondary dark:text-text-secondary-dark">
+                {t('emptyDescription')}
+              </Text>
+            </View>
+          )
         }
         ListFooterComponent={<View className="h-7.5" />}
       />

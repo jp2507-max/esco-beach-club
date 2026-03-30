@@ -1,5 +1,9 @@
 const perks = {
   title: 'Ưu đãi',
+  loading: 'Đang tải ưu đãi...',
+  emptyTitle: 'Không có ưu đãi nào khớp bộ lọc này',
+  emptyDescription:
+    'Hãy thử danh mục khác hoặc quay lại sau để xem thêm ưu đãi đối tác mới.',
   categories: {
     all: 'Tất cả',
     hotels: 'Khách sạn',
@@ -30,7 +34,14 @@ const perks = {
       total: '{{count}} Ưu đãi',
       subtitle: 'Đã mở khóa trong năm nay',
     },
+    loading: 'Đang tải lịch sử ưu đãi...',
+    emptyTitle: 'Chưa có lịch sử ưu đãi',
+    emptyDescription:
+      'Ưu đãi đối tác bạn đã nhận sẽ xuất hiện tại đây sau lần mở khóa đầu tiên.',
+    unknownPartner: 'Ưu đãi đối tác',
+    unknownPerk: 'Quyền lợi thành viên',
     status: {
+      claimed: 'Đã nhận',
       used: 'Đã dùng',
       expired: 'Hết hạn',
     },

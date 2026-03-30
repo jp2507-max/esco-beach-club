@@ -178,15 +178,15 @@ export function ControlledDateInput<TFieldValues extends FieldValues>({
                 visible={isPickerVisible}
                 onRequestClose={handleConfirm}
               >
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={t('close')}
-                  accessibilityHint={t('datePicker.dismissHint')}
-                  accessible={true}
-                  className="flex-1"
-                  onPress={handleConfirm}
-                >
-                  <View className="flex-1" />
+                <View className="flex-1">
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={t('close')}
+                    accessibilityHint={t('datePicker.dismissHint')}
+                    accessible
+                    className="flex-1"
+                    onPress={handleConfirm}
+                  />
                   <View className="rounded-t-3xl bg-card pb-8 dark:bg-dark-bg-card">
                     <View className="flex-row items-center justify-between border-b border-border/50 px-5 py-3 dark:border-dark-border/50">
                       <View className="w-16" />
@@ -214,7 +214,7 @@ export function ControlledDateInput<TFieldValues extends FieldValues>({
                       value={dateValue}
                     />
                   </View>
-                </Pressable>
+                </View>
               </Modal>
             ) : null}
 

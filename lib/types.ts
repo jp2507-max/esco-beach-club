@@ -1,4 +1,38 @@
-export type UserTier = 'STANDARD' | 'VIP' | 'OWNER';
+export const rewardTierKeys = {
+  escoLifeMember: 'ESCO_LIFE_MEMBER',
+} as const;
+
+export type RewardTierKey =
+  (typeof rewardTierKeys)[keyof typeof rewardTierKeys];
+
+export const rewardTransactionEventTypes = {
+  manualAdjustment: 'manual_adjustment',
+  purchase: 'purchase',
+  refund: 'refund',
+  tierProgressReset: 'tier_progress_reset',
+  void: 'void',
+} as const;
+
+export type RewardTransactionEventType =
+  (typeof rewardTransactionEventTypes)[keyof typeof rewardTransactionEventTypes];
+
+export const rewardTransactionSources = {
+  localPosPoller: 'local_pos_poller',
+  manualStaffEntry: 'manual_staff_entry',
+  systemReconcile: 'system_reconcile',
+} as const;
+
+export type RewardTransactionSource =
+  (typeof rewardTransactionSources)[keyof typeof rewardTransactionSources];
+
+export const rewardTransactionStatuses = {
+  pending: 'pending',
+  posted: 'posted',
+  rejected: 'rejected',
+} as const;
+
+export type RewardTransactionStatus =
+  (typeof rewardTransactionStatuses)[keyof typeof rewardTransactionStatuses];
 
 export type StaffRole = 'staff' | 'manager';
 
@@ -11,21 +45,33 @@ export const onboardingPermissionStatuses = {
 export type OnboardingPermissionStatus =
   (typeof onboardingPermissionStatuses)[keyof typeof onboardingPermissionStatuses];
 
+export const memberSegments = {
+  foreigner: 'FOREIGNER',
+  local: 'LOCAL',
+} as const;
+
+export type MemberSegment =
+  (typeof memberSegments)[keyof typeof memberSegments];
+
 export type Profile = {
   id: string;
   full_name: string;
   date_of_birth: string | null;
   bio: string;
-  tier: UserTier;
   member_id: string;
   member_since: string;
   nights_left: number;
-  points: number;
-  max_points: number;
-  earned: number;
+  cashback_points_balance: number;
+  cashback_points_lifetime_earned: number;
+  lifetime_tier_key: RewardTierKey;
+  next_tier_key: RewardTierKey | null;
+  tier_progress_points: number;
+  tier_progress_target_points: number;
+  tier_progress_started_at: string | null;
+  tier_progress_expires_at: string | null;
   saved: number;
   avatar_url: string | null;
-  is_danang_citizen: boolean | null;
+  member_segment: MemberSegment | null;
   location_permission_status: OnboardingPermissionStatus;
   push_notification_permission_status: OnboardingPermissionStatus;
   onboarding_completed_at: string | null;
@@ -163,6 +209,7 @@ export type SavedEvent = {
 
 export type PrivateEventInquiry = {
   id: string;
+  entry_key: string;
   event_type: string;
   preferred_date: string;
   estimated_pax: number;
@@ -206,21 +253,20 @@ export type StaffAccess = {
   user_id: string | null;
 };
 
-export type LoyaltyTransaction = {
+export type RewardTransaction = {
   id: string;
-  approved_by_staff_access_id: string | null;
-  bill_amount_vnd: number;
+  amount_vnd: number;
+  cashback_points_delta: number;
   created_at: string;
-  currency: string;
   entry_key: string;
-  manager_pin_label: string | null;
+  event_type: RewardTransactionEventType;
+  external_event_id: string;
   member_id: string;
   member_profile_id: string | null;
-  points_awarded: number;
-  points_rate_per_100k_vnd: number;
-  receipt_reference: string | null;
-  source: string;
-  staff_access_id: string | null;
-  status: string;
+  occurred_at: string;
+  reference: string | null;
+  source: RewardTransactionSource;
+  status: RewardTransactionStatus;
+  tier_progress_points_delta: number;
   updated_at: string;
 };

@@ -1,5 +1,9 @@
 const perks = {
   title: '혜택',
+  loading: '혜택을 불러오는 중입니다...',
+  emptyTitle: '이 필터에 맞는 혜택이 없습니다',
+  emptyDescription:
+    '다른 카테고리를 선택하거나 새 제휴 혜택을 다시 확인해 주세요.',
   categories: {
     all: '전체',
     hotels: '호텔',
@@ -29,7 +33,14 @@ const perks = {
       total: '{{count}}개 혜택',
       subtitle: '올해 잠금 해제됨',
     },
+    loading: '혜택 내역을 불러오는 중입니다...',
+    emptyTitle: '아직 혜택 내역이 없습니다',
+    emptyDescription:
+      '첫 혜택을 잠금 해제하면 제휴 혜택 내역이 여기에 표시됩니다.',
+    unknownPartner: '파트너 혜택',
+    unknownPerk: '멤버 혜택',
     status: {
+      claimed: '수령함',
       used: '사용됨',
       expired: '만료됨',
     },

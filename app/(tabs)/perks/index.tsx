@@ -1,17 +1,18 @@
+import type { NativeStackHeaderItem } from '@react-navigation/native-stack';
 import { FlashList, type ListRenderItemInfo } from '@shopify/flash-list';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useRouter } from 'expo-router';
 import { Compass, ExternalLink, History } from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Linking, useWindowDimensions } from 'react-native';
+import { Alert, Linking, Platform, useWindowDimensions } from 'react-native';
 
 import { Colors } from '@/constants/colors';
 import type { Partner } from '@/lib/types';
-import { useFilteredPartners } from '@/providers/DataProvider';
+import { useFilteredPartners, usePartnersData } from '@/providers/DataProvider';
 import { CategoryChip } from '@/src/components/ui';
 import { shadows } from '@/src/lib/styles/shadows';
-import { Pressable, ScrollView, Text, View } from '@/src/tw';
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Image } from '@/src/tw/image';
 
 const partnerCategories = [
@@ -35,6 +36,7 @@ export default function PerksScreen(): React.JSX.Element {
     []
   );
 
+  const { partnersLoading } = usePartnersData();
   const filtered = useFilteredPartners(activeCategory);
 
   const handlePartnerPress = useCallback(
@@ -106,24 +108,42 @@ export default function PerksScreen(): React.JSX.Element {
       <Stack.Screen
         options={{
           headerLargeTitle: true,
-          headerRight: () => (
-            <Pressable
-              accessibilityHint={t('history.openHint')}
-              accessibilityLabel={t('history.openAction')}
-              accessibilityRole="button"
-              className="flex-row items-center rounded-full border border-border bg-card px-3 py-1.5 dark:border-dark-border dark:bg-dark-bg-card"
-              onPress={handleOpenHistory}
-              style={shadows.level1}
-              testID="perks-history-link"
-            >
-              <History color={Colors.primary} size={14} />
-              <Text className="ml-1 text-xs font-bold text-primary dark:text-primary-bright">
-                {t('history.openAction')}
-              </Text>
-            </Pressable>
-          ),
           headerSearchBarOptions: undefined,
           title: t('title'),
+          ...(Platform.OS === 'ios'
+            ? {
+                // Native UIBarButtonItem avoids stacking a React view inside the bar’s glass/material chrome (iOS 18+ / 26).
+                unstable_headerRightItems: (): NativeStackHeaderItem[] => [
+                  {
+                    type: 'button',
+                    label: t('history.openAction'),
+                    icon: { type: 'sfSymbol', name: 'clock.arrow.circlepath' },
+                    variant: 'plain',
+                    tintColor: Colors.primary,
+                    onPress: handleOpenHistory,
+                    accessibilityLabel: t('history.openAction'),
+                    accessibilityHint: t('history.openHint'),
+                    hidesSharedBackground: true,
+                  },
+                ],
+              }
+            : {
+                headerRight: () => (
+                  <Pressable
+                    accessibilityHint={t('history.openHint')}
+                    accessibilityLabel={t('history.openAction')}
+                    accessibilityRole="button"
+                    className="flex-row items-center px-2 py-1"
+                    onPress={handleOpenHistory}
+                    testID="perks-history-link"
+                  >
+                    <History color={Colors.primary} size={14} />
+                    <Text className="ml-1 text-xs font-bold text-primary dark:text-primary-bright">
+                      {t('history.openAction')}
+                    </Text>
+                  </Pressable>
+                ),
+              }),
         }}
       />
 
@@ -203,6 +223,25 @@ export default function PerksScreen(): React.JSX.Element {
               </View>
             </Pressable>
           </>
+        }
+        ListEmptyComponent={
+          partnersLoading ? (
+            <View className="items-center rounded-2xl border border-border bg-card px-4 py-10 dark:border-dark-border dark:bg-dark-bg-card">
+              <ActivityIndicator color={Colors.primary} size="large" />
+              <Text className="mt-4 text-sm font-medium text-text-secondary dark:text-text-secondary-dark">
+                {t('loading')}
+              </Text>
+            </View>
+          ) : (
+            <View className="rounded-2xl border border-border bg-card px-4 py-8 dark:border-dark-border dark:bg-dark-bg-card">
+              <Text className="text-center text-lg font-bold text-text dark:text-text-primary-dark">
+                {t('emptyTitle')}
+              </Text>
+              <Text className="mt-2 text-center text-sm leading-6 text-text-secondary dark:text-text-secondary-dark">
+                {t('emptyDescription')}
+              </Text>
+            </View>
+          )
         }
         numColumns={2}
         renderItem={renderCard}

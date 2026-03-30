@@ -17,7 +17,9 @@ import { OnboardingHeader } from '@/src/components/onboarding/onboarding-header'
 import { InfoDot } from '@/src/components/ui';
 import { motion, withRM } from '@/src/lib/animations/motion';
 import { useButtonPress } from '@/src/lib/animations/use-button-press';
+import { ensureVenueUpsellNotificationChannel } from '@/src/lib/notifications';
 import { shadows } from '@/src/lib/styles/shadows';
+import { readSingleSearchParam } from '@/src/lib/utils/search-params';
 import { ActivityIndicator, Pressable, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 
@@ -27,19 +29,9 @@ type OnboardingPermissionsSearchParams = {
   onboardingLocationPermissionStatus?: string | string[];
   onboardingPrivacyAccepted?: string | string[];
   onboardingPushPermissionStatus?: string | string[];
-  onboardingResident?: string | string[];
+  onboardingSegment?: string | string[];
   onboardingTermsAccepted?: string | string[];
 };
-
-function readSingleSearchParam(
-  value: string | string[] | undefined
-): string | undefined {
-  if (Array.isArray(value)) {
-    return value[0];
-  }
-
-  return value;
-}
 
 function parseOnboardingPermissionStatus(
   value: string | string[] | undefined
@@ -91,6 +83,10 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
         searchParams.onboardingLocationPermissionStatus
       )
     );
+  const [backgroundLocationStatus, setBackgroundLocationStatus] =
+    React.useState<OnboardingPermissionStatus>(
+      onboardingPermissionStatuses.undetermined
+    );
   const [pushStatus, setPushStatus] =
     React.useState<OnboardingPermissionStatus>(
       parseOnboardingPermissionStatus(
@@ -101,6 +97,43 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
     React.useState<boolean>(false);
   const [isRequestingPush, setIsRequestingPush] =
     React.useState<boolean>(false);
+
+  const isBusy = isRequestingLocation || isRequestingPush;
+
+  React.useEffect(() => {
+    let isMounted = true;
+
+    void (async () => {
+      try {
+        const [
+          foregroundLocationPermission,
+          backgroundPermission,
+          notificationsPermission,
+        ] = await Promise.all([
+          Location.getForegroundPermissionsAsync(),
+          Location.getBackgroundPermissionsAsync(),
+          Notifications.getPermissionsAsync(),
+        ]);
+
+        if (!isMounted) return;
+
+        setLocationStatus(
+          mapExpoPermissionStatus(foregroundLocationPermission.status)
+        );
+        setBackgroundLocationStatus(
+          mapExpoPermissionStatus(backgroundPermission.status)
+        );
+        setPushStatus(mapExpoPermissionStatus(notificationsPermission.status));
+      } catch {
+        // Keep the search-param defaults when the current device state
+        // cannot be read yet.
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   function showInfoAlert(title: string, message: string): void {
     Alert.alert(title, message);
@@ -114,8 +147,8 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
         readSingleSearchParam(searchParams.onboardingDisplayName) ?? '',
       onboardingPrivacyAccepted:
         readSingleSearchParam(searchParams.onboardingPrivacyAccepted) ?? '0',
-      onboardingResident:
-        readSingleSearchParam(searchParams.onboardingResident) ?? '0',
+      onboardingSegment:
+        readSingleSearchParam(searchParams.onboardingSegment) ?? '',
       onboardingTermsAccepted:
         readSingleSearchParam(searchParams.onboardingTermsAccepted) ?? '0',
     }),
@@ -123,7 +156,7 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
       searchParams.onboardingDateOfBirth,
       searchParams.onboardingDisplayName,
       searchParams.onboardingPrivacyAccepted,
-      searchParams.onboardingResident,
+      searchParams.onboardingSegment,
       searchParams.onboardingTermsAccepted,
     ]
   );
@@ -152,22 +185,76 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
     return t('onboardingPermissionsActionAllow');
   }
 
+  function resolveEffectiveLocationStatus(): OnboardingPermissionStatus {
+    return locationStatus;
+  }
+
+  async function confirmBackgroundLocationRequest(): Promise<boolean> {
+    return new Promise((resolve) => {
+      Alert.alert(
+        t('onboardingPermissionsBackgroundPromptTitle'),
+        t('onboardingPermissionsBackgroundPromptMessage'),
+        [
+          {
+            text: t('onboardingPermissionsBackgroundPromptLater'),
+            style: 'cancel',
+            onPress: () => resolve(false),
+          },
+          {
+            text: t('onboardingPermissionsBackgroundPromptContinue'),
+            onPress: () => resolve(true),
+          },
+        ]
+      );
+    });
+  }
+
   async function requestLocationPermission(): Promise<void> {
     if (isBusy) return;
     setIsRequestingLocation(true);
 
     try {
-      const currentPermission = await Location.getForegroundPermissionsAsync();
+      let nextLocationStatus = mapExpoPermissionStatus(
+        (await Location.getForegroundPermissionsAsync()).status
+      );
 
-      if (currentPermission.status === 'granted') {
-        setLocationStatus(onboardingPermissionStatuses.granted);
+      if (nextLocationStatus !== onboardingPermissionStatuses.granted) {
+        nextLocationStatus = mapExpoPermissionStatus(
+          (await Location.requestForegroundPermissionsAsync()).status
+        );
+      }
+
+      setLocationStatus(nextLocationStatus);
+
+      if (nextLocationStatus !== onboardingPermissionStatuses.granted) {
+        setBackgroundLocationStatus(onboardingPermissionStatuses.undetermined);
         return;
       }
 
-      const requestedPermission =
-        await Location.requestForegroundPermissionsAsync();
+      const currentBackgroundPermission =
+        await Location.getBackgroundPermissionsAsync();
+      const currentBackgroundStatus = mapExpoPermissionStatus(
+        currentBackgroundPermission.status
+      );
 
-      setLocationStatus(mapExpoPermissionStatus(requestedPermission.status));
+      if (currentBackgroundStatus === onboardingPermissionStatuses.granted) {
+        setBackgroundLocationStatus(onboardingPermissionStatuses.granted);
+        return;
+      }
+
+      const shouldRequestBackground = await confirmBackgroundLocationRequest();
+
+      if (!shouldRequestBackground) {
+        setBackgroundLocationStatus(currentBackgroundStatus);
+        return;
+      }
+
+      const requestedBackgroundPermission =
+        await Location.requestBackgroundPermissionsAsync();
+
+      setBackgroundLocationStatus(
+        mapExpoPermissionStatus(requestedBackgroundPermission.status)
+      );
     } catch {
       Alert.alert(
         t('onboardingPermissionsErrorTitle'),
@@ -183,6 +270,7 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
     setIsRequestingPush(true);
 
     try {
+      await ensureVenueUpsellNotificationChannel();
       const currentPermission = await Notifications.getPermissionsAsync();
 
       if (currentPermission.status === 'granted') {
@@ -223,21 +311,14 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
     });
   }
 
-  function handleContinue(): void {
+  function handleNavigateNext(): void {
+    const effectiveLocationStatus = resolveEffectiveLocationStatus();
+
     continueToFinalDetails({
-      location: locationStatus,
+      location: effectiveLocationStatus,
       push: pushStatus,
     });
   }
-
-  function handleNotNow(): void {
-    continueToFinalDetails({
-      location: locationStatus,
-      push: pushStatus,
-    });
-  }
-
-  const isBusy = isRequestingLocation || isRequestingPush;
 
   return (
     <View className="flex-1 bg-background dark:bg-dark-bg">
@@ -305,7 +386,7 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
 
               <View className="rounded-full bg-primary/10 px-2.5 py-1 dark:bg-primary-bright/20">
                 <Text className="text-[10px] font-bold uppercase tracking-[1.5px] text-primary dark:text-primary-bright">
-                  {statusLabel(locationStatus)}
+                  {statusLabel(resolveEffectiveLocationStatus())}
                 </Text>
               </View>
             </View>
@@ -332,13 +413,14 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
                   <ActivityIndicator color="#fff" />
                 ) : (
                   <Text className="text-[14px] font-bold text-white">
-                    {actionLabel(locationStatus)}
+                    {actionLabel(resolveEffectiveLocationStatus())}
                   </Text>
                 )}
               </LinearGradient>
             </Pressable>
 
-            {locationStatus === onboardingPermissionStatuses.denied ? (
+            {resolveEffectiveLocationStatus() ===
+            onboardingPermissionStatuses.denied ? (
               <Pressable
                 accessibilityRole="button"
                 className="mt-2 items-center"
@@ -453,7 +535,7 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
               accessibilityRole="button"
               className="overflow-hidden rounded-full"
               disabled={isBusy}
-              onPress={handleContinue}
+              onPress={handleNavigateNext}
               onPressIn={ctaButton.handlePressIn}
               onPressOut={ctaButton.handlePressOut}
               testID="onboarding-permissions-continue"
@@ -483,7 +565,7 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
             accessibilityRole="button"
             className="items-center"
             disabled={isBusy}
-            onPress={handleNotNow}
+            onPress={handleNavigateNext}
             testID="onboarding-permissions-not-now"
           >
             <Text className="text-[16px] font-bold text-secondary dark:text-secondary-fixed">

@@ -30,6 +30,7 @@ import {
   type PrivateEventFormValues,
   privateEventSchema,
 } from '@/src/lib/forms/schemas';
+import { captureHandledError } from '@/src/lib/monitoring';
 import { cn } from '@/src/lib/utils';
 import {
   KeyboardAvoidingView,
@@ -131,12 +132,17 @@ export default function PrivateEventScreen(): React.JSX.Element {
         notes: values.notes?.trim() || undefined,
       }),
     onSuccess: () => {
-      console.log('[PrivateEvent] Inquiry submitted');
       setSubmitted(true);
       successScale.set(withSpring(1, motion.spring.bouncy));
     },
     onError: (err) => {
-      console.log('[PrivateEvent] Submit error:', err);
+      captureHandledError(err, {
+        extras: { userId },
+        tags: {
+          area: 'private_events',
+          operation: 'submit_inquiry',
+        },
+      });
       const message =
         err instanceof Error ? err.message : t('privateEvent.submitError');
       Alert.alert(t('privateEvent.submissionFailed'), message);

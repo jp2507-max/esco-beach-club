@@ -22,22 +22,22 @@ const auth = {
   onboardingBasicsTermsCta: 'Terms of Service',
   onboardingLocalIdentityTitle: 'Guest Profile',
   onboardingLocalIdentitySubtitle:
-    'Tell us how often you visit Esco Beach Club so we can tailor your member experience.',
-  onboardingLocalIdentityRegionalAccessTitle: 'Visit Pattern',
+    'Tell us whether you are a local or a foreigner so we can tailor your member experience.',
+  onboardingLocalIdentityRegionalAccessTitle: 'Member Segment',
   onboardingLocalIdentityRegionalAccessDescription:
-    'This helps us personalize your perks and recommendations.',
-  onboardingLocalIdentityCitizenTitle: 'Regular Guest',
-  onboardingLocalIdentityCitizenDescription:
-    'I visit Esco Beach Club regularly.',
-  onboardingLocalIdentityVisitorTitle: 'One-time Guest',
-  onboardingLocalIdentityVisitorDescription:
-    'I am visiting once or only occasionally.',
+    'This helps us personalize your perks, recommendations, and venue offers.',
+  onboardingLocalIdentityLocalTitle: 'Local',
+  onboardingLocalIdentityLocalDescription:
+    'I live locally and want offers tailored to residents.',
+  onboardingLocalIdentityForeignerTitle: 'Foreigner',
+  onboardingLocalIdentityForeignerDescription:
+    'I am visiting from abroad and want traveler-friendly recommendations.',
   onboardingLocalIdentityLegalConsentsTitle: 'Legal Consents',
   onboardingInfoButtonLabel: 'Why we ask this',
   onboardingInfoButtonHint: 'Shows a short explanation',
-  onboardingLocalIdentityRegionalAccessInfoTitle: 'Why we ask visit pattern',
+  onboardingLocalIdentityRegionalAccessInfoTitle: 'Why we ask your segment',
   onboardingLocalIdentityRegionalAccessInfoMessage:
-    'We tailor recommendations, offers, and follow-up experiences based on how often you usually visit.',
+    'We use this to personalize local offers, travel-friendly perks, and on-site experiences.',
   onboardingLocalIdentityTermsInfoTitle: 'Why terms are required',
   onboardingLocalIdentityTermsInfoMessage:
     'This protects members and partners by setting clear booking, conduct, and cancellation rules.',
@@ -56,13 +56,13 @@ const auth = {
   onboardingLocalIdentityContinue: 'Continue',
   onboardingLocalIdentityInvalidTitle: 'Missing Information',
   onboardingLocalIdentityInvalidMessage:
-    'Please choose your guest type and accept all legal consents.',
+    'Please choose Local or Foreigner and accept all legal consents.',
   onboardingFinalDetailsTitle: 'Final Details',
   onboardingFinalDetailsSubtitle:
     'Upload a photo so your cabana host can welcome you by name.',
   onboardingFinalDetailsLocationTitle: 'Location Services',
   onboardingFinalDetailsLocationDescription:
-    'Enable location to find the nearest cabana and get beach-side delivery alerts.',
+    'Enable location so we can detect when you arrive at the restaurant and unlock in-venue offers.',
   onboardingFinalDetailsNotificationsTitle: 'Stay Informed',
   onboardingFinalDetailsNotificationsDescription:
     'Never miss a booking confirmation or exclusive sunset hour invitation.',
@@ -83,7 +83,13 @@ const auth = {
     'Enable only what helps: nearby perks and timely booking updates for members.',
   onboardingPermissionsLocationInfoTitle: 'Why location helps members',
   onboardingPermissionsLocationInfoMessage:
-    'We use location to highlight nearby venues, member-only perks, and relevant local experiences.',
+    'We use location to detect restaurant entry, unlock timely venue offers, and highlight relevant nearby perks.',
+  onboardingPermissionsBackgroundPromptTitle:
+    'Allow background location for venue alerts',
+  onboardingPermissionsBackgroundPromptMessage:
+    'Enable background location so Esco Beach Club can recognize when you arrive at the restaurant and send timely in-venue offers.',
+  onboardingPermissionsBackgroundPromptContinue: 'Continue',
+  onboardingPermissionsBackgroundPromptLater: 'Not now',
   onboardingPermissionsNotificationsInfoTitle: 'Why notifications help members',
   onboardingPermissionsNotificationsInfoMessage:
     'Notifications keep you informed about confirmations, schedule changes, and exclusive offers.',
@@ -101,13 +107,19 @@ const auth = {
     'We could not open the permission prompt. Please try again or continue for now.',
   onboardingPermissionsPrivacyNote:
     'You can change permissions anytime in your device settings.',
+  venueUpsellNotificationChannelName: 'Venue offers',
+  venueUpsellNotificationChannelDescription:
+    'Timely offers when you arrive at the restaurant.',
+  venueUpsellNotificationTitle: 'Earn cashback points at the bar',
+  venueUpsellNotificationBody:
+    'Order a cocktail now to add cashback points to your balance.',
   onboardingClubWelcomeTitle: 'Welcome to the Club!',
   onboardingClubWelcomeSubtitle:
     'The sun is out and your membership is active. Let’s start with a toast to your new lifestyle.',
   onboardingClubValueLabel: 'Immediate Value',
   onboardingClubRewardTitle: 'Free Signature Welcome Cocktail - Unlocked!',
-  onboardingClubVoucherCode: 'Voucher #ES-2024',
-  onboardingClubVoucherValidity: 'Valid at all Club Cabanas',
+  onboardingClubVoucherCode: 'Voucher #{{code}}',
+  onboardingClubVoucherValidity: 'Valid at {{scope}}',
   onboardingClubVoucherInstruction:
     'Show this screen to your server at any Esco Life property to claim your artisan welcome drink.',
   onboardingClubPrimaryCta: 'Enjoy my Perks',

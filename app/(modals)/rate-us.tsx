@@ -23,6 +23,7 @@ import { ProfileSubScreenHeader } from '@/src/components/ui';
 import { motion, rmTiming } from '@/src/lib/animations/motion';
 import { ControlledTextInput } from '@/src/lib/forms/controlled-text-input';
 import { type ReviewFormValues, reviewSchema } from '@/src/lib/forms/schemas';
+import { captureHandledError } from '@/src/lib/monitoring';
 import {
   KeyboardAvoidingView,
   Pressable,
@@ -116,17 +117,20 @@ export default function RateUsScreen(): React.JSX.Element {
     mutationFn: (values: ReviewFormValues) =>
       submitReview(userId, values.rating, values.comment?.trim() || null),
     onSuccess: () => {
-      console.log('[RateUs] Review submitted successfully');
       setSubmitted(true);
       successScale.set(withSpring(1, motion.spring.bouncy));
     },
     onError: (err) => {
-      console.log('[RateUs] Review submit error:', err);
+      captureHandledError(err, {
+        extras: { userId },
+        tags: {
+          area: 'reviews',
+          operation: 'submit_review',
+        },
+      });
       const message =
-        err instanceof Error
-          ? err.message
-          : 'Could not submit your review right now.';
-      Alert.alert('Review Failed', message);
+        err instanceof Error ? err.message : t('rateUs.reviewSubmitError');
+      Alert.alert(t('rateUs.reviewFailed'), message);
     },
   });
 

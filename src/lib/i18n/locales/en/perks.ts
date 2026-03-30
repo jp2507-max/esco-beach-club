@@ -1,5 +1,9 @@
 const perks = {
   title: 'Perks',
+  loading: 'Loading perks...',
+  emptyTitle: 'No perks match this filter',
+  emptyDescription:
+    'Try another category or check back soon for new partner offers.',
   categories: {
     all: 'All',
     hotels: 'Hotels',
@@ -30,7 +34,14 @@ const perks = {
       total: '{{count}} Perks',
       subtitle: 'Unlocked this year',
     },
+    loading: 'Loading perk history...',
+    emptyTitle: 'No perk history yet',
+    emptyDescription:
+      'Your claimed partner perks will appear here after your first unlock.',
+    unknownPartner: 'Partner reward',
+    unknownPerk: 'Member benefit',
     status: {
+      claimed: 'Claimed',
       used: 'Used',
       expired: 'Expired',
     },

@@ -78,7 +78,7 @@ const rules = {
       isOwner: "auth.id != null && auth.id in data.ref('user.id')",
       isOwnerOrLinkedProfile: 'isOwner || isLinkedProfile',
       onlySafeProfileFields:
-        "request.modifiedFields.all(field, field in ['full_name', 'avatar_url', 'has_seen_welcome_voucher', 'bio', 'member_since', 'nights_left', 'date_of_birth', 'is_danang_citizen', 'location_permission_status', 'push_notification_permission_status', 'onboarding_completed_at'])",
+        "request.modifiedFields.all(field, field in ['full_name', 'avatar_url', 'has_seen_welcome_voucher', 'bio', 'member_since', 'member_segment', 'nights_left', 'date_of_birth', 'location_permission_status', 'push_notification_permission_status', 'onboarding_completed_at', 'updated_at'])",
       canCreateOwnedProfile:
         "auth.id != null && auth.id in data.ref('user.id')",
     },
@@ -126,27 +126,11 @@ const rules = {
       update: 'false',
     },
   },
-  loyalty_transactions: {
+  reward_transactions: {
     bind: {
       authHasActiveStaffRole:
         "auth.id != null && ('staff' in auth.ref('$user.staff_access.role') || 'manager' in auth.ref('$user.staff_access.role')) && true in auth.ref('$user.staff_access.is_active')",
-      authIsManager:
-        "auth.id != null && 'manager' in auth.ref('$user.staff_access.role')",
-      authMatchesStaffAccess:
-        "auth.id != null && auth.id in data.ref('staff_access.user.id')",
-      hasActiveStaffAccess:
-        "size(data.ref('staff_access.id')) == 1 && true in data.ref('staff_access.is_active')",
-      hasManagerApproval:
-        "size(data.ref('approved_by.id')) == 1 && true in data.ref('approved_by.is_active') && 'manager' in data.ref('approved_by.role')",
-      hasMember: "size(data.ref('member.id')) == 1",
       isMemberOwner: "auth.id != null && auth.id in data.ref('member.user.id')",
-      isPostedStatus: "data.status == 'posted'",
-      isWithinApprovalCap: 'data.bill_amount_vnd <= 3000000',
-      usesSupportedCurrency: "data.currency == 'VND'",
-      usesSupportedSource:
-        "data.source == 'manual_staff_entry' || data.source == 'pos_import'",
-      validApprovalShape:
-        "isWithinApprovalCap ? size(data.ref('approved_by.id')) == 0 : hasManagerApproval",
     },
     allow: {
       view: 'isMemberOwner || authHasActiveStaffRole',

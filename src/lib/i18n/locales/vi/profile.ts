@@ -2,9 +2,7 @@ const profile = {
   guest: 'Khách',
   memberFallback: 'THÀNH VIÊN',
   tier: {
-    standard: 'Thành viên',
-    vip: 'VIP',
-    owner: 'Người sở hữu',
+    escoLifeMember: 'Thành viên Esco Life',
   },
   menu: {
     comingSoon: 'Sắp ra mắt',
@@ -35,9 +33,9 @@ const profile = {
   brandPrefix: 'Esco',
   brandHighlight: 'Life',
   accessPass: 'THẺ TRUY CẬP',
-  scanAtTable: 'Quét để tích điểm hội viên',
+  scanAtTable: 'Quét tại quầy thanh toán để liên kết mã thành viên của bạn',
   refPrefix: 'Mã: {{memberId}}',
-  earned: 'ĐÃ NHẬN',
+  earned: 'CASHBACK ĐÃ NHẬN',
   saved: 'ĐÃ TIẾT KIỆM',
   profileDetails: 'Chi tiết hồ sơ',
   memberSince: 'Thành viên từ',
@@ -80,9 +78,9 @@ const profile = {
             'Hãy xuất trình thẻ hội viên số tại quầy bar Esco Life. Ưu đãi đủ điều kiện sẽ được áp dụng tự động sau khi xác nhận.',
         },
         upgradeTier: {
-          question: 'Làm sao để nâng hạng lên Diamond?',
+          question: 'Tiến độ lên hạng theo tháng hoạt động thế nào?',
           answer:
-            'Việc nâng hạng dựa trên điểm tích lũy và lượt lưu trú đủ điều kiện. Vào mục Hội viên để xem tiến độ và lựa chọn nâng hạng.',
+            'Hạng hiện tại của bạn được giữ trọn đời. Điểm tiến độ cho hạng tiếp theo được theo dõi riêng và sẽ đặt lại sau 1 tháng kể từ khi chu kỳ tiến độ bắt đầu.',
         },
         modifyCabana: {
           question: 'Tôi có thể chỉnh sửa đặt chỗ cabana không?',
@@ -102,15 +100,6 @@ const profile = {
     openMail: 'Không thể mở ứng dụng email',
     openWhatsApp: 'Không thể mở WhatsApp',
     languageChangeFailed: 'Không thể thay đổi ngôn ngữ. Vui lòng thử lại.',
-    photoPermissionTitle: 'Cần cấp quyền',
-    photoPermissionBlockedDescription:
-      'Quyền truy cập ảnh đã bị chặn. Hãy bật quyền Camera và Ảnh trong phần cài đặt thiết bị.',
-    photoLibraryPermissionDescription:
-      'Vui lòng cho phép truy cập thư viện ảnh để chọn ảnh hồ sơ.',
-    photoCameraPermissionDescription:
-      'Vui lòng cho phép truy cập camera để chụp ảnh hồ sơ.',
-    photoSelectionFailed: 'Không thể đọc ảnh đã chọn. Vui lòng thử lại.',
-    photoUploadFailed: 'Không thể tải ảnh hồ sơ lên. Vui lòng thử lại.',
     saveProfileFailed: 'Không thể lưu hồ sơ của bạn. Vui lòng thử lại.',
     signOutFailed: 'Không thể đăng xuất. Vui lòng thử lại.',
   },
@@ -124,13 +113,6 @@ const profile = {
     memberSincePlaceholder: 'YYYY-MM-DD',
     nightsLeft: 'Đêm còn lại',
     nightsLeftPlaceholder: '0',
-    profilePhoto: {
-      label: 'Ảnh hồ sơ',
-      helper: 'Chọn cách ảnh hồ sơ của bạn hiển thị với thành viên.',
-      takePhoto: 'Chụp ảnh',
-      chooseFromLibrary: 'Chọn từ thư viện',
-      remove: 'Xóa ảnh',
-    },
     save: 'Lưu thay đổi',
     saving: 'Đang lưu...',
   },
@@ -170,39 +152,40 @@ const profile = {
     accessDeniedTitle: 'Cần quyền nhân viên',
     allowlistPending:
       'Hãy nhờ admin thêm tài khoản này vào allowlist nhân viên.',
-    approvalRequired: 'Cần mã PIN quản lý cho giao dịch trên {{amount}}.',
-    award: 'Cộng điểm',
-    awarding: 'Đang cộng điểm...',
-    awardTitle: 'Cộng điểm thành viên',
+    approvalRequired: 'Các điều chỉnh thủ công nhạy cảm cần quản lý phê duyệt.',
+    award: 'Ghi nhận cashback',
+    awarding: 'Đang ghi nhận...',
+    awardTitle: 'Ghi nhận điều chỉnh cashback',
     badge: 'Nhân viên',
     billAmountLabel: 'Giá trị hóa đơn (VND)',
     billAmountPlaceholder: '100000',
     cameraPermissionDescription:
       'Cho phép truy cập camera để nhân viên quét mã QR thành viên tại Esco Beach.',
     cameraPermissionTitle: 'Cần quyền camera',
-    currentPoints: 'Điểm hiện tại: {{value}}',
+    currentPoints: 'Số dư cashback hiện tại: {{value}}',
     errors: {
-      billBelowMinimumSpend:
-        'Hóa đơn này chưa đạt mức chi tối thiểu để cộng điểm.',
+      billBelowMinimumSpend: 'Hóa đơn này chưa đạt ngưỡng cashback tối thiểu.',
       generic: 'Đã xảy ra lỗi. Vui lòng thử lại.',
       invalidBillAmount: 'Hãy nhập giá trị hóa đơn hợp lệ bằng VND.',
-      invalidLoyaltyServiceResponse:
-        'Dịch vụ loyalty trả về phản hồi không hợp lệ. Vui lòng thử lại.',
+      invalidRewardServiceResponse:
+        'Dịch vụ phần thưởng trả về phản hồi không hợp lệ. Vui lòng thử lại.',
       invalidQr: 'Mã QR này không phải mã thành viên Esco hợp lệ.',
-      loyaltyServiceRejectedRequest:
-        'Dịch vụ loyalty đã từ chối yêu cầu này. Vui lòng kiểm tra thông tin hóa đơn và thử lại.',
-      loyaltyServiceUnavailable:
-        'Dịch vụ loyalty hiện không khả dụng. Vui lòng thử lại sau ít phút.',
+      rewardServiceRejectedRequest:
+        'Dịch vụ phần thưởng đã từ chối yêu cầu này. Vui lòng kiểm tra thông tin hóa đơn và thử lại.',
+      rewardServiceUnavailable:
+        'Dịch vụ phần thưởng hiện không khả dụng. Vui lòng thử lại sau ít phút.',
       managerApprovalRequired:
         'Cần mã PIN quản lý hợp lệ cho giao dịch vượt ngưỡng phê duyệt.',
       memberNotFound: 'Không tìm thấy thành viên với mã này.',
       receiptReferenceRequired:
-        'Cần mã tham chiếu hóa đơn để cộng điểm an toàn.',
-      staffAccessRequired: 'Tài khoản này chưa được allowlist để cộng điểm.',
+        'Cần mã tham chiếu hóa đơn để ghi nhận cashback an toàn.',
+      staffAccessRequired:
+        'Tài khoản này chưa được allowlist để điều chỉnh phần thưởng thủ công.',
       title: 'Không thể hoàn tất thao tác',
     },
     findMember: 'Tìm thành viên',
-    formulaNote: '{{points}} điểm được cộng cho mỗi {{amount}} chi tiêu.',
+    formulaNote:
+      '{{points}} điểm cashback được cộng cho mỗi {{amount}} chi tiêu.',
     goBack: 'Quay lại',
     grantPermission: 'Cấp quyền camera',
     invalidQrTitle: 'Mã QR không hợp lệ',
@@ -219,18 +202,19 @@ const profile = {
     memberNotFound: 'Không có thành viên nào khớp với mã này.',
     memberNotFoundTitle: 'Không tìm thấy thành viên',
     memberPendingLookup:
-      'Nhấn Tìm thành viên để xác nhận thành viên này trước khi cộng điểm.',
+      'Nhấn Tìm thành viên để xác nhận thành viên này trước khi ghi nhận cashback.',
     pointsPreviewDescription:
-      'Điểm được làm tròn xuống theo từng bậc chi tiêu trước khi cộng.',
-    pointsPreviewLabel: 'Xem trước điểm',
+      'Điểm cashback được làm tròn xuống theo từng bậc {{amount}} trước khi ghi nhận.',
+    pointsPreviewLabel: 'Xem trước cashback',
     receiptReferenceLabel: 'Mã tham chiếu hóa đơn',
     receiptReferencePlaceholder: 'Số bill hoặc hóa đơn',
     scanAgain: 'Quét lại',
     subtitle:
-      'Quét QR của khách hoặc nhập mã thành viên để cộng điểm với các biện pháp chống gian lận.',
-    successMessage: '{{name}} đã nhận {{points}} điểm từ hóa đơn {{amount}}.',
-    successTitle: 'Đã cộng điểm',
-    title: 'Máy quét tích điểm',
+      'Quét QR của khách hoặc nhập mã thành viên để ghi nhận một điều chỉnh cashback an toàn.',
+    successMessage:
+      '{{name}} đã nhận {{points}} điểm cashback từ hóa đơn {{amount}}.',
+    successTitle: 'Đã ghi nhận cashback',
+    title: 'Máy quét phần thưởng',
   },
   invite: {
     codeCopied: 'Đã sao chép!',

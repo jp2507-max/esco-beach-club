@@ -25,6 +25,9 @@ import { useProfileData } from '@/providers/DataProvider';
 import { OnboardingHeader } from '@/src/components/onboarding/onboarding-header';
 import { motion, withRM } from '@/src/lib/animations/motion';
 import { useButtonPress } from '@/src/lib/animations/use-button-press';
+import { config } from '@/src/lib/config';
+import { parseOnboardingMemberSegmentSearchParam } from '@/src/lib/utils/member-segment';
+import { readSingleSearchParam } from '@/src/lib/utils/search-params';
 import { Pressable, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 import { Image } from '@/src/tw/image';
@@ -38,25 +41,9 @@ type OnboardingLocalIdentityParams = {
   onboardingLocationPermissionStatus?: string | string[];
   onboardingPrivacyAccepted?: string | string[];
   onboardingPushPermissionStatus?: string | string[];
-  onboardingResident?: string | string[];
+  onboardingSegment?: string | string[];
   onboardingTermsAccepted?: string | string[];
 };
-
-function parseBooleanSearchParam(
-  value: string | string[] | undefined
-): boolean | undefined {
-  const normalized = readSingleSearchParam(value)?.trim().toLowerCase();
-
-  if (normalized === '1' || normalized === 'true') {
-    return true;
-  }
-
-  if (normalized === '0' || normalized === 'false') {
-    return false;
-  }
-
-  return undefined;
-}
 
 function parsePermissionStatusSearchParam(
   value: string | string[] | undefined
@@ -77,29 +64,21 @@ function parsePermissionStatusSearchParam(
   return onboardingPermissionStatuses.undetermined;
 }
 
-function readSingleSearchParam(
-  value: string | string[] | undefined
-): string | undefined {
-  if (Array.isArray(value)) {
-    return value[0];
-  }
-
-  return value;
-}
-
 const ICON_DELAY = 100;
 const TITLE_DELAY = 260;
 const CARD_DELAY = 440;
 const CTA_DELAY = 680;
 
 function FloatingDot({
-  className,
   delay,
   amplitude,
+  positionClassName,
+  appearanceClassName,
 }: {
   amplitude: number;
-  className: string;
+  appearanceClassName: string;
   delay: number;
+  positionClassName: string;
 }): React.JSX.Element {
   const translateY = useSharedValue(0);
 
@@ -130,9 +109,10 @@ function FloatingDot({
   return (
     <Animated.View
       entering={withRM(FadeIn.duration(motion.dur.xl).delay(delay))}
-      style={dotStyle}
-      className={className}
-    />
+      className={positionClassName}
+    >
+      <Animated.View style={dotStyle} className={appearanceClassName} />
+    </Animated.View>
   );
 }
 
@@ -183,8 +163,8 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
     const onboardingDateOfBirth = readSingleSearchParam(
       searchParams.onboardingDateOfBirth
     )?.trim();
-    const isDanangCitizen = parseBooleanSearchParam(
-      searchParams.onboardingResident
+    const memberSegment = parseOnboardingMemberSegmentSearchParam(
+      searchParams.onboardingSegment
     );
     const locationPermissionStatus = parsePermissionStatusSearchParam(
       searchParams.onboardingLocationPermissionStatus
@@ -216,9 +196,7 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
       ...(onboardingDisplayName && onboardingDisplayName.length >= 2
         ? { full_name: onboardingDisplayName }
         : {}),
-      ...(isDanangCitizen !== undefined
-        ? { is_danang_citizen: isDanangCitizen }
-        : {}),
+      ...(memberSegment ? { member_segment: memberSegment } : {}),
       location_permission_status: resolvedLocationPermissionStatus,
       push_notification_permission_status: resolvedPushPermissionStatus,
       ...(isSetupCompleted
@@ -259,8 +237,8 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
     const onboardingPrivacyAccepted = readSingleSearchParam(
       searchParams.onboardingPrivacyAccepted
     );
-    const onboardingResident = readSingleSearchParam(
-      searchParams.onboardingResident
+    const onboardingSegment = readSingleSearchParam(
+      searchParams.onboardingSegment
     );
     const onboardingTermsAccepted = readSingleSearchParam(
       searchParams.onboardingTermsAccepted
@@ -280,9 +258,7 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
         ...(onboardingPrivacyAccepted
           ? { onboardingPrivacyAccepted }
           : { onboardingPrivacyAccepted: '0' }),
-        ...(onboardingResident
-          ? { onboardingResident }
-          : { onboardingResident: '0' }),
+        ...(onboardingSegment ? { onboardingSegment } : {}),
         ...(onboardingTermsAccepted
           ? { onboardingTermsAccepted }
           : { onboardingTermsAccepted: '0' }),
@@ -334,27 +310,32 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
 
       <View className="pointer-events-none absolute inset-0 opacity-45 dark:opacity-25">
         <FloatingDot
-          className="absolute left-10 top-20 size-4 rounded-full bg-primary/50 dark:bg-primary-bright/40"
+          positionClassName="absolute left-10 top-20 size-4"
+          appearanceClassName="size-full rounded-full bg-primary/50 dark:bg-primary-bright/40"
           delay={200}
           amplitude={6}
         />
         <FloatingDot
-          className="absolute right-16 top-55 size-3 rounded-sm bg-secondary/50 dark:bg-secondary/30"
+          positionClassName="absolute right-16 top-55 size-3"
+          appearanceClassName="size-full rounded-sm bg-secondary/50 dark:bg-secondary/30"
           delay={400}
           amplitude={8}
         />
         <FloatingDot
-          className="absolute left-24 top-120 h-5 w-2 rounded-full bg-warning/45 dark:bg-warning-dark/30"
+          positionClassName="absolute left-24 top-120 h-5 w-2"
+          appearanceClassName="size-full rounded-full bg-warning/45 dark:bg-warning-dark/30"
           delay={300}
           amplitude={5}
         />
         <FloatingDot
-          className="absolute right-24 top-110 size-3 rounded-full bg-primary/40 dark:bg-primary-bright/30"
+          positionClassName="absolute right-24 top-110 size-3"
+          appearanceClassName="size-full rounded-full bg-primary/40 dark:bg-primary-bright/30"
           delay={500}
           amplitude={7}
         />
         <FloatingDot
-          className="absolute bottom-20 right-8 size-6 rounded-full bg-border/70 dark:bg-dark-border/60"
+          positionClassName="absolute bottom-20 right-8 size-6"
+          appearanceClassName="size-full rounded-full bg-border/70 dark:bg-dark-border/60"
           delay={350}
           amplitude={4}
         />
@@ -372,13 +353,17 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
             entering={withRM(
               ZoomIn.springify().damping(12).stiffness(160).delay(ICON_DELAY)
             )}
-            style={sparkleStyle}
             className="mb-4 size-14 items-center justify-center rounded-full bg-primary-fixed dark:bg-primary/20"
           >
-            <Sparkles
-              className="text-primary dark:text-primary-bright"
-              size={24}
-            />
+            <Animated.View
+              style={sparkleStyle}
+              className="items-center justify-center"
+            >
+              <Sparkles
+                className="text-primary dark:text-primary-bright"
+                size={24}
+              />
+            </Animated.View>
           </Animated.View>
 
           <Animated.View
@@ -450,10 +435,14 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
 
                   <View>
                     <Text className="text-[17px] font-bold text-text dark:text-text-primary-dark">
-                      {t('onboardingClubVoucherCode')}
+                      {t('onboardingClubVoucherCode', {
+                        code: config.onboardingClubVoucher.code,
+                      })}
                     </Text>
                     <Text className="text-[13px] text-text-secondary dark:text-text-secondary-dark">
-                      {t('onboardingClubVoucherValidity')}
+                      {t('onboardingClubVoucherValidity', {
+                        scope: config.onboardingClubVoucher.scope,
+                      })}
                     </Text>
                   </View>
                 </View>

@@ -3,16 +3,18 @@ const membership = {
   tierCard: {
     currentTier: 'Current Tier',
     memberSince: 'Member since {{date}}',
+    cashbackBalance: 'Cashback Balance',
+    cashbackPoints: '{{value}} cashback pts',
     progressTo: 'Progress to {{nextTier}}',
-    pointsLabel: '{{current}} / {{max}} pts',
+    progressPoints: '{{current}} / {{target}} pts',
+    progressExpires: 'Progress resets on {{date}}',
+    progressResetsMonthly: 'Monthly tier progress resets after 1 month.',
+    nextTierComingSoon: 'Next tier coming soon',
+    progressUnavailable:
+      'Tier progress will appear here once the next tier is configured.',
   },
   tiers: {
-    standard: 'Member',
-    vip: 'VIP',
-    owner: 'Platinum',
-    nextStandard: 'VIP',
-    nextVip: 'Platinum',
-    nextOwner: 'Diamond',
+    escoLifeMember: 'Esco Life Member',
   },
   benefits: {
     title: 'Unlocked Benefits',
@@ -34,11 +36,21 @@ const membership = {
   },
   activity: {
     title: 'Recent Activity',
-    tierUpgraded: 'Tier Upgraded',
-    tierUpgradedDesc: "Congratulations! You've reached {{tier}} Status.",
-    pointsEarned: 'Points Earned',
-    pointsEarnedDesc: '+{{points}} points from recent activity.',
+    cashbackAdjusted: 'Manual Cashback Adjustment',
+    cashbackAdjustedDesc:
+      '{{points}} cashback points were changed through a manual adjustment.',
+    cashbackEarned: 'Cashback Earned',
+    cashbackEarnedDesc:
+      '+{{points}} cashback points from a recent qualifying purchase.',
+    cashbackReversed: 'Cashback Reversed',
+    cashbackReversedDesc: '-{{points}} cashback points after a refund or void.',
     daysAgo: '{{count}} days ago',
+    loading: 'Loading recent activity...',
+    emptyTitle: 'No member activity yet',
+    emptyDescription:
+      'New cashback activity and monthly tier progress will appear here after your next qualifying purchase.',
+    progressReset: 'Tier Progress Reset',
+    progressResetDesc: 'Your monthly tier progress window was reset.',
     sampleData: 'Sample Content',
   },
   comingSoon: 'Coming soon',

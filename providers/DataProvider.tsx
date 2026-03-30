@@ -18,15 +18,25 @@ import type {
   MenuItemContent,
   NewsItem,
   Partner,
+  PartnerRedemption,
   PrivateEventTypeOption,
   Profile,
   Referral,
   SavedEvent,
   StaffAccess,
 } from '@/lib/types';
+import { rewardTierKeys } from '@/lib/types';
 import { useAuth } from '@/providers/AuthProvider';
 import { db } from '@/src/lib/instant';
-import { isManagerRole, isStaffRole } from '@/src/lib/loyalty';
+import {
+  getActiveTierProgressPoints,
+  getNextRewardTierKey,
+  getTierProgressPercent,
+  hasTierUpgradePath,
+  isManagerRole,
+  isStaffRole,
+} from '@/src/lib/loyalty';
+import { captureHandledError } from '@/src/lib/monitoring';
 import {
   type InstantRecord,
   mapBookingOccasion,
@@ -37,6 +47,7 @@ import {
   mapMenuItem,
   mapNewsItem,
   mapPartner,
+  mapPartnerRedemption,
   mapPrivateEventType,
   mapProfile,
   mapReferral,
@@ -64,6 +75,11 @@ type NewsData = {
 type PartnersData = {
   partners: Partner[];
   partnersLoading: boolean;
+};
+
+type PartnerRedemptionsData = {
+  partnerRedemptions: PartnerRedemption[];
+  partnerRedemptionsLoading: boolean;
 };
 
 type ReferralsData = {
@@ -105,10 +121,33 @@ type StaffAccessData = {
   staffAccessLoading: boolean;
 };
 
+export type MemberSummary = {
+  activeTierProgressPoints: number;
+  avatarUrl: string | null;
+  cashbackBalancePoints: number;
+  cashbackLifetimePoints: number;
+  fullName: string;
+  hasProfile: boolean;
+  hasTierUpgradePath: boolean;
+  lifetimeTierKey: Profile['lifetime_tier_key'];
+  memberId: string;
+  memberSince: string | null;
+  nextTierKey: Profile['next_tier_key'];
+  nightsLeft: number;
+  saved: number;
+  savedEventsCount: number;
+  tierProgressExpiresAt: string | null;
+  tierProgressPercent: number;
+  tierProgressTargetPoints: number;
+};
+
 const ProfileContext = createContext<ProfileData | null>(null);
 const EventsContext = createContext<EventsData | null>(null);
 const NewsContext = createContext<NewsData | null>(null);
 const PartnersContext = createContext<PartnersData | null>(null);
+const PartnerRedemptionsContext = createContext<PartnerRedemptionsData | null>(
+  null
+);
 const ReferralsContext = createContext<ReferralsData | null>(null);
 const SavedEventsContext = createContext<SavedEventsData | null>(null);
 const BookingContentContext = createContext<BookingContentData | null>(null);
@@ -119,6 +158,7 @@ const StaffAccessContext = createContext<StaffAccessData | null>(null);
 const EMPTY_EVENTS: Event[] = [];
 const EMPTY_NEWS: NewsItem[] = [];
 const EMPTY_PARTNERS: Partner[] = [];
+const EMPTY_PARTNER_REDEMPTIONS: PartnerRedemption[] = [];
 const EMPTY_REFERRALS: Referral[] = [];
 const EMPTY_SAVED_EVENTS: SavedEvent[] = [];
 const EMPTY_BOOKING_OCCASIONS: BookingOccasionOption[] = [];
@@ -145,6 +185,10 @@ const FALLBACK_NEWS: NewsData = { news: EMPTY_NEWS, newsLoading: false };
 const FALLBACK_PARTNERS: PartnersData = {
   partners: EMPTY_PARTNERS,
   partnersLoading: false,
+};
+const FALLBACK_PARTNER_REDEMPTIONS: PartnerRedemptionsData = {
+  partnerRedemptions: EMPTY_PARTNER_REDEMPTIONS,
+  partnerRedemptionsLoading: false,
 };
 const FALLBACK_REFERRALS: ReferralsData = {
   referrals: EMPTY_REFERRALS,
@@ -258,6 +302,18 @@ export function DataProvider({
   const eventsQuery = db.useQuery(userId ? { events: {} } : null);
   const newsQuery = db.useQuery(userId ? { news_items: {} } : null);
   const partnersQuery = db.useQuery(userId ? { partners: {} } : null);
+  const partnerRedemptionsQuery = db.useQuery(
+    userId
+      ? {
+          partner_redemptions: {
+            $: {
+              where: { 'owner.id': userId },
+              order: { created_at: 'desc' },
+            },
+          },
+        }
+      : null
+  );
   const staffAccessQuery = db.useQuery(
     userId
       ? {
@@ -265,6 +321,7 @@ export function DataProvider({
             $: {
               where: { 'user.id': userId },
             },
+            user: {},
           },
         }
       : null
@@ -314,7 +371,10 @@ export function DataProvider({
     const record = staffAccessQuery.data?.staff_access?.[0] as
       | InstantRecord
       | undefined;
-    return record ? mapStaffAccess(record) : null;
+    if (!record) return null;
+
+    const mapped = mapStaffAccess(record);
+    return { ...mapped, user_id: mapped.user_id ?? userId };
   }, [staffAccessQuery.data, userId]);
 
   const events = useMemo(() => {
@@ -340,6 +400,13 @@ export function DataProvider({
     const records = (referralsQuery.data?.referrals ?? []) as InstantRecord[];
     return records.map(mapReferral);
   }, [referralsQuery.data, userId]);
+
+  const partnerRedemptions = useMemo(() => {
+    if (!userId) return EMPTY_PARTNER_REDEMPTIONS;
+    const records = (partnerRedemptionsQuery.data?.partner_redemptions ??
+      []) as InstantRecord[];
+    return records.map(mapPartnerRedemption);
+  }, [partnerRedemptionsQuery.data, userId]);
 
   const savedEvents = useMemo(() => {
     if (!userId) return EMPTY_SAVED_EVENTS;
@@ -457,6 +524,13 @@ export function DataProvider({
       })
       .catch((error: unknown) => {
         if (!isMounted) return;
+        captureHandledError(error, {
+          extras: { userId },
+          tags: {
+            area: 'profile',
+            operation: 'ensure_profile',
+          },
+        });
         console.error('[DataProvider] Failed to provision profile:', {
           error,
           isAuthLoading,
@@ -497,6 +571,12 @@ export function DataProvider({
         })
       )
       .catch((error: unknown) => {
+        captureHandledError(error, {
+          tags: {
+            area: 'profile',
+            operation: 'dismiss_welcome_voucher',
+          },
+        });
         console.error(
           '[DataProvider] Failed to dismiss welcome voucher:',
           error
@@ -575,6 +655,13 @@ export function DataProvider({
           await saveEvent(userId, eventId);
         }
       } catch (error: unknown) {
+        captureHandledError(error, {
+          extras: { eventId, userId },
+          tags: {
+            area: 'events',
+            operation: 'toggle_saved_event',
+          },
+        });
         console.error('[DataProvider] Failed to toggle saved event:', error);
         const timeout = pendingSavedToggleTimeoutsRef.current.get(eventId);
         if (timeout != null) {
@@ -689,6 +776,15 @@ export function DataProvider({
     [referrals, referralsQuery.isLoading, userId]
   );
 
+  const partnerRedemptionsValue = useMemo(
+    () => ({
+      partnerRedemptions,
+      partnerRedemptionsLoading:
+        Boolean(userId) && partnerRedemptionsQuery.isLoading,
+    }),
+    [partnerRedemptions, partnerRedemptionsQuery.isLoading, userId]
+  );
+
   const savedEventsValue = useMemo(
     () => ({
       isEventSaved,
@@ -780,19 +876,21 @@ export function DataProvider({
       <EventsContext.Provider value={eventsValue}>
         <NewsContext.Provider value={newsValue}>
           <PartnersContext.Provider value={partnersValue}>
-            <ReferralsContext.Provider value={referralsValue}>
-              <SavedEventsContext.Provider value={savedEventsValue}>
-                <BookingContentContext.Provider value={bookingContentValue}>
-                  <MemberOffersContext.Provider value={memberOffersValue}>
-                    <MenuContentContext.Provider value={menuContentValue}>
-                      <StaffAccessContext.Provider value={staffAccessValue}>
-                        {children}
-                      </StaffAccessContext.Provider>
-                    </MenuContentContext.Provider>
-                  </MemberOffersContext.Provider>
-                </BookingContentContext.Provider>
-              </SavedEventsContext.Provider>
-            </ReferralsContext.Provider>
+            <PartnerRedemptionsContext.Provider value={partnerRedemptionsValue}>
+              <ReferralsContext.Provider value={referralsValue}>
+                <SavedEventsContext.Provider value={savedEventsValue}>
+                  <BookingContentContext.Provider value={bookingContentValue}>
+                    <MemberOffersContext.Provider value={memberOffersValue}>
+                      <MenuContentContext.Provider value={menuContentValue}>
+                        <StaffAccessContext.Provider value={staffAccessValue}>
+                          {children}
+                        </StaffAccessContext.Provider>
+                      </MenuContentContext.Provider>
+                    </MemberOffersContext.Provider>
+                  </BookingContentContext.Provider>
+                </SavedEventsContext.Provider>
+              </ReferralsContext.Provider>
+            </PartnerRedemptionsContext.Provider>
           </PartnersContext.Provider>
         </NewsContext.Provider>
       </EventsContext.Provider>
@@ -814,6 +912,13 @@ export function useNewsData(): NewsData {
 
 export function usePartnersData(): PartnersData {
   return useRequiredContext(PartnersContext, FALLBACK_PARTNERS);
+}
+
+export function usePartnerRedemptionsData(): PartnerRedemptionsData {
+  return useRequiredContext(
+    PartnerRedemptionsContext,
+    FALLBACK_PARTNER_REDEMPTIONS
+  );
 }
 
 export function useReferralsData(): ReferralsData {
@@ -855,6 +960,7 @@ export function useData() {
   const eventsData = useEventsData();
   const newsData = useNewsData();
   const partnersData = usePartnersData();
+  const partnerRedemptionsData = usePartnerRedemptionsData();
   const referralsData = useReferralsData();
   const savedEventsData = useSavedEventsData();
   const bookingContentData = useBookingContentData();
@@ -870,6 +976,7 @@ export function useData() {
       ...menuContentData,
       ...newsData,
       ...partnersData,
+      ...partnerRedemptionsData,
       ...referralsData,
       ...savedEventsData,
     }),
@@ -880,6 +987,7 @@ export function useData() {
       menuContentData,
       newsData,
       partnersData,
+      partnerRedemptionsData,
       profileData,
       referralsData,
       savedEventsData,
@@ -933,4 +1041,42 @@ export function useReferralProgress() {
 export function useSavedEventsCount(): number {
   const { savedEvents } = useSavedEventsData();
   return savedEvents.length;
+}
+
+export function useMemberSummary(): MemberSummary {
+  const { profile } = useProfileData();
+  const savedEventsCount = useSavedEventsCount();
+
+  return useMemo(() => {
+    const lifetimeTierKey =
+      profile?.lifetime_tier_key ?? rewardTierKeys.escoLifeMember;
+    const nextTierKey = profile?.next_tier_key ?? getNextRewardTierKey(lifetimeTierKey);
+    const tierProgressTargetPoints = profile?.tier_progress_target_points ?? 0;
+    const activeTierProgressPoints = profile
+      ? getActiveTierProgressPoints(profile)
+      : 0;
+    const tierProgressPercent = profile ? getTierProgressPercent(profile) : 0;
+    const canUpgrade =
+      hasTierUpgradePath(lifetimeTierKey) && nextTierKey !== null && tierProgressTargetPoints > 0;
+
+    return {
+      activeTierProgressPoints,
+      avatarUrl: profile?.avatar_url ?? null,
+      cashbackBalancePoints: profile?.cashback_points_balance ?? 0,
+      cashbackLifetimePoints: profile?.cashback_points_lifetime_earned ?? 0,
+      fullName: profile?.full_name ?? '',
+      hasProfile: Boolean(profile),
+      hasTierUpgradePath: canUpgrade,
+      lifetimeTierKey,
+      memberId: profile?.member_id ?? '',
+      memberSince: profile?.member_since ?? null,
+      nextTierKey,
+      nightsLeft: profile?.nights_left ?? 0,
+      saved: profile?.saved ?? 0,
+      savedEventsCount,
+      tierProgressExpiresAt: profile?.tier_progress_expires_at ?? null,
+      tierProgressPercent,
+      tierProgressTargetPoints,
+    };
+  }, [profile, savedEventsCount]);
 }

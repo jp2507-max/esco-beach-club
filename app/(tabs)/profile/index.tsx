@@ -32,13 +32,18 @@ import { Colors } from '@/constants/colors';
 import { useAuth } from '@/providers/AuthProvider';
 import {
   useMemberOffersData,
+  useMemberSummary,
   useProfileData,
-  useSavedEventsCount,
 } from '@/providers/DataProvider';
 import { HeaderGlassButton } from '@/src/components/ui';
 import { Avatar } from '@/src/components/ui/avatar';
 import { rmTiming } from '@/src/lib/animations/motion';
 import { config } from '@/src/lib/config';
+import {
+  getRewardTierLabelKey,
+  hasRewardBenefit,
+  rewardBenefitKeys,
+} from '@/src/lib/loyalty';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 
@@ -127,25 +132,21 @@ export default function ProfileScreen(): React.JSX.Element {
   const voucherOpacity = useSharedValue(0);
 
   const { profile, dismissVoucher } = useProfileData();
+  const memberSummary = useMemberSummary();
   const { welcomeOffer } = useMemberOffersData();
-  const savedEventsCount = useSavedEventsCount();
   const { signOut } = useAuth();
 
-  const userName = profile?.full_name ?? t('guest');
-  const tierBadge =
-    profile?.tier === 'VIP'
-      ? t('tier.vip')
-      : profile?.tier === 'OWNER'
-        ? t('tier.owner')
-        : t('tier.standard');
-  const tierLevel = profile?.tier ?? 'STANDARD';
+  const userName = memberSummary.fullName || t('guest');
+  const tierBadge = t(
+    `tier.${getRewardTierLabelKey(memberSummary.lifetimeTierKey)}`
+  );
   const bio = profile?.bio?.trim() ?? '';
-  const memberSince = profile?.member_since
-    ? profile.member_since.slice(0, 10)
+  const memberSince = memberSummary.memberSince
+    ? memberSummary.memberSince.slice(0, 10)
     : '—';
-  const earned = profile?.earned ?? 0;
-  const nightsLeft = profile?.nights_left ?? 0;
-  const saved = profile?.saved ?? 0;
+  const cashbackLifetimePoints = memberSummary.cashbackLifetimePoints;
+  const nightsLeft = memberSummary.nightsLeft;
+  const saved = memberSummary.saved;
   const welcomeOfferBadgeKey = resolveWelcomeOfferVoucherKey(
     welcomeOffer?.badge_key,
     'welcomeGift'
@@ -263,7 +264,10 @@ export default function ProfileScreen(): React.JSX.Element {
     setShowVoucher(!profile.has_seen_welcome_voucher);
   }, [profile]);
 
-  const isVIP = tierLevel === 'VIP' || tierLevel === 'OWNER';
+  const hasPrioritySupport = hasRewardBenefit(
+    memberSummary.lifetimeTierKey,
+    rewardBenefitKeys.concierge
+  );
 
   const voucherStyle = useAnimatedStyle(() => ({
     opacity: voucherOpacity.get(),
@@ -321,8 +325,8 @@ export default function ProfileScreen(): React.JSX.Element {
     if (item.route) router.push(item.route as never);
   }
 
-  const earnedProgress = Math.min(Math.max((earned / 2000) * 100, 0), 100);
-  const savedProgress = Math.min(Math.max((saved / 300) * 100, 0), 100);
+  const earnedProgress = cashbackLifetimePoints > 0 ? 100 : 0;
+  const savedProgress = saved > 0 ? 100 : 0;
 
   return (
     <View
@@ -355,7 +359,7 @@ export default function ProfileScreen(): React.JSX.Element {
               className="mr-3 size-12 overflow-hidden rounded-full border-[2.5px]"
               style={{ borderColor: `${Colors.primary}40` }}
             >
-              <Avatar className="h-full w-full" uri={profile?.avatar_url} />
+              <Avatar className="h-full w-full" uri={memberSummary.avatarUrl} />
             </View>
             <View>
               <Text className="text-[13px] font-medium text-text-secondary dark:text-text-secondary-dark">
@@ -397,7 +401,7 @@ export default function ProfileScreen(): React.JSX.Element {
               label={t('earned')}
               progressDegrees={(earnedProgress / 100) * 360}
               progressTrackColor={`${Colors.primary}25`}
-              value={earned.toLocaleString()}
+              value={cashbackLifetimePoints.toLocaleString()}
             />
           </View>
           <StatCard
@@ -451,7 +455,7 @@ export default function ProfileScreen(): React.JSX.Element {
                 {t('savedEventsCount')}
               </Text>
               <Text className="mt-1 text-sm font-bold text-text dark:text-text-primary-dark">
-                {savedEventsCount}
+                {memberSummary.savedEventsCount}
               </Text>
             </View>
           </View>
@@ -509,7 +513,7 @@ export default function ProfileScreen(): React.JSX.Element {
           </Animated.View>
         )}
 
-        {isVIP && config.contact.conciergeBase ? (
+        {hasPrioritySupport && config.contact.conciergeBase ? (
           <Pressable
             accessibilityRole="button"
             className="mb-5 flex-row items-center justify-center rounded-2xl py-4"

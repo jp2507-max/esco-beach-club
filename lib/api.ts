@@ -2,24 +2,34 @@ import { id } from '@instantdb/react-native';
 
 import type {
   Event,
-  LoyaltyTransaction,
+  MemberSegment,
   NewsItem,
   OnboardingPermissionStatus,
   Partner,
   PartnerRedemption,
+  PrivateEventInquiry,
   Profile,
   Referral,
+  RewardTransaction,
   SavedEvent,
   StaffAccess,
   TableReservation,
 } from '@/lib/types';
-import { onboardingPermissionStatuses } from '@/lib/types';
+import {
+  onboardingPermissionStatuses,
+  rewardTierKeys,
+  rewardTransactionEventTypes,
+  rewardTransactionSources,
+} from '@/lib/types';
 import { db } from '@/src/lib/instant';
+import { rewardServiceResponseSchema } from '@/src/lib/reward-backend-contract';
+import { normalizeMemberSegment } from '@/src/lib/utils/member-segment';
 import {
   type InstantRecord,
   mapEvent,
   mapNewsItem,
   mapPartner,
+  mapPrivateEventInquiry,
   mapProfile,
   mapReferral,
   mapSavedEvent,
@@ -31,10 +41,12 @@ function nowIso(): string {
   return new Date().toISOString();
 }
 
-function getTrustedLoyaltyAwardEndpoint(): string {
-  const endpoint = process.env.EXPO_PUBLIC_TRUSTED_LOYALTY_AWARD_URL?.trim();
+function getRewardServiceEndpoint(): string {
+  const endpoint =
+    process.env.EXPO_PUBLIC_REWARD_SERVICE_URL?.trim() ||
+    process.env.EXPO_PUBLIC_TRUSTED_LOYALTY_AWARD_URL?.trim();
   if (!endpoint) {
-    throw new Error('loyaltyServiceUnavailable');
+    throw new Error('rewardServiceUnavailable');
   }
 
   return endpoint;
@@ -46,7 +58,7 @@ function normalizeMemberSince(
   if (value === undefined || value === null) return undefined;
 
   const trimmed = value.trim();
-  if (!trimmed) return null;
+  if (!trimmed) return undefined;
 
   const parsed = new Date(trimmed);
   const isValidDate = !Number.isNaN(parsed.getTime());
@@ -69,7 +81,7 @@ function normalizeDateOfBirth(
   if (value === undefined || value === null) return undefined;
 
   const trimmed = value.trim();
-  if (!trimmed) return null;
+  if (!trimmed) return undefined;
 
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(trimmed);
   if (!match) return undefined;
@@ -93,7 +105,7 @@ function normalizeOnboardingCompletedAt(
   if (value === undefined || value === null) return value;
 
   const trimmed = value.trim();
-  if (!trimmed) return null;
+  if (!trimmed) return undefined;
 
   const parsed = new Date(trimmed);
   if (Number.isNaN(parsed.getTime())) {
@@ -124,79 +136,12 @@ function normalizePermissionStatus(
   return undefined;
 }
 
-function buildProfilePhotoStoragePath(userId: string): string {
-  return `profile-photos/${userId}/avatar`;
-}
-
-function firstFileRecordFromQueryResult(data: unknown): InstantRecord | null {
-  if (!isRecord(data)) return null;
-
-  const files = data.$files;
-  if (!Array.isArray(files)) return null;
-
-  const [first] = files;
-  return isInstantRecord(first) ? first : null;
-}
-
-function resolveUploadedFileId(value: unknown): string | null {
-  if (!isRecord(value)) return null;
-
-  const maybeData = value.data;
-  if (!isRecord(maybeData)) return null;
-
-  return typeof maybeData.id === 'string' ? maybeData.id : null;
-}
-
-async function toFileFromLocalUri(params: {
-  fallbackFileName: string;
-  localUri: string;
-  mimeType?: string | null;
-}): Promise<File> {
-  const response = await fetch(params.localUri);
-  const blob = await response.blob();
-  const contentType = params.mimeType?.trim() || blob.type || 'image/jpeg';
-  return new File([blob], params.fallbackFileName, { type: contentType });
-}
-
-async function resolveUploadedFileUrl(params: {
-  fileId: string | null;
-  path: string;
-}): Promise<string | null> {
-  if (params.fileId) {
-    const byId = await db.queryOnce({
-      $files: {
-        $: {
-          where: { id: params.fileId },
-        },
-      },
-    });
-
-    const fileById = firstFileRecordFromQueryResult(byId.data);
-    if (fileById && typeof fileById.url === 'string') {
-      return fileById.url;
-    }
-  }
-
-  const byPath = await db.queryOnce({
-    $files: {
-      $: {
-        where: { path: params.path },
-      },
-    },
-  });
-
-  const fileByPath = firstFileRecordFromQueryResult(byPath.data);
-  return fileByPath && typeof fileByPath.url === 'string'
-    ? fileByPath.url
-    : null;
-}
-
 function buildProfileId(userId: string): string {
   return userId;
 }
 
 function buildMemberId(userId: string): string {
-  return `ESCO-${userId.replace(/-/g, '').slice(0, 8).toUpperCase()}`;
+  return `ESCO-${userId.replace(/-/g, '').slice(0, 16).toUpperCase()}`;
 }
 
 function buildReferralCode(): string {
@@ -246,213 +191,102 @@ function firstInstantRecord(value: unknown): InstantRecord | null {
   return isInstantRecord(value) ? value : null;
 }
 
-function isFiniteNumber(value: unknown): value is number {
-  return typeof value === 'number' && Number.isFinite(value);
-}
-
-function isNullableString(value: unknown): value is string | null {
-  return typeof value === 'string' || value === null;
-}
-
-function isSupportedPermissionStatus(value: unknown): boolean {
-  if (value === undefined) return true;
-
-  return (
-    value === onboardingPermissionStatuses.undetermined ||
-    value === onboardingPermissionStatuses.granted ||
-    value === onboardingPermissionStatuses.denied
-  );
-}
-
-function hasStringFields(
-  value: Record<string, unknown>,
-  fields: readonly string[]
-): boolean {
-  return fields.every((field) => typeof value[field] === 'string');
-}
-
-function hasNumberFields(
-  value: Record<string, unknown>,
-  fields: readonly string[]
-): boolean {
-  return fields.every((field) => isFiniteNumber(value[field]));
-}
-
-function isProfilePayload(value: unknown): value is Profile {
-  if (!isRecord(value)) return false;
-
-  if (
-    value.tier !== 'STANDARD' &&
-    value.tier !== 'VIP' &&
-    value.tier !== 'OWNER'
-  ) {
-    return false;
-  }
-
-  if (!isNullableString(value.avatar_url)) return false;
-  if ('date_of_birth' in value && !isNullableString(value.date_of_birth)) {
-    return false;
-  }
-  if (
-    'is_danang_citizen' in value &&
-    value.is_danang_citizen !== null &&
-    typeof value.is_danang_citizen !== 'boolean'
-  ) {
-    return false;
-  }
-  if (!isSupportedPermissionStatus(value.location_permission_status)) {
-    return false;
-  }
-  if (!isSupportedPermissionStatus(value.push_notification_permission_status)) {
-    return false;
-  }
-  if (
-    'onboarding_completed_at' in value &&
-    !isNullableString(value.onboarding_completed_at)
-  ) {
-    return false;
-  }
-  if (typeof value.has_seen_welcome_voucher !== 'boolean') return false;
-
-  return (
-    hasStringFields(value, [
-      'id',
-      'full_name',
-      'bio',
-      'member_id',
-      'member_since',
-      'referral_code',
-      'created_at',
-      'updated_at',
-    ]) &&
-    hasNumberFields(value, [
-      'nights_left',
-      'points',
-      'max_points',
-      'earned',
-      'saved',
-    ])
-  );
-}
-
-function isLoyaltyTransactionPayload(
-  value: unknown
-): value is LoyaltyTransaction {
-  if (!isRecord(value)) return false;
-
-  if (!isNullableString(value.approved_by_staff_access_id)) return false;
-  if (!isNullableString(value.manager_pin_label)) return false;
-  if (!isNullableString(value.member_profile_id)) return false;
-  if (!isNullableString(value.receipt_reference)) return false;
-  if (!isNullableString(value.staff_access_id)) return false;
-
-  return (
-    hasStringFields(value, [
-      'id',
-      'created_at',
-      'currency',
-      'entry_key',
-      'member_id',
-      'source',
-      'status',
-      'updated_at',
-    ]) &&
-    hasNumberFields(value, [
-      'bill_amount_vnd',
-      'points_awarded',
-      'points_rate_per_100k_vnd',
-    ])
-  );
-}
-
-type LoyaltyAwardServiceResponse = {
+type RewardServiceApiResponse = {
+  cashbackPointsDelta: number;
   member: Profile;
-  pointsAwarded: number;
-  transaction: LoyaltyTransaction;
+  tierProgressPointsDelta: number;
+  transaction: RewardTransaction;
 };
 
-function parseLoyaltyAwardServiceResponse(
+function normalizeNullableIsoDateTime(
+  value: string | null | undefined
+): string | null {
+  const normalized = normalizeOnboardingCompletedAt(value);
+  return normalized ?? null;
+}
+
+function normalizeRequiredIsoDateTime(value: string): string {
+  return normalizeOnboardingCompletedAt(value) ?? value;
+}
+
+function parseRewardServiceResponse(
   value: unknown
-): LoyaltyAwardServiceResponse | null {
-  if (!isRecord(value)) return null;
+): RewardServiceApiResponse | null {
+  const parsed = rewardServiceResponseSchema.safeParse(value);
+  if (!parsed.success) return null;
 
-  const member = value.member;
-  const pointsAwarded = value.pointsAwarded;
-  const transaction = value.transaction;
-
-  if (!isProfilePayload(member)) return null;
-  if (!isFiniteNumber(pointsAwarded)) return null;
-  if (!isLoyaltyTransactionPayload(transaction)) return null;
-
-  const dateOfBirth =
-    'date_of_birth' in member && isNullableString(member.date_of_birth)
-      ? member.date_of_birth
-      : null;
-  const isDanangCitizen =
-    'is_danang_citizen' in member &&
-    (typeof member.is_danang_citizen === 'boolean' ||
-      member.is_danang_citizen === null)
-      ? member.is_danang_citizen
-      : null;
-  const locationPermissionStatus = normalizePermissionStatus(
-    typeof member.location_permission_status === 'string'
-      ? member.location_permission_status
-      : undefined
-  );
-  const pushNotificationPermissionStatus = normalizePermissionStatus(
-    typeof member.push_notification_permission_status === 'string'
-      ? member.push_notification_permission_status
-      : undefined
-  );
-  const onboardingCompletedAt =
-    'onboarding_completed_at' in member &&
-    isNullableString(member.onboarding_completed_at)
-      ? (normalizeOnboardingCompletedAt(member.onboarding_completed_at) ?? null)
-      : null;
+  const { cashbackPointsDelta, member, tierProgressPointsDelta, transaction } =
+    parsed.data;
 
   return {
+    cashbackPointsDelta,
     member: {
       ...member,
-      date_of_birth: dateOfBirth,
-      is_danang_citizen: isDanangCitizen,
+      date_of_birth: normalizeDateOfBirth(member.date_of_birth) ?? null,
+      member_segment: member.member_segment
+        ? (normalizeMemberSegment(member.member_segment) ?? null)
+        : null,
+      member_since: normalizeMemberSince(member.member_since) ?? member.member_since,
+      onboarding_completed_at: normalizeNullableIsoDateTime(
+        member.onboarding_completed_at
+      ),
+      tier_progress_expires_at: normalizeNullableIsoDateTime(
+        member.tier_progress_expires_at
+      ),
+      tier_progress_started_at: normalizeNullableIsoDateTime(
+        member.tier_progress_started_at
+      ),
       location_permission_status:
-        locationPermissionStatus ?? onboardingPermissionStatuses.undetermined,
-      push_notification_permission_status:
-        pushNotificationPermissionStatus ??
+        normalizePermissionStatus(member.location_permission_status) ??
         onboardingPermissionStatuses.undetermined,
-      onboarding_completed_at: onboardingCompletedAt,
+      push_notification_permission_status:
+        normalizePermissionStatus(member.push_notification_permission_status) ??
+        onboardingPermissionStatuses.undetermined,
     },
-    pointsAwarded,
-    transaction,
+    tierProgressPointsDelta,
+    transaction: {
+      ...transaction,
+      created_at: normalizeRequiredIsoDateTime(transaction.created_at),
+      occurred_at: normalizeRequiredIsoDateTime(transaction.occurred_at),
+      reference: transaction.reference ?? null,
+      updated_at: normalizeRequiredIsoDateTime(transaction.updated_at),
+    },
   };
 }
 
-function createProfileDefaults(
-  userId: string,
-  email?: string,
-  displayName?: string,
-  dateOfBirth?: string
-): {
+type CreateProfileDefaultsOptions = {
+  userId: string;
+  email?: string;
+  displayName?: string;
+  dateOfBirth?: string;
+};
+
+function createProfileDefaults(options: CreateProfileDefaultsOptions): {
   bio: string;
+  cashback_points_balance: number;
+  cashback_points_lifetime_earned: number;
   created_at: string;
   date_of_birth: string | null;
-  earned: number;
   full_name: string;
   has_seen_welcome_voucher: boolean;
-  is_danang_citizen: boolean | null;
+  lifetime_tier_key: Profile['lifetime_tier_key'];
   location_permission_status: OnboardingPermissionStatus;
-  max_points: number;
   member_id: string;
+  member_segment: MemberSegment | null;
   member_since: string;
+  next_tier_key: Profile['next_tier_key'];
   nights_left: number;
   onboarding_completed_at: string | null;
-  points: number;
   push_notification_permission_status: OnboardingPermissionStatus;
   referral_code: string;
   saved: number;
-  tier: 'STANDARD';
+  tier_progress_expires_at: string | null;
+  tier_progress_points: number;
+  tier_progress_started_at: string | null;
+  tier_progress_target_points: number;
   updated_at: string;
 } {
+  const { userId, email, displayName, dateOfBirth } = options;
   const createdAt = nowIso();
   const normalizedDisplayName = displayName?.trim() ?? '';
   const emailPrefix = email?.split('@')[0]?.trim() ?? '';
@@ -466,24 +300,28 @@ function createProfileDefaults(
 
   return {
     bio: '',
+    cashback_points_balance: 0,
+    cashback_points_lifetime_earned: 0,
     created_at: createdAt,
     date_of_birth: normalizedDateOfBirth ?? null,
-    earned: 0,
     full_name: normalizedDisplayName || fallbackDisplayName,
     has_seen_welcome_voucher: false,
-    is_danang_citizen: null,
+    lifetime_tier_key: rewardTierKeys.escoLifeMember,
     location_permission_status: onboardingPermissionStatuses.undetermined,
-    max_points: 5000,
     member_id: buildMemberId(userId),
+    member_segment: null,
     member_since: createdAt,
+    next_tier_key: null,
     nights_left: 0,
     onboarding_completed_at: null,
-    points: 0,
     push_notification_permission_status:
       onboardingPermissionStatuses.undetermined,
     referral_code: buildReferralCode(),
     saved: 0,
-    tier: 'STANDARD',
+    tier_progress_expires_at: null,
+    tier_progress_points: 0,
+    tier_progress_started_at: null,
+    tier_progress_target_points: 0,
     updated_at: createdAt,
   };
 }
@@ -537,12 +375,12 @@ export async function ensureProfile(params: {
     attempt++;
 
     const profileId = buildProfileId(params.userId);
-    const payload = createProfileDefaults(
-      params.userId,
-      params.email,
-      params.displayName,
-      params.dateOfBirth
-    );
+    const payload = createProfileDefaults({
+      userId: params.userId,
+      email: params.email,
+      displayName: params.displayName,
+      dateOfBirth: params.dateOfBirth,
+    });
 
     try {
       await db.transact(
@@ -650,23 +488,27 @@ export async function fetchStaffAccess(
       $: {
         where: { 'user.id': userId },
       },
+      user: {},
     },
   });
 
   const staffAccess = data.staff_access[0] as InstantRecord | undefined;
-  return staffAccess ? mapStaffAccess(staffAccess) : null;
+  if (!staffAccess) return null;
+
+  const mapped = mapStaffAccess(staffAccess);
+  return { ...mapped, user_id: mapped.user_id ?? userId };
 }
 
-export async function awardLoyaltyTransaction(params: {
+export async function submitRewardAdjustment(params: {
   billAmountVnd: number;
-  managerPin?: string;
   memberId: string;
   receiptReference?: string;
   staffUserId: string;
 }): Promise<{
+  cashbackPointsDelta: number;
   member: Profile;
-  pointsAwarded: number;
-  transaction: LoyaltyTransaction;
+  tierProgressPointsDelta: number;
+  transaction: RewardTransaction;
 }> {
   const memberId = params.memberId.trim();
   const billAmountVnd = Math.trunc(params.billAmountVnd);
@@ -688,7 +530,7 @@ export async function awardLoyaltyTransaction(params: {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 10000);
   try {
-    response = await fetch(getTrustedLoyaltyAwardEndpoint(), {
+    response = await fetch(getRewardServiceEndpoint(), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -696,17 +538,18 @@ export async function awardLoyaltyTransaction(params: {
       signal: controller.signal,
       body: JSON.stringify({
         billAmountVnd,
-        managerPin: params.managerPin?.trim() ?? '',
+        eventType: rewardTransactionEventTypes.manualAdjustment,
         memberId,
         receiptReference,
+        source: rewardTransactionSources.manualStaffEntry,
         staffUserId: params.staffUserId,
       }),
     });
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error('loyaltyServiceUnavailable');
+      throw new Error('rewardServiceUnavailable');
     }
-    throw new Error('loyaltyServiceUnavailable');
+    throw new Error('rewardServiceUnavailable');
   } finally {
     clearTimeout(timeoutId);
   }
@@ -728,12 +571,12 @@ export async function awardLoyaltyTransaction(params: {
       throw new Error(payload.error);
     }
 
-    throw new Error('loyaltyServiceRejectedRequest');
+    throw new Error('rewardServiceRejectedRequest');
   }
 
-  const parsedPayload = parseLoyaltyAwardServiceResponse(payload);
+  const parsedPayload = parseRewardServiceResponse(payload);
   if (!parsedPayload) {
-    throw new Error('invalidLoyaltyServiceResponse');
+    throw new Error('invalidRewardServiceResponse');
   }
 
   return parsedPayload;
@@ -754,11 +597,11 @@ export async function updateProfile(
     date_of_birth: normalizeDateOfBirth(updates.date_of_birth),
     full_name: updates.full_name,
     has_seen_welcome_voucher: updates.has_seen_welcome_voucher,
-    is_danang_citizen: updates.is_danang_citizen,
     location_permission_status: normalizePermissionStatus(
       updates.location_permission_status
     ),
     member_since: normalizeMemberSince(updates.member_since),
+    member_segment: normalizeMemberSegment(updates.member_segment),
     nights_left: updates.nights_left,
     onboarding_completed_at: normalizeOnboardingCompletedAt(
       updates.onboarding_completed_at
@@ -772,9 +615,9 @@ export async function updateProfile(
     date_of_birth?: Profile['date_of_birth'];
     full_name?: Profile['full_name'];
     has_seen_welcome_voucher?: Profile['has_seen_welcome_voucher'];
-    is_danang_citizen?: Profile['is_danang_citizen'];
     location_permission_status?: Profile['location_permission_status'];
     member_since?: string | null;
+    member_segment?: Profile['member_segment'];
     nights_left?: Profile['nights_left'];
     onboarding_completed_at?: string | null;
     push_notification_permission_status?: Profile['push_notification_permission_status'];
@@ -792,61 +635,6 @@ export async function updateProfile(
   );
 
   return fetchProfile(userId);
-}
-
-export async function uploadProfilePhotoAndGetUrl(params: {
-  localUri: string;
-  mimeType?: string | null;
-  userId: string;
-}): Promise<string> {
-  if (!params.userId.trim()) {
-    throw new Error('missingUserId');
-  }
-
-  if (!params.localUri.trim()) {
-    throw new Error('missingPhotoUri');
-  }
-
-  const path = buildProfilePhotoStoragePath(params.userId);
-  const file = await toFileFromLocalUri({
-    fallbackFileName: `${params.userId}-avatar.jpg`,
-    localUri: params.localUri,
-    mimeType: params.mimeType,
-  });
-
-  const uploadResult = await db.storage.uploadFile(path, file, {
-    contentType: file.type,
-  });
-  const uploadedFileId = resolveUploadedFileId(uploadResult);
-  const uploadedUrl = await resolveUploadedFileUrl({
-    fileId: uploadedFileId,
-    path,
-  });
-
-  if (!uploadedUrl) {
-    throw new Error('profilePhotoUploadFailed');
-  }
-
-  return uploadedUrl;
-}
-
-export async function updateProfilePhotoFromLocalAsset(params: {
-  localUri: string;
-  mimeType?: string | null;
-  userId: string;
-}): Promise<Profile | null> {
-  const avatarUrl = await uploadProfilePhotoAndGetUrl(params);
-  return updateProfile(params.userId, {
-    avatar_url: avatarUrl,
-  });
-}
-
-export async function removeProfilePhoto(
-  userId: string
-): Promise<Profile | null> {
-  return updateProfile(userId, {
-    avatar_url: null,
-  });
 }
 
 export async function fetchEvents(): Promise<Event[]> {
@@ -1213,29 +1001,19 @@ export async function submitPrivateEventInquiry(params: {
   contact_name?: string;
   contact_email?: string;
   notes?: string;
-}): Promise<{
-  contact_email?: string;
-  contact_name?: string;
-  created_at: string;
-  estimated_pax: number;
-  event_type: string;
-  id: string;
-  notes?: string;
-  preferred_date: string;
-}> {
+}): Promise<PrivateEventInquiry> {
   const createdAt = nowIso();
   const inquiryId = id();
-  const payload = {
-    contact_email: params.contact_email,
-    contact_name: params.contact_name,
-    estimated_pax: params.estimated_pax,
-    event_type: params.event_type,
-    notes: params.notes,
-    preferred_date: params.preferred_date,
-  };
+  const entryKey = [
+    params.user_id,
+    params.event_type,
+    params.preferred_date,
+    params.contact_email?.trim() || 'no-email',
+  ].join(':');
 
   const createPayload = {
     created_at: createdAt,
+    entry_key: entryKey,
     estimated_pax: params.estimated_pax,
     event_type: params.event_type,
     preferred_date: params.preferred_date,
@@ -1248,15 +1026,50 @@ export async function submitPrivateEventInquiry(params: {
     ...(params.notes !== undefined ? { notes: params.notes } : {}),
   };
 
-  await db.transact(
-    db.tx.private_event_inquiries[inquiryId]
-      .create(createPayload)
-      .link({ owner: params.user_id })
-  );
+  const tx = db.tx.private_event_inquiries[inquiryId]
+    .create(createPayload)
+    .link({ owner: params.user_id });
 
-  return {
-    ...payload,
-    created_at: createdAt,
-    id: inquiryId,
-  };
+  try {
+    await db.transact(tx);
+
+    return {
+      id: inquiryId,
+      entry_key: entryKey,
+      contact_email: params.contact_email || null,
+      contact_name: params.contact_name || null,
+      created_at: createdAt,
+      estimated_pax: params.estimated_pax,
+      event_type: params.event_type,
+      notes: params.notes || null,
+      preferred_date: params.preferred_date,
+    };
+  } catch (error) {
+    if (error instanceof Error) {
+      const message = error.message.toLowerCase();
+      const isConflict =
+        message.includes('unique') ||
+        message.includes('already exists') ||
+        message.includes('duplicate');
+
+      if (isConflict) {
+        const { data } = await db.queryOnce({
+          private_event_inquiries: {
+            $: {
+              where: { entry_key: entryKey },
+            },
+          },
+        });
+
+        const existing = data.private_event_inquiries[0] as
+          | InstantRecord
+          | undefined;
+        if (existing) {
+          return mapPrivateEventInquiry(existing);
+        }
+      }
+    }
+
+    throw error;
+  }
 }

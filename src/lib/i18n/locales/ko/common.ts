@@ -19,7 +19,7 @@ const common = {
     invalidCode: '6자리의 인증 코드를 입력해 주세요.',
     loyaltyManagerPin:
       '이 금액을 승인하려면 유효한 관리자 PIN을 입력해 주세요.',
-    loyaltyMinimumSpend: '이 청구 금액은 포인트 적립 최소 금액보다 낮습니다.',
+    loyaltyMinimumSpend: '이 청구 금액은 최소 캐시백 기준보다 낮습니다.',
   },
   back: '뒤로',
   backHint: '이전 화면으로 돌아갑니다',
@@ -44,6 +44,11 @@ const common = {
     guest: '게스트',
     subtitle: '예약이 확인되었습니다.',
     title: '{{name}}님, 준비가 완료되었습니다!',
+  },
+  appError: {
+    title: '예기치 않은 문제가 발생했습니다',
+    description:
+      '앱을 다시 열거나 잠시 후 다시 시도해 주세요. 팀에서 이미 확인할 수 있도록 기록했습니다.',
   },
   menu: '메뉴',
   privateEvent: {

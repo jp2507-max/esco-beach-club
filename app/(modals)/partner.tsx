@@ -19,6 +19,7 @@ import { claimPartnerRedemption } from '@/lib/api';
 import { usePartnerById, useUserId } from '@/providers/DataProvider';
 import { HeaderGlassButton } from '@/src/components/ui';
 import { motion, rmTiming } from '@/src/lib/animations/motion';
+import { captureHandledError } from '@/src/lib/monitoring';
 import { Pressable, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 import { Image } from '@/src/tw/image';
@@ -81,6 +82,13 @@ export default function PartnerModal(): React.JSX.Element {
       if (copyResetTimerRef.current) clearTimeout(copyResetTimerRef.current);
       copyResetTimerRef.current = setTimeout(() => setCopied(false), 2000);
     } catch (error: unknown) {
+      captureHandledError(error, {
+        extras: { partnerId: partner.id, userId },
+        tags: {
+          area: 'perks',
+          operation: 'copy_redemption_code',
+        },
+      });
       console.error('[PartnerModal] Failed to copy redemption code:', error);
       Alert.alert(
         t('partner.redemptionFailedTitle'),
@@ -96,6 +104,13 @@ export default function PartnerModal(): React.JSX.Element {
       await claimMutation.mutateAsync('cta_unlock');
       router.back();
     } catch (error: unknown) {
+      captureHandledError(error, {
+        extras: { partnerId: partner.id, userId },
+        tags: {
+          area: 'perks',
+          operation: 'claim_redemption',
+        },
+      });
       console.error('[PartnerModal] Failed to claim redemption:', error);
       Alert.alert(
         t('partner.redemptionFailedTitle'),

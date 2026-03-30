@@ -3,16 +3,18 @@ const membership = {
   tierCard: {
     currentTier: '현재 등급',
     memberSince: '가입일 {{date}}',
+    cashbackBalance: '캐시백 잔액',
+    cashbackPoints: '{{value}} 캐시백 포인트',
     progressTo: '{{nextTier}}까지 진행',
-    pointsLabel: '{{current}} / {{max}} pts',
+    progressPoints: '{{current}} / {{target}} pts',
+    progressExpires: '{{date}}에 진행이 초기화됩니다',
+    progressResetsMonthly: '월간 등급 진행은 1개월 후 초기화됩니다.',
+    nextTierComingSoon: '다음 등급은 곧 공개됩니다',
+    progressUnavailable:
+      '다음 등급이 설정되면 등급 진행 상황이 여기에 표시됩니다.',
   },
   tiers: {
-    standard: '멤버',
-    vip: 'VIP',
-    owner: '플래티넘',
-    nextStandard: 'VIP',
-    nextVip: '플래티넘',
-    nextOwner: '다이아몬드',
+    escoLifeMember: 'Esco Life 멤버',
   },
   benefits: {
     title: '혜택',
@@ -34,11 +36,22 @@ const membership = {
   },
   activity: {
     title: '최근 활동',
-    tierUpgraded: '등급 업그레이드',
-    tierUpgradedDesc: '축하합니다! {{tier}} 등급에 도달했습니다.',
-    pointsEarned: '포인트 적립',
-    pointsEarnedDesc: '최근 활동에서 +{{points}} 포인트.',
+    cashbackAdjusted: '수동 캐시백 조정',
+    cashbackAdjustedDesc:
+      '{{points}} 캐시백 포인트가 수동 조정으로 변경되었습니다.',
+    cashbackEarned: '캐시백 적립',
+    cashbackEarnedDesc:
+      '최근 적격 구매에서 +{{points}} 캐시백 포인트가 적립되었습니다.',
+    cashbackReversed: '캐시백 취소',
+    cashbackReversedDesc:
+      '환불 또는 취소 처리로 -{{points}} 캐시백 포인트가 반영되었습니다.',
     daysAgo: '{{count}}일 전',
+    loading: '최근 활동을 불러오는 중입니다...',
+    emptyTitle: '아직 멤버 활동이 없습니다',
+    emptyDescription:
+      '다음 적격 구매 이후 새로운 캐시백 활동과 월간 등급 진행이 여기에 표시됩니다.',
+    progressReset: '등급 진행 초기화',
+    progressResetDesc: '월간 등급 진행 창이 초기화되었습니다.',
     sampleData: '샘플 데이터',
   },
   comingSoon: '곧 출시',

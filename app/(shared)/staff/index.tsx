@@ -21,27 +21,27 @@ import { Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
-import { awardLoyaltyTransaction, fetchProfileByMemberId } from '@/lib/api';
+import { fetchProfileByMemberId, submitRewardAdjustment } from '@/lib/api';
 import type { Profile } from '@/lib/types';
 import { useStaffAccessData } from '@/providers/DataProvider';
 import { Button, Card } from '@/src/components/ui';
 import { ControlledTextInput } from '@/src/lib/forms/controlled-text-input';
 import {
-  type StaffLoyaltyAwardFormValues,
-  staffLoyaltyAwardSchema,
+  type StaffRewardAdjustmentFormValues,
+  staffRewardAdjustmentSchema,
 } from '@/src/lib/forms/schemas';
 import {
-  calculatePointsForAmountVnd,
+  calculateCashbackPointsForAmountVnd,
   formatCurrencyVnd,
-  loyaltyConfig,
   parseMemberQrValue,
+  rewardConfig,
 } from '@/src/lib/loyalty';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
 
 type StaffAwardSummary = {
   amountLabel: string;
+  cashbackPointsDelta: number;
   memberName: string;
-  pointsAwarded: number;
 };
 
 type QrScanPayload = {
@@ -50,12 +50,11 @@ type QrScanPayload = {
 
 const staffErrorMessageByKey = {
   billBelowMinimumSpend: 'staff.errors.billBelowMinimumSpend',
-  invalidLoyaltyServiceResponse: 'staff.errors.invalidLoyaltyServiceResponse',
   invalidBillAmount: 'staff.errors.invalidBillAmount',
-  loyaltyServiceRejectedRequest: 'staff.errors.loyaltyServiceRejectedRequest',
-  loyaltyServiceUnavailable: 'staff.errors.loyaltyServiceUnavailable',
-  managerApprovalRequired: 'staff.errors.managerApprovalRequired',
+  invalidRewardServiceResponse: 'staff.errors.invalidRewardServiceResponse',
   memberNotFound: 'staff.errors.memberNotFound',
+  rewardServiceRejectedRequest: 'staff.errors.rewardServiceRejectedRequest',
+  rewardServiceUnavailable: 'staff.errors.rewardServiceUnavailable',
   receiptReferenceRequired: 'staff.errors.receiptReferenceRequired',
   staffAccessRequired: 'staff.errors.staffAccessRequired',
 } as const;
@@ -82,15 +81,14 @@ export default function StaffScanScreen(): React.JSX.Element {
     null
   );
   const { control, getValues, handleSubmit, reset, setValue, watch } =
-    useForm<StaffLoyaltyAwardFormValues>({
+    useForm<StaffRewardAdjustmentFormValues>({
       defaultValues: {
         billAmountVnd: '',
-        managerPin: '',
         memberId: '',
         receiptReference: '',
       },
       mode: 'onBlur',
-      resolver: zodResolver(staffLoyaltyAwardSchema),
+      resolver: zodResolver(staffRewardAdjustmentSchema),
     });
 
   const billAmountInput = watch('billAmountVnd');
@@ -104,14 +102,9 @@ export default function StaffScanScreen(): React.JSX.Element {
     }
   }, [memberIdInput, selectedMember]);
   const billAmountVnd = Number.parseInt(billAmountInput || '0', 10);
-  const requiresManagerPin = billAmountVnd > loyaltyConfig.approvalCapVnd;
-  const pointsPreview = calculatePointsForAmountVnd(billAmountVnd);
-  const approvalCapLabel = useMemo(
-    () => formatCurrencyVnd(loyaltyConfig.approvalCapVnd),
-    []
-  );
-  const pointsFormulaLabel = useMemo(
-    () => formatCurrencyVnd(loyaltyConfig.spendStepVnd),
+  const cashbackPreview = calculateCashbackPointsForAmountVnd(billAmountVnd);
+  const cashbackFormulaLabel = useMemo(
+    () => formatCurrencyVnd(rewardConfig.cashbackSpendStepVnd),
     []
   );
 
@@ -197,9 +190,8 @@ export default function StaffScanScreen(): React.JSX.Element {
 
     setAwardLoading(true);
     try {
-      const result = await awardLoyaltyTransaction({
+      const result = await submitRewardAdjustment({
         billAmountVnd: Number.parseInt(values.billAmountVnd, 10),
-        managerPin: values.managerPin,
         memberId: values.memberId,
         receiptReference: values.receiptReference,
         staffUserId: staffAccess.user_id,
@@ -210,17 +202,16 @@ export default function StaffScanScreen(): React.JSX.Element {
         amountLabel: formatCurrencyVnd(
           Number.parseInt(values.billAmountVnd, 10)
         ),
+        cashbackPointsDelta: result.cashbackPointsDelta,
         memberName: result.member.full_name || result.member.member_id,
-        pointsAwarded: result.pointsAwarded,
       });
       reset({
         billAmountVnd: '',
-        managerPin: '',
         memberId: result.member.member_id,
         receiptReference: '',
       });
     } catch (error: unknown) {
-      console.error('[staff] Award loyalty transaction failed:', error);
+      console.error('[staff] Reward adjustment failed:', error);
       const message = error instanceof Error ? error.message : 'generic';
       Alert.alert(t('staff.errors.title'), resolveErrorMessage(message));
     } finally {
@@ -376,7 +367,7 @@ export default function StaffScanScreen(): React.JSX.Element {
           </Text>
 
           <View className="mt-4">
-            <ControlledTextInput<StaffLoyaltyAwardFormValues>
+            <ControlledTextInput<StaffRewardAdjustmentFormValues>
               autoCapitalize="characters"
               control={control}
               icon={({ color, size }) => (
@@ -412,8 +403,9 @@ export default function StaffScanScreen(): React.JSX.Element {
               </Text>
               <Text className="mt-3 text-sm text-text-secondary dark:text-text-secondary-dark">
                 {t('staff.currentPoints', {
-                  count: selectedMember.points,
-                  value: selectedMember.points.toLocaleString(),
+                  count: selectedMember.cashback_points_balance,
+                  value:
+                    selectedMember.cashback_points_balance.toLocaleString(),
                 })}
               </Text>
             </View>
@@ -430,13 +422,13 @@ export default function StaffScanScreen(): React.JSX.Element {
           </Text>
           <Text className="mt-2 text-sm leading-6 text-text-secondary dark:text-text-secondary-dark">
             {t('staff.formulaNote', {
-              amount: pointsFormulaLabel,
-              points: loyaltyConfig.pointsAwardedPerStep,
+              amount: cashbackFormulaLabel,
+              points: rewardConfig.cashbackPointsPerStep,
             })}
           </Text>
 
           <View className="mt-4">
-            <ControlledTextInput<StaffLoyaltyAwardFormValues>
+            <ControlledTextInput<StaffRewardAdjustmentFormValues>
               control={control}
               icon={({ color, size }) => (
                 <ShieldCheck color={color} size={size} />
@@ -448,7 +440,7 @@ export default function StaffScanScreen(): React.JSX.Element {
               placeholder={t('staff.billAmountPlaceholder')}
               testID="staff-bill-amount"
             />
-            <ControlledTextInput<StaffLoyaltyAwardFormValues>
+            <ControlledTextInput<StaffRewardAdjustmentFormValues>
               autoCapitalize="characters"
               control={control}
               label={t('staff.receiptReferenceLabel')}
@@ -456,27 +448,6 @@ export default function StaffScanScreen(): React.JSX.Element {
               placeholder={t('staff.receiptReferencePlaceholder')}
               testID="staff-receipt-reference"
             />
-            {requiresManagerPin ? (
-              <>
-                <Text className="mb-2 text-sm font-medium text-warning dark:text-warning-dark">
-                  {t('staff.approvalRequired', { amount: approvalCapLabel })}
-                </Text>
-                <ControlledTextInput<StaffLoyaltyAwardFormValues>
-                  autoCapitalize="none"
-                  control={control}
-                  icon={({ color, size }) => (
-                    <ShieldCheck color={color} size={size} />
-                  )}
-                  inputMode="numeric"
-                  keyboardType="numeric"
-                  label={t('staff.managerPinLabel')}
-                  name="managerPin"
-                  placeholder={t('staff.managerPinPlaceholder')}
-                  secureTextEntry
-                  testID="staff-manager-pin"
-                />
-              </>
-            ) : null}
           </View>
 
           <View className="mt-3 rounded-2xl bg-background p-4 dark:bg-dark-bg-elevated">
@@ -484,10 +455,12 @@ export default function StaffScanScreen(): React.JSX.Element {
               {t('staff.pointsPreviewLabel')}
             </Text>
             <Text className="mt-2 text-2xl font-extrabold text-text dark:text-text-primary-dark">
-              {pointsPreview.toLocaleString()}
+              {cashbackPreview.toLocaleString()}
             </Text>
             <Text className="mt-2 text-sm leading-6 text-text-secondary dark:text-text-secondary-dark">
-              {t('staff.pointsPreviewDescription')}
+              {t('staff.pointsPreviewDescription', {
+                amount: cashbackFormulaLabel,
+              })}
             </Text>
           </View>
 
@@ -513,7 +486,7 @@ export default function StaffScanScreen(): React.JSX.Element {
               {t('staff.successMessage', {
                 amount: awardSummary.amountLabel,
                 name: awardSummary.memberName,
-                points: awardSummary.pointsAwarded.toLocaleString(),
+                points: awardSummary.cashbackPointsDelta.toLocaleString(),
               })}
             </Text>
           </Card>

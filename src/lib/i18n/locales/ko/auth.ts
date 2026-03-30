@@ -21,21 +21,22 @@ const auth = {
   onboardingBasicsTermsCta: '서비스 이용약관',
   onboardingLocalIdentityTitle: '게스트 프로필',
   onboardingLocalIdentitySubtitle:
-    '에스코 비치 클럽을 얼마나 자주 방문하는지 알려주시면 맞춤 혜택을 제공해 드려요.',
-  onboardingLocalIdentityRegionalAccessTitle: '방문 유형',
+    '로컬인지 외국인인지 알려주시면 맞춤 멤버 경험을 제공해 드려요.',
+  onboardingLocalIdentityRegionalAccessTitle: '회원 구분',
   onboardingLocalIdentityRegionalAccessDescription:
-    '방문 빈도에 맞춰 혜택과 추천을 개인화합니다.',
-  onboardingLocalIdentityCitizenTitle: '정기 게스트',
-  onboardingLocalIdentityCitizenDescription:
-    '에스코 비치 클럽을 자주 방문해요.',
-  onboardingLocalIdentityVisitorTitle: '1회성 게스트',
-  onboardingLocalIdentityVisitorDescription: '가끔 또는 한 번 방문해요.',
+    '혜택, 추천, 현장 오퍼를 더 정확히 개인화하는 데 도움이 됩니다.',
+  onboardingLocalIdentityLocalTitle: '로컬',
+  onboardingLocalIdentityLocalDescription:
+    '현지 거주자에게 맞는 혜택과 추천을 받고 싶어요.',
+  onboardingLocalIdentityForeignerTitle: '외국인',
+  onboardingLocalIdentityForeignerDescription:
+    '해외 방문객에게 맞는 추천과 혜택을 받고 싶어요.',
   onboardingLocalIdentityLegalConsentsTitle: '법적 동의',
   onboardingInfoButtonLabel: '왜 필요한가요',
   onboardingInfoButtonHint: '짧은 설명을 보여줍니다',
-  onboardingLocalIdentityRegionalAccessInfoTitle: '방문 유형을 묻는 이유',
+  onboardingLocalIdentityRegionalAccessInfoTitle: '회원 구분을 묻는 이유',
   onboardingLocalIdentityRegionalAccessInfoMessage:
-    '평소 방문 빈도에 따라 추천, 혜택, 후속 경험을 더 정확히 맞춤 제공하기 위해서예요.',
+    '로컬 혜택, 여행자 친화 혜택, 현장 경험을 더 적절하게 맞춤 제공하기 위해서예요.',
   onboardingLocalIdentityTermsInfoTitle: '약관 동의가 필요한 이유',
   onboardingLocalIdentityTermsInfoMessage:
     '예약, 이용 수칙, 취소 정책을 명확히 해 회원과 파트너를 보호하기 위해 필요합니다.',
@@ -55,13 +56,13 @@ const auth = {
   onboardingLocalIdentityContinue: '계속',
   onboardingLocalIdentityInvalidTitle: '정보가 부족합니다',
   onboardingLocalIdentityInvalidMessage:
-    '게스트 유형을 선택하고 모든 법적 동의 항목을 확인해 주세요.',
+    '로컬 또는 외국인을 선택하고 모든 법적 동의 항목을 확인해 주세요.',
   onboardingFinalDetailsTitle: '마무리 정보',
   onboardingFinalDetailsSubtitle:
     '카바나 호스트가 이름으로 맞이할 수 있도록 사진을 업로드해 주세요.',
   onboardingFinalDetailsLocationTitle: '위치 서비스',
   onboardingFinalDetailsLocationDescription:
-    '가까운 카바나를 찾고 해변 딜리버리 알림을 받으려면 위치를 활성화하세요.',
+    '레스토랑 도착을 감지하고 현장 전용 오퍼를 받으려면 위치를 활성화하세요.',
   onboardingFinalDetailsNotificationsTitle: '알림 받기',
   onboardingFinalDetailsNotificationsDescription:
     '예약 확인과 선셋 아워 초대 소식을 놓치지 마세요.',
@@ -82,7 +83,13 @@ const auth = {
     '필요한 권한만 켜고, 근처 혜택과 중요한 예약 업데이트만 받아보세요.',
   onboardingPermissionsLocationInfoTitle: '위치 권한이 도움이 되는 이유',
   onboardingPermissionsLocationInfoMessage:
-    '가까운 제휴 장소, 멤버 전용 혜택, 지역 맞춤 경험을 보여드리는 데 사용됩니다.',
+    '레스토랑 도착을 감지하고, 적절한 현장 오퍼와 근처 멤버 혜택을 보여드리는 데 사용됩니다.',
+  onboardingPermissionsBackgroundPromptTitle:
+    '현장 알림을 위해 백그라운드 위치를 허용하세요',
+  onboardingPermissionsBackgroundPromptMessage:
+    '에스코 비치 클럽이 레스토랑 도착을 인식하고 현장 전용 오퍼를 제때 보낼 수 있도록 백그라운드 위치를 허용해 주세요.',
+  onboardingPermissionsBackgroundPromptContinue: '계속',
+  onboardingPermissionsBackgroundPromptLater: '나중에',
   onboardingPermissionsNotificationsInfoTitle: '알림 권한이 도움이 되는 이유',
   onboardingPermissionsNotificationsInfoMessage:
     '예약 확인, 일정 변경, 회원 전용 오퍼를 제때 알려드리기 위해 사용됩니다.',
@@ -100,13 +107,19 @@ const auth = {
     '권한 팝업을 열 수 없습니다. 다시 시도하거나 지금은 건너뛸 수 있어요.',
   onboardingPermissionsPrivacyNote:
     '권한은 언제든 기기 설정에서 변경할 수 있어요.',
+  venueUpsellNotificationChannelName: '현장 오퍼',
+  venueUpsellNotificationChannelDescription:
+    '레스토랑 도착 시 받을 수 있는 실시간 오퍼입니다.',
+  venueUpsellNotificationTitle: '바에서 캐시백 포인트 적립',
+  venueUpsellNotificationBody:
+    '지금 칵테일을 주문하고 캐시백 포인트를 잔액에 추가하세요!',
   onboardingClubWelcomeTitle: '클럽에 오신 것을 환영합니다!',
   onboardingClubWelcomeSubtitle:
     '햇살이 가득하고 멤버십이 활성화되었습니다. 새로운 라이프스타일을 위한 첫 건배를 시작해 보세요.',
   onboardingClubValueLabel: '즉시 제공 혜택',
   onboardingClubRewardTitle: '시그니처 웰컴 칵테일 무료 제공 - 잠금 해제!',
-  onboardingClubVoucherCode: '바우처 #ES-2024',
-  onboardingClubVoucherValidity: '모든 클럽 카바나에서 사용 가능',
+  onboardingClubVoucherCode: '바우처 #{{code}}',
+  onboardingClubVoucherValidity: '{{scope}}에서 사용 가능',
   onboardingClubVoucherInstruction:
     '에스코 라이프 모든 지점에서 이 화면을 직원에게 보여주시면 웰컴 드링크를 받으실 수 있습니다.',
   onboardingClubPrimaryCta: '혜택 즐기기',

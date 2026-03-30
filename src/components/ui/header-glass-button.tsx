@@ -171,10 +171,7 @@ export function HeaderGlassButton({
       : 'border-white/45 bg-white/35 dark:border-white/20 dark:bg-white/10';
 
   const effectiveGlassStyle: GlassStyle =
-    canUseGlass &&
-    isFocused &&
-    isGlassReady &&
-    !isReduceTransparencyEnabled
+    canUseGlass && isFocused && isGlassReady && !isReduceTransparencyEnabled
       ? glassStyle
       : 'none';
   const shouldAnimateGlass = !isReducedMotion && effectiveGlassStyle !== 'none';

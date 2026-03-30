@@ -1,4 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import {
   Award,
   CalendarCheck,
@@ -13,7 +14,7 @@ import {
 } from 'lucide-react-native';
 import React, { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, useColorScheme } from 'react-native';
+import { useColorScheme } from 'react-native';
 import {
   cancelAnimation,
   useAnimatedStyle,
@@ -24,58 +25,33 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
-import type { UserTier } from '@/lib/types';
-import { useProfileData } from '@/providers/DataProvider';
-import { Badge, ProfileSubScreenHeader } from '@/src/components/ui';
+import type { RewardTierKey } from '@/lib/types';
+import { useMemberSummary, useProfileData } from '@/providers/DataProvider';
+import { ProfileSubScreenHeader } from '@/src/components/ui';
 import { motion, rmTiming } from '@/src/lib/animations/motion';
 import { db } from '@/src/lib/instant';
-import { type InstantRecord, mapLoyaltyTransaction } from '@/src/lib/mappers';
+import {
+  getRewardTierDefinition,
+  getRewardTierLabelKey,
+  type RewardBenefitKey,
+} from '@/src/lib/loyalty';
+import { type InstantRecord, mapRewardTransaction } from '@/src/lib/mappers';
 import { shadows } from '@/src/lib/styles/shadows';
 import { cn } from '@/src/lib/utils';
-import { Pressable, ScrollView, Text, View } from '@/src/tw';
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 
 // ── Tier helpers ────────────────────────────────────────────────
 
 type TierConfig = {
-  benefits: readonly BenefitKey[];
   gradient: readonly [string, string, ...string[]];
-  nextTierKey: 'nextOwner' | 'nextStandard' | 'nextVip';
-  tierKey: 'owner' | 'standard' | 'vip';
 };
 
-const TIER_CONFIG: Record<UserTier, TierConfig> = {
-  STANDARD: {
-    benefits: ['memberEvents', 'discountDining'],
+const TIER_CONFIG: Record<RewardTierKey, TierConfig> = {
+  ESCO_LIFE_MEMBER: {
     gradient: [Colors.secondary, Colors.tealLight] as const,
-    nextTierKey: 'nextStandard',
-    tierKey: 'standard',
-  },
-  VIP: {
-    benefits: ['memberEvents', 'discountDining', 'priorityBooking'],
-    gradient: [Colors.primary, '#FF7043'] as const,
-    nextTierKey: 'nextVip',
-    tierKey: 'vip',
-  },
-  OWNER: {
-    benefits: [
-      'concierge',
-      'priorityBooking',
-      'poolsideDrinks',
-      'memberEvents',
-    ],
-    gradient: [Colors.cardGradientStart, Colors.cardGradientEnd] as const,
-    nextTierKey: 'nextOwner',
-    tierKey: 'owner',
   },
 } as const;
-
-type BenefitKey =
-  | 'concierge'
-  | 'discountDining'
-  | 'memberEvents'
-  | 'poolsideDrinks'
-  | 'priorityBooking';
 
 type BenefitTitleKey =
   | 'benefits.concierge'
@@ -97,7 +73,7 @@ type BenefitConfig = {
   wide: boolean;
 };
 
-const BENEFIT_MAP: Record<BenefitKey, BenefitConfig> = {
+const BENEFIT_MAP: Record<RewardBenefitKey, BenefitConfig> = {
   concierge: {
     color: Colors.primary,
     descKey: null,
@@ -172,11 +148,13 @@ const MANAGE_ITEMS: ManageItem[] = [
 
 export default function MembershipScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const { t, i18n } = useTranslation('membership');
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
 
   const { profile } = useProfileData();
+  const memberSummary = useMemberSummary();
 
   // Animations
   const heroScale = useSharedValue(0.92);
@@ -204,13 +182,13 @@ export default function MembershipScreen(): React.JSX.Element {
   }));
 
   // Derived data
-  const tierLevel: UserTier = profile?.tier ?? 'STANDARD';
+  const tierLevel: RewardTierKey = memberSummary.lifetimeTierKey;
   const tierConfig = TIER_CONFIG[tierLevel];
-  const userName = profile?.full_name ?? '—';
+  const userName = memberSummary.fullName || '—';
   const memberSince = useMemo(() => {
-    if (!profile?.member_since) return '—';
+    if (!memberSummary.memberSince) return '—';
     try {
-      const date = new Date(profile.member_since);
+      const date = new Date(memberSummary.memberSince);
       return new Intl.DateTimeFormat(i18n.language, {
         day: 'numeric',
         month: 'long',
@@ -218,49 +196,68 @@ export default function MembershipScreen(): React.JSX.Element {
       }).format(date);
     } catch (err) {
       console.error('[Membership] Date format failed', err);
-      return profile.member_since.slice(0, 10);
+      return memberSummary.memberSince.slice(0, 10);
     }
-  }, [profile?.member_since, i18n.language]);
-  const points = profile?.points ?? 0;
-  const maxPoints = profile?.max_points ?? 10000;
-  const progressPercent =
-    maxPoints > 0 ? Math.min((points / maxPoints) * 100, 100) : 0;
+  }, [i18n.language, memberSummary.memberSince]);
+  const cashbackBalancePoints = memberSummary.cashbackBalancePoints;
+  const progressPoints = memberSummary.activeTierProgressPoints;
+  const progressTargetPoints = memberSummary.tierProgressTargetPoints;
+  const progressPercent = memberSummary.tierProgressPercent;
 
-  const tierLabel = t(`tiers.${tierConfig.tierKey}`);
-  const nextTierLabel = t(`tiers.${tierConfig.nextTierKey}`);
+  const tierLabel = t(
+    `tiers.${getRewardTierLabelKey(memberSummary.lifetimeTierKey)}`
+  );
+  const nextTierLabel =
+    memberSummary.nextTierKey !== null
+      ? t(`tiers.${getRewardTierLabelKey(memberSummary.nextTierKey)}`)
+      : t('tierCard.nextTierComingSoon');
+  const tierProgressExpiryLabel = useMemo(() => {
+    if (!memberSummary.tierProgressExpiresAt) return null;
+
+    try {
+      return new Intl.DateTimeFormat(i18n.language, {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      }).format(new Date(memberSummary.tierProgressExpiresAt));
+    } catch {
+      return memberSummary.tierProgressExpiresAt.slice(0, 10);
+    }
+  }, [i18n.language, memberSummary.tierProgressExpiresAt]);
+  const showTierProgress =
+    memberSummary.hasTierUpgradePath && memberSummary.nextTierKey !== null;
 
   const benefits = useMemo(
-    () => tierConfig.benefits.map((key) => ({ ...BENEFIT_MAP[key], key })),
-    [tierConfig.benefits]
+    () =>
+      getRewardTierDefinition(
+        memberSummary.lifetimeTierKey
+      ).unlockedBenefits.map((key) => ({ ...BENEFIT_MAP[key], key })),
+    [memberSummary.lifetimeTierKey]
   );
 
-  // Fetch real activity data (Loyalty Transactions)
+  // Fetch reward activity
   const profileId = profile?.id;
-  const { data: activityData } = db.useQuery(
+  const activityQuery = db.useQuery(
     profileId
-      ? {
-          profiles: {
+      ? ({
+          reward_transactions: {
             $: {
-              where: { id: profileId },
+              where: { 'member.id': profileId },
+              order: { created_at: 'desc' },
+              limit: 5,
             },
-            loyalty_transactions: {
-              $: {
-                order: { created_at: 'desc' },
-                limit: 5,
-              },
-            },
-          } as const,
-        }
+          },
+        } as const)
       : null
   );
 
   const activities = useMemo(() => {
-    if (!activityData?.profiles?.[0]) return [];
     const rawTxs =
-      (activityData.profiles[0].loyalty_transactions as
+      (activityQuery.data?.reward_transactions as
         | InstantRecord[]
         | undefined) ?? [];
-    const txs = rawTxs.map(mapLoyaltyTransaction);
+    if (rawTxs.length === 0) return [];
+    const txs = rawTxs.map(mapRewardTransaction);
 
     return txs.map((tx) => {
       const createdAt = tx.created_at ? new Date(tx.created_at) : new Date();
@@ -268,18 +265,61 @@ export default function MembershipScreen(): React.JSX.Element {
       const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
       return {
+        cashbackPoints: tx.cashback_points_delta,
+        eventType: tx.event_type,
         id: tx.id,
-        type: 'points_earned' as const,
-        points: tx.points_awarded || 0,
         daysAgo: days,
       };
     });
-  }, [activityData]);
+  }, [activityQuery.data]);
 
   const hasActivity = activities.length > 0;
+  const isActivityLoading = Boolean(profileId) && activityQuery.isLoading;
+
+  function getActivityCopy(activity: {
+    cashbackPoints: number;
+    eventType: string;
+  }): {
+    description: string;
+    title: string;
+  } {
+    const absolutePoints = Math.abs(activity.cashbackPoints).toLocaleString();
+
+    if (activity.eventType === 'refund' || activity.eventType === 'void') {
+      return {
+        description: t('activity.cashbackReversedDesc', {
+          points: absolutePoints,
+        }),
+        title: t('activity.cashbackReversed'),
+      };
+    }
+
+    if (activity.eventType === 'manual_adjustment') {
+      return {
+        description: t('activity.cashbackAdjustedDesc', {
+          points: absolutePoints,
+        }),
+        title: t('activity.cashbackAdjusted'),
+      };
+    }
+
+    if (activity.eventType === 'tier_progress_reset') {
+      return {
+        description: t('activity.progressResetDesc'),
+        title: t('activity.progressReset'),
+      };
+    }
+
+    return {
+      description: t('activity.cashbackEarnedDesc', {
+        points: absolutePoints,
+      }),
+      title: t('activity.cashbackEarned'),
+    };
+  }
 
   function handleManagePress(): void {
-    Alert.alert(t('comingSoon'));
+    router.push('/profile/help-center' as never);
   }
 
   return (
@@ -344,27 +384,57 @@ export default function MembershipScreen(): React.JSX.Element {
               <View className="gap-2.5">
                 <View className="flex-row items-center justify-between">
                   <Text className="text-sm font-bold text-white">
-                    {t('tierCard.progressTo', { nextTier: nextTierLabel })}
+                    {t('tierCard.cashbackBalance')}
                   </Text>
                   <Text className="text-sm font-bold text-white">
-                    {t('tierCard.pointsLabel', {
-                      current: points.toLocaleString(),
-                      max: maxPoints.toLocaleString(),
+                    {t('tierCard.cashbackPoints', {
+                      value: cashbackBalancePoints.toLocaleString(),
                     })}
                   </Text>
                 </View>
-                <View className="h-3 overflow-hidden rounded-full bg-black/10">
-                  <View
-                    className="h-full rounded-full bg-white"
-                    style={{
-                      width: `${progressPercent}%`,
-                      shadowColor: '#fff',
-                      shadowOffset: { width: 0, height: 0 },
-                      shadowOpacity: 0.5,
-                      shadowRadius: 8,
-                    }}
-                  />
-                </View>
+                {showTierProgress ? (
+                  <>
+                    <View className="mt-2 flex-row items-center justify-between">
+                      <Text className="text-sm font-bold text-white">
+                        {t('tierCard.progressTo', { nextTier: nextTierLabel })}
+                      </Text>
+                      <Text className="text-sm font-bold text-white">
+                        {t('tierCard.progressPoints', {
+                          current: progressPoints.toLocaleString(),
+                          target: progressTargetPoints.toLocaleString(),
+                        })}
+                      </Text>
+                    </View>
+                    <View className="h-3 overflow-hidden rounded-full bg-black/10">
+                      <View
+                        className="h-full rounded-full bg-white"
+                        style={{
+                          width: `${progressPercent}%`,
+                          shadowColor: Colors.white,
+                          shadowOffset: { width: 0, height: 0 },
+                          shadowOpacity: 0.5,
+                          shadowRadius: 8,
+                        }}
+                      />
+                    </View>
+                    <Text className="text-xs text-white/70">
+                      {tierProgressExpiryLabel
+                        ? t('tierCard.progressExpires', {
+                            date: tierProgressExpiryLabel,
+                          })
+                        : t('tierCard.progressResetsMonthly')}
+                    </Text>
+                  </>
+                ) : (
+                  <View className="mt-2 rounded-2xl bg-black/10 px-4 py-3">
+                    <Text className="text-sm font-semibold text-white">
+                      {t('tierCard.nextTierComingSoon')}
+                    </Text>
+                    <Text className="mt-1 text-xs text-white/70">
+                      {t('tierCard.progressUnavailable')}
+                    </Text>
+                  </View>
+                )}
               </View>
             </View>
           </LinearGradient>
@@ -480,63 +550,65 @@ export default function MembershipScreen(): React.JSX.Element {
             <Text className="text-lg font-bold tracking-tight text-secondary dark:text-teal-light">
               {t('activity.title')}
             </Text>
-            {!hasActivity && (
-              <Badge label={t('activity.sampleData')} tone="neutral" />
-            )}
           </View>
 
           <View className="overflow-hidden rounded-2xl border border-border bg-white dark:border-dark-border dark:bg-dark-bg-card">
-            {hasActivity ? (
+            {isActivityLoading ? (
+              <View className="items-center p-5">
+                <ActivityIndicator color={Colors.primary} size="small" />
+                <Text className="mt-3 text-sm font-medium text-text-secondary dark:text-text-secondary-dark">
+                  {t('activity.loading')}
+                </Text>
+              </View>
+            ) : hasActivity ? (
               activities.map(
                 (
-                  item: { daysAgo: number; id: string; points: number },
+                  item: {
+                    cashbackPoints: number;
+                    daysAgo: number;
+                    eventType: string;
+                    id: string;
+                  },
                   index: number
-                ) => (
-                  <View
-                    key={item.id}
-                    className={cn(
-                      'flex-row items-start gap-3.5 p-5',
-                      index < activities.length - 1 &&
-                        'border-b border-border dark:border-dark-border'
-                    )}
-                  >
+                ) => {
+                  const activityCopy = getActivityCopy(item);
+
+                  return (
                     <View
-                      className="mt-1.5 size-2.5 rounded-full"
-                      style={{ backgroundColor: Colors.secondary }}
-                    />
-                    <View className="flex-1">
-                      <Text className="text-sm font-bold text-text dark:text-text-primary-dark">
-                        {t('activity.pointsEarned')}
-                      </Text>
-                      <Text className="mt-0.5 text-xs text-text-secondary dark:text-text-secondary-dark">
-                        {t('activity.pointsEarnedDesc', {
-                          points: item.points,
-                        })}
-                      </Text>
-                      <Text className="mt-1.5 text-[10px] font-bold uppercase tracking-[1px] text-text-muted dark:text-text-muted-dark">
-                        {t('activity.daysAgo', { count: item.daysAgo })}
-                      </Text>
+                      key={item.id}
+                      className={cn(
+                        'flex-row items-start gap-3.5 p-5',
+                        index < activities.length - 1 &&
+                          'border-b border-border dark:border-dark-border'
+                      )}
+                    >
+                      <View
+                        className="mt-1.5 size-2.5 rounded-full"
+                        style={{ backgroundColor: Colors.secondary }}
+                      />
+                      <View className="flex-1">
+                        <Text className="text-sm font-bold text-text dark:text-text-primary-dark">
+                          {activityCopy.title}
+                        </Text>
+                        <Text className="mt-0.5 text-xs text-text-secondary dark:text-text-secondary-dark">
+                          {activityCopy.description}
+                        </Text>
+                        <Text className="mt-1.5 text-[10px] font-bold uppercase tracking-[1px] text-text-muted dark:text-text-muted-dark">
+                          {t('activity.daysAgo', { count: item.daysAgo })}
+                        </Text>
+                      </View>
                     </View>
-                  </View>
-                )
+                  );
+                }
               )
             ) : (
-              <View className="flex-row items-start gap-3.5 p-5">
-                <View
-                  className="mt-1.5 size-2.5 rounded-full"
-                  style={{ backgroundColor: Colors.secondary }}
-                />
-                <View className="flex-1">
-                  <Text className="text-sm font-bold text-text dark:text-text-primary-dark">
-                    {t('activity.pointsEarned')}
-                  </Text>
-                  <Text className="mt-0.5 text-xs text-text-secondary dark:text-text-secondary-dark">
-                    {t('activity.pointsEarnedDesc', { points: '—' })}
-                  </Text>
-                  <Text className="mt-1.5 text-[10px] font-bold uppercase tracking-[1px] text-text-muted dark:text-text-muted-dark">
-                    {t('activity.daysAgo', { count: 0 })}
-                  </Text>
-                </View>
+              <View className="p-5">
+                <Text className="text-sm font-bold text-text dark:text-text-primary-dark">
+                  {t('activity.emptyTitle')}
+                </Text>
+                <Text className="mt-1.5 text-xs leading-5 text-text-secondary dark:text-text-secondary-dark">
+                  {t('activity.emptyDescription')}
+                </Text>
               </View>
             )}
           </View>

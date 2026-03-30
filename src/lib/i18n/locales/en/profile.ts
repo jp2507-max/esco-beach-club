@@ -2,9 +2,7 @@ const profile = {
   guest: 'Guest',
   memberFallback: 'MEMBER',
   tier: {
-    standard: 'Member',
-    vip: 'VIP',
-    owner: 'Owner',
+    escoLifeMember: 'Esco Life Member',
   },
   menu: {
     comingSoon: 'Coming soon',
@@ -35,9 +33,9 @@ const profile = {
   brandPrefix: 'Esco',
   brandHighlight: 'Life',
   accessPass: 'ACCESS PASS',
-  scanAtTable: 'Scan to earn member points',
+  scanAtTable: 'Scan at checkout to link your member ID',
   refPrefix: 'Ref: {{memberId}}',
-  earned: 'EARNED',
+  earned: 'CASHBACK EARNED',
   saved: 'SAVED',
   profileDetails: 'Profile details',
   memberSince: 'Member since',
@@ -79,9 +77,9 @@ const profile = {
             'Show your digital member card at any Esco Life bar. Eligible perks are applied automatically after verification.',
         },
         upgradeTier: {
-          question: 'How do I upgrade to Diamond tier?',
+          question: 'How does monthly tier progress work?',
           answer:
-            'Tier upgrades are based on points and qualifying stays. Visit Membership to review your progress and available upgrade options.',
+            'Your current tier is kept for life. Progress toward the next tier is tracked separately and resets one month after the active progress window starts.',
         },
         modifyCabana: {
           question: 'Can I modify my cabana reservation?',
@@ -101,16 +99,6 @@ const profile = {
     openMail: 'Could not open mail',
     openWhatsApp: 'Could not open WhatsApp',
     languageChangeFailed: 'Could not change language. Please try again.',
-    photoPermissionTitle: 'Permission required',
-    photoPermissionBlockedDescription:
-      'Photo permissions are blocked. Enable camera and photos access in your device settings.',
-    photoLibraryPermissionDescription:
-      'Please allow photo library access to choose a profile photo.',
-    photoCameraPermissionDescription:
-      'Please allow camera access to take a profile photo.',
-    photoSelectionFailed:
-      'Could not read the selected photo. Please try again.',
-    photoUploadFailed: 'Could not upload your profile photo. Please try again.',
     saveProfileFailed: 'Could not save your profile. Please try again.',
     signOutFailed: 'Could not sign out. Please try again.',
   },
@@ -124,13 +112,6 @@ const profile = {
     memberSincePlaceholder: 'YYYY-MM-DD',
     nightsLeft: 'Nights left',
     nightsLeftPlaceholder: '0',
-    profilePhoto: {
-      label: 'Profile photo',
-      helper: 'Choose how your profile photo appears to members.',
-      takePhoto: 'Take photo',
-      chooseFromLibrary: 'Choose from library',
-      remove: 'Remove photo',
-    },
     save: 'Save Changes',
     saving: 'Saving...',
   },
@@ -170,40 +151,42 @@ const profile = {
     accessDeniedTitle: 'Staff access required',
     allowlistPending:
       'Ask an admin to add this account to the staff allowlist.',
-    approvalRequired: 'Manager PIN required above {{amount}}.',
-    award: 'Award points',
-    awarding: 'Awarding...',
-    awardTitle: 'Award member points',
+    approvalRequired:
+      'Manager approval is required for sensitive manual adjustments.',
+    award: 'Record cashback',
+    awarding: 'Recording...',
+    awardTitle: 'Record cashback adjustment',
     badge: 'Staff',
     billAmountLabel: 'Bill amount (VND)',
     billAmountPlaceholder: '100000',
     cameraPermissionDescription:
       'Grant camera access so staff can scan member QR codes at Esco Beach.',
     cameraPermissionTitle: 'Camera access needed',
-    currentPoints: 'Current points: {{value}}',
+    currentPoints: 'Current cashback balance: {{value}}',
     errors: {
       billBelowMinimumSpend:
-        'This bill does not meet the minimum spend required to award points.',
+        'This bill does not meet the minimum cashback threshold.',
       generic: 'Something went wrong. Please try again.',
       invalidBillAmount: 'Enter a valid bill amount in VND.',
-      invalidLoyaltyServiceResponse:
-        'The loyalty service returned an invalid response. Please try again.',
+      invalidRewardServiceResponse:
+        'The reward service returned an invalid response. Please try again.',
       invalidQr: 'This QR code is not a valid Esco member code.',
-      loyaltyServiceRejectedRequest:
-        'The loyalty service rejected this request. Please review the bill details and try again.',
-      loyaltyServiceUnavailable:
-        'The loyalty service is currently unavailable. Please try again shortly.',
+      rewardServiceRejectedRequest:
+        'The reward service rejected this request. Please review the bill details and try again.',
+      rewardServiceUnavailable:
+        'The reward service is currently unavailable. Please try again shortly.',
       managerApprovalRequired:
         'A valid manager PIN is required for transactions above the approval cap.',
       memberNotFound: 'We could not find a member for that ID.',
       receiptReferenceRequired:
-        'A receipt or bill reference is required to award points securely.',
+        'A receipt or bill reference is required to record cashback securely.',
       staffAccessRequired:
-        'This account is not allowlisted for staff point awards.',
+        'This account is not allowlisted for manual reward adjustments.',
       title: 'Unable to complete action',
     },
     findMember: 'Find member',
-    formulaNote: '{{points}} points are awarded for every {{amount}} spent.',
+    formulaNote:
+      '{{points}} cashback point is earned for every {{amount}} spent.',
     goBack: 'Go back',
     grantPermission: 'Grant camera access',
     invalidQrTitle: 'Invalid QR code',
@@ -220,19 +203,19 @@ const profile = {
     memberNotFound: 'No member matches that code.',
     memberNotFoundTitle: 'Member not found',
     memberPendingLookup:
-      'Tap Find Member to confirm this member before awarding points.',
+      'Tap Find Member to confirm this member before recording cashback.',
     pointsPreviewDescription:
-      'Points are rounded down to full spend steps before being awarded.',
-    pointsPreviewLabel: 'Points preview',
+      'Cashback points are rounded down to full {{amount}} spend steps.',
+    pointsPreviewLabel: 'Cashback preview',
     receiptReferenceLabel: 'Receipt reference',
     receiptReferencePlaceholder: 'Receipt or bill number',
     scanAgain: 'Scan again',
     subtitle:
-      'Scan a customer QR or enter their member ID to award points with fraud controls.',
+      'Scan a customer QR or enter their member ID to record a secure cashback adjustment.',
     successMessage:
-      '{{name}} received {{points}} points from a bill of {{amount}}.',
-    successTitle: 'Points awarded',
-    title: 'Loyalty scanner',
+      '{{name}} received {{points}} cashback points from a bill of {{amount}}.',
+    successTitle: 'Cashback recorded',
+    title: 'Reward scanner',
   },
   invite: {
     codeCopied: 'Copied!',

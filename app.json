@@ -17,6 +17,7 @@
       "bundleIdentifier": "com.escobeachclub.app",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Allow Esco Beach Club to access your location in the background so we can recognize when you arrive at the restaurant and unlock member-only venue offers.",
         "NSLocationWhenInUseUsageDescription": "Allow Esco Beach Club to access your location so we can show nearby events, partner perks, and venue updates.",
         "NSUserNotificationUsageDescription": "Allow Esco Beach Club to send booking updates, event reminders, and exclusive member offers.",
         "UIDesignRequiresCompatibility": false
@@ -28,6 +29,7 @@
         "backgroundColor": "#ffffff"
       },
       "permissions": [
+        "ACCESS_BACKGROUND_LOCATION",
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
         "POST_NOTIFICATIONS"
@@ -41,14 +43,6 @@
       "expo-router",
       "expo-image",
       [
-        "expo-image-picker",
-        {
-          "photosPermission": "Allow Esco Beach Club to access your photos so you can update your profile photo.",
-          "cameraPermission": "Allow Esco Beach Club to access your camera so you can take a profile photo.",
-          "microphonePermission": false
-        }
-      ],
-      [
         "expo-camera",
         {
           "cameraPermission": "Allow Esco Beach Club to access your camera so staff can scan member QR codes."
@@ -57,6 +51,9 @@
       [
         "expo-location",
         {
+          "isAndroidBackgroundLocationEnabled": true,
+          "isIosBackgroundLocationEnabled": true,
+          "locationAlwaysAndWhenInUsePermission": "Allow Esco Beach Club to access your location in the background so we can recognize when you arrive at the restaurant and unlock member-only venue offers.",
           "locationWhenInUsePermission": "Allow Esco Beach Club to access your location so we can show nearby events, partner perks, and venue updates."
         }
       ],

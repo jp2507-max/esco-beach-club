@@ -1,20 +1,24 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { useProfileData } from '@/providers/DataProvider';
-import { MemberQrCode } from '@/src/components/ui';
+import { useMemberSummary } from '@/providers/DataProvider';
+import { MemberCard } from '@/src/components/ui';
+import { getRewardTierLabelKey } from '@/src/lib/loyalty';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
 
 export default function QrTabScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { t } = useTranslation('profile');
-  const { profile } = useProfileData();
-
-  const memberId = profile?.member_id ?? '';
+  const { t: tHome } = useTranslation('home');
+  const memberSummary = useMemberSummary();
+  const memberId = memberSummary.memberId;
+  const memberName = memberSummary.fullName || t('guest');
+  const tierLabel = t(
+    `tier.${getRewardTierLabelKey(memberSummary.lifetimeTierKey)}`
+  );
 
   function handleOpenStaffRoute(): void {
     router.push('/staff' as never);
@@ -41,37 +45,25 @@ export default function QrTabScreen(): React.JSX.Element {
           </Text>
         </View>
 
-        <View className="items-center rounded-3xl border border-border bg-white p-6 dark:border-dark-border dark:bg-dark-bg-card">
-          <Text className="text-2xl font-extrabold text-text dark:text-text-primary-dark">
-            {t('brandPrefix')}
-            <Text className="text-primary">{t('brandHighlight')}</Text>
-          </Text>
-          <Text className="mt-1 text-[11px] font-semibold tracking-[3px] text-text-secondary dark:text-text-secondary-dark">
-            {t('accessPass')}
-          </Text>
+        <View className="rounded-3xl border border-border bg-white p-6 dark:border-dark-border dark:bg-dark-bg-card">
+          <MemberCard
+            className="min-h-[300px]"
+            copy={{
+              balanceLabel: tHome('cashbackBalance'),
+              balanceSuffix: tHome('cashbackSuffix'),
+              brandLabel: tHome('brandMark'),
+              emptyQrLabel: t('staff.memberNotFound'),
+              memberNameLabel: tHome('memberName'),
+            }}
+            cashbackPoints={memberSummary.cashbackBalancePoints}
+            memberId={memberId}
+            memberName={memberName}
+            tierProgressPercent={memberSummary.tierProgressPercent}
+            tierLabel={tierLabel}
+            variant="full"
+          />
 
-          <View className="mb-5 mt-4">
-            <LinearGradient
-              colors={['#E91E63', '#9C27B0', '#00BCD4']}
-              end={{ x: 1, y: 0 }}
-              start={{ x: 0, y: 1 }}
-              style={{
-                borderRadius: 20,
-                height: 220,
-                padding: 6,
-                width: 220,
-              }}
-            >
-              <MemberQrCode
-                className="flex-1 rounded-2xl"
-                emptyLabel={t('staff.memberNotFound')}
-                memberId={memberId}
-                size={156}
-              />
-            </LinearGradient>
-          </View>
-
-          <Text className="mb-1 text-base font-bold text-text dark:text-text-primary-dark">
+          <Text className="mb-1 mt-5 text-center text-base font-bold text-text dark:text-text-primary-dark">
             {t('scanAtTable')}
           </Text>
           <Pressable

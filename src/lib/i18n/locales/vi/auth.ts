@@ -22,22 +22,23 @@ const auth = {
   onboardingBasicsTermsCta: 'Điều khoản Dịch vụ',
   onboardingLocalIdentityTitle: 'Hồ sơ khách',
   onboardingLocalIdentitySubtitle:
-    'Hãy cho biết bạn ghé Esco Beach Club thường xuyên hay chỉ đôi lúc để chúng tôi cá nhân hóa trải nghiệm.',
-  onboardingLocalIdentityRegionalAccessTitle: 'Mức độ ghé thăm',
+    'Hãy cho biết bạn là người địa phương hay người nước ngoài để chúng tôi cá nhân hóa trải nghiệm thành viên.',
+  onboardingLocalIdentityRegionalAccessTitle: 'Phân nhóm thành viên',
   onboardingLocalIdentityRegionalAccessDescription:
-    'Thông tin này giúp cá nhân hóa ưu đãi và gợi ý dành cho bạn.',
-  onboardingLocalIdentityCitizenTitle: 'Khách thường xuyên',
-  onboardingLocalIdentityCitizenDescription:
-    'Tôi ghé Esco Beach Club thường xuyên.',
-  onboardingLocalIdentityVisitorTitle: 'Khách một lần',
-  onboardingLocalIdentityVisitorDescription:
-    'Tôi ghé một lần hoặc chỉ thỉnh thoảng.',
+    'Thông tin này giúp cá nhân hóa ưu đãi, gợi ý và đề xuất tại địa điểm.',
+  onboardingLocalIdentityLocalTitle: 'Người địa phương',
+  onboardingLocalIdentityLocalDescription:
+    'Tôi sống tại địa phương và muốn nhận ưu đãi phù hợp cho cư dân.',
+  onboardingLocalIdentityForeignerTitle: 'Người nước ngoài',
+  onboardingLocalIdentityForeignerDescription:
+    'Tôi đến từ nước ngoài và muốn nhận gợi ý phù hợp cho khách du lịch.',
   onboardingLocalIdentityLegalConsentsTitle: 'Chấp thuận pháp lý',
   onboardingInfoButtonLabel: 'Vì sao cần thông tin này',
   onboardingInfoButtonHint: 'Hiển thị giải thích ngắn',
-  onboardingLocalIdentityRegionalAccessInfoTitle: 'Vì sao hỏi mức độ ghé thăm',
+  onboardingLocalIdentityRegionalAccessInfoTitle:
+    'Vì sao hỏi phân nhóm thành viên',
   onboardingLocalIdentityRegionalAccessInfoMessage:
-    'Chúng tôi dùng thông tin này để gợi ý ưu đãi, đề xuất và trải nghiệm phù hợp với tần suất bạn ghé thăm.',
+    'Chúng tôi dùng thông tin này để cá nhân hóa ưu đãi địa phương, quyền lợi phù hợp cho du khách và trải nghiệm tại điểm đến.',
   onboardingLocalIdentityTermsInfoTitle: 'Vì sao cần đồng ý điều khoản',
   onboardingLocalIdentityTermsInfoMessage:
     'Điều này giúp bảo vệ thành viên và đối tác với quy định rõ ràng về đặt chỗ, hành vi và hủy lịch.',
@@ -55,13 +56,13 @@ const auth = {
   onboardingLocalIdentityContinue: 'Tiếp tục',
   onboardingLocalIdentityInvalidTitle: 'Thiếu thông tin',
   onboardingLocalIdentityInvalidMessage:
-    'Vui lòng chọn loại khách và chấp thuận đầy đủ các mục pháp lý.',
+    'Vui lòng chọn Người địa phương hoặc Người nước ngoài và chấp thuận đầy đủ các mục pháp lý.',
   onboardingFinalDetailsTitle: 'Thông tin cuối cùng',
   onboardingFinalDetailsSubtitle:
     'Tải ảnh lên để host cabana có thể chào đón bạn bằng tên.',
   onboardingFinalDetailsLocationTitle: 'Dịch vụ vị trí',
   onboardingFinalDetailsLocationDescription:
-    'Bật vị trí để tìm cabana gần nhất và nhận cảnh báo giao hàng tại bãi biển.',
+    'Bật vị trí để chúng tôi nhận biết khi bạn đến nhà hàng và mở khóa ưu đãi tại chỗ.',
   onboardingFinalDetailsNotificationsTitle: 'Luôn cập nhật',
   onboardingFinalDetailsNotificationsDescription:
     'Không bỏ lỡ xác nhận đặt chỗ hoặc lời mời sunset hour độc quyền.',
@@ -83,7 +84,13 @@ const auth = {
   onboardingPermissionsLocationInfoTitle:
     'Vì sao vị trí hữu ích cho thành viên',
   onboardingPermissionsLocationInfoMessage:
-    'Chúng tôi dùng vị trí để gợi ý địa điểm gần bạn, ưu đãi thành viên và trải nghiệm địa phương phù hợp.',
+    'Chúng tôi dùng vị trí để nhận biết khi bạn đến nhà hàng, mở ưu đãi đúng lúc tại địa điểm và gợi ý quyền lợi phù hợp gần bạn.',
+  onboardingPermissionsBackgroundPromptTitle:
+    'Cho phép vị trí nền để nhận ưu đãi tại địa điểm',
+  onboardingPermissionsBackgroundPromptMessage:
+    'Hãy cho phép vị trí nền để Esco Beach Club nhận biết khi bạn đến nhà hàng và gửi ưu đãi tại chỗ đúng lúc.',
+  onboardingPermissionsBackgroundPromptContinue: 'Tiếp tục',
+  onboardingPermissionsBackgroundPromptLater: 'Để sau',
   onboardingPermissionsNotificationsInfoTitle:
     'Vì sao thông báo hữu ích cho thành viên',
   onboardingPermissionsNotificationsInfoMessage:
@@ -102,14 +109,20 @@ const auth = {
     'Không thể mở hộp thoại cấp quyền. Vui lòng thử lại hoặc tiếp tục sau.',
   onboardingPermissionsPrivacyNote:
     'Bạn có thể thay đổi quyền bất cứ lúc nào trong cài đặt thiết bị.',
+  venueUpsellNotificationChannelName: 'Ưu đãi tại địa điểm',
+  venueUpsellNotificationChannelDescription:
+    'Ưu đãi đúng lúc khi bạn đến nhà hàng.',
+  venueUpsellNotificationTitle: 'Nhận điểm cashback tại quầy bar',
+  venueUpsellNotificationBody:
+    'Gọi một ly cocktail ngay bây giờ để cộng điểm cashback vào số dư của bạn.',
   onboardingClubWelcomeTitle: 'Chào mừng đến với Câu lạc bộ!',
   onboardingClubWelcomeSubtitle:
     'Nắng đã lên và gói thành viên của bạn đã được kích hoạt. Hãy bắt đầu lối sống mới bằng một ly chúc mừng.',
   onboardingClubValueLabel: 'Giá trị ngay lập tức',
   onboardingClubRewardTitle:
     'Cocktail chào mừng đặc trưng miễn phí - Đã mở khóa!',
-  onboardingClubVoucherCode: 'Voucher #ES-2024',
-  onboardingClubVoucherValidity: 'Có hiệu lực tại tất cả Club Cabana',
+  onboardingClubVoucherCode: 'Voucher #{{code}}',
+  onboardingClubVoucherValidity: 'Có hiệu lực tại {{scope}}',
   onboardingClubVoucherInstruction:
     'Hãy đưa màn hình này cho nhân viên phục vụ tại bất kỳ cơ sở Esco Life nào để nhận đồ uống chào mừng thủ công của bạn.',
   onboardingClubPrimaryCta: 'Tận hưởng ưu đãi của tôi',

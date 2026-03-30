@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useColorScheme } from 'react-native';
 
 import { Colors } from '@/constants/colors';
+import { triggerTabPressHapticFeedback } from '@/src/lib/haptics/tab-press-feedback';
 
 export default function TabLayout(): React.JSX.Element {
   const { t } = useTranslation('common');
@@ -13,10 +14,14 @@ export default function TabLayout(): React.JSX.Element {
   const tabBarBackground = isDark ? Colors.darkBgCard : '#F8F7F2';
   const inactiveTint = isDark ? Colors.textMutedDark : Colors.textSecondary;
   const activeTint = isDark ? Colors.primaryBright : Colors.primary;
+  const handleTabPress = React.useCallback((): void => {
+    triggerTabPressHapticFeedback();
+  }, []);
 
   return (
     <NativeTabs
       backBehavior="history"
+      screenListeners={{ tabPress: handleTabPress }}
       backgroundColor={tabBarBackground}
       badgeBackgroundColor={activeTint}
       badgeTextColor={Colors.white}

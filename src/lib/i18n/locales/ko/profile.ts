@@ -2,9 +2,7 @@ const profile = {
   guest: '게스트',
   memberFallback: '멤버',
   tier: {
-    standard: '멤버',
-    vip: 'VIP',
-    owner: '오너',
+    escoLifeMember: 'Esco Life 멤버',
   },
   menu: {
     comingSoon: '곧 출시',
@@ -35,9 +33,9 @@ const profile = {
   brandPrefix: 'Esco',
   brandHighlight: 'Life',
   accessPass: '액세스 패스',
-  scanAtTable: '스캔하여 멤버 포인트 적립',
+  scanAtTable: '체크아웃 시 스캔하여 회원 ID를 연결하세요',
   refPrefix: '참조: {{memberId}}',
-  earned: '적립',
+  earned: '적립된 캐시백',
   saved: '절약',
   profileDetails: '프로필 정보',
   memberSince: '가입일',
@@ -79,9 +77,9 @@ const profile = {
             'Esco Life 바에서 디지털 멤버 카드를 보여주세요. 자격이 확인되면 혜택이 자동 적용됩니다.',
         },
         upgradeTier: {
-          question: '다이아몬드 등급으로 어떻게 업그레이드하나요?',
+          question: '월간 등급 진행은 어떻게 작동하나요?',
           answer:
-            '등급은 포인트와 이용 실적 기준으로 업그레이드됩니다. 멤버십 화면에서 진행 상황과 가능 옵션을 확인하세요.',
+            '현재 등급은 평생 유지됩니다. 다음 등급을 향한 진행 포인트는 별도로 추적되며, 활성 진행 기간이 시작된 뒤 1개월 후 초기화됩니다.',
         },
         modifyCabana: {
           question: '카바나 예약을 변경할 수 있나요?',
@@ -101,17 +99,6 @@ const profile = {
     openMail: '메일을 열 수 없습니다',
     openWhatsApp: 'WhatsApp을 열 수 없습니다',
     languageChangeFailed: '언어를 변경할 수 없습니다. 다시 시도해 주세요.',
-    photoPermissionTitle: '권한이 필요합니다',
-    photoPermissionBlockedDescription:
-      '사진 권한이 차단되어 있습니다. 기기 설정에서 카메라 및 사진 접근 권한을 허용해 주세요.',
-    photoLibraryPermissionDescription:
-      '프로필 사진을 선택하려면 사진 보관함 접근 권한이 필요합니다.',
-    photoCameraPermissionDescription:
-      '프로필 사진을 촬영하려면 카메라 접근 권한이 필요합니다.',
-    photoSelectionFailed:
-      '선택한 사진을 불러오지 못했습니다. 다시 시도해 주세요.',
-    photoUploadFailed:
-      '프로필 사진을 업로드할 수 없습니다. 다시 시도해 주세요.',
     saveProfileFailed: '프로필을 저장할 수 없습니다. 다시 시도해 주세요.',
     signOutFailed: '로그아웃할 수 없습니다. 다시 시도해 주세요.',
   },
@@ -125,13 +112,6 @@ const profile = {
     memberSincePlaceholder: 'YYYY-MM-DD',
     nightsLeft: '남은 숙박',
     nightsLeftPlaceholder: '0',
-    profilePhoto: {
-      label: '프로필 사진',
-      helper: '회원에게 표시될 프로필 사진을 설정하세요.',
-      takePhoto: '사진 촬영',
-      chooseFromLibrary: '앨범에서 선택',
-      remove: '사진 제거',
-    },
     save: '변경사항 저장',
     saving: '저장 중...',
   },
@@ -171,40 +151,40 @@ const profile = {
     accessDeniedTitle: '직원 권한 필요',
     allowlistPending:
       '관리자에게 이 계정을 직원 허용 목록에 추가해 달라고 요청하세요.',
-    approvalRequired: '{{amount}} 초과 거래에는 관리자 PIN이 필요합니다.',
-    award: '포인트 적립',
-    awarding: '적립 중...',
-    awardTitle: '회원 포인트 적립',
+    approvalRequired: '민감한 수동 조정에는 관리자 승인이 필요합니다.',
+    award: '캐시백 기록',
+    awarding: '기록 중...',
+    awardTitle: '캐시백 조정 기록',
     badge: '직원',
     billAmountLabel: '결제 금액 (VND)',
     billAmountPlaceholder: '100000',
     cameraPermissionDescription:
       'Esco Beach에서 회원 QR 코드를 스캔할 수 있도록 카메라 접근 권한을 허용해 주세요.',
     cameraPermissionTitle: '카메라 권한 필요',
-    currentPoints: '현재 포인트: {{value}}',
+    currentPoints: '현재 캐시백 잔액: {{value}}',
     errors: {
-      billBelowMinimumSpend:
-        '이 결제 금액은 포인트 적립 최소 금액에 미달합니다.',
+      billBelowMinimumSpend: '이 결제 금액은 최소 캐시백 기준에 미달합니다.',
       generic: '문제가 발생했습니다. 다시 시도해 주세요.',
       invalidBillAmount: 'VND 기준의 올바른 결제 금액을 입력해 주세요.',
-      invalidLoyaltyServiceResponse:
-        '로열티 서비스 응답이 올바르지 않습니다. 다시 시도해 주세요.',
+      invalidRewardServiceResponse:
+        '리워드 서비스 응답이 올바르지 않습니다. 다시 시도해 주세요.',
       invalidQr: '이 QR 코드는 유효한 Esco 회원 코드가 아닙니다.',
-      loyaltyServiceRejectedRequest:
-        '로열티 서비스에서 요청을 거부했습니다. 결제 정보를 확인한 뒤 다시 시도해 주세요.',
-      loyaltyServiceUnavailable:
-        '로열티 서비스를 현재 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.',
+      rewardServiceRejectedRequest:
+        '리워드 서비스에서 요청을 거부했습니다. 결제 정보를 확인한 뒤 다시 시도해 주세요.',
+      rewardServiceUnavailable:
+        '리워드 서비스를 현재 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.',
       managerApprovalRequired:
         '승인 한도를 초과하는 거래에는 유효한 관리자 PIN이 필요합니다.',
       memberNotFound: '해당 ID의 회원을 찾을 수 없습니다.',
       receiptReferenceRequired:
-        '보안 적립을 위해 영수증 또는 청구 참조 번호가 필요합니다.',
+        '안전한 캐시백 기록을 위해 영수증 또는 청구 참조 번호가 필요합니다.',
       staffAccessRequired:
-        '이 계정은 포인트 적립용 직원 허용 목록에 등록되어 있지 않습니다.',
+        '이 계정은 수동 리워드 조정용 허용 목록에 등록되어 있지 않습니다.',
       title: '작업을 완료할 수 없습니다',
     },
     findMember: '회원 찾기',
-    formulaNote: '{{amount}} 사용 시마다 {{points}}포인트가 적립됩니다.',
+    formulaNote:
+      '{{amount}} 사용 시마다 {{points}} 캐시백 포인트가 적립됩니다.',
     goBack: '뒤로 가기',
     grantPermission: '카메라 권한 허용',
     invalidQrTitle: '잘못된 QR 코드',
@@ -221,19 +201,19 @@ const profile = {
     memberNotFound: '해당 코드와 일치하는 회원이 없습니다.',
     memberNotFoundTitle: '회원을 찾을 수 없음',
     memberPendingLookup:
-      '포인트 적립 전에 회원을 확인하려면 회원 찾기를 눌러 주세요.',
+      '캐시백을 기록하기 전에 회원을 확인하려면 회원 찾기를 눌러 주세요.',
     pointsPreviewDescription:
-      '포인트는 적립 전에 지출 구간 단위로 내림 처리됩니다.',
-    pointsPreviewLabel: '포인트 미리보기',
+      '캐시백 포인트는 {{amount}} 단위로 내림 처리됩니다.',
+    pointsPreviewLabel: '캐시백 미리보기',
     receiptReferenceLabel: '영수증 참조',
     receiptReferencePlaceholder: '영수증 또는 청구 번호',
     scanAgain: '다시 스캔',
     subtitle:
-      '고객 QR을 스캔하거나 회원 ID를 입력하여 부정 방지 장치와 함께 포인트를 적립하세요.',
+      '고객 QR을 스캔하거나 회원 ID를 입력하여 안전한 캐시백 조정을 기록하세요.',
     successMessage:
-      '{{name}}님에게 {{amount}} 결제로 {{points}}포인트가 적립되었습니다.',
-    successTitle: '포인트 적립 완료',
-    title: '로열티 스캐너',
+      '{{name}}님에게 {{amount}} 결제로 {{points}} 캐시백 포인트가 기록되었습니다.',
+    successTitle: '캐시백 기록 완료',
+    title: '리워드 스캐너',
   },
   invite: {
     codeCopied: '복사됨!',

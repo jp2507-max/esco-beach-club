@@ -137,7 +137,11 @@ export default function LoginScreen(): React.JSX.Element {
   return (
     <View className="flex-1">
       <LinearGradient
-        colors={[Colors.secondary, '#00796B', '#004D40']}
+        colors={[
+          Colors.secondary,
+          Colors.secondaryDark,
+          Colors.secondaryDeeper,
+        ]}
         end={{ x: 1, y: 1 }}
         start={{ x: 0, y: 0 }}
         style={{ bottom: 0, left: 0, position: 'absolute', right: 0, top: 0 }}
@@ -231,7 +235,7 @@ export default function LoginScreen(): React.JSX.Element {
                 testID="login-submit"
               >
                 <LinearGradient
-                  colors={[Colors.primary, '#C2185B']}
+                  colors={[Colors.primary, Colors.primaryDark]}
                   end={{ x: 1, y: 0 }}
                   start={{ x: 0, y: 0 }}
                   style={{
@@ -242,7 +246,7 @@ export default function LoginScreen(): React.JSX.Element {
                   }}
                 >
                   {isAuthBusy ? (
-                    <ActivityIndicator color="#fff" />
+                    <ActivityIndicator color={Colors.white} />
                   ) : (
                     <Text className="text-base font-bold tracking-[0.5px] text-white">
                       {isCodeStep

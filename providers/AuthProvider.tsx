@@ -1,12 +1,9 @@
 import createContextHook from '@nkzw/create-context-hook';
 import { useState } from 'react';
 
+import { ensureProfile, updateProfile } from '@/lib/api';
 import {
-  ensureProfile,
-  updateProfile,
-  uploadProfilePhotoAndGetUrl,
-} from '@/lib/api';
-import {
+  type MemberSegment,
   type OnboardingPermissionStatus,
   onboardingPermissionStatuses,
 } from '@/lib/types';
@@ -18,6 +15,8 @@ import {
 } from '@/src/lib/auth/social-auth';
 import { isAuthErrorKey } from '@/src/lib/auth-errors';
 import { db } from '@/src/lib/instant';
+import { captureHandledError } from '@/src/lib/monitoring';
+import { normalizeMemberSegment } from '@/src/lib/utils/member-segment';
 
 type SendCodeParams = {
   email: string;
@@ -30,14 +29,12 @@ type VerifyCodeParams = {
 };
 
 export type SignupOnboardingData = {
-  avatarLocalUri?: string;
-  avatarMimeType?: string;
   dateOfBirth: string;
   displayName: string;
   hasCompletedSetup?: boolean;
   hasAcceptedPrivacyPolicy?: boolean;
   hasAcceptedTerms?: boolean;
-  isDanangCitizen?: boolean;
+  memberSegment?: MemberSegment;
   locationPermissionStatus?: OnboardingPermissionStatus;
   pushNotificationPermissionStatus?: OnboardingPermissionStatus;
 };
@@ -264,8 +261,7 @@ function normalizeSignupOnboardingData(
     return null;
   }
 
-  const normalizedCitizenValue =
-    typeof value.isDanangCitizen === 'boolean' ? value.isDanangCitizen : null;
+  const normalizedMemberSegment = normalizeMemberSegment(value.memberSegment);
   const locationPermissionStatus = normalizeOnboardingPermissionStatus(
     value.locationPermissionStatus
   );
@@ -276,17 +272,13 @@ function normalizeSignupOnboardingData(
   const hasAcceptedTerms = value.hasAcceptedTerms === true;
   const hasAcceptedPrivacyPolicy = value.hasAcceptedPrivacyPolicy === true;
   const hasCompletedSetup = value.hasCompletedSetup === true;
-  const avatarLocalUri = value.avatarLocalUri?.trim() || undefined;
-  const avatarMimeType = value.avatarMimeType?.trim() || undefined;
 
   return {
     dateOfBirth: normalizedDateOfBirth,
     displayName: normalizedDisplayName,
-    ...(avatarLocalUri ? { avatarLocalUri } : {}),
-    ...(avatarMimeType ? { avatarMimeType } : {}),
     ...(hasCompletedSetup ? { hasCompletedSetup } : {}),
-    ...(normalizedCitizenValue !== null
-      ? { isDanangCitizen: normalizedCitizenValue }
+    ...(normalizedMemberSegment
+      ? { memberSegment: normalizedMemberSegment }
       : {}),
     ...(locationPermissionStatus ? { locationPermissionStatus } : {}),
     ...(pushNotificationPermissionStatus
@@ -367,11 +359,10 @@ async function applyOnboardingProfileDataForNewUser(params: {
     profile.date_of_birth !== params.onboardingData.dateOfBirth;
   const needsFullNameUpdate =
     profile.full_name !== params.onboardingData.displayName;
-  const hasCitizenData =
-    typeof params.onboardingData.isDanangCitizen === 'boolean';
-  const needsCitizenUpdate =
-    hasCitizenData &&
-    profile.is_danang_citizen !== params.onboardingData.isDanangCitizen;
+  const hasMemberSegmentData = params.onboardingData.memberSegment !== undefined;
+  const needsMemberSegmentUpdate =
+    hasMemberSegmentData &&
+    profile.member_segment !== params.onboardingData.memberSegment;
   const hasLocationPermissionStatus =
     params.onboardingData.locationPermissionStatus !== undefined;
   const needsLocationPermissionStatusUpdate =
@@ -389,48 +380,26 @@ async function applyOnboardingProfileDataForNewUser(params: {
   const needsCompletedAtUpdate =
     hasCompletedIdentityOnboarding && !profile.onboarding_completed_at;
 
-  let avatarUrlFromUpload: string | undefined;
-
-  if (params.onboardingData.avatarLocalUri) {
-    try {
-      avatarUrlFromUpload = await uploadProfilePhotoAndGetUrl({
-        localUri: params.onboardingData.avatarLocalUri,
-        mimeType: params.onboardingData.avatarMimeType,
-        userId: signInUser.id,
-      });
-    } catch (error: unknown) {
-      console.error('[AuthProvider] Failed to upload onboarding avatar:', {
-        error,
-      });
-    }
-  }
-
-  const needsAvatarUpdate =
-    avatarUrlFromUpload !== undefined &&
-    profile.avatar_url !== avatarUrlFromUpload;
-
   if (
     !needsDateOfBirthUpdate &&
     !needsFullNameUpdate &&
-    !needsCitizenUpdate &&
+    !needsMemberSegmentUpdate &&
     !needsLocationPermissionStatusUpdate &&
     !needsPushPermissionStatusUpdate &&
-    !needsAvatarUpdate &&
     !needsCompletedAtUpdate
   ) {
     return;
   }
 
   await updateProfile(signInUser.id, {
-    ...(needsAvatarUpdate ? { avatar_url: avatarUrlFromUpload } : {}),
     ...(needsDateOfBirthUpdate
       ? { date_of_birth: params.onboardingData.dateOfBirth }
       : {}),
     ...(needsFullNameUpdate
       ? { full_name: params.onboardingData.displayName }
       : {}),
-    ...(needsCitizenUpdate
-      ? { is_danang_citizen: params.onboardingData.isDanangCitizen }
+    ...(needsMemberSegmentUpdate
+      ? { member_segment: params.onboardingData.memberSegment }
       : {}),
     ...(needsLocationPermissionStatusUpdate
       ? {
@@ -628,6 +597,9 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       });
     } catch (error: unknown) {
       const nextError = toError(error, 'unableToSignInWithApple');
+      captureHandledError(nextError, {
+        tags: { area: 'auth', operation: 'sign_in_with_apple' },
+      });
       setAppleSignInError(nextError);
       throw nextError;
     } finally {
@@ -768,6 +740,9 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       const nextError = toError(error, 'unableToSignInWithGoogle', {
         oauthProvider: 'google',
       });
+      captureHandledError(nextError, {
+        tags: { area: 'auth', operation: 'sign_in_with_google' },
+      });
       setGoogleSignInError(nextError);
       throw nextError;
     } finally {
@@ -791,6 +766,9 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       return trimmedEmail;
     } catch (error: unknown) {
       const nextError = toError(error, 'unableToSendCode');
+      captureHandledError(nextError, {
+        tags: { area: 'auth', operation: 'send_magic_code' },
+      });
       setSendCodeError(nextError);
       throw nextError;
     } finally {
@@ -842,6 +820,9 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       });
     } catch (error: unknown) {
       const nextError = toError(error, 'unableToVerifyCode');
+      captureHandledError(nextError, {
+        tags: { area: 'auth', operation: 'verify_magic_code' },
+      });
       setVerifyCodeError(nextError);
       throw nextError;
     } finally {
@@ -857,6 +838,9 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       await db.auth.signOut();
     } catch (error: unknown) {
       const nextError = toError(error, 'unableToSignOut');
+      captureHandledError(nextError, {
+        tags: { area: 'auth', operation: 'sign_out' },
+      });
       setSignOutError(nextError);
       throw nextError;
     } finally {

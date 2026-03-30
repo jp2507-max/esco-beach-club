@@ -82,15 +82,11 @@ export default function OnboardingWelcomeScreen(): React.JSX.Element {
           <View className="h-52 w-full overflow-hidden">
             <Image
               className="h-full w-full"
-              source={{ uri: config.heroImage.uri }}
-              defaultSource={config.heroImage.fallback}
+              source={config.heroImage}
+              placeholder={config.heroImage}
               cachePolicy="memory-disk"
               contentFit="cover"
               transition={180}
-              onError={() => {
-                // Handle error by using fallback image
-                console.warn('Hero image failed to load, using fallback');
-              }}
             />
             <LinearGradient
               colors={['rgba(0,0,0,0.1)', 'rgba(0,0,0,0.52)']}

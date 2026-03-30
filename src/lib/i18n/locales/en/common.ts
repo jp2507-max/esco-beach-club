@@ -20,7 +20,7 @@ const common = {
     loyaltyManagerPin:
       'Please enter a valid manager PIN to approve this amount.',
     loyaltyMinimumSpend:
-      'This bill amount is below the minimum points threshold.',
+      'This bill amount is below the minimum cashback threshold.',
   },
   back: 'Back',
   backHint: 'Returns to the previous screen',
@@ -46,6 +46,11 @@ const common = {
     guest: 'Guest',
     subtitle: 'Your reservation has been confirmed.',
     title: "You're all set, {{name}}!",
+  },
+  appError: {
+    title: 'We hit an unexpected issue',
+    description:
+      'Please reopen the app or try again in a moment. Our team has been notified.',
   },
   menu: 'Menu',
   privateEvent: {
@@ -97,7 +102,8 @@ const common = {
   },
   close: 'Close',
   datePicker: {
-    dismissHint: 'Double tap to close the date picker without changing the date',
+    dismissHint:
+      'Double tap to close the date picker without changing the date',
   },
   done: 'Done',
   modal: {
