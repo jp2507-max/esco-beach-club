@@ -7,11 +7,11 @@ const booking = {
   confirmReservation: '예약 확인',
   reserving: '예약 중...',
   occasions: {
-    'Date Night': '데이트',
-    Birthday: '생일',
-    Business: '비즈니스',
-    Casual: '캐주얼',
-    Celebration: '축하',
+    dateNight: '데이트',
+    birthday: '생일',
+    business: '비즈니스',
+    casual: '캐주얼',
+    celebration: '축하',
   },
   days: {
     today: '오늘',
@@ -40,6 +40,9 @@ const booking = {
   guestsUnit: '명',
   full: '만석',
   confirmationMessage: '{{date}} {{time}}에 테이블이 예약되었습니다.',
+  reservationFailedTitle: '예약 실패',
+  reservationFailedMessage:
+    '지금은 예약을 확정할 수 없습니다. 다시 시도해 주세요.',
 } as const;
 
 export default booking;

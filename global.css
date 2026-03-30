@@ -36,4 +36,8 @@
   --color-pink-light: #fce4ec;
   --color-success: #4caf50;
   --color-gold: #c8a24d;
+  --color-primary-fixed: #fce4ec;
+  --color-secondary-fixed: #b2dfdb;
+  --color-surface: #ffffff;
+  --color-surface-container-low: #faf8f0;
 }

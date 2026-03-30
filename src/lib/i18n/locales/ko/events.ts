@@ -8,6 +8,14 @@ const events = {
     wellness: '웰니스',
     dining: '다이닝',
   },
+  weekStrip: {
+    title: '날짜별 보기',
+    selectDay: '{{day}} 이벤트 보기',
+    selectDayHint: '선택한 날짜로 이벤트를 필터링합니다',
+  },
+  loading: '이벤트를 불러오는 중입니다...',
+  noEventsForDayTitle: '선택한 날짜에 이벤트가 없습니다',
+  noEventsForDayDescription: '다른 날짜, 카테고리 또는 검색어를 시도해 보세요.',
   featuredPrice: '가격',
   privatePartyTitle: '프라이빗 파티를 계획하시나요?',
   privatePartyDescription: '생일, 결혼식, 기업 행사까지 모두 가능합니다',
@@ -29,6 +37,13 @@ const events = {
   shareEvent: '이벤트 공유',
   likeEvent: '이벤트 좋아요',
   unlikeEvent: '이벤트 좋아요 취소',
+  saveEvent: '이벤트 저장',
+  removeSavedEvent: '저장한 이벤트 삭제',
+  shareEventHint: '공유 시트를 엽니다',
+  openEventPrice: '{{title}} 이벤트 열기',
+  openEventPriceHint: '이 이벤트 상세 정보를 엽니다',
+  likeEventHint: '이 이벤트를 저장 목록에 추가합니다',
+  unlikeEventHint: '이 이벤트를 저장 목록에서 제거합니다',
   shareMessage:
     '{{location}}에서 {{date}} {{time}}에 열리는 {{title}}을(를) 확인해 보세요!',
   priceTiers: {

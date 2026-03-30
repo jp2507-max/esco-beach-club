@@ -21,7 +21,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
 import { submitPrivateEventInquiry } from '@/lib/api';
-import { useUserId } from '@/providers/DataProvider';
+import { useBookingContentData, useUserId } from '@/providers/DataProvider';
 import { Button, ModalHeader } from '@/src/components/ui';
 import { motion } from '@/src/lib/animations/motion';
 import { ControlledTextInput } from '@/src/lib/forms/controlled-text-input';
@@ -30,6 +30,7 @@ import {
   type PrivateEventFormValues,
   privateEventSchema,
 } from '@/src/lib/forms/schemas';
+import { captureHandledError } from '@/src/lib/monitoring';
 import { cn } from '@/src/lib/utils';
 import {
   KeyboardAvoidingView,
@@ -50,6 +51,11 @@ const EVENT_TYPE_KEYS = [
   'other',
 ] as const;
 
+type EventTypeOption = {
+  label: string;
+  value: string;
+};
+
 export default function PrivateEventScreen(): React.JSX.Element {
   const { t } = useTranslation('common');
   const insets = useSafeAreaInsets();
@@ -59,6 +65,7 @@ export default function PrivateEventScreen(): React.JSX.Element {
   const successScale = useSharedValue(0);
 
   const userId = useUserId();
+  const { privateEventTypes } = useBookingContentData();
   const { control, handleSubmit, setValue } = useForm<
     PrivateEventFormInput,
     unknown,
@@ -84,6 +91,30 @@ export default function PrivateEventScreen(): React.JSX.Element {
     defaultValue: '',
   });
 
+  const resolvedEventTypeOptions = React.useMemo<EventTypeOption[]>(() => {
+    if (privateEventTypes.length === 0) {
+      return EVENT_TYPE_KEYS.map((key) => ({
+        label: t(`privateEvent.eventTypes.${key}` as never) as string,
+        value: key,
+      }));
+    }
+
+    return privateEventTypes.map((option) => ({
+      label: t(option.label_key as never) as string,
+      value: option.value,
+    }));
+  }, [privateEventTypes, t]);
+
+  const selectedEventTypeLabel = React.useMemo<string>(() => {
+    if (!eventType) return '';
+
+    return (
+      resolvedEventTypeOptions.find((option) => option.value === eventType)
+        ?.label ??
+      (t(`privateEvent.eventTypes.${eventType}` as never) as string)
+    );
+  }, [eventType, resolvedEventTypeOptions, t]);
+
   const successStyle = useAnimatedStyle(() => ({
     opacity: successScale.get(),
     transform: [{ scale: successScale.get() }],
@@ -101,12 +132,17 @@ export default function PrivateEventScreen(): React.JSX.Element {
         notes: values.notes?.trim() || undefined,
       }),
     onSuccess: () => {
-      console.log('[PrivateEvent] Inquiry submitted');
       setSubmitted(true);
       successScale.set(withSpring(1, motion.spring.bouncy));
     },
     onError: (err) => {
-      console.log('[PrivateEvent] Submit error:', err);
+      captureHandledError(err, {
+        extras: { userId },
+        tags: {
+          area: 'private_events',
+          operation: 'submit_inquiry',
+        },
+      });
       const message =
         err instanceof Error ? err.message : t('privateEvent.submitError');
       Alert.alert(t('privateEvent.submissionFailed'), message);
@@ -204,10 +240,7 @@ export default function PrivateEventScreen(): React.JSX.Element {
                     }
                   >
                     {eventType
-                      ? t(
-                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                          `privateEvent.eventTypes.${eventType}` as any
-                        )
+                      ? selectedEventTypeLabel
                       : t('privateEvent.selectType')}
                   </Text>
                 </View>
@@ -216,28 +249,31 @@ export default function PrivateEventScreen(): React.JSX.Element {
 
               {showTypePicker && (
                 <View className="-mt-1 mb-2 overflow-hidden rounded-[14px] border border-border bg-white dark:border-dark-border dark:bg-dark-bg-card">
-                  {EVENT_TYPE_KEYS.map((key) => (
+                  {resolvedEventTypeOptions.map((option) => (
                     <Pressable
                       accessibilityRole="button"
-                      key={key}
+                      key={option.value}
                       className="border-b border-border px-4.5 py-3.25 last:border-b-0 dark:border-dark-border"
-                      onPress={() => handleTypeSelect(key)}
+                      onPress={() => handleTypeSelect(option.value)}
                       style={
-                        eventType === key
+                        eventType === option.value
                           ? { backgroundColor: `${Colors.secondary}12` }
                           : undefined
                       }
-                      testID={`type-${key}`}
+                      testID={`type-${option.value}`}
                     >
                       <Text
                         className="text-[15px]"
                         style={{
                           color:
-                            eventType === key ? Colors.secondary : Colors.text,
-                          fontWeight: eventType === key ? '700' : '500',
+                            eventType === option.value
+                              ? Colors.secondary
+                              : Colors.text,
+                          fontWeight:
+                            eventType === option.value ? '700' : '500',
                         }}
                       >
-                        {t(`privateEvent.eventTypes.${key}`)}
+                        {option.label}
                       </Text>
                     </Pressable>
                   ))}

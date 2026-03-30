@@ -13,7 +13,7 @@ import {
   UserCheck,
   Users,
 } from 'lucide-react-native';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Share } from 'react-native';
 import {
@@ -25,7 +25,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
-import { useEventById } from '@/providers/DataProvider';
+import { useEventById, useSavedEventsData } from '@/providers/DataProvider';
+import { HeaderGlassButton } from '@/src/components/ui';
 import { rmTiming } from '@/src/lib/animations/motion';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
@@ -63,6 +64,7 @@ export default function EventDetailsScreen(): React.JSX.Element {
 
   const { t } = useTranslation('events');
   const foundEvent = useEventById(id);
+  const { isEventSaved, toggleSavedEvent } = useSavedEventsData();
 
   useEffect(() => {
     headerOpacity.set(withTiming(1, rmTiming(400)));
@@ -84,9 +86,6 @@ export default function EventDetailsScreen(): React.JSX.Element {
     transform: [{ translateY: slide.get() }],
   }));
 
-  // TODO(#FAV-123): Persist isLiked to API/localStorage; currently local-only and resets on navigation
-  const [isLiked, setIsLiked] = useState(false);
-
   if (!foundEvent) {
     return (
       <View className="flex-1 items-center justify-center bg-background dark:bg-dark-bg">
@@ -105,6 +104,7 @@ export default function EventDetailsScreen(): React.JSX.Element {
   }
 
   const event = foundEvent;
+  const isLiked = isEventSaved(event.id);
   const contactForPricing = t('priceTiers.contactForPricing');
   const priceTiers: PriceTier[] = [
     {
@@ -137,7 +137,7 @@ export default function EventDetailsScreen(): React.JSX.Element {
   function handleBook(): void {
     router.push({
       pathname: '/booking' as never,
-      params: { eventTitle: event.title },
+      params: { eventId: event.id, eventTitle: event.title },
     });
   }
 
@@ -157,7 +157,7 @@ export default function EventDetailsScreen(): React.JSX.Element {
   }
 
   function handleToggleLike(): void {
-    setIsLiked((prev) => !prev);
+    void toggleSavedEvent(event.id);
   }
 
   return (
@@ -180,51 +180,44 @@ export default function EventDetailsScreen(): React.JSX.Element {
           className="absolute left-4 right-4 z-10 flex-row items-center justify-between"
           style={{ top: insets.top + 8 }}
         >
-          <Pressable
-            accessibilityRole="button"
-            className="size-10 items-center justify-center rounded-full"
+          <HeaderGlassButton
+            accessibilityLabel={t('goBack')}
+            accessibilityHint={t('goBack')}
             onPress={() => router.back()}
-            style={{ backgroundColor: 'rgba(0,0,0,0.35)' }}
             testID="back-btn"
+            variant="overlay"
           >
             <ArrowLeft size={20} color="#fff" />
-          </Pressable>
+          </HeaderGlassButton>
           <View className="flex-row">
-            <Pressable
-              className="mr-2.5 size-10 items-center justify-center rounded-full"
-              style={{ backgroundColor: 'rgba(0,0,0,0.35)' }}
+            <HeaderGlassButton
+              className="mr-2.5"
               onPress={handleShare}
-              accessibilityRole="button"
               accessibilityLabel={t('shareEvent')}
-              accessibilityHint={t('shareEventHint', {
-                defaultValue: 'Opens share sheet',
-              })}
+              accessibilityHint={t('shareEventHint')}
               testID="share-btn"
+              variant="overlay"
             >
               <Share2 size={18} color="#fff" />
-            </Pressable>
-            <Pressable
-              className="size-10 items-center justify-center rounded-full"
-              style={{ backgroundColor: 'rgba(0,0,0,0.35)' }}
+            </HeaderGlassButton>
+            <HeaderGlassButton
               onPress={handleToggleLike}
-              accessibilityRole="button"
-              accessibilityLabel={isLiked ? t('unlikeEvent') : t('likeEvent')}
+              accessibilityLabel={
+                isLiked ? t('removeSavedEvent') : t('saveEvent')
+              }
               accessibilityHint={
-                isLiked
-                  ? t('unlikeEventHint', {
-                      defaultValue: 'Removes from favourites',
-                    })
-                  : t('likeEventHint', { defaultValue: 'Adds to favourites' })
+                isLiked ? t('unlikeEventHint') : t('likeEventHint')
               }
               accessibilityState={{ selected: isLiked }}
               testID="like-btn"
+              variant="overlay"
             >
               <Heart
                 size={18}
                 color={isLiked ? Colors.primary : '#fff'}
                 fill={isLiked ? Colors.primary : 'transparent'}
               />
-            </Pressable>
+            </HeaderGlassButton>
           </View>
         </View>
 

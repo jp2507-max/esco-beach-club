@@ -80,7 +80,12 @@ export function useEmailCodeAuthFlow(
         error instanceof Error && error.message
           ? error.message
           : 'unableToSendCode';
-      const message = isAuthErrorKey(raw) ? t(raw) : raw;
+
+      if (!isAuthErrorKey(raw)) {
+        console.error('[AuthError] Unrecognized sendCode error:', raw);
+      }
+
+      const message = isAuthErrorKey(raw) ? t(raw) : t('genericError');
       Alert.alert(t('codeNotSentTitle'), message);
     }
   }
@@ -97,7 +102,12 @@ export function useEmailCodeAuthFlow(
         error instanceof Error && error.message
           ? error.message
           : 'unableToVerifyCode';
-      const message = isAuthErrorKey(raw) ? t(raw) : raw;
+
+      if (!isAuthErrorKey(raw)) {
+        console.error('[AuthError] Unrecognized verifyCode error:', raw);
+      }
+
+      const message = isAuthErrorKey(raw) ? t(raw) : t('genericError');
       Alert.alert(t('verificationFailedTitle'), message);
     }
   }

@@ -1,7 +1,7 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import {
   Bell,
+  Bookmark,
   ChevronRight,
   CreditCard,
   Crown,
@@ -9,7 +9,8 @@ import {
   Headphones,
   HelpCircle,
   LogOut,
-  QrCode,
+  PencilLine,
+  RefreshCw,
   Settings,
   Star,
   Ticket,
@@ -17,7 +18,7 @@ import {
 } from 'lucide-react-native';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Linking } from 'react-native';
+import { Alert, Linking, useColorScheme } from 'react-native';
 import {
   cancelAnimation,
   useAnimatedStyle,
@@ -29,11 +30,20 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/providers/AuthProvider';
-import { useProfileData } from '@/providers/DataProvider';
+import {
+  useMemberOffersData,
+  useMemberSummary,
+  useProfileData,
+} from '@/providers/DataProvider';
+import { HeaderGlassButton } from '@/src/components/ui';
 import { Avatar } from '@/src/components/ui/avatar';
 import { rmTiming } from '@/src/lib/animations/motion';
 import { config } from '@/src/lib/config';
-import { shadows } from '@/src/lib/styles/shadows';
+import {
+  getRewardTierLabelKey,
+  hasRewardBenefit,
+  rewardBenefitKeys,
+} from '@/src/lib/loyalty';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 
@@ -56,6 +66,26 @@ type StatCardProps = {
   progressTrackColor: string;
   value: string;
 };
+
+const welcomeOfferVoucherKeys = [
+  'welcomeGift',
+  'welcomeDiscount',
+  'firstVisit',
+  'validForThirtyDays',
+] as const;
+
+type WelcomeOfferVoucherKey = (typeof welcomeOfferVoucherKeys)[number];
+
+function resolveWelcomeOfferVoucherKey(
+  key: unknown,
+  fallback: WelcomeOfferVoucherKey
+): WelcomeOfferVoucherKey {
+  if (typeof key !== 'string') return fallback;
+  if ((welcomeOfferVoucherKeys as readonly string[]).includes(key)) {
+    return key as WelcomeOfferVoucherKey;
+  }
+  return fallback;
+}
 
 function StatCard({
   accentColor,
@@ -96,38 +126,55 @@ export default function ProfileScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { t } = useTranslation('profile');
-  const scale = useSharedValue(0.9);
-  const fade = useSharedValue(0);
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const voucherScale = useSharedValue(0.9);
   const voucherOpacity = useSharedValue(0);
 
-  useEffect(() => {
-    scale.set(
-      withSpring(1, {
-        damping: 15,
-        stiffness: 120,
-      })
-    );
-    fade.set(withTiming(1, rmTiming(600)));
-    return () => {
-      cancelAnimation(scale);
-      cancelAnimation(fade);
-    };
-  }, [fade, scale]);
-
   const { profile, dismissVoucher } = useProfileData();
+  const memberSummary = useMemberSummary();
+  const { welcomeOffer } = useMemberOffersData();
   const { signOut } = useAuth();
 
-  const userName = profile?.full_name ?? t('guest');
-  const tierBadge = profile?.tier_label ?? t('memberFallback');
-  const tierLevel = profile?.tier ?? 'STANDARD';
-  const memberId = profile?.member_id ?? '';
-  const earned = profile?.earned ?? 0;
-  const saved = profile?.saved ?? 0;
+  const userName = memberSummary.fullName || t('guest');
+  const tierBadge = t(
+    `tier.${getRewardTierLabelKey(memberSummary.lifetimeTierKey)}`
+  );
+  const bio = profile?.bio?.trim() ?? '';
+  const memberSince = memberSummary.memberSince
+    ? memberSummary.memberSince.slice(0, 10)
+    : '—';
+  const cashbackLifetimePoints = memberSummary.cashbackLifetimePoints;
+  const nightsLeft = memberSummary.nightsLeft;
+  const saved = memberSummary.saved;
+  const welcomeOfferBadgeKey = resolveWelcomeOfferVoucherKey(
+    welcomeOffer?.badge_key,
+    'welcomeGift'
+  );
+  const welcomeOfferTitleKey = resolveWelcomeOfferVoucherKey(
+    welcomeOffer?.title_key,
+    'welcomeDiscount'
+  );
+  const welcomeOfferSubtitleKey = resolveWelcomeOfferVoucherKey(
+    welcomeOffer?.subtitle_key,
+    'firstVisit'
+  );
+  const welcomeOfferTermsKey = resolveWelcomeOfferVoucherKey(
+    welcomeOffer?.terms_key,
+    'validForThirtyDays'
+  );
+  const welcomeOfferCode = welcomeOffer?.code ?? 'WELCOME10';
 
   const [showVoucher, setShowVoucher] = useState<boolean>(false);
   const menuItems = useMemo<MenuItem[]>(
     () => [
+      {
+        color: Colors.primary,
+        icon: PencilLine,
+        id: 'edit-profile',
+        label: t('menu.editProfile'),
+        route: '/profile/edit-profile',
+      },
       {
         color: Colors.primary,
         icon: Users,
@@ -143,12 +190,18 @@ export default function ProfileScreen(): React.JSX.Element {
         route: '/rate-us',
       },
       {
+        color: Colors.secondary,
+        icon: Bookmark,
+        id: 'saved-events',
+        label: t('menu.savedEvents'),
+        route: '/profile/saved-events',
+      },
+      {
         color: Colors.primary,
-        disabled: true,
         icon: CreditCard,
         id: 'membership',
         label: t('menu.membership'),
-        route: null,
+        route: '/profile/membership',
       },
       {
         color: '#FF9800',
@@ -160,19 +213,24 @@ export default function ProfileScreen(): React.JSX.Element {
       },
       {
         color: Colors.secondary,
-        disabled: true,
         icon: Settings,
         id: 'settings',
         label: t('menu.settings'),
-        route: null,
+        route: '/profile/theme-preference',
       },
       {
         color: '#7C4DFF',
-        disabled: true,
         icon: HelpCircle,
         id: 'help-support',
         label: t('menu.helpSupport'),
-        route: null,
+        route: '/profile/help-center',
+      },
+      {
+        color: '#00A884',
+        icon: RefreshCw,
+        id: 'restart-onboarding',
+        label: t('menu.restartOnboarding'),
+        route: '/onboarding-welcome',
       },
       {
         color: '#EF5350',
@@ -206,12 +264,10 @@ export default function ProfileScreen(): React.JSX.Element {
     setShowVoucher(!profile.has_seen_welcome_voucher);
   }, [profile]);
 
-  const isVIP = tierLevel === 'VIP' || tierLevel === 'OWNER';
-
-  const accessCardStyle = useAnimatedStyle(() => ({
-    opacity: fade.get(),
-    transform: [{ scale: scale.get() }],
-  }));
+  const hasPrioritySupport = hasRewardBenefit(
+    memberSummary.lifetimeTierKey,
+    rewardBenefitKeys.concierge
+  );
 
   const voucherStyle = useAnimatedStyle(() => ({
     opacity: voucherOpacity.get(),
@@ -249,11 +305,28 @@ export default function ProfileScreen(): React.JSX.Element {
       }
       return;
     }
+    if (item.id === 'restart-onboarding') {
+      Alert.alert(
+        t('restartOnboarding.confirmTitle'),
+        t('restartOnboarding.confirmMessage'),
+        [
+          {
+            style: 'cancel',
+            text: t('restartOnboarding.cancel'),
+          },
+          {
+            onPress: () => router.push('/onboarding-welcome' as never),
+            text: t('restartOnboarding.start'),
+          },
+        ]
+      );
+      return;
+    }
     if (item.route) router.push(item.route as never);
   }
 
-  const earnedProgress = Math.min(Math.max((earned / 2000) * 100, 0), 100);
-  const savedProgress = Math.min(Math.max((saved / 300) * 100, 0), 100);
+  const earnedProgress = cashbackLifetimePoints > 0 ? 100 : 0;
+  const savedProgress = saved > 0 ? 100 : 0;
 
   return (
     <View
@@ -286,7 +359,7 @@ export default function ProfileScreen(): React.JSX.Element {
               className="mr-3 size-12 overflow-hidden rounded-full border-[2.5px]"
               style={{ borderColor: `${Colors.primary}40` }}
             >
-              <Avatar className="h-full w-full" uri={profile?.avatar_url} />
+              <Avatar className="h-full w-full" uri={memberSummary.avatarUrl} />
             </View>
             <View>
               <Text className="text-[13px] font-medium text-text-secondary dark:text-text-secondary-dark">
@@ -297,14 +370,19 @@ export default function ProfileScreen(): React.JSX.Element {
               </Text>
             </View>
           </View>
-          <Pressable
-            accessibilityRole="button"
-            className="size-[42px] items-center justify-center rounded-full border border-border bg-white dark:border-dark-border dark:bg-dark-bg-card"
+          <HeaderGlassButton
+            accessibilityLabel={t('menu.comingSoon')}
+            accessibilityHint={t('notifications.hint')}
+            className="size-10.5 border-white/35 dark:border-white/20"
+            glassStyle="regular"
             onPress={() => Alert.alert(t('menu.comingSoon'))}
             testID="notification-bell"
           >
-            <Bell color={Colors.text} size={20} />
-          </Pressable>
+            <Bell
+              color={isDark ? Colors.textPrimaryDark : Colors.text}
+              size={20}
+            />
+          </HeaderGlassButton>
         </View>
 
         <View className="mb-5 items-center">
@@ -316,48 +394,6 @@ export default function ProfileScreen(): React.JSX.Element {
           </View>
         </View>
 
-        <Animated.View className="mb-5" style={accessCardStyle}>
-          <View
-            className="items-center rounded-[24px] bg-white p-6 dark:bg-dark-bg-card"
-            style={shadows.level3}
-          >
-            <View className="mb-5 items-center">
-              <Text className="text-2xl font-extrabold text-text dark:text-text-primary-dark">
-                {t('brandPrefix')}
-                <Text className="text-primary">{t('brandHighlight')}</Text>
-              </Text>
-              <Text className="mt-1 text-[11px] font-semibold tracking-[3px] text-text-secondary dark:text-text-secondary-dark">
-                {t('accessPass')}
-              </Text>
-            </View>
-
-            <View className="mb-5">
-              <LinearGradient
-                colors={['#E91E63', '#9C27B0', '#00BCD4']}
-                start={{ x: 0, y: 1 }}
-                end={{ x: 1, y: 0 }}
-                style={{
-                  borderRadius: 20,
-                  height: 180,
-                  padding: 5,
-                  width: 180,
-                }}
-              >
-                <View className="flex-1 items-center justify-center rounded-[16px] bg-white dark:bg-dark-bg-card">
-                  <QrCode color={Colors.text} size={100} />
-                </View>
-              </LinearGradient>
-            </View>
-
-            <Text className="mb-1 text-base font-bold text-text dark:text-text-primary-dark">
-              {t('scanAtTable')}
-            </Text>
-            <Text className="text-[13px] font-medium text-text-secondary dark:text-text-secondary-dark">
-              {t('refPrefix', { memberId })}
-            </Text>
-          </View>
-        </Animated.View>
-
         <View className="mb-5 flex-row">
           <View className="mr-3 flex-1">
             <StatCard
@@ -365,7 +401,7 @@ export default function ProfileScreen(): React.JSX.Element {
               label={t('earned')}
               progressDegrees={(earnedProgress / 100) * 360}
               progressTrackColor={`${Colors.primary}25`}
-              value={earned.toLocaleString()}
+              value={cashbackLifetimePoints.toLocaleString()}
             />
           </View>
           <StatCard
@@ -375,6 +411,54 @@ export default function ProfileScreen(): React.JSX.Element {
             progressTrackColor={`${Colors.secondary}25`}
             value={`$${saved}`}
           />
+        </View>
+
+        <View className="mb-5 rounded-[20px] border border-border bg-white p-5 dark:border-dark-border dark:bg-dark-bg-card">
+          <View className="mb-4 flex-row items-center justify-between">
+            <Text className="text-lg font-bold text-text dark:text-text-primary-dark">
+              {t('profileDetails')}
+            </Text>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => router.push('/profile/edit-profile')}
+              testID="profile-edit-shortcut"
+            >
+              <Text className="text-sm font-bold text-primary dark:text-primary-bright">
+                {t('edit')}
+              </Text>
+            </Pressable>
+          </View>
+
+          <Text className="text-sm leading-6 text-text-secondary dark:text-text-secondary-dark">
+            {bio || t('noBio')}
+          </Text>
+
+          <View className="mt-4 flex-row gap-3">
+            <View className="flex-1 rounded-2xl bg-background px-4 py-3 dark:bg-dark-bg-elevated">
+              <Text className="text-[11px] font-semibold uppercase tracking-[0.8px] text-text-muted dark:text-text-muted-dark">
+                {t('memberSince')}
+              </Text>
+              <Text className="mt-1 text-sm font-bold text-text dark:text-text-primary-dark">
+                {memberSince}
+              </Text>
+            </View>
+            <View className="flex-1 rounded-2xl bg-background px-4 py-3 dark:bg-dark-bg-elevated">
+              <Text className="text-[11px] font-semibold uppercase tracking-[0.8px] text-text-muted dark:text-text-muted-dark">
+                {t('nightsLeft')}
+              </Text>
+              <Text className="mt-1 text-sm font-bold text-text dark:text-text-primary-dark">
+                {nightsLeft}
+              </Text>
+            </View>
+            <View className="flex-1 rounded-2xl bg-background px-4 py-3 dark:bg-dark-bg-elevated">
+              <Text className="text-[11px] font-semibold uppercase tracking-[0.8px] text-text-muted dark:text-text-muted-dark">
+                {t('savedEventsCount')}
+              </Text>
+              <Text className="mt-1 text-sm font-bold text-text dark:text-text-primary-dark">
+                {memberSummary.savedEventsCount}
+              </Text>
+            </View>
+          </View>
         </View>
 
         {showVoucher && (
@@ -397,21 +481,21 @@ export default function ProfileScreen(): React.JSX.Element {
               <View className="mb-2 flex-row items-center">
                 <Ticket color={Colors.primary} size={22} />
                 <Text className="ml-2 text-[11px] font-extrabold tracking-[2px] text-primary">
-                  {t('welcomeGift')}
+                  {t(welcomeOfferBadgeKey)}
                 </Text>
               </View>
               <Text className="mb-0.5 text-[42px] font-black text-text dark:text-text-primary-dark">
-                {t('welcomeDiscount')}
+                {t(welcomeOfferTitleKey)}
               </Text>
               <Text className="mb-3.5 text-base font-semibold text-text-secondary dark:text-text-secondary-dark">
-                {t('firstVisit')}
+                {t(welcomeOfferSubtitleKey)}
               </Text>
               <View className="mb-3.5 h-px w-4/5 bg-border dark:bg-dark-border" />
               <Text className="mb-1.5 text-lg font-extrabold tracking-[2px] text-secondary">
-                {t('codeLabel', { code: 'WELCOME10' })}
+                {t('codeLabel', { code: welcomeOfferCode })}
               </Text>
               <Text className="mb-4 text-xs text-text-muted dark:text-text-muted-dark">
-                {t('validForThirtyDays')}
+                {t(welcomeOfferTermsKey)}
               </Text>
               <Pressable
                 accessibilityRole="button"
@@ -429,7 +513,7 @@ export default function ProfileScreen(): React.JSX.Element {
           </Animated.View>
         )}
 
-        {isVIP && config.contact.conciergeBase ? (
+        {hasPrioritySupport && config.contact.conciergeBase ? (
           <Pressable
             accessibilityRole="button"
             className="mb-5 flex-row items-center justify-center rounded-2xl py-4"

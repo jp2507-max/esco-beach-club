@@ -12,11 +12,18 @@ const common = {
     min: '최소 {{min}} 이상이어야 합니다.',
     max: '최대 {{max}} 이하여야 합니다.',
     maxCharacters: '최대 {{count}}자까지 입력 가능합니다.',
+    profileNameMin: '이름은 최소 2자 이상 입력해 주세요.',
+    profileNameMax: '이름은 최대 60자까지 입력 가능합니다.',
+    profileBioMax: '소개는 최대 160자까지 입력 가능합니다.',
     commentMax: '코멘트는 최대 500자까지 입력 가능합니다.',
     invalidDate: 'YYYY-MM-DD 형식의 유효한 날짜를 입력해 주세요.',
     invalidCode: '6자리의 인증 코드를 입력해 주세요.',
+    loyaltyManagerPin:
+      '이 금액을 승인하려면 유효한 관리자 PIN을 입력해 주세요.',
+    loyaltyMinimumSpend: '이 청구 금액은 최소 캐시백 기준보다 낮습니다.',
   },
   back: '뒤로',
+  backHint: '이전 화면으로 돌아갑니다',
   rateUs: {
     title: '경험을 평가해 주세요',
     howWasVisit: '방문은 어떠셨나요?',
@@ -38,6 +45,11 @@ const common = {
     guest: '게스트',
     subtitle: '예약이 확인되었습니다.',
     title: '{{name}}님, 준비가 완료되었습니다!',
+  },
+  appError: {
+    title: '예기치 않은 문제가 발생했습니다',
+    description:
+      '앱을 다시 열거나 잠시 후 다시 시도해 주세요. 팀에서 이미 확인할 수 있도록 기록했습니다.',
   },
   menu: '메뉴',
   privateEvent: {
@@ -81,14 +93,21 @@ const common = {
   tabs: {
     home: '홈',
     events: '이벤트',
+    qr: 'QR',
     perks: '혜택',
     profile: '프로필',
   },
   close: '닫기',
+  datePicker: {
+    dismissHint: '더블 탭하여 날짜 변경 없이 날짜 선택기를 닫기',
+  },
+  done: '완료',
   modal: {
     title: 'Esco Life',
     description:
       'Esco Life 비치 클럽에 오신 것을 환영합니다. 회원 전용 혜택을 누려보세요.',
+    closeLabel: '닫기',
+    closeHint: '이 모달을 닫습니다',
   },
   notFound: {
     title: '이 화면은 존재하지 않습니다.',

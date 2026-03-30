@@ -12,11 +12,19 @@ const common = {
     min: 'Must be at least {{min}}.',
     max: 'Must be at most {{max}}.',
     maxCharacters: 'Must be at most {{count}} characters.',
+    profileNameMin: 'Name must be at least 2 characters.',
+    profileNameMax: 'Name must be at most 60 characters.',
+    profileBioMax: 'Bio must be at most 160 characters.',
     commentMax: 'Comment must be at most 500 characters.',
     invalidDate: 'Please enter a valid date in YYYY-MM-DD format.',
     invalidCode: 'Please enter a 6-digit verification code.',
+    loyaltyManagerPin:
+      'Please enter a valid manager PIN to approve this amount.',
+    loyaltyMinimumSpend:
+      'This bill amount is below the minimum cashback threshold.',
   },
   back: 'Back',
+  backHint: 'Returns to the previous screen',
   rateUs: {
     title: 'Rate Your Experience',
     howWasVisit: 'How was your visit?',
@@ -39,6 +47,11 @@ const common = {
     guest: 'Guest',
     subtitle: 'Your reservation has been confirmed.',
     title: "You're all set, {{name}}!",
+  },
+  appError: {
+    title: 'We hit an unexpected issue',
+    description:
+      'Please reopen the app or try again in a moment. Our team has been notified.',
   },
   menu: 'Menu',
   privateEvent: {
@@ -84,14 +97,22 @@ const common = {
   tabs: {
     home: 'Home',
     events: 'Events',
+    qr: 'QR',
     perks: 'Perks',
     profile: 'Profile',
   },
   close: 'Close',
+  datePicker: {
+    dismissHint:
+      'Double tap to close the date picker without changing the date',
+  },
+  done: 'Done',
   modal: {
     title: 'Esco Life',
     description:
       'Welcome to Esco Life Beach Club. Enjoy exclusive member benefits.',
+    closeLabel: 'Close',
+    closeHint: 'Closes this modal',
   },
   notFound: {
     title: "This screen doesn't exist.",

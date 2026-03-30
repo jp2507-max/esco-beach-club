@@ -1,0 +1,83 @@
+import { useRouter } from 'expo-router';
+import React from 'react';
+import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { useMemberSummary } from '@/providers/DataProvider';
+import { MemberCard } from '@/src/components/ui';
+import { getRewardTierLabelKey } from '@/src/lib/loyalty';
+import { Pressable, ScrollView, Text, View } from '@/src/tw';
+
+export default function QrTabScreen(): React.JSX.Element {
+  const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const { t } = useTranslation('profile');
+  const { t: tHome } = useTranslation('home');
+  const memberSummary = useMemberSummary();
+  const memberId = memberSummary.memberId;
+  const memberName = memberSummary.fullName || t('guest');
+  const tierLabel = t(
+    `tier.${getRewardTierLabelKey(memberSummary.lifetimeTierKey)}`
+  );
+
+  function handleOpenStaffRoute(): void {
+    router.push('/staff' as never);
+  }
+
+  return (
+    <View
+      className="flex-1 bg-background dark:bg-dark-bg"
+      style={{
+        paddingTop: insets.top,
+      }}
+    >
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerClassName="px-5 pb-8 pt-6"
+        showsVerticalScrollIndicator={false}
+      >
+        <View className="mb-4 items-center">
+          <Text className="text-[11px] font-semibold uppercase tracking-[2.5px] text-text-secondary dark:text-text-secondary-dark">
+            {t('accessPass')}
+          </Text>
+          <Text className="mt-2 text-center text-2xl font-extrabold text-text dark:text-text-primary-dark">
+            {t('scanAtTable')}
+          </Text>
+        </View>
+
+        <View className="rounded-3xl border border-border bg-white p-6 dark:border-dark-border dark:bg-dark-bg-card">
+          <MemberCard
+            className="min-h-[300px]"
+            copy={{
+              balanceLabel: tHome('cashbackBalance'),
+              balanceSuffix: tHome('cashbackSuffix'),
+              brandLabel: tHome('brandMark'),
+              emptyQrLabel: t('staff.memberNotFound'),
+              memberNameLabel: tHome('memberName'),
+            }}
+            cashbackPoints={memberSummary.cashbackBalancePoints}
+            memberId={memberId}
+            memberName={memberName}
+            tierProgressPercent={memberSummary.tierProgressPercent}
+            tierLabel={tierLabel}
+            variant="full"
+          />
+
+          <Text className="mb-1 mt-5 text-center text-base font-bold text-text dark:text-text-primary-dark">
+            {t('scanAtTable')}
+          </Text>
+          <Pressable
+            accessibilityRole="button"
+            className="items-center"
+            onLongPress={handleOpenStaffRoute}
+            testID="member-qr-hidden-staff-entry"
+          >
+            <Text className="text-[13px] font-medium text-text-secondary dark:text-text-secondary-dark">
+              {t('refPrefix', { memberId })}
+            </Text>
+          </Pressable>
+        </View>
+      </ScrollView>
+    </View>
+  );
+}

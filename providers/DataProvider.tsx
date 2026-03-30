@@ -2,20 +2,57 @@ import React, {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
+  useState,
 } from 'react';
 
-import type { Event, NewsItem, Partner, Profile, Referral } from '@/lib/types';
+import { ensureProfile, removeSavedEvent, saveEvent } from '@/lib/api';
+import type {
+  BookingOccasionOption,
+  BookingTimeSlotOption,
+  Event,
+  MemberOffer,
+  MenuCategoryContent,
+  MenuItemContent,
+  NewsItem,
+  Partner,
+  PartnerRedemption,
+  PrivateEventTypeOption,
+  Profile,
+  Referral,
+  SavedEvent,
+  StaffAccess,
+} from '@/lib/types';
+import { rewardTierKeys } from '@/lib/types';
 import { useAuth } from '@/providers/AuthProvider';
 import { db } from '@/src/lib/instant';
 import {
+  getActiveTierProgressPoints,
+  getNextRewardTierKey,
+  getTierProgressPercent,
+  hasTierUpgradePath,
+  isManagerRole,
+  isStaffRole,
+} from '@/src/lib/loyalty';
+import { captureHandledError } from '@/src/lib/monitoring';
+import {
   type InstantRecord,
+  mapBookingOccasion,
+  mapBookingTimeSlot,
   mapEvent,
+  mapMemberOffer,
+  mapMenuCategory,
+  mapMenuItem,
   mapNewsItem,
   mapPartner,
+  mapPartnerRedemption,
+  mapPrivateEventType,
   mapProfile,
   mapReferral,
+  mapSavedEvent,
+  mapStaffAccess,
 } from '@/src/lib/mappers';
 
 type ProfileData = {
@@ -40,21 +77,97 @@ type PartnersData = {
   partnersLoading: boolean;
 };
 
+type PartnerRedemptionsData = {
+  partnerRedemptions: PartnerRedemption[];
+  partnerRedemptionsLoading: boolean;
+};
+
 type ReferralsData = {
   referrals: Referral[];
   referralsLoading: boolean;
+};
+
+type SavedEventsData = {
+  isEventSaved: (eventId: string) => boolean;
+  savedEvents: SavedEvent[];
+  savedEventsList: Event[];
+  savedEventsLoading: boolean;
+  toggleSavedEvent: (eventId: string) => Promise<void>;
+};
+
+type BookingContentData = {
+  bookingContentLoading: boolean;
+  bookingOccasions: BookingOccasionOption[];
+  bookingTimeSlots: BookingTimeSlotOption[];
+  privateEventTypes: PrivateEventTypeOption[];
+};
+
+type MemberOffersData = {
+  memberOffers: MemberOffer[];
+  memberOffersLoading: boolean;
+  welcomeOffer: MemberOffer | null;
+};
+
+type MenuContentData = {
+  menuCategories: MenuCategoryContent[];
+  menuContentLoading: boolean;
+  menuItems: MenuItemContent[];
+};
+
+type StaffAccessData = {
+  isManagerUser: boolean;
+  isStaffUser: boolean;
+  staffAccess: StaffAccess | null;
+  staffAccessLoading: boolean;
+};
+
+export type MemberSummary = {
+  activeTierProgressPoints: number;
+  avatarUrl: string | null;
+  cashbackBalancePoints: number;
+  cashbackLifetimePoints: number;
+  fullName: string;
+  hasProfile: boolean;
+  hasTierUpgradePath: boolean;
+  lifetimeTierKey: Profile['lifetime_tier_key'];
+  memberId: string;
+  memberSince: string | null;
+  nextTierKey: Profile['next_tier_key'];
+  nightsLeft: number;
+  saved: number;
+  savedEventsCount: number;
+  tierProgressExpiresAt: string | null;
+  tierProgressPercent: number;
+  tierProgressTargetPoints: number;
 };
 
 const ProfileContext = createContext<ProfileData | null>(null);
 const EventsContext = createContext<EventsData | null>(null);
 const NewsContext = createContext<NewsData | null>(null);
 const PartnersContext = createContext<PartnersData | null>(null);
+const PartnerRedemptionsContext = createContext<PartnerRedemptionsData | null>(
+  null
+);
 const ReferralsContext = createContext<ReferralsData | null>(null);
+const SavedEventsContext = createContext<SavedEventsData | null>(null);
+const BookingContentContext = createContext<BookingContentData | null>(null);
+const MemberOffersContext = createContext<MemberOffersData | null>(null);
+const MenuContentContext = createContext<MenuContentData | null>(null);
+const StaffAccessContext = createContext<StaffAccessData | null>(null);
 
 const EMPTY_EVENTS: Event[] = [];
 const EMPTY_NEWS: NewsItem[] = [];
 const EMPTY_PARTNERS: Partner[] = [];
+const EMPTY_PARTNER_REDEMPTIONS: PartnerRedemption[] = [];
 const EMPTY_REFERRALS: Referral[] = [];
+const EMPTY_SAVED_EVENTS: SavedEvent[] = [];
+const EMPTY_BOOKING_OCCASIONS: BookingOccasionOption[] = [];
+const EMPTY_BOOKING_TIME_SLOTS: BookingTimeSlotOption[] = [];
+const EMPTY_MEMBER_OFFERS: MemberOffer[] = [];
+const EMPTY_MENU_CATEGORIES: MenuCategoryContent[] = [];
+const EMPTY_MENU_ITEMS: MenuItemContent[] = [];
+const EMPTY_PRIVATE_EVENT_TYPES: PrivateEventTypeOption[] = [];
+const MAX_PROFILE_PROVISION_ATTEMPTS = 2;
 
 // Safe fallbacks returned during sign-out DataProvider teardown so consumers
 // never receive a thrown error during navigation transitions.
@@ -64,14 +177,73 @@ const FALLBACK_PROFILE: ProfileData = {
   profileLoading: false,
   userId: '',
 };
-const FALLBACK_EVENTS: EventsData = { events: EMPTY_EVENTS, eventsLoading: false };
+const FALLBACK_EVENTS: EventsData = {
+  events: EMPTY_EVENTS,
+  eventsLoading: false,
+};
 const FALLBACK_NEWS: NewsData = { news: EMPTY_NEWS, newsLoading: false };
-const FALLBACK_PARTNERS: PartnersData = { partners: EMPTY_PARTNERS, partnersLoading: false };
-const FALLBACK_REFERRALS: ReferralsData = { referrals: EMPTY_REFERRALS, referralsLoading: false };
+const FALLBACK_PARTNERS: PartnersData = {
+  partners: EMPTY_PARTNERS,
+  partnersLoading: false,
+};
+const FALLBACK_PARTNER_REDEMPTIONS: PartnerRedemptionsData = {
+  partnerRedemptions: EMPTY_PARTNER_REDEMPTIONS,
+  partnerRedemptionsLoading: false,
+};
+const FALLBACK_REFERRALS: ReferralsData = {
+  referrals: EMPTY_REFERRALS,
+  referralsLoading: false,
+};
+const FALLBACK_SAVED_EVENTS: SavedEventsData = {
+  isEventSaved: () => false,
+  savedEvents: EMPTY_SAVED_EVENTS,
+  savedEventsList: EMPTY_EVENTS,
+  savedEventsLoading: false,
+  toggleSavedEvent: async () => {},
+};
+const FALLBACK_BOOKING_CONTENT: BookingContentData = {
+  bookingContentLoading: false,
+  bookingOccasions: EMPTY_BOOKING_OCCASIONS,
+  bookingTimeSlots: EMPTY_BOOKING_TIME_SLOTS,
+  privateEventTypes: EMPTY_PRIVATE_EVENT_TYPES,
+};
+const FALLBACK_MEMBER_OFFERS: MemberOffersData = {
+  memberOffers: EMPTY_MEMBER_OFFERS,
+  memberOffersLoading: false,
+  welcomeOffer: null,
+};
+const FALLBACK_MENU_CONTENT: MenuContentData = {
+  menuCategories: EMPTY_MENU_CATEGORIES,
+  menuContentLoading: false,
+  menuItems: EMPTY_MENU_ITEMS,
+};
+const FALLBACK_STAFF_ACCESS: StaffAccessData = {
+  isManagerUser: false,
+  isStaffUser: false,
+  staffAccess: null,
+  staffAccessLoading: false,
+};
 
 type DataProviderProps = {
   children: React.ReactNode;
 };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function isInstantRecord(value: unknown): value is InstantRecord {
+  return isRecord(value) && typeof value.id === 'string';
+}
+
+function firstInstantRecord(value: unknown): InstantRecord | null {
+  if (Array.isArray(value)) {
+    const [first] = value;
+    return isInstantRecord(first) ? first : null;
+  }
+
+  return isInstantRecord(value) ? value : null;
+}
 
 function useRequiredContext<T>(
   context: React.Context<T | null>,
@@ -87,8 +259,10 @@ function useRequiredContext<T>(
 export function DataProvider({
   children,
 }: DataProviderProps): React.JSX.Element {
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const userId = user?.id ?? '';
+  const [isProvisioningProfile, setIsProvisioningProfile] =
+    useState<boolean>(false);
 
   const profileQuery = db.useQuery(
     userId
@@ -101,10 +275,71 @@ export function DataProvider({
         }
       : null
   );
+  const profileViaUserQuery = db.useQuery(
+    userId
+      ? {
+          $users: {
+            $: {
+              where: { id: userId },
+            },
+            profile: {},
+          },
+        }
+      : null
+  );
+  const savedEventsQuery = db.useQuery(
+    userId
+      ? {
+          saved_events: {
+            $: {
+              where: { 'owner.id': userId },
+            },
+          },
+        }
+      : null
+  );
 
   const eventsQuery = db.useQuery(userId ? { events: {} } : null);
   const newsQuery = db.useQuery(userId ? { news_items: {} } : null);
   const partnersQuery = db.useQuery(userId ? { partners: {} } : null);
+  const partnerRedemptionsQuery = db.useQuery(
+    userId
+      ? {
+          partner_redemptions: {
+            $: {
+              where: { 'owner.id': userId },
+              order: { created_at: 'desc' },
+            },
+          },
+        }
+      : null
+  );
+  const staffAccessQuery = db.useQuery(
+    userId
+      ? {
+          staff_access: {
+            $: {
+              where: { 'user.id': userId },
+            },
+            user: {},
+          },
+        }
+      : null
+  );
+  const bookingOccasionsQuery = db.useQuery(
+    userId ? { booking_occasions: {} } : null
+  );
+  const bookingTimeSlotsQuery = db.useQuery(
+    userId ? { booking_time_slots: {} } : null
+  );
+  const memberOffersQuery = db.useQuery(userId ? { member_offers: {} } : null);
+  const menuCategoriesQuery = db.useQuery(
+    userId ? { menu_categories: {} } : null
+  );
+  const menuItemsQuery = db.useQuery(userId ? { menu_items: {} } : null);
+  const privateEventTypesQuery = db.useQuery(
+    userId ? { private_event_types: {} } : null
+  );
   const referralsQuery = db.useQuery(
     userId
       ? {
@@ -120,11 +355,27 @@ export function DataProvider({
   const profile = useMemo(() => {
     if (!userId) return null;
 
-    const record = profileQuery.data?.profiles?.[0] as
+    const directRecord = firstInstantRecord(profileQuery.data?.profiles);
+    const userRecord = firstInstantRecord(profileViaUserQuery.data?.$users);
+    const linkedRecord = firstInstantRecord(
+      (userRecord as Record<string, unknown> | null)?.profile
+    );
+    const record = directRecord ?? linkedRecord;
+
+    return record ? mapProfile(record) : null;
+  }, [profileQuery.data, profileViaUserQuery.data, userId]);
+
+  const staffAccess = useMemo(() => {
+    if (!userId) return null;
+
+    const record = staffAccessQuery.data?.staff_access?.[0] as
       | InstantRecord
       | undefined;
-    return record ? mapProfile(record) : null;
-  }, [profileQuery.data, userId]);
+    if (!record) return null;
+
+    const mapped = mapStaffAccess(record);
+    return { ...mapped, user_id: mapped.user_id ?? userId };
+  }, [staffAccessQuery.data, userId]);
 
   const events = useMemo(() => {
     if (!userId) return EMPTY_EVENTS;
@@ -150,7 +401,163 @@ export function DataProvider({
     return records.map(mapReferral);
   }, [referralsQuery.data, userId]);
 
+  const partnerRedemptions = useMemo(() => {
+    if (!userId) return EMPTY_PARTNER_REDEMPTIONS;
+    const records = (partnerRedemptionsQuery.data?.partner_redemptions ??
+      []) as InstantRecord[];
+    return records.map(mapPartnerRedemption);
+  }, [partnerRedemptionsQuery.data, userId]);
+
+  const savedEvents = useMemo(() => {
+    if (!userId) return EMPTY_SAVED_EVENTS;
+    const records = (savedEventsQuery.data?.saved_events ??
+      []) as InstantRecord[];
+    return records.map(mapSavedEvent);
+  }, [savedEventsQuery.data, userId]);
+
+  const bookingOccasions = useMemo(() => {
+    if (!userId) return EMPTY_BOOKING_OCCASIONS;
+    const records = (bookingOccasionsQuery.data?.booking_occasions ??
+      []) as InstantRecord[];
+    return records
+      .map(mapBookingOccasion)
+      .filter((option) => option.is_active)
+      .sort((a, b) => a.sort_order - b.sort_order);
+  }, [bookingOccasionsQuery.data, userId]);
+
+  const bookingTimeSlots = useMemo(() => {
+    if (!userId) return EMPTY_BOOKING_TIME_SLOTS;
+    const records = (bookingTimeSlotsQuery.data?.booking_time_slots ??
+      []) as InstantRecord[];
+    return records
+      .map(mapBookingTimeSlot)
+      .sort((a, b) => a.sort_order - b.sort_order);
+  }, [bookingTimeSlotsQuery.data, userId]);
+
+  const memberOffers = useMemo(() => {
+    if (!userId) return EMPTY_MEMBER_OFFERS;
+    const records = (memberOffersQuery.data?.member_offers ??
+      []) as InstantRecord[];
+    return records
+      .map(mapMemberOffer)
+      .filter((offer) => offer.is_active)
+      .sort((a, b) => a.sort_order - b.sort_order);
+  }, [memberOffersQuery.data, userId]);
+
+  const menuCategories = useMemo(() => {
+    if (!userId) return EMPTY_MENU_CATEGORIES;
+    const records = (menuCategoriesQuery.data?.menu_categories ??
+      []) as InstantRecord[];
+    return records
+      .map(mapMenuCategory)
+      .filter((category) => category.is_active)
+      .sort((a, b) => a.sort_order - b.sort_order);
+  }, [menuCategoriesQuery.data, userId]);
+
+  const menuItems = useMemo(() => {
+    if (!userId) return EMPTY_MENU_ITEMS;
+    const records = (menuItemsQuery.data?.menu_items ?? []) as InstantRecord[];
+    return records
+      .map(mapMenuItem)
+      .filter((item) => item.is_active)
+      .sort((a, b) => a.sort_order - b.sort_order);
+  }, [menuItemsQuery.data, userId]);
+
+  const privateEventTypes = useMemo(() => {
+    if (!userId) return EMPTY_PRIVATE_EVENT_TYPES;
+    const records = (privateEventTypesQuery.data?.private_event_types ??
+      []) as InstantRecord[];
+    return records
+      .map(mapPrivateEventType)
+      .filter((option) => option.is_active)
+      .sort((a, b) => a.sort_order - b.sort_order);
+  }, [privateEventTypesQuery.data, userId]);
+
   const isDismissingRef = useRef(false);
+  const isTogglingSavedRef = useRef<Set<string>>(new Set<string>());
+  const pendingSavedToggleTimeoutsRef = useRef<
+    Map<string, ReturnType<typeof setTimeout>>
+  >(new Map());
+  const [pendingSavedToggles, setPendingSavedToggles] = useState<
+    Record<string, boolean>
+  >({});
+  const isProvisioningProfileRef = useRef(false);
+  const profileProvisionAttemptsRef = useRef<Map<string, number>>(new Map());
+
+  useEffect(() => {
+    if (isAuthLoading) {
+      return;
+    }
+
+    if (!userId) {
+      profileProvisionAttemptsRef.current.clear();
+      isProvisioningProfileRef.current = false;
+      setIsProvisioningProfile(false);
+      return;
+    }
+
+    if (profile) {
+      profileProvisionAttemptsRef.current.delete(userId);
+      return;
+    }
+
+    if (profileQuery.isLoading || profileViaUserQuery.isLoading) return;
+    if (isProvisioningProfileRef.current) return;
+
+    const attemptCount = profileProvisionAttemptsRef.current.get(userId) ?? 0;
+    if (attemptCount >= MAX_PROFILE_PROVISION_ATTEMPTS) {
+      return;
+    }
+
+    profileProvisionAttemptsRef.current.set(userId, attemptCount + 1);
+
+    isProvisioningProfileRef.current = true;
+    setIsProvisioningProfile(true);
+    let isMounted = true;
+
+    void ensureProfile({ email: user?.email ?? undefined, userId })
+      .then((nextProfile) => {
+        if (!isMounted) return;
+        if (nextProfile) {
+          profileProvisionAttemptsRef.current.delete(userId);
+        }
+      })
+      .catch((error: unknown) => {
+        if (!isMounted) return;
+        captureHandledError(error, {
+          extras: { userId },
+          tags: {
+            area: 'profile',
+            operation: 'ensure_profile',
+          },
+        });
+        console.error('[DataProvider] Failed to provision profile:', {
+          error,
+          isAuthLoading,
+          profileQueryLoading: profileQuery.isLoading,
+          profileViaUserQueryLoading: profileViaUserQuery.isLoading,
+          userId,
+        });
+      })
+      .finally(() => {
+        if (!isMounted) return;
+        isProvisioningProfileRef.current = false;
+        setIsProvisioningProfile(false);
+      });
+
+    return () => {
+      isMounted = false;
+      isProvisioningProfileRef.current = false;
+      setIsProvisioningProfile(false);
+    };
+  }, [
+    isAuthLoading,
+    profile,
+    profileQuery.isLoading,
+    profileViaUserQuery.isLoading,
+    user?.email,
+    userId,
+  ]);
 
   const dismissVoucher = useCallback((): void => {
     if (!profile || profile.has_seen_welcome_voucher) return;
@@ -164,6 +571,12 @@ export function DataProvider({
         })
       )
       .catch((error: unknown) => {
+        captureHandledError(error, {
+          tags: {
+            area: 'profile',
+            operation: 'dismiss_welcome_voucher',
+          },
+        });
         console.error(
           '[DataProvider] Failed to dismiss welcome voucher:',
           error
@@ -174,14 +587,161 @@ export function DataProvider({
       });
   }, [profile]);
 
+  const savedEventIdSet = useMemo(
+    () => new Set(savedEvents.map((savedEvent) => savedEvent.event_id)),
+    [savedEvents]
+  );
+
+  const isEventSaved = useCallback(
+    (eventId: string): boolean => {
+      if (eventId in pendingSavedToggles) {
+        return pendingSavedToggles[eventId];
+      }
+
+      return savedEventIdSet.has(eventId);
+    },
+    [pendingSavedToggles, savedEventIdSet]
+  );
+
+  const savedEventsList = useMemo(
+    () => events.filter((event) => savedEventIdSet.has(event.id)),
+    [events, savedEventIdSet]
+  );
+
+  const toggleSavedEvent = useCallback(
+    async (eventId: string): Promise<void> => {
+      if (!userId) return;
+      if (isTogglingSavedRef.current.has(eventId)) return;
+
+      const isCurrentlySaved = savedEvents.some(
+        (entry) => entry.event_id === eventId
+      );
+      const shouldBeSaved = !isCurrentlySaved;
+
+      const savedEvent = savedEvents.find(
+        (entry) => entry.event_id === eventId
+      );
+      isTogglingSavedRef.current.add(eventId);
+
+      const previousTimeout =
+        pendingSavedToggleTimeoutsRef.current.get(eventId);
+      if (previousTimeout != null) {
+        clearTimeout(previousTimeout);
+      }
+
+      setPendingSavedToggles((previous) => ({
+        ...previous,
+        [eventId]: shouldBeSaved,
+      }));
+
+      const timeoutId = setTimeout(() => {
+        pendingSavedToggleTimeoutsRef.current.delete(eventId);
+        setPendingSavedToggles((previous) => {
+          if (!(eventId in previous)) return previous;
+
+          const next = { ...previous };
+          delete next[eventId];
+          return next;
+        });
+        isTogglingSavedRef.current.delete(eventId);
+      }, 8000);
+
+      pendingSavedToggleTimeoutsRef.current.set(eventId, timeoutId);
+
+      try {
+        if (savedEvent) {
+          await removeSavedEvent(savedEvent.id);
+        } else {
+          await saveEvent(userId, eventId);
+        }
+      } catch (error: unknown) {
+        captureHandledError(error, {
+          extras: { eventId, userId },
+          tags: {
+            area: 'events',
+            operation: 'toggle_saved_event',
+          },
+        });
+        console.error('[DataProvider] Failed to toggle saved event:', error);
+        const timeout = pendingSavedToggleTimeoutsRef.current.get(eventId);
+        if (timeout != null) {
+          clearTimeout(timeout);
+        }
+
+        pendingSavedToggleTimeoutsRef.current.delete(eventId);
+        setPendingSavedToggles((previous) => {
+          if (!(eventId in previous)) return previous;
+
+          const next = { ...previous };
+          delete next[eventId];
+          return next;
+        });
+        isTogglingSavedRef.current.delete(eventId);
+      }
+    },
+    [savedEvents, userId]
+  );
+
+  useEffect(() => {
+    if (!userId) {
+      if (pendingSavedToggleTimeoutsRef.current.size > 0) {
+        pendingSavedToggleTimeoutsRef.current.forEach((timeoutId) => {
+          clearTimeout(timeoutId);
+        });
+        pendingSavedToggleTimeoutsRef.current.clear();
+      }
+      setPendingSavedToggles((previous) =>
+        Object.keys(previous).length === 0 ? previous : {}
+      );
+      if (isTogglingSavedRef.current.size > 0) {
+        isTogglingSavedRef.current.clear();
+      }
+      return;
+    }
+
+    Object.entries(pendingSavedToggles).forEach(([eventId, shouldBeSaved]) => {
+      const isNowSaved = savedEvents.some(
+        (savedEvent) => savedEvent.event_id === eventId
+      );
+
+      if (isNowSaved === shouldBeSaved) {
+        const timeout = pendingSavedToggleTimeoutsRef.current.get(eventId);
+        if (timeout != null) {
+          clearTimeout(timeout);
+        }
+
+        pendingSavedToggleTimeoutsRef.current.delete(eventId);
+        setPendingSavedToggles((previous) => {
+          if (!(eventId in previous)) return previous;
+
+          const next = { ...previous };
+          delete next[eventId];
+          return next;
+        });
+        isTogglingSavedRef.current.delete(eventId);
+      }
+    });
+  }, [pendingSavedToggles, savedEvents, userId]);
+
   const profileValue = useMemo(
     () => ({
       dismissVoucher,
       profile,
-      profileLoading: Boolean(userId) && profileQuery.isLoading,
+      profileLoading:
+        Boolean(userId) &&
+        (profileQuery.isLoading ||
+          profileViaUserQuery.isLoading ||
+          isProvisioningProfile),
       userId,
     }),
-    [dismissVoucher, profile, profileQuery.isLoading, userId]
+    [
+      dismissVoucher,
+      isProvisioningProfile,
+      profile,
+      profileQuery.isLoading,
+      profileViaUserQuery.isLoading,
+      userId,
+    ]
   );
 
   const eventsValue = useMemo(
@@ -216,14 +776,121 @@ export function DataProvider({
     [referrals, referralsQuery.isLoading, userId]
   );
 
+  const partnerRedemptionsValue = useMemo(
+    () => ({
+      partnerRedemptions,
+      partnerRedemptionsLoading:
+        Boolean(userId) && partnerRedemptionsQuery.isLoading,
+    }),
+    [partnerRedemptions, partnerRedemptionsQuery.isLoading, userId]
+  );
+
+  const savedEventsValue = useMemo(
+    () => ({
+      isEventSaved,
+      savedEvents,
+      savedEventsList,
+      savedEventsLoading:
+        Boolean(userId) &&
+        (savedEventsQuery.isLoading || eventsQuery.isLoading),
+      toggleSavedEvent,
+    }),
+    [
+      eventsQuery.isLoading,
+      isEventSaved,
+      savedEvents,
+      savedEventsList,
+      savedEventsQuery.isLoading,
+      toggleSavedEvent,
+      userId,
+    ]
+  );
+
+  const bookingContentValue = useMemo(
+    () => ({
+      bookingContentLoading:
+        Boolean(userId) &&
+        (bookingOccasionsQuery.isLoading ||
+          bookingTimeSlotsQuery.isLoading ||
+          privateEventTypesQuery.isLoading),
+      bookingOccasions,
+      bookingTimeSlots,
+      privateEventTypes,
+    }),
+    [
+      bookingOccasions,
+      bookingOccasionsQuery.isLoading,
+      bookingTimeSlots,
+      bookingTimeSlotsQuery.isLoading,
+      privateEventTypes,
+      privateEventTypesQuery.isLoading,
+      userId,
+    ]
+  );
+
+  const memberOffersValue = useMemo(
+    () => ({
+      memberOffers,
+      memberOffersLoading: Boolean(userId) && memberOffersQuery.isLoading,
+      welcomeOffer:
+        memberOffers.find((offer) => offer.kind === 'welcome_voucher') ??
+        memberOffers[0] ??
+        null,
+    }),
+    [memberOffers, memberOffersQuery.isLoading, userId]
+  );
+
+  const menuContentValue = useMemo(
+    () => ({
+      menuCategories,
+      menuContentLoading:
+        Boolean(userId) &&
+        (menuCategoriesQuery.isLoading || menuItemsQuery.isLoading),
+      menuItems,
+    }),
+    [
+      menuCategories,
+      menuCategoriesQuery.isLoading,
+      menuItems,
+      menuItemsQuery.isLoading,
+      userId,
+    ]
+  );
+
+  const staffAccessValue = useMemo(
+    () => ({
+      isManagerUser: Boolean(
+        staffAccess?.is_active && isManagerRole(staffAccess.role)
+      ),
+      isStaffUser: Boolean(
+        staffAccess?.is_active && isStaffRole(staffAccess.role)
+      ),
+      staffAccess,
+      staffAccessLoading: Boolean(userId) && staffAccessQuery.isLoading,
+    }),
+    [staffAccess, staffAccessQuery.isLoading, userId]
+  );
+
   return (
     <ProfileContext.Provider value={profileValue}>
       <EventsContext.Provider value={eventsValue}>
         <NewsContext.Provider value={newsValue}>
           <PartnersContext.Provider value={partnersValue}>
-            <ReferralsContext.Provider value={referralsValue}>
-              {children}
-            </ReferralsContext.Provider>
+            <PartnerRedemptionsContext.Provider value={partnerRedemptionsValue}>
+              <ReferralsContext.Provider value={referralsValue}>
+                <SavedEventsContext.Provider value={savedEventsValue}>
+                  <BookingContentContext.Provider value={bookingContentValue}>
+                    <MemberOffersContext.Provider value={memberOffersValue}>
+                      <MenuContentContext.Provider value={menuContentValue}>
+                        <StaffAccessContext.Provider value={staffAccessValue}>
+                          {children}
+                        </StaffAccessContext.Provider>
+                      </MenuContentContext.Provider>
+                    </MemberOffersContext.Provider>
+                  </BookingContentContext.Provider>
+                </SavedEventsContext.Provider>
+              </ReferralsContext.Provider>
+            </PartnerRedemptionsContext.Provider>
           </PartnersContext.Provider>
         </NewsContext.Provider>
       </EventsContext.Provider>
@@ -247,8 +914,35 @@ export function usePartnersData(): PartnersData {
   return useRequiredContext(PartnersContext, FALLBACK_PARTNERS);
 }
 
+export function usePartnerRedemptionsData(): PartnerRedemptionsData {
+  return useRequiredContext(
+    PartnerRedemptionsContext,
+    FALLBACK_PARTNER_REDEMPTIONS
+  );
+}
+
 export function useReferralsData(): ReferralsData {
   return useRequiredContext(ReferralsContext, FALLBACK_REFERRALS);
+}
+
+export function useSavedEventsData(): SavedEventsData {
+  return useRequiredContext(SavedEventsContext, FALLBACK_SAVED_EVENTS);
+}
+
+export function useBookingContentData(): BookingContentData {
+  return useRequiredContext(BookingContentContext, FALLBACK_BOOKING_CONTENT);
+}
+
+export function useMemberOffersData(): MemberOffersData {
+  return useRequiredContext(MemberOffersContext, FALLBACK_MEMBER_OFFERS);
+}
+
+export function useMenuContentData(): MenuContentData {
+  return useRequiredContext(MenuContentContext, FALLBACK_MENU_CONTENT);
+}
+
+export function useStaffAccessData(): StaffAccessData {
+  return useRequiredContext(StaffAccessContext, FALLBACK_STAFF_ACCESS);
 }
 
 export function useUserId(): string {
@@ -266,17 +960,38 @@ export function useData() {
   const eventsData = useEventsData();
   const newsData = useNewsData();
   const partnersData = usePartnersData();
+  const partnerRedemptionsData = usePartnerRedemptionsData();
   const referralsData = useReferralsData();
+  const savedEventsData = useSavedEventsData();
+  const bookingContentData = useBookingContentData();
+  const memberOffersData = useMemberOffersData();
+  const menuContentData = useMenuContentData();
 
   return useMemo(
     () => ({
+      ...bookingContentData,
       ...profileData,
       ...eventsData,
+      ...memberOffersData,
+      ...menuContentData,
       ...newsData,
       ...partnersData,
+      ...partnerRedemptionsData,
       ...referralsData,
+      ...savedEventsData,
     }),
-    [eventsData, newsData, partnersData, profileData, referralsData]
+    [
+      bookingContentData,
+      eventsData,
+      memberOffersData,
+      menuContentData,
+      newsData,
+      partnersData,
+      partnerRedemptionsData,
+      profileData,
+      referralsData,
+      savedEventsData,
+    ]
   );
 }
 
@@ -321,4 +1036,47 @@ export function useReferralProgress() {
     [referrals]
   );
   return { current: completed, goal: 3 };
+}
+
+export function useSavedEventsCount(): number {
+  const { savedEvents } = useSavedEventsData();
+  return savedEvents.length;
+}
+
+export function useMemberSummary(): MemberSummary {
+  const { profile } = useProfileData();
+  const savedEventsCount = useSavedEventsCount();
+
+  return useMemo(() => {
+    const lifetimeTierKey =
+      profile?.lifetime_tier_key ?? rewardTierKeys.escoLifeMember;
+    const nextTierKey = profile?.next_tier_key ?? getNextRewardTierKey(lifetimeTierKey);
+    const tierProgressTargetPoints = profile?.tier_progress_target_points ?? 0;
+    const activeTierProgressPoints = profile
+      ? getActiveTierProgressPoints(profile)
+      : 0;
+    const tierProgressPercent = profile ? getTierProgressPercent(profile) : 0;
+    const canUpgrade =
+      hasTierUpgradePath(lifetimeTierKey) && nextTierKey !== null && tierProgressTargetPoints > 0;
+
+    return {
+      activeTierProgressPoints,
+      avatarUrl: profile?.avatar_url ?? null,
+      cashbackBalancePoints: profile?.cashback_points_balance ?? 0,
+      cashbackLifetimePoints: profile?.cashback_points_lifetime_earned ?? 0,
+      fullName: profile?.full_name ?? '',
+      hasProfile: Boolean(profile),
+      hasTierUpgradePath: canUpgrade,
+      lifetimeTierKey,
+      memberId: profile?.member_id ?? '',
+      memberSince: profile?.member_since ?? null,
+      nextTierKey,
+      nightsLeft: profile?.nights_left ?? 0,
+      saved: profile?.saved ?? 0,
+      savedEventsCount,
+      tierProgressExpiresAt: profile?.tier_progress_expires_at ?? null,
+      tierProgressPercent,
+      tierProgressTargetPoints,
+    };
+  }, [profile, savedEventsCount]);
 }

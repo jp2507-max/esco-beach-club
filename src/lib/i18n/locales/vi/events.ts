@@ -8,6 +8,14 @@ const events = {
     wellness: 'Chăm sóc sức khỏe',
     dining: 'Ẩm thực',
   },
+  weekStrip: {
+    title: 'Duyệt theo ngày',
+    selectDay: 'Hiển thị sự kiện cho {{day}}',
+    selectDayHint: 'Lọc sự kiện theo ngày đã chọn',
+  },
+  loading: 'Đang tải sự kiện...',
+  noEventsForDayTitle: 'Không có sự kiện trong ngày này',
+  noEventsForDayDescription: 'Hãy thử ngày khác, danh mục khác hoặc tìm kiếm.',
   featuredPrice: 'GIÁ',
   privatePartyTitle: 'Lên kế hoạch tiệc riêng?',
   privatePartyDescription:
@@ -31,6 +39,13 @@ const events = {
   shareEvent: 'Chia sẻ sự kiện',
   likeEvent: 'Thích sự kiện',
   unlikeEvent: 'Bỏ thích sự kiện',
+  saveEvent: 'Lưu sự kiện',
+  removeSavedEvent: 'Xóa sự kiện đã lưu',
+  shareEventHint: 'Mở bảng chia sẻ',
+  openEventPrice: 'Mở sự kiện {{title}}',
+  openEventPriceHint: 'Mở chi tiết sự kiện này',
+  likeEventHint: 'Thêm sự kiện này vào danh sách đã lưu của bạn',
+  unlikeEventHint: 'Xóa sự kiện này khỏi danh sách đã lưu của bạn',
   shareMessage: 'Xem {{title}} tại {{location}} vào {{date}} lúc {{time}}!',
   priceTiers: {
     contactForPricing: 'Liên hệ để biết giá',

@@ -2,14 +2,26 @@
 export const AUTH_ERROR_KEYS = [
   'emailRequired',
   'emailAndCodeRequired',
+  'signupConsentRequired',
+  'appleAuthUnavailable',
+  'appleIdTokenMissing',
+  'googleAuthNotConfigured',
+  'googleOauthClientNotConfigured',
+  'googleIdTokenMissing',
+  'googlePlayServicesUnavailable',
+  'providerSignInCanceled',
+  'providerSignInInProgress',
   'unableToSendCode',
+  'unableToSignInWithApple',
+  'unableToSignInWithGoogle',
   'unableToVerifyCode',
   'unableToSignOut',
+  'genericError',
 ] as const;
 
 export type AuthErrorKey = (typeof AUTH_ERROR_KEYS)[number];
 const AUTH_ERROR_KEY_SET: ReadonlySet<string> = new Set(AUTH_ERROR_KEYS);
 
-export function isAuthErrorKey(message: string): message is AuthErrorKey {
-  return AUTH_ERROR_KEY_SET.has(message);
+export function isAuthErrorKey(message: unknown): message is AuthErrorKey {
+  return typeof message === 'string' && AUTH_ERROR_KEY_SET.has(message);
 }

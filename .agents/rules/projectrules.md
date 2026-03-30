@@ -8,9 +8,12 @@ You are an expert in TypeScript, React Native, Expo, and Mobile UI development w
 
 Every time you choose to apply a rule(s), explicitly state the rule(s) in the output. You can abbreviate the rule description to a single word or phrase.
 
-## Project Context
+## Rule Ownership
 
-Esco Beach Club — a members-only lifestyle app for curated events, partner perks, and loyalty rewards. Fresh codebase (not the old Obytes-starter project).
+- `product.md` owns product positioning, member experience, and feature intent
+- `styling-guidelines.md` owns Reanimated, worklets, gestures, motion tokens, and Reduced Motion behavior
+- `Uniwind-styling.md` owns Uniwind, theming, wrapper imports, token usage, and `className` rules
+- This file owns repo-wide engineering defaults and implementation conventions
 
 ## Code Style and Structure
 
@@ -92,7 +95,6 @@ npx instant-cli@latest init           # Scaffold instant.schema.ts + instant.per
 
 - Enabled in `babel.config.js` (`babel-plugin-react-compiler`) and `app.json` (`experiments.reactCompiler: true`).
 - ESLint plugin `eslint-plugin-react-compiler` enforces compiler-safe patterns.
-- For Reanimated shared values with React Compiler: use `.get()/.set()` methods instead of `.value` property for React Compiler compatibility.
 
 ## Naming Conventions
 
@@ -125,21 +127,13 @@ npx instant-cli@latest init           # Scaffold instant.schema.ts + instant.per
 ## UI and Styling
 
 - Use Uniwind for styling (CSS-first config in `global.css`, no `tailwind.config.js`)
-- Prefer wrappers for className-based UI: `@/src/tw` (View, Text, Pressable, etc.), `@/src/tw/image` (Image), and `@/src/tw/animated` (Animated.View)
-- `react-native` direct imports are allowed for APIs not wrapped in `@/src/tw` (hooks, platform APIs, Modal, type imports)
-- For conditional class composition, use `cn` (tailwind-merge + clsx) in reusable components
-- Avoid web-only utilities unless intentionally targeting web (`hover:*`, `before:*`, `after:*`, `print:*`, `float-*`)
-- Remember style specificity: inline `style` overrides `className`; avoid mixing both for the same property unless intentional
-- Use `useColorScheme` from `react-native`
+- Follow `Uniwind-styling.md` for theme tokens, wrapper imports, `className` stability, and `cn` forwarding
+- Follow `styling-guidelines.md` for Reanimated, gestures, worklets, and motion behavior
 - Use built-in UI components from `@/src/components/ui`
 - Use native iOS/Android presentation APIs (formSheet, modal) instead of JS bottom-sheet libraries
-- Use `Image` from `@/src/tw/image` for all image rendering (CSS-wrapped expo-image)
 - Use `lucide-react-native` for icons
 - Ensure high accessibility (a11y) standards using ARIA roles and native accessibility props
-- Leverage react-native-reanimated and react-native-gesture-handler for performant animations and gestures
 - Avoid unnecessary re-renders by memoizing components and using useMemo and useCallback hooks appropriately
-- Color tokens defined in `global.css` `@theme` block; JS mirror in `constants/colors.ts`
-- Use explicit `dark:` pairs (e.g., `bg-background dark:bg-dark-bg`) for all themed elements (variable auto-switching is not supported)
 
 ## Error Handling
 
@@ -151,13 +145,6 @@ npx instant-cli@latest init           # Scaffold instant.schema.ts + instant.per
 - Sentry is initialized in `app/_layout.tsx` and wraps the root layout via `Sentry.wrap()`.
 - The DSN must come from env (`EXPO_PUBLIC_SENTRY_DSN`) — do not hardcode it.
 - Privacy-first: keep `sendDefaultPii` disabled unless we have an explicit, user-facing opt-in.
-
-## Testing
-
-- Write unit tests using Jest and React Native Testing Library (test infra not yet installed — will be set up when needed)
-- Write unit tests for utilities and complex components
-- The test file should be named like the component file but with the .test.tsx extension (e.g., component-name.test.tsx)
-- Do not write unit tests for simple components that only show data
 
 ## Git
 

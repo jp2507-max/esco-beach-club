@@ -13,7 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/providers/AuthProvider';
-import { ErrorBanner } from '@/src/components/ui';
+import { ErrorBanner, SocialAuthButtons } from '@/src/components/ui';
 import { motion } from '@/src/lib/animations/motion';
 import { useEmailCodeAuthFlow } from '@/src/lib/auth/use-email-code-auth-flow';
 import { isAuthErrorKey } from '@/src/lib/auth-errors';
@@ -38,6 +38,12 @@ export default function LoginScreen(): React.JSX.Element {
   const router = useRouter();
   const { t } = useTranslation('auth');
   const {
+    appleSignInError,
+    appleSignInLoading,
+    googleSignInError,
+    googleSignInLoading,
+    signInWithApple,
+    signInWithGoogle,
     sendCode,
     sendCodeError,
     sendCodeLoading,
@@ -65,6 +71,10 @@ export default function LoginScreen(): React.JSX.Element {
     onCodeSubmit,
     handleUseDifferentEmail,
   } = flow;
+
+  const isAuthBusy =
+    primaryLoading || appleSignInLoading || googleSignInLoading;
+
   const buttonScale = useSharedValue(1);
 
   const buttonStyle = useAnimatedStyle(() => ({
@@ -79,16 +89,59 @@ export default function LoginScreen(): React.JSX.Element {
     buttonScale.set(withSpring(1, motion.spring.snappy));
   }
 
-  const resolvedErrorMessage = visibleError
-    ? isAuthErrorKey(visibleError.message)
-      ? t(visibleError.message)
-      : visibleError.message
-    : null;
+  function handleApplePress(): void {
+    if (isAuthBusy) return;
+    void signInWithApple().catch(() => undefined);
+  }
+
+  function handleGooglePress(): void {
+    if (isAuthBusy) return;
+    void signInWithGoogle().catch(() => undefined);
+  }
+
+  const socialError = appleSignInError ?? googleSignInError;
+  const resolvedError = socialError ?? visibleError;
+
+  const unrecognizedErrorMessage = React.useMemo(() => {
+    if (!resolvedError) return null;
+    const message = resolvedError.message;
+    return isAuthErrorKey(message) ? null : message;
+  }, [resolvedError]);
+
+  const lastLoggedUnrecognizedErrorRef = React.useRef<string | null>(null);
+
+  React.useEffect(() => {
+    if (!unrecognizedErrorMessage) {
+      lastLoggedUnrecognizedErrorRef.current = null;
+      return;
+    }
+
+    if (lastLoggedUnrecognizedErrorRef.current === unrecognizedErrorMessage)
+      return;
+
+    console.error(
+      '[AuthError] Unrecognized message:',
+      unrecognizedErrorMessage
+    );
+    lastLoggedUnrecognizedErrorRef.current = unrecognizedErrorMessage;
+  }, [unrecognizedErrorMessage]);
+
+  const resolvedErrorMessage = React.useMemo(() => {
+    if (!resolvedError) return null;
+    const message = resolvedError.message;
+    if (isAuthErrorKey(message)) return t(message);
+
+    return t('genericError');
+  }, [resolvedError, t]);
 
   return (
     <View className="flex-1">
       <LinearGradient
-        colors={[Colors.secondary, '#00796B', '#004D40']}
+        colors={[
+          Colors.secondary,
+          Colors.secondaryDark,
+          Colors.secondaryDeeper,
+        ]}
         end={{ x: 1, y: 1 }}
         start={{ x: 0, y: 0 }}
         style={{ bottom: 0, left: 0, position: 'absolute', right: 0, top: 0 }}
@@ -136,19 +189,30 @@ export default function LoginScreen(): React.JSX.Element {
 
             {isCodeStep ? (
               <ControlledTextInput<VerifyCodeFormValues>
+                key="login-code-input"
+                autoFocus
                 autoCapitalize="none"
-                autoComplete="one-time-code"
+                autoComplete={
+                  Platform.OS === 'android' ? 'sms-otp' : 'one-time-code'
+                }
+                autoCorrect={false}
                 control={codeControl}
                 icon={({ color, size }) => (
                   <ShieldCheck color={color} size={size} />
                 )}
-                keyboardType="number-pad"
+                keyboardType={Platform.OS === 'ios' ? 'number-pad' : 'numeric'}
+                maxLength={6}
                 name="code"
                 placeholder={t('codePlaceholder')}
+                returnKeyType="done"
                 testID="login-code"
+                textContentType={
+                  Platform.OS === 'ios' ? 'oneTimeCode' : undefined
+                }
               />
             ) : (
               <ControlledTextInput<EmailFormValues>
+                key="login-email-input"
                 autoCapitalize="none"
                 autoComplete="email"
                 control={control}
@@ -164,14 +228,14 @@ export default function LoginScreen(): React.JSX.Element {
               <Pressable
                 accessibilityRole="button"
                 className="mt-1 overflow-hidden rounded-2xl"
-                disabled={primaryLoading}
+                disabled={isAuthBusy}
                 onPress={isCodeStep ? onCodeSubmit : onEmailSubmit}
                 onPressIn={handlePressIn}
                 onPressOut={handlePressOut}
                 testID="login-submit"
               >
                 <LinearGradient
-                  colors={[Colors.primary, '#C2185B']}
+                  colors={[Colors.primary, Colors.primaryDark]}
                   end={{ x: 1, y: 0 }}
                   start={{ x: 0, y: 0 }}
                   style={{
@@ -181,8 +245,8 @@ export default function LoginScreen(): React.JSX.Element {
                     justifyContent: 'center',
                   }}
                 >
-                  {primaryLoading ? (
-                    <ActivityIndicator color="#fff" />
+                  {isAuthBusy ? (
+                    <ActivityIndicator color={Colors.white} />
                   ) : (
                     <Text className="text-base font-bold tracking-[0.5px] text-white">
                       {isCodeStep
@@ -210,6 +274,16 @@ export default function LoginScreen(): React.JSX.Element {
               </Pressable>
             ) : null}
 
+            {!isCodeStep ? (
+              <SocialAuthButtons
+                appleLoading={appleSignInLoading}
+                disabled={isAuthBusy}
+                googleLoading={googleSignInLoading}
+                onApplePress={handleApplePress}
+                onGooglePress={handleGooglePress}
+              />
+            ) : null}
+
             <View className="my-5 flex-row items-center">
               <View className="h-px flex-1 bg-border dark:bg-dark-border" />
               <Text className="mx-3 text-[13px] text-text-muted dark:text-text-muted-dark">
@@ -221,7 +295,7 @@ export default function LoginScreen(): React.JSX.Element {
             <Pressable
               accessibilityRole="button"
               className="items-center"
-              onPress={() => router.push('/signup')}
+              onPress={() => router.push('/onboarding-welcome')}
               testID="login-go-signup"
             >
               <Text className="text-sm text-text-secondary dark:text-text-secondary-dark">

@@ -8,12 +8,8 @@ alwaysApply: true
 
 - Keep `className` **stable**. Static styles in `className`, animated/gesture styles via Reanimated `style`.
 - Prefer explicit `dark:` pairs (e.g., `bg-background dark:bg-dark-bg`) for all themed elements, as CSS variables do not auto-switch modes.
-
 - Never toggle Tailwind classes per frame; derive animation values in worklets.
-- Always respect Reduced Motion:
-  - Detect system `prefers-reduced-motion` and disable or simplify non-essential animations/gestures
-  - Use `ReduceMotion.System` in all Reanimated worklets and animated styles
-  - Verify smooth transitions with Expo Dev Menu FPS monitor
+- Follow `styling-guidelines.mdc` for Reduced Motion and animation runtime behavior.
 - Class order: layout → flex → spacing → size → border → bg → text → effects → dark.
 - Custom components must forward/merge `className` via `cn` (tailwind-merge).
 
@@ -93,10 +89,8 @@ function Card({ className, ...props }: { className?: string }) {
 
 ---
 
-## Animation & Motion Guidance
+## Motion Boundary
 
-- Tailwind/Uniwind remain for **static layouts**; drive motion with Reanimated styles (`style={animatedStyle}`) for transforms/opacity. Keep `className` stable and inject dynamic values through `useAnimatedStyle`, `Animated.View`, or gesture worklets.
-- Prefer the shared motion tokens in `src/lib/animations/motion.ts` (`motion.dur`, `motion.ease`, `motion.spring`, `withRM`, `rmTiming`) when configuring timing/spring values so duration semantics (xs/sm/md/lg) and reduced-motion handling stay consistent.
-- Use layout animation builders (`withRM`, `FadeIn`, `LinearTransition`, etc.) for mount/unmount changes and always cancel long-lived animations (`cancelAnimation(sharedValue)`) during cleanup effects.
-- When composing shared transitions, use `sharedTransitionTag` prefixes scoped by feature (e.g., `feed.post.image`, `settings.avatar`) so hooks remain discoverable across screens. See `src/lib/animations/shared.ts` for the `sharedTag()` helper.
-- State-driven animations should leverage `useSharedValue`, `useAnimatedStyle`, and helpers such as `interpolateColor` to interpolate between definitions instead of toggling classes; keep per-frame math inside worklets and only schedule JS side effects via `scheduleOnRN` (haptics, analytics, logging).
+- Uniwind owns static layout and theme styling.
+- `styling-guidelines.mdc` owns animated styles, gestures, worklets, motion tokens, shared transitions, and cleanup rules.
+- Keep `className` stable and pass dynamic transforms, opacity, and interpolated values through Reanimated `style`.

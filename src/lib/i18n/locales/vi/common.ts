@@ -12,11 +12,18 @@ const common = {
     min: 'Phải có ít nhất {{min}}.',
     max: 'Không được vượt quá {{max}}.',
     maxCharacters: 'Tối đa {{count}} ký tự.',
+    profileNameMin: 'Tên phải có ít nhất 2 ký tự.',
+    profileNameMax: 'Tên tối đa 60 ký tự.',
+    profileBioMax: 'Tiểu sử tối đa 160 ký tự.',
     commentMax: 'Nhận xét tối đa 500 ký tự.',
     invalidDate: 'Vui lòng nhập ngày hợp lệ theo định dạng YYYY-MM-DD.',
     invalidCode: 'Vui lòng nhập mã xác minh 6 chữ số.',
+    loyaltyManagerPin:
+      'Vui lòng nhập mã PIN quản lý hợp lệ để phê duyệt số tiền này.',
+    loyaltyMinimumSpend: 'Hóa đơn này chưa đạt ngưỡng cashback tối thiểu.',
   },
   back: 'Quay lại',
+  backHint: 'Quay về màn hình trước',
   rateUs: {
     title: 'Đánh giá trải nghiệm của bạn',
     howWasVisit: 'Chuyến thăm của bạn thế nào?',
@@ -39,6 +46,11 @@ const common = {
     guest: 'Khách',
     subtitle: 'Đặt chỗ của bạn đã được xác nhận.',
     title: 'Mọi thứ đã sẵn sàng, {{name}}!',
+  },
+  appError: {
+    title: 'Đã xảy ra sự cố ngoài dự kiến',
+    description:
+      'Vui lòng mở lại ứng dụng hoặc thử lại sau ít phút. Đội ngũ của chúng tôi đã được thông báo.',
   },
   menu: 'Thực đơn',
   privateEvent: {
@@ -83,14 +95,21 @@ const common = {
   tabs: {
     home: 'Trang chủ',
     events: 'Sự kiện',
+    qr: 'QR',
     perks: 'Ưu đãi',
     profile: 'Hồ sơ',
   },
   close: 'Đóng',
+  datePicker: {
+    dismissHint: 'Nhấn đúp để đóng bộ chọn ngày mà không thay đổi ngày',
+  },
+  done: 'Xong',
   modal: {
     title: 'Esco Life',
     description:
       'Chào mừng đến Esco Life Beach Club. Tận hưởng các ưu đãi dành riêng cho thành viên.',
+    closeLabel: 'Đóng',
+    closeHint: 'Đóng hộp thoại này',
   },
   notFound: {
     title: 'Màn hình này không tồn tại.',

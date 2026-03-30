@@ -1,7 +1,10 @@
 export const Colors = {
   primary: '#E91E63',
   primaryBright: '#FF4F8B',
+  primaryDark: '#C2185B',
   secondary: '#009688',
+  secondaryDark: '#00796B',
+  secondaryDeeper: '#004D40',
   background: '#FFFDF5',
   darkBg: '#0F172A',
   surface: '#FFFFFF',
@@ -29,12 +32,32 @@ export const Colors = {
   sandDark: '#E8E0CC',
   success: '#4CAF50',
   gold: '#C8A24D',
+  primaryFixed: '#FCE4EC',
+  secondaryFixed: '#B2DFDB',
+  surfaceContainerLow: '#FAF8F0',
+  gradientPrimary: ['#BC004B', '#C00053', '#A5004B'],
+  vipAccent: '#FF7043',
   warning: '#FF9800',
   warningDark: '#F59E0B',
   danger: '#EF5350',
   errorDark: '#F87171',
   white: '#FFFFFF',
   black: '#000000',
+  overlayTintDark: 'rgba(0,0,0,0.18)',
+  overlayTintLight: 'rgba(255,255,255,0.15)',
+  /** Poster-style default avatar illustration (no semantic theme mapping). */
+  avatarFallback: {
+    base: '#f3b68e',
+    gradient: ['#f17963', '#f9b36b', '#8ee5e0'] as const,
+    highlight: 'rgba(255, 255, 255, 0.25)',
+    discTeal: 'rgba(16, 184, 200, 0.2)',
+    wave: 'rgba(90, 211, 224, 0.75)',
+    chin: '#f4a77c',
+    cheek: '#f7c49b',
+    nose: '#d28a58',
+    faceLight: '#ffd9bc',
+    feature: 'rgba(143, 90, 54, 0.85)',
+  },
 } as const;
 
 export default Colors;

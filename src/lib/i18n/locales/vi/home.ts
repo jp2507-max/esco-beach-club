@@ -5,20 +5,29 @@ const home = {
     evening: 'Chào buổi tối',
   },
   guest: 'Khách',
-  member: 'Thành viên',
-  vipStatus: 'Trạng thái VIP',
+  tier: {
+    escoLifeMember: 'Thành viên Esco Life',
+  },
+  lifetimeTier: 'Hạng trọn đời',
   seeAll: 'Xem tất cả',
   quickActions: {
     bookTable: 'Đặt bàn',
     menu: 'Thực đơn',
   },
   latestNews: 'Tin mới nhất',
+  loading: 'Đang tải bảng tin thành viên...',
   welcomeBack: 'CHÀO MỪNG TRỞ LẠI',
+  welcomeBackName: 'Chào mừng trở lại, {{name}}',
   brandMark: 'ESCO LIFE',
-  pointsBalance: 'Điểm tích lũy',
-  pointsSuffix: '/ {{max}} điểm',
+  cashbackBalance: 'Số dư cashback',
+  cashbackSuffix: 'điểm cashback',
   memberName: 'TÊN THÀNH VIÊN',
   happeningThisWeek: 'Diễn ra tuần này',
+  emptyTitle: 'Bảng tin của bạn đang được chuẩn bị',
+  emptyDescription:
+    'Sự kiện mới và cập nhật từ câu lạc bộ sẽ xuất hiện tại đây khi sẵn sàng.',
+  openProfile: 'Mở hồ sơ',
+  openProfileHint: 'Mở màn hình hồ sơ của bạn',
 } as const;
 
 export default home;

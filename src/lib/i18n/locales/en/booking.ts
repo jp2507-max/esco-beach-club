@@ -7,11 +7,11 @@ const booking = {
   confirmReservation: 'Confirm Reservation',
   reserving: 'Reserving...',
   occasions: {
-    'Date Night': 'Date Night',
-    Birthday: 'Birthday',
-    Business: 'Business',
-    Casual: 'Casual',
-    Celebration: 'Celebration',
+    dateNight: 'Date Night',
+    birthday: 'Birthday',
+    business: 'Business',
+    casual: 'Casual',
+    celebration: 'Celebration',
   },
   days: {
     today: 'Today',
@@ -40,6 +40,9 @@ const booking = {
   guestsUnit: 'guests',
   full: 'Full',
   confirmationMessage: 'Your table is reserved for {{date}} at {{time}}.',
+  reservationFailedTitle: 'Reservation Failed',
+  reservationFailedMessage:
+    'Could not confirm your reservation right now. Please try again.',
 } as const;
 
 export default booking;

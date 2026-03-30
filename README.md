@@ -26,8 +26,11 @@ Create a `.env` file in the project root:
 ```env
 EXPO_PUBLIC_INSTANT_APP_ID=your_instant_app_id
 
-# Optional
+# Optional (runtime SDK)
 EXPO_PUBLIC_SENTRY_DSN=
+
+# Required for EAS Build/Update sourcemap upload (do not commit real value)
+SENTRY_AUTH_TOKEN=
 ```
 
 `EXPO_PUBLIC_INSTANT_APP_ID` is required at runtime by `src/lib/instant.ts`.
@@ -134,6 +137,28 @@ bunx eas-cli build --profile development --platform ios
 bunx eas-cli build --profile preview --platform android
 bunx eas-cli build --profile production --platform all
 ```
+
+### Sentry sourcemaps
+
+- Native release builds upload sourcemaps automatically when `SENTRY_AUTH_TOKEN` is available in your build environment.
+- For OTA updates, run sourcemap upload after `eas update`:
+
+```bash
+npx sentry-expo-upload-sourcemaps dist
+```
+
+### Sentry quick setup checklist
+
+1. Ensure `EXPO_PUBLIC_SENTRY_DSN` is set in local `.env` (runtime SDK init).
+2. Ensure `SENTRY_AUTH_TOKEN` is set in EAS project secrets for build/update environments.
+3. Build a release profile once (`preview` or `production`) and verify a test error appears symbolicated in Sentry.
+4. For OTA updates, run `eas update`, then upload update sourcemaps:
+
+```bash
+bun run sentry:upload-sourcemaps
+```
+
+5. Confirm Sentry event tags include update metadata (`expo-update-id`, `expo-update-group-id`, `expo-update-debug-url`).
 
 ## App identifiers
 

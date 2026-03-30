@@ -16,7 +16,11 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.escobeachclub.app",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Allow Esco Beach Club to access your location in the background so we can recognize when you arrive at the restaurant and unlock member-only venue offers.",
+        "NSLocationWhenInUseUsageDescription": "Allow Esco Beach Club to access your location so we can show nearby events, partner perks, and venue updates.",
+        "NSUserNotificationUsageDescription": "Allow Esco Beach Club to send booking updates, event reminders, and exclusive member offers.",
+        "UIDesignRequiresCompatibility": false
       }
     },
     "android": {
@@ -24,6 +28,12 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
+      "permissions": [
+        "ACCESS_BACKGROUND_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "POST_NOTIFICATIONS"
+      ],
       "package": "com.escobeachclub.app"
     },
     "web": {
@@ -32,7 +42,34 @@
     "plugins": [
       "expo-router",
       "expo-image",
-      "expo-localization"
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Esco Beach Club to access your camera so staff can scan member QR codes."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "isAndroidBackgroundLocationEnabled": true,
+          "isIosBackgroundLocationEnabled": true,
+          "locationAlwaysAndWhenInUsePermission": "Allow Esco Beach Club to access your location in the background so we can recognize when you arrive at the restaurant and unlock member-only venue offers.",
+          "locationWhenInUsePermission": "Allow Esco Beach Club to access your location so we can show nearby events, partner perks, and venue updates."
+        }
+      ],
+      "expo-notifications",
+      "expo-localization",
+      "expo-web-browser",
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "escolife",
+          "organization": "canabro"
+        }
+      ],
+      "@react-native-google-signin/google-signin",
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true,

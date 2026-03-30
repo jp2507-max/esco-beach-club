@@ -1,9 +1,12 @@
 import { X } from 'lucide-react-native';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Colors } from '@/constants/colors';
 import { cn } from '@/src/lib/utils';
-import { Pressable, Text, View } from '@/src/tw';
+import { Text, View } from '@/src/tw';
+
+import { HeaderGlassButton } from './header-glass-button';
 
 export type ModalHeaderTitleAlign = 'center' | 'left';
 export type ModalHeaderClosePosition = 'left' | 'right';
@@ -28,18 +31,20 @@ function CloseButton({
   onClose: () => void;
   testID?: string;
 }): React.JSX.Element {
+  const { t } = useTranslation('common');
   return (
-    <Pressable
-      accessibilityRole="button"
+    <HeaderGlassButton
+      accessibilityLabel={t('modal.closeLabel')}
+      accessibilityHint={t('modal.closeHint')}
       className={cn(
-        'size-10 items-center justify-center rounded-full bg-sand dark:bg-dark-bg-card',
+        'size-10 items-center justify-center rounded-full',
         className
       )}
       onPress={onClose}
       testID={testID}
     >
       <X color={Colors.text} size={20} />
-    </Pressable>
+    </HeaderGlassButton>
   );
 }
 

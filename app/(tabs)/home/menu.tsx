@@ -1,7 +1,14 @@
 import { FlashList, type ListRenderItemInfo } from '@shopify/flash-list';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { Colors } from '@/constants/colors';
+import { useMenuContentData } from '@/providers/DataProvider';
 import { Badge, Card } from '@/src/components/ui';
 import { useScreenEntry } from '@/src/lib/animations/use-screen-entry';
 import {
@@ -224,10 +231,45 @@ export default function MenuScreen(): React.JSX.Element {
   const tMenu = useMenuTranslation();
   const [activeCategory, setActiveCategory] = useState<string>('cocktails');
   const { contentStyle } = useScreenEntry();
+  const { menuCategories: menuCategoryRecords, menuItems: menuItemRecords } =
+    useMenuContentData();
+
+  const resolvedCategories = useMemo<MenuCategory[]>(() => {
+    if (menuCategoryRecords.length === 0 || menuItemRecords.length === 0) {
+      return MENU_DATA;
+    }
+
+    return menuCategoryRecords.map((category) => ({
+      key: category.key,
+      labelKey: category.label_key as MenuCategoryKey,
+      items: menuItemRecords
+        .filter((item) => item.category_key === category.key)
+        .map((item) => ({
+          descriptionKey: item.description_key as MenuItemKey,
+          id: item.id,
+          image: item.image,
+          nameKey: item.name_key as MenuItemKey,
+          price: item.price,
+          tagKey: item.tag_key as MenuItemKey | undefined,
+        })),
+    }));
+  }, [menuCategoryRecords, menuItemRecords]);
+
+  const activeCategoryRef = useRef(activeCategory);
+  activeCategoryRef.current = activeCategory;
+
+  useEffect(() => {
+    const categoryExists = resolvedCategories.some(
+      (category) => category.key === activeCategoryRef.current
+    );
+    if (resolvedCategories.length > 0 && !categoryExists) {
+      setActiveCategory(resolvedCategories[0].key);
+    }
+  }, [resolvedCategories]);
 
   const currentItems = useMemo(
-    () => MENU_DATA.find((c) => c.key === activeCategory)?.items ?? [],
-    [activeCategory]
+    () => resolvedCategories.find((c) => c.key === activeCategory)?.items ?? [],
+    [activeCategory, resolvedCategories]
   );
 
   const listContentContainerStyle = useMemo(
@@ -250,7 +292,7 @@ export default function MenuScreen(): React.JSX.Element {
           horizontal={true}
           showsHorizontalScrollIndicator={false}
         >
-          {MENU_DATA.map((cat) => {
+          {resolvedCategories.map((cat) => {
             const active = activeCategory === cat.key;
             return (
               <Pressable
