@@ -2,12 +2,14 @@ import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Platform } from 'react-native';
+import { useColorScheme } from 'react-native';
 
 import { Pressable, Text, View } from '@/src/tw';
 
 export default function ModalScreen(): React.JSX.Element {
   const { t } = useTranslation('common');
+  const isDark = useColorScheme() === 'dark';
+
   return (
     <View className="flex-1 items-center justify-center">
       <Pressable
@@ -32,7 +34,7 @@ export default function ModalScreen(): React.JSX.Element {
           </Text>
         </Pressable>
       </View>
-      <StatusBar style={Platform.OS === 'ios' ? 'light' : 'auto'} />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
     </View>
   );
 }

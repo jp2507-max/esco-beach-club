@@ -1,6 +1,7 @@
 import { X } from 'lucide-react-native';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { useColorScheme } from 'react-native';
 
 import { Colors } from '@/constants/colors';
 import { cn } from '@/src/lib/utils';
@@ -32,6 +33,7 @@ function CloseButton({
   testID?: string;
 }): React.JSX.Element {
   const { t } = useTranslation('common');
+  const isDark = useColorScheme() === 'dark';
   return (
     <HeaderGlassButton
       accessibilityLabel={t('modal.closeLabel')}
@@ -43,7 +45,7 @@ function CloseButton({
       onPress={onClose}
       testID={testID}
     >
-      <X color={Colors.text} size={20} />
+      <X color={isDark ? Colors.textPrimaryDark : Colors.text} size={20} />
     </HeaderGlassButton>
   );
 }

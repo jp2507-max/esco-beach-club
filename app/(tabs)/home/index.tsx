@@ -10,6 +10,7 @@ import {
 } from 'lucide-react-native';
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useColorScheme } from 'react-native';
 import {
   cancelAnimation,
   useAnimatedStyle,
@@ -198,6 +199,8 @@ export default function HomeScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { t } = useTranslation('home');
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const cardScale = useSharedValue(0.95);
   const cardOpacity = useSharedValue(0);
   const { contentStyle: sectionStyle } = useScreenEntry({ durationMs: 500 });
@@ -235,21 +238,21 @@ export default function HomeScreen(): React.JSX.Element {
   const quickActions = useMemo<QuickAction[]>(
     () => [
       {
-        color: Colors.secondary,
+        color: isDark ? Colors.secondaryBright : Colors.secondary,
         id: 'book-table',
         icon: UtensilsCrossed,
         label: t('quickActions.bookTable'),
         route: '/booking',
       },
       {
-        color: Colors.primary,
+        color: isDark ? Colors.primaryBright : Colors.primary,
         id: 'menu',
         icon: Wine,
         label: t('quickActions.menu'),
         route: '/home/menu',
       },
     ],
-    [t]
+    [isDark, t]
   );
 
   const feedRows = useMemo<HomeFeedRow[]>(
@@ -341,15 +344,27 @@ export default function HomeScreen(): React.JSX.Element {
       <View className="absolute left-0 right-0 top-0 h-75 overflow-hidden">
         <View
           className="absolute size-45 rounded-full"
-          style={{ backgroundColor: '#E91E6310', right: -20, top: -40 }}
+          style={{
+            backgroundColor: isDark ? '#FF6B9D22' : '#E91E6310',
+            right: -20,
+            top: -40,
+          }}
         />
         <View
           className="absolute size-30 rounded-full"
-          style={{ backgroundColor: '#00968812', right: 80, top: 30 }}
+          style={{
+            backgroundColor: isDark ? '#5ED4AF1C' : '#00968812',
+            right: 80,
+            top: 30,
+          }}
         />
         <View
           className="absolute size-25 rounded-full"
-          style={{ backgroundColor: '#FF980010', left: -20, top: 10 }}
+          style={{
+            backgroundColor: isDark ? '#FF6B9D18' : '#FF980010',
+            left: -20,
+            top: 10,
+          }}
         />
       </View>
 
@@ -366,7 +381,7 @@ export default function HomeScreen(): React.JSX.Element {
             <View className="px-5">
               <View className="flex-row items-center justify-between pb-5 pt-4">
                 <View>
-                  <Text className="text-[28px] font-extrabold text-text dark:text-text-primary-dark">
+                  <Text className="text-[28px] font-extrabold text-primary dark:text-primary-bright">
                     {t('welcomeBackName', { name: userName })}
                   </Text>
                 </View>

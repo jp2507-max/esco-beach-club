@@ -85,23 +85,3 @@ export const mockPartners: Partner[] = [
     code: 'ESCO-COCO-SWEET',
   },
 ];
-
-export interface Referral {
-  id: string;
-  name: string;
-  avatar: string;
-  status: 'Completed' | 'Pending';
-}
-
-export const mockReferrals: Referral[] = [
-  {
-    id: '1',
-    name: 'Sarah Jenkins',
-    avatar:
-      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face',
-    status: 'Completed',
-  },
-];
-
-export const referralCode = 'ALEX-2025';
-export const referralProgress = { current: 1, goal: 3 };

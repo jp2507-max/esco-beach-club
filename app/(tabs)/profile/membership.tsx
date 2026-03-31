@@ -24,7 +24,7 @@ import {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Colors } from '@/constants/colors';
+import { accentOnDarkBackground, Colors } from '@/constants/colors';
 import type { RewardTierKey } from '@/lib/types';
 import { useMemberSummary, useProfileData } from '@/providers/DataProvider';
 import { ProfileSubScreenHeader } from '@/src/components/ui';
@@ -443,7 +443,7 @@ export default function MembershipScreen(): React.JSX.Element {
         {/* ── Section 2: Unlocked Benefits ──────────────────────── */}
         <Animated.View className="mb-8" style={fadeStyle}>
           <View className="mb-4 flex-row items-end justify-between px-1">
-            <Text className="text-lg font-bold tracking-tight text-secondary dark:text-teal-light">
+            <Text className="text-lg font-bold tracking-tight text-secondary dark:text-secondary-bright">
               {t('benefits.title')}
             </Text>
             <Text className="text-[11px] font-bold uppercase tracking-[2px] text-primary dark:text-primary-bright">
@@ -454,6 +454,10 @@ export default function MembershipScreen(): React.JSX.Element {
           <View className="flex-row flex-wrap gap-3">
             {benefits.map((benefit) => {
               const IconComp = benefit.icon;
+              const benefitAccent = accentOnDarkBackground(
+                benefit.color,
+                isDark
+              );
               if (benefit.wide) {
                 return (
                   <View
@@ -463,9 +467,9 @@ export default function MembershipScreen(): React.JSX.Element {
                   >
                     <View
                       className="size-14 items-center justify-center rounded-full"
-                      style={{ backgroundColor: `${benefit.color}15` }}
+                      style={{ backgroundColor: `${benefitAccent}15` }}
                     >
-                      <IconComp color={benefit.color} size={26} />
+                      <IconComp color={benefitAccent} size={26} />
                     </View>
                     <View className="flex-1">
                       <Text className="text-[15px] font-bold text-text dark:text-text-primary-dark">
@@ -488,9 +492,9 @@ export default function MembershipScreen(): React.JSX.Element {
                 >
                   <View
                     className="size-12 items-center justify-center rounded-full"
-                    style={{ backgroundColor: `${benefit.color}15` }}
+                    style={{ backgroundColor: `${benefitAccent}15` }}
                   >
-                    <IconComp color={benefit.color} size={22} />
+                    <IconComp color={benefitAccent} size={22} />
                   </View>
                   <Text className="text-[15px] font-bold leading-tight text-text dark:text-text-primary-dark">
                     {t(benefit.titleKey)}
@@ -503,13 +507,14 @@ export default function MembershipScreen(): React.JSX.Element {
 
         {/* ── Section 3: Manage Account ─────────────────────────── */}
         <Animated.View className="mb-8" style={fadeStyle}>
-          <Text className="mb-4 px-1 text-lg font-bold tracking-tight text-secondary dark:text-teal-light">
+          <Text className="mb-4 px-1 text-lg font-bold tracking-tight text-secondary dark:text-secondary-bright">
             {t('manageAccount.title')}
           </Text>
 
           <View className="gap-3">
             {MANAGE_ITEMS.map((item) => {
               const IconComp = item.icon;
+              const manageAccent = accentOnDarkBackground(item.color, isDark);
               return (
                 <Pressable
                   key={item.id}
@@ -528,7 +533,7 @@ export default function MembershipScreen(): React.JSX.Element {
                           : Colors.sand,
                       }}
                     >
-                      <IconComp color={item.color} size={20} />
+                      <IconComp color={manageAccent} size={20} />
                     </View>
                     <Text className="text-[15px] font-semibold text-text dark:text-text-primary-dark">
                       {t(item.labelKey)}
@@ -547,7 +552,7 @@ export default function MembershipScreen(): React.JSX.Element {
         {/* ── Section 4: Recent Activity ────────────────────────── */}
         <Animated.View className="mb-4" style={fadeStyle}>
           <View className="mb-4 flex-row items-center justify-between px-1">
-            <Text className="text-lg font-bold tracking-tight text-secondary dark:text-teal-light">
+            <Text className="text-lg font-bold tracking-tight text-secondary dark:text-secondary-bright">
               {t('activity.title')}
             </Text>
           </View>
@@ -584,7 +589,11 @@ export default function MembershipScreen(): React.JSX.Element {
                     >
                       <View
                         className="mt-1.5 size-2.5 rounded-full"
-                        style={{ backgroundColor: Colors.secondary }}
+                        style={{
+                          backgroundColor: isDark
+                            ? Colors.secondaryBright
+                            : Colors.secondary,
+                        }}
                       />
                       <View className="flex-1">
                         <Text className="text-sm font-bold text-text dark:text-text-primary-dark">

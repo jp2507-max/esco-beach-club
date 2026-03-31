@@ -6,6 +6,7 @@ import { Pressable, Text, View } from '@/src/tw';
 
 export default function NotFoundScreen(): React.JSX.Element {
   const { t } = useTranslation('common');
+
   return (
     <>
       <Stack.Screen options={{ title: t('notFound.title') }} />

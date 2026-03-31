@@ -160,6 +160,14 @@ bun run sentry:upload-sourcemaps
 
 5. Confirm Sentry event tags include update metadata (`expo-update-id`, `expo-update-group-id`, `expo-update-debug-url`).
 
+## Invite & Earn (referrals)
+
+- **Deep links**: `esco-beach-club://invite/<CODE>` and `https://escolife.app/invite/<CODE>` (universal links require Apple/Google verification + hosting `apple-app-site-association` / Digital Asset Links).
+- **Client env**: `EXPO_PUBLIC_REFERRAL_API_BASE_URL` — base URL where Expo Router serves API routes (e.g. production web/API host). In dev, the app falls back to `http://<metro-host>:8081` when `hostUri` is available.
+- **Server secrets** (never ship to the client): `INSTANT_APP_ADMIN_TOKEN` — Instant dashboard admin token; optional `INSTANT_APP_ID` if you do not want to reuse `EXPO_PUBLIC_INSTANT_APP_ID` on the server.
+- **API routes**: `POST /api/referrals/claim` (body: `referralCode`, `refreshToken`) creates a pending referral for the signed-in user; `POST /api/referrals/complete` (`Authorization: Bearer <refreshToken>`, body: `referralId`) marks a referral completed for active staff/manager in `staff_access`.
+- **Schema**: after pulling changes, run `npx instant-cli@latest push schema` so `referrals.referee_profile_id` exists in production.
+
 ## App identifiers
 
 - Slug: `escolife`

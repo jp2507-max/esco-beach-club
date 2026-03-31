@@ -1,7 +1,8 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import type { ViewStyle } from 'react-native';
 import {
   type AnimatedStyle,
+  cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
@@ -24,6 +25,12 @@ export function useButtonPress(
     : 0.96;
 
   const scale = useSharedValue(1);
+
+  useEffect(() => {
+    return () => {
+      cancelAnimation(scale);
+    };
+  }, [scale]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.get() }],

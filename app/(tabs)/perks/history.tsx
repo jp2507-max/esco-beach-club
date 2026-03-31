@@ -11,9 +11,10 @@ import {
 } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useColorScheme } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Colors } from '@/constants/colors';
+import { accentOnDarkBackground, Colors } from '@/constants/colors';
 import {
   usePartnerRedemptionsData,
   usePartnersData,
@@ -45,11 +46,26 @@ const historyCategories = [
 ] as const satisfies readonly { labelKey: string; value: HistoryCategory }[];
 
 function HistoryItemIcon({ icon }: { icon: HistoryIcon }): React.JSX.Element {
-  if (icon === 'hotel') return <Hotel color={Colors.primary} size={18} />;
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  if (icon === 'hotel')
+    return (
+      <Hotel color={isDark ? Colors.primaryBright : Colors.primary} size={18} />
+    );
   if (icon === 'dining')
-    return <UtensilsCrossed color={Colors.gold} size={18} />;
+    return (
+      <UtensilsCrossed
+        color={isDark ? Colors.goldBright : Colors.gold}
+        size={18}
+      />
+    );
   if (icon === 'travel')
-    return <PlaneTakeoff color={Colors.secondary} size={18} />;
+    return (
+      <PlaneTakeoff
+        color={isDark ? Colors.secondaryBright : Colors.secondary}
+        size={18}
+      />
+    );
   return <Flower2 color={Colors.primaryBright} size={18} />;
 }
 
@@ -65,6 +81,9 @@ export default function PerkHistoryScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { t, i18n } = useTranslation('perks');
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const headerAccent = accentOnDarkBackground(Colors.primary, isDark);
   const [activeCategory, setActiveCategory] = useState<HistoryCategory>('all');
   const { partnerRedemptions, partnerRedemptionsLoading } =
     usePartnerRedemptionsData();
@@ -147,7 +166,7 @@ export default function PerkHistoryScreen(): React.JSX.Element {
           style={shadows.level1}
           testID="perk-history-back"
         >
-          <ArrowLeft color={Colors.primary} size={20} />
+          <ArrowLeft color={headerAccent} size={20} />
         </Pressable>
         <Text className="ml-2 text-2xl font-extrabold tracking-[-0.4px] text-primary dark:text-primary-bright">
           {t('history.title')}
@@ -175,7 +194,7 @@ export default function PerkHistoryScreen(): React.JSX.Element {
 
           <View className="items-center">
             <View className="mb-3 size-12 items-center justify-center rounded-full bg-primary/10">
-              <Sparkles color={Colors.primary} size={20} />
+              <Sparkles color={headerAccent} size={20} />
             </View>
 
             <Text className="mb-1 text-[11px] font-extrabold uppercase tracking-[2px] text-secondary dark:text-text-secondary-dark">
@@ -220,7 +239,10 @@ export default function PerkHistoryScreen(): React.JSX.Element {
 
         {partnerRedemptionsLoading ? (
           <View className="items-center rounded-2xl border border-border bg-card px-4 py-10 dark:border-dark-border dark:bg-dark-bg-card">
-            <ActivityIndicator color={Colors.primary} size="large" />
+            <ActivityIndicator
+              color={isDark ? Colors.primaryBright : Colors.primary}
+              size="large"
+            />
             <Text className="mt-4 text-sm font-medium text-text-secondary dark:text-text-secondary-dark">
               {historyLoadingLabel}
             </Text>
@@ -239,7 +261,7 @@ export default function PerkHistoryScreen(): React.JSX.Element {
             {filteredItems.map((item) => {
               const statusBadgeClassName =
                 item.status === 'claimed' || item.status === 'used'
-                  ? 'bg-secondary/20 text-secondary dark:bg-secondary/25 dark:text-secondary'
+                  ? 'bg-secondary/20 text-secondary dark:bg-secondary/25 dark:text-secondary-bright'
                   : 'bg-background text-text-secondary dark:bg-dark-bg-elevated dark:text-text-secondary-dark';
 
               return (
@@ -280,7 +302,10 @@ export default function PerkHistoryScreen(): React.JSX.Element {
                             : t('history.status.used')}
                       </Text>
                     </View>
-                    <ChevronRight color={Colors.textLight} size={16} />
+                    <ChevronRight
+                      color={isDark ? Colors.textMutedDark : Colors.textLight}
+                      size={16}
+                    />
                   </View>
                 </View>
               );
@@ -289,11 +314,11 @@ export default function PerkHistoryScreen(): React.JSX.Element {
         )}
 
         <View className="mb-6 mt-6 flex-row items-center justify-center">
-          <Text className="text-base font-bold text-secondary">
+          <Text className="text-base font-bold text-secondary dark:text-secondary-bright">
             {t('history.fullArchive')}
           </Text>
           <History
-            color={Colors.secondary}
+            color={isDark ? Colors.secondaryBright : Colors.secondary}
             size={14}
             style={{ marginLeft: 8 }}
           />

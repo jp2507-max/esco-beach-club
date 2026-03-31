@@ -4,7 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Award, Check, Copy, Percent, Star, X } from 'lucide-react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert } from 'react-native';
+import { Alert, useColorScheme } from 'react-native';
 import {
   cancelAnimation,
   useAnimatedStyle,
@@ -28,6 +28,8 @@ export default function PartnerModal(): React.JSX.Element {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const { t } = useTranslation('perks');
   const scale = useSharedValue(0.8);
   const opacity = useSharedValue(0);
@@ -152,14 +154,17 @@ export default function PartnerModal(): React.JSX.Element {
         testID="close-modal"
         variant="overlay"
       >
-        <X color={Colors.text} size={20} />
+        <X color="#FFFFFF" size={20} />
       </HeaderGlassButton>
 
       <View
         className="absolute bottom-0 left-0 right-0 rounded-t-[28px] px-7 pb-10 pt-3"
-        style={{ backgroundColor: '#FFF8F5', minHeight: '60%' }}
+        style={{
+          backgroundColor: isDark ? Colors.darkBgCard : '#FFF8F5',
+          minHeight: '60%',
+        }}
       >
-        <View className="mb-4 h-1 w-10 self-center rounded bg-border" />
+        <View className="mb-4 h-1 w-10 self-center rounded bg-border dark:bg-dark-border-bright" />
 
         <Animated.View className="items-center" style={contentStyle}>
           <Image
@@ -173,22 +178,32 @@ export default function PartnerModal(): React.JSX.Element {
           <View className="mb-4 items-center">
             <View
               className="mb-1.5 size-20 items-center justify-center rounded-full border-[3px]"
-              style={{ backgroundColor: '#FFF8E1', borderColor: '#F9A825' }}
+              style={{
+                backgroundColor: isDark ? `${Colors.warningDark}22` : '#FFF8E1',
+                borderColor: isDark ? Colors.warningDark : '#F9A825',
+              }}
             >
-              <Star size={32} color="#F9A825" fill="#F9A825" />
+              <Star
+                size={32}
+                color={isDark ? Colors.warningDark : '#F9A825'}
+                fill={isDark ? Colors.warningDark : '#F9A825'}
+              />
             </View>
-            <Text className="text-[11px] font-extrabold tracking-[1.5px] text-[#F9A825]">
+            <Text
+              className="text-[11px] font-extrabold tracking-[1.5px]"
+              style={{ color: isDark ? Colors.warningDark : '#F9A825' }}
+            >
               {t('partner.unlocked')}
             </Text>
           </View>
 
-          <Text className="text-center text-[28px] font-extrabold text-text">
+          <Text className="text-center text-[28px] font-extrabold text-text dark:text-text-primary-dark">
             {t('partner.congratulations')}
           </Text>
-          <Text className="mb-2.5 text-center text-[28px] font-extrabold text-primary">
+          <Text className="mb-2.5 text-center text-[28px] font-extrabold text-primary dark:text-primary-bright">
             {partner.discount_label}!
           </Text>
-          <Text className="mb-6 text-center text-sm leading-[22px] text-text-secondary">
+          <Text className="mb-6 text-center text-sm leading-[22px] text-text-secondary dark:text-text-secondary-dark">
             {t('partner.benefitsDescription', {
               name: partner.name,
               description: partner.description,
@@ -196,32 +211,41 @@ export default function PartnerModal(): React.JSX.Element {
           </Text>
 
           <View className="mb-6 flex-row">
-            <View className="mr-4 size-[90px] items-center justify-center rounded-2xl border border-border bg-white">
-              <Award size={24} color={Colors.primary} />
-              <Text className="mt-1.5 text-xs font-semibold text-text">
+            <View className="mr-4 size-[90px] items-center justify-center rounded-2xl border border-border bg-white dark:border-dark-border dark:bg-dark-bg-elevated">
+              <Award
+                size={24}
+                color={isDark ? Colors.primaryBright : Colors.primary}
+              />
+              <Text className="mt-1.5 text-xs font-semibold text-text dark:text-text-primary-dark">
                 {t('partner.exclusive')}
               </Text>
             </View>
-            <View className="mr-4 size-[90px] items-center justify-center rounded-2xl border border-border bg-white">
-              <Percent size={24} color={Colors.primary} />
-              <Text className="mt-1.5 text-xs font-semibold text-text">
+            <View className="mr-4 size-[90px] items-center justify-center rounded-2xl border border-border bg-white dark:border-dark-border dark:bg-dark-bg-elevated">
+              <Percent
+                size={24}
+                color={isDark ? Colors.primaryBright : Colors.primary}
+              />
+              <Text className="mt-1.5 text-xs font-semibold text-text dark:text-text-primary-dark">
                 {t('partner.discount')}
               </Text>
             </View>
-            <View className="size-[90px] items-center justify-center rounded-2xl border border-border bg-white">
-              <Star size={24} color={Colors.primary} />
-              <Text className="mt-1.5 text-xs font-semibold text-text">
+            <View className="size-[90px] items-center justify-center rounded-2xl border border-border bg-white dark:border-dark-border dark:bg-dark-bg-elevated">
+              <Star
+                size={24}
+                color={isDark ? Colors.primaryBright : Colors.primary}
+              />
+              <Text className="mt-1.5 text-xs font-semibold text-text dark:text-text-primary-dark">
                 {t('partner.vipPerk')}
               </Text>
             </View>
           </View>
 
-          <View className="mb-5 w-full rounded-2xl border border-border bg-white p-4">
-            <Text className="mb-2.5 text-[10px] font-bold tracking-[1px] text-text-secondary">
+          <View className="mb-5 w-full rounded-2xl border border-border bg-white p-4 dark:border-dark-border dark:bg-dark-bg-elevated">
+            <Text className="mb-2.5 text-[10px] font-bold tracking-[1px] text-text-secondary dark:text-text-secondary-dark">
               {t('partner.yourDiscountCode')}
             </Text>
             <View className="flex-row items-center justify-between">
-              <Text className="text-lg font-extrabold tracking-[0.5px] text-text">
+              <Text className="text-lg font-extrabold tracking-[0.5px] text-text dark:text-text-primary-dark">
                 {partner.code}
               </Text>
               <Pressable
@@ -230,7 +254,11 @@ export default function PartnerModal(): React.JSX.Element {
                 disabled={claimMutation.isPending}
                 onPress={handleCopy}
                 style={[
-                  { backgroundColor: `${Colors.secondary}15` },
+                  {
+                    backgroundColor: isDark
+                      ? `${Colors.secondaryBright}22`
+                      : `${Colors.secondary}15`,
+                  },
                   claimMutation.isPending && { opacity: 0.5 },
                 ]}
                 testID="copy-discount"
@@ -238,7 +266,10 @@ export default function PartnerModal(): React.JSX.Element {
                 {copied ? (
                   <Check size={18} color={Colors.success} />
                 ) : (
-                  <Copy size={18} color={Colors.secondary} />
+                  <Copy
+                    size={18}
+                    color={isDark ? Colors.secondaryBright : Colors.secondary}
+                  />
                 )}
               </Pressable>
             </View>
@@ -246,7 +277,7 @@ export default function PartnerModal(): React.JSX.Element {
 
           <Pressable
             accessibilityRole="button"
-            className="mb-3.5 w-full items-center rounded-[18px] bg-primary py-[17px]"
+            className="mb-3.5 w-full items-center rounded-[18px] bg-primary py-[17px] dark:bg-primary-bright"
             disabled={claimMutation.isPending}
             onPress={() => {
               void handleClaim();
@@ -261,7 +292,7 @@ export default function PartnerModal(): React.JSX.Element {
           </Pressable>
 
           <Pressable accessibilityRole="button" onPress={() => router.back()}>
-            <Text className="text-sm font-medium text-text-secondary">
+            <Text className="text-sm font-medium text-text-secondary dark:text-text-secondary-dark">
               {t('partner.maybeLater')}
             </Text>
           </Pressable>

@@ -1,13 +1,17 @@
-import type { NativeStackHeaderItem } from '@react-navigation/native-stack';
 import { FlashList, type ListRenderItemInfo } from '@shopify/flash-list';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Stack, useRouter } from 'expo-router';
-import { Compass, ExternalLink, History } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
+import { Compass, ExternalLink } from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Linking, Platform, useWindowDimensions } from 'react-native';
+import {
+  Alert,
+  Linking,
+  useColorScheme,
+  useWindowDimensions,
+} from 'react-native';
 
-import { Colors } from '@/constants/colors';
+import { accentOnDarkBackground, Colors } from '@/constants/colors';
 import type { Partner } from '@/lib/types';
 import { useFilteredPartners, usePartnersData } from '@/providers/DataProvider';
 import { CategoryChip } from '@/src/components/ui';
@@ -28,6 +32,9 @@ const DANANG_365_URL = 'https://danang365.com/en/home/';
 export default function PerksScreen(): React.JSX.Element {
   const router = useRouter();
   const { t } = useTranslation('perks');
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const headerAccent = accentOnDarkBackground(Colors.primary, isDark);
   const { width } = useWindowDimensions();
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const cardWidth = (width - 52) / 2;
@@ -55,10 +62,6 @@ export default function PerksScreen(): React.JSX.Element {
       );
     });
   }, [t]);
-
-  const handleOpenHistory = useCallback((): void => {
-    router.push('/perks/history');
-  }, [router]);
 
   const renderCard = useCallback(
     ({ item }: ListRenderItemInfo<Partner>): React.JSX.Element => (
@@ -105,48 +108,6 @@ export default function PerksScreen(): React.JSX.Element {
 
   return (
     <View className="flex-1 bg-background dark:bg-dark-bg">
-      <Stack.Screen
-        options={{
-          headerLargeTitle: true,
-          headerSearchBarOptions: undefined,
-          title: t('title'),
-          ...(Platform.OS === 'ios'
-            ? {
-                // Native UIBarButtonItem avoids stacking a React view inside the bar’s glass/material chrome (iOS 18+ / 26).
-                unstable_headerRightItems: (): NativeStackHeaderItem[] => [
-                  {
-                    type: 'button',
-                    label: t('history.openAction'),
-                    icon: { type: 'sfSymbol', name: 'clock.arrow.circlepath' },
-                    variant: 'plain',
-                    tintColor: Colors.primary,
-                    onPress: handleOpenHistory,
-                    accessibilityLabel: t('history.openAction'),
-                    accessibilityHint: t('history.openHint'),
-                    hidesSharedBackground: true,
-                  },
-                ],
-              }
-            : {
-                headerRight: () => (
-                  <Pressable
-                    accessibilityHint={t('history.openHint')}
-                    accessibilityLabel={t('history.openAction')}
-                    accessibilityRole="button"
-                    className="flex-row items-center px-2 py-1"
-                    onPress={handleOpenHistory}
-                    testID="perks-history-link"
-                  >
-                    <History color={Colors.primary} size={14} />
-                    <Text className="ml-1 text-xs font-bold text-primary dark:text-primary-bright">
-                      {t('history.openAction')}
-                    </Text>
-                  </Pressable>
-                ),
-              }),
-        }}
-      />
-
       <FlashList
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={listContentContainerStyle}
@@ -196,7 +157,7 @@ export default function PerksScreen(): React.JSX.Element {
               <View className="p-4">
                 <View className="mb-2 flex-row items-center">
                   <View className="mr-2 size-8 items-center justify-center rounded-full bg-primary/15">
-                    <Compass color={Colors.primary} size={16} />
+                    <Compass color={headerAccent} size={16} />
                   </View>
                   <Text className="text-xs font-bold uppercase tracking-[1px] text-primary dark:text-primary-bright">
                     {t('danangCta.badge')}
@@ -227,7 +188,10 @@ export default function PerksScreen(): React.JSX.Element {
         ListEmptyComponent={
           partnersLoading ? (
             <View className="items-center rounded-2xl border border-border bg-card px-4 py-10 dark:border-dark-border dark:bg-dark-bg-card">
-              <ActivityIndicator color={Colors.primary} size="large" />
+              <ActivityIndicator
+                color={isDark ? Colors.primaryBright : Colors.primary}
+                size="large"
+              />
               <Text className="mt-4 text-sm font-medium text-text-secondary dark:text-text-secondary-dark">
                 {t('loading')}
               </Text>

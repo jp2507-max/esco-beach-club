@@ -161,6 +161,7 @@ const _schema = i.schema({
       created_at: i.date().indexed().optional(),
       referred_avatar: i.string().optional(),
       referred_name: i.string().optional(),
+      referee_profile_id: i.string().unique().indexed().optional(),
       referrer_id: i.string().indexed().optional(),
       status: i.string().indexed().optional(),
     }),

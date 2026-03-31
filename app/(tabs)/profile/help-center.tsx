@@ -10,10 +10,10 @@ import {
 } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Linking } from 'react-native';
+import { Alert, Linking, useColorScheme } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Colors } from '@/constants/colors';
+import { accentOnDarkBackground, Colors } from '@/constants/colors';
 import {
   ProfileSubScreenHeader,
   SurfaceCard,
@@ -42,6 +42,8 @@ const heroImageUri =
 
 export default function HelpCenterScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const { t } = useTranslation('profile');
 
   const [expandedFaqId, setExpandedFaqId] = useState<string | null>(null);
@@ -170,14 +172,19 @@ export default function HelpCenterScreen(): React.JSX.Element {
               className="flex-row items-center rounded-full border border-border bg-white px-4 py-2.5 dark:border-dark-border dark:bg-dark-bg-card"
               style={shadows.level1}
             >
-              <Search color={Colors.primary} size={18} />
+              <Search
+                color={accentOnDarkBackground(Colors.primary, isDark)}
+                size={18}
+              />
               <TextInput
                 accessibilityLabel={t('helpCenter.searchPlaceholder')}
                 accessibilityHint={t('helpCenter.searchPlaceholder')}
                 className="ml-2.5 flex-1 p-0 text-base text-text dark:text-text-primary-dark"
                 onChangeText={setSearchQuery}
                 placeholder={t('helpCenter.searchPlaceholder')}
-                placeholderTextColor={Colors.textLight}
+                placeholderTextColor={
+                  isDark ? Colors.textMutedDark : Colors.textLight
+                }
                 testID="help-center-search"
                 value={searchQuery}
               />
@@ -194,9 +201,14 @@ export default function HelpCenterScreen(): React.JSX.Element {
         >
           <View
             className="mr-4 size-13 items-center justify-center rounded-full"
-            style={{ backgroundColor: `${Colors.secondary}18` }}
+            style={{
+              backgroundColor: `${accentOnDarkBackground(Colors.secondary, isDark)}22`,
+            }}
           >
-            <Headphones color={Colors.secondary} size={24} />
+            <Headphones
+              color={accentOnDarkBackground(Colors.secondary, isDark)}
+              size={24}
+            />
           </View>
           <View className="flex-1">
             <Text className="text-xl font-bold text-text dark:text-text-primary-dark">
@@ -216,6 +228,7 @@ export default function HelpCenterScreen(): React.JSX.Element {
           <View className="flex-row flex-wrap justify-between gap-y-3">
             {categoryItems.map((item) => {
               const IconComp = item.icon;
+              const catAccent = accentOnDarkBackground(item.color, isDark);
               return (
                 <SurfaceCard
                   className="w-[48%] items-center px-4 py-6"
@@ -224,9 +237,9 @@ export default function HelpCenterScreen(): React.JSX.Element {
                 >
                   <View
                     className="mb-3 size-13 items-center justify-center rounded-full"
-                    style={{ backgroundColor: `${item.color}18` }}
+                    style={{ backgroundColor: `${catAccent}22` }}
                   >
-                    <IconComp color={item.color} size={24} />
+                    <IconComp color={catAccent} size={24} />
                   </View>
                   <Text className="text-center text-lg font-semibold leading-6 text-text dark:text-text-primary-dark">
                     {item.label}
@@ -273,7 +286,7 @@ export default function HelpCenterScreen(): React.JSX.Element {
                         {faq.question}
                       </Text>
                       <ChevronDown
-                        color={Colors.textLight}
+                        color={isDark ? Colors.textMutedDark : Colors.textLight}
                         size={20}
                         style={{
                           marginTop: 4,

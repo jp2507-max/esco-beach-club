@@ -40,7 +40,7 @@ export default function QrTabScreen(): React.JSX.Element {
           <Text className="text-[11px] font-semibold uppercase tracking-[2.5px] text-text-secondary dark:text-text-secondary-dark">
             {t('accessPass')}
           </Text>
-          <Text className="mt-2 text-center text-2xl font-extrabold text-text dark:text-text-primary-dark">
+          <Text className="mt-2 text-center text-2xl font-extrabold text-primary dark:text-primary-bright">
             {t('scanAtTable')}
           </Text>
         </View>
@@ -63,7 +63,7 @@ export default function QrTabScreen(): React.JSX.Element {
             variant="full"
           />
 
-          <Text className="mb-1 mt-5 text-center text-base font-bold text-text dark:text-text-primary-dark">
+          <Text className="mb-1 mt-5 text-center text-base font-bold text-text dark:text-primary-bright">
             {t('scanAtTable')}
           </Text>
           <Pressable

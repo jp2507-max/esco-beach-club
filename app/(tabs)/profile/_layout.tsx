@@ -16,6 +16,10 @@ export default function ProfileStackLayout(): React.JSX.Element {
         options={{ headerShown: false, presentation: 'card' }}
       />
       <Stack.Screen
+        name="invite-referrals"
+        options={{ headerShown: false, presentation: 'card' }}
+      />
+      <Stack.Screen
         name="saved-events"
         options={{ headerShown: false, presentation: 'card' }}
       />

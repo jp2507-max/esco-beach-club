@@ -10,6 +10,7 @@ import React, {
   useState,
 } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Platform, useColorScheme } from 'react-native';
 
 import { Colors } from '@/constants/colors';
 import type { Event } from '@/lib/types';
@@ -238,6 +239,8 @@ export default function EventsScreen(): React.JSX.Element {
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const router = useRouter();
   const { i18n, t } = useTranslation('events');
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
 
   const { events, eventsLoading } = useEventsData();
   const { isEventSaved, toggleSavedEvent } = useSavedEventsData();
@@ -442,16 +445,32 @@ export default function EventsScreen(): React.JSX.Element {
     [isEventSaved, openEvent, t, toggleSavedEvent]
   );
 
+  /**
+   * Expo Router merges `Stack.SearchBar` composition *after* screen options via
+   * Object.assign — it replaces `headerSearchBarOptions` entirely. Colors must
+   * live on `<Stack.SearchBar />`, not only inside `Stack.Screen` options.
+   */
+  const eventsSearchBarProps = useMemo(
+    () => ({
+      barTintColor: isDark ? Colors.darkBgElevated : Colors.surfaceContainerLow,
+      textColor: isDark ? Colors.textPrimaryDark : Colors.text,
+      tintColor: isDark ? Colors.primaryBright : Colors.primary,
+      ...(Platform.OS === 'android'
+        ? {
+            headerIconColor: isDark
+              ? Colors.textMutedDark
+              : Colors.textSecondary,
+            hintTextColor: isDark ? Colors.textMutedDark : Colors.textMuted,
+          }
+        : {}),
+    }),
+    [isDark]
+  );
+
   return (
     <View className="flex-1 bg-background dark:bg-dark-bg">
-      <Stack.Screen
-        options={{
-          headerLargeTitle: true,
-          headerRight: () => null,
-          title: t('title'),
-        }}
-      />
       <Stack.SearchBar
+        {...eventsSearchBarProps}
         placeholder={t('searchPlaceholder')}
         onChangeText={(event) => {
           setSearchQuery(event.nativeEvent.text);
@@ -614,7 +633,10 @@ export default function EventsScreen(): React.JSX.Element {
           <>
             {eventsLoading ? (
               <View className="mb-3 items-center rounded-2xl border border-border bg-card p-6 dark:border-dark-border dark:bg-dark-bg-card">
-                <ActivityIndicator color={Colors.primary} size="large" />
+                <ActivityIndicator
+                  color={isDark ? Colors.primaryBright : Colors.primary}
+                  size="large"
+                />
                 <Text className="mt-3 text-sm font-medium text-text-secondary dark:text-text-secondary-dark">
                   {t('loading')}
                 </Text>
@@ -638,8 +660,11 @@ export default function EventsScreen(): React.JSX.Element {
               onPress={() => router.push('/private-event')}
               testID="private-event-btn"
             >
-              <View className="size-12 items-center justify-center rounded-[14px] border border-secondary/20 bg-background dark:bg-dark-bg-elevated">
-                <PartyPopper size={22} color={Colors.secondary} />
+              <View className="size-12 items-center justify-center rounded-[14px] border border-secondary/20 bg-background dark:border-secondary-bright/25 dark:bg-dark-bg-elevated">
+                <PartyPopper
+                  size={22}
+                  color={isDark ? Colors.secondaryBright : Colors.secondary}
+                />
               </View>
               <View className="flex-1">
                 <Text className="mb-0.5 text-base font-bold text-text dark:text-text-primary-dark">

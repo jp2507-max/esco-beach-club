@@ -11,7 +11,7 @@ import {
 import React, { useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { Alert, Platform } from 'react-native';
+import { Alert, Platform, useColorScheme } from 'react-native';
 import {
   useAnimatedStyle,
   useSharedValue,
@@ -59,6 +59,7 @@ type EventTypeOption = {
 export default function PrivateEventScreen(): React.JSX.Element {
   const { t } = useTranslation('common');
   const insets = useSafeAreaInsets();
+  const isDark = useColorScheme() === 'dark';
   const router = useRouter();
   const [showTypePicker, setShowTypePicker] = useState<boolean>(false);
   const [submitted, setSubmitted] = useState<boolean>(false);
@@ -244,7 +245,10 @@ export default function PrivateEventScreen(): React.JSX.Element {
                       : t('privateEvent.selectType')}
                   </Text>
                 </View>
-                <ChevronDown color={Colors.textLight} size={18} />
+                <ChevronDown
+                  color={isDark ? Colors.textMutedDark : Colors.textLight}
+                  size={18}
+                />
               </Pressable>
 
               {showTypePicker && (
@@ -267,8 +271,12 @@ export default function PrivateEventScreen(): React.JSX.Element {
                         style={{
                           color:
                             eventType === option.value
-                              ? Colors.secondary
-                              : Colors.text,
+                              ? isDark
+                                ? Colors.secondaryBright
+                                : Colors.secondary
+                              : isDark
+                                ? Colors.textPrimaryDark
+                                : Colors.text,
                           fontWeight:
                             eventType === option.value ? '700' : '500',
                         }}
@@ -339,7 +347,9 @@ export default function PrivateEventScreen(): React.JSX.Element {
                             t('privateEvent.preferredDatePlaceholder') ||
                             'YYYY-MM-DD'
                           }
-                          placeholderTextColor={Colors.textLight}
+                          placeholderTextColor={
+                            isDark ? Colors.textMutedDark : Colors.textLight
+                          }
                           value={
                             typeof value === 'string'
                               ? value
@@ -421,7 +431,12 @@ export default function PrivateEventScreen(): React.JSX.Element {
               <Button
                 className="mt-5"
                 isLoading={isSubmitting}
-                leftIcon={<Send color="#fff" size={18} />}
+                leftIcon={
+                  <Send
+                    color={isDark ? Colors.secondaryDeeper : '#fff'}
+                    size={18}
+                  />
+                }
                 onPress={handleSubmit(handleValidSubmit, handleInvalidSubmit)}
                 disabled={!isValid}
                 testID="submit-inquiry"

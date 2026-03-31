@@ -11,6 +11,12 @@ export const themePreferences = ['system', 'light', 'dark'] as const;
 
 export type ThemePreference = (typeof themePreferences)[number];
 
+type PersistedThemePreferenceState = {
+  state?: {
+    preference?: ThemePreference;
+  };
+};
+
 type ThemePreferenceState = {
   preference: ThemePreference;
   setPreference: (preference: ThemePreference) => void;
@@ -35,6 +41,34 @@ export function applyThemePreference(preference: ThemePreference): void {
   );
 }
 
+function isThemePreference(value: unknown): value is ThemePreference {
+  return (
+    typeof value === 'string' &&
+    themePreferences.includes(value as ThemePreference)
+  );
+}
+
+function getStoredThemePreference(): ThemePreference {
+  const rawPreferenceState = themeStorage.getString('theme-preference');
+
+  if (!rawPreferenceState) return 'system';
+
+  try {
+    const parsedPreferenceState = JSON.parse(
+      rawPreferenceState
+    ) as PersistedThemePreferenceState;
+    const storedPreference = parsedPreferenceState.state?.preference;
+
+    return isThemePreference(storedPreference) ? storedPreference : 'system';
+  } catch {
+    return 'system';
+  }
+}
+
+const initialThemePreference = getStoredThemePreference();
+
+applyThemePreference(initialThemePreference);
+
 export function getThemePreferenceLabelKey(
   preference: ThemePreference
 ): 'theme.options.system' | 'theme.options.light' | 'theme.options.dark' {
@@ -46,7 +80,7 @@ export function getThemePreferenceLabelKey(
 export const useThemePreferenceStore = create<ThemePreferenceState>()(
   persist(
     (set) => ({
-      preference: 'system',
+      preference: initialThemePreference,
       setPreference: (preference: ThemePreference): void => {
         applyThemePreference(preference);
         set({ preference });

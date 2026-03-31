@@ -19,10 +19,10 @@ const BADGE_TONES = {
   },
   secondary: {
     container: 'bg-secondary/15 dark:bg-secondary/25',
-    text: 'text-secondary',
+    text: 'text-secondary dark:text-secondary-bright',
   },
   success: {
-    container: 'bg-success/15',
+    container: 'bg-success/15 dark:bg-success/25',
     text: 'text-success',
   },
   warning: {

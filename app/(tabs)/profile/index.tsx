@@ -28,7 +28,7 @@ import {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Colors } from '@/constants/colors';
+import { accentOnDarkBackground, Colors } from '@/constants/colors';
 import { useAuth } from '@/providers/AuthProvider';
 import {
   useMemberOffersData,
@@ -328,23 +328,29 @@ export default function ProfileScreen(): React.JSX.Element {
   const earnedProgress = cashbackLifetimePoints > 0 ? 100 : 0;
   const savedProgress = saved > 0 ? 100 : 0;
 
+  const profileCanvasBg = isDark ? Colors.darkBg : '#E8F0F8';
+  const profileOrbLarge = isDark ? '#E9255E22' : '#F8BBD020';
+  const profileOrbMid = isDark ? '#5ED4AF1C' : '#B2EBF220';
+  const profileOrbSmall = isDark ? '#FF6B9D18' : '#F3E5F520';
+  const voucherNotchBg = isDark ? Colors.darkBg : '#E8F0F8';
+
   return (
     <View
-      className="flex-1 dark:bg-dark-bg"
-      style={{ backgroundColor: '#E8F0F8', paddingTop: insets.top }}
+      className="flex-1"
+      style={{ backgroundColor: profileCanvasBg, paddingTop: insets.top }}
     >
       <View className="absolute left-0 right-0 top-0 h-[500px] overflow-hidden">
         <View
           className="absolute size-[250px] rounded-full"
-          style={{ backgroundColor: '#F8BBD020', right: -40, top: -50 }}
+          style={{ backgroundColor: profileOrbLarge, right: -40, top: -50 }}
         />
         <View
           className="absolute size-[200px] rounded-full"
-          style={{ backgroundColor: '#B2EBF220', left: -60, top: 100 }}
+          style={{ backgroundColor: profileOrbMid, left: -60, top: 100 }}
         />
         <View
           className="absolute size-[160px] rounded-full"
-          style={{ backgroundColor: '#F3E5F520', right: 40, top: 50 }}
+          style={{ backgroundColor: profileOrbSmall, right: 40, top: 50 }}
         />
       </View>
 
@@ -365,7 +371,7 @@ export default function ProfileScreen(): React.JSX.Element {
               <Text className="text-[13px] font-medium text-text-secondary dark:text-text-secondary-dark">
                 {t('welcomeBack')}
               </Text>
-              <Text className="text-xl font-extrabold text-text dark:text-text-primary-dark">
+              <Text className="text-xl font-extrabold text-primary dark:text-primary-bright">
                 {userName}
               </Text>
             </View>
@@ -397,18 +403,22 @@ export default function ProfileScreen(): React.JSX.Element {
         <View className="mb-5 flex-row">
           <View className="mr-3 flex-1">
             <StatCard
-              accentColor={Colors.primary}
+              accentColor={accentOnDarkBackground(Colors.primary, isDark)}
               label={t('earned')}
               progressDegrees={(earnedProgress / 100) * 360}
-              progressTrackColor={`${Colors.primary}25`}
+              progressTrackColor={
+                isDark ? `${Colors.primaryBright}30` : `${Colors.primary}25`
+              }
               value={cashbackLifetimePoints.toLocaleString()}
             />
           </View>
           <StatCard
-            accentColor={Colors.secondary}
+            accentColor={accentOnDarkBackground(Colors.secondary, isDark)}
             label={t('saved')}
             progressDegrees={(savedProgress / 100) * 360}
-            progressTrackColor={`${Colors.secondary}25`}
+            progressTrackColor={
+              isDark ? `${Colors.secondaryBright}28` : `${Colors.secondary}25`
+            }
             value={`$${saved}`}
           />
         </View>
@@ -435,7 +445,7 @@ export default function ProfileScreen(): React.JSX.Element {
 
           <View className="mt-4 flex-row gap-3">
             <View className="flex-1 rounded-2xl bg-background px-4 py-3 dark:bg-dark-bg-elevated">
-              <Text className="text-[11px] font-semibold uppercase tracking-[0.8px] text-text-muted dark:text-text-muted-dark">
+              <Text className="text-[11px] font-semibold uppercase tracking-[0.8px] text-text-muted dark:text-text-secondary-dark">
                 {t('memberSince')}
               </Text>
               <Text className="mt-1 text-sm font-bold text-text dark:text-text-primary-dark">
@@ -443,7 +453,7 @@ export default function ProfileScreen(): React.JSX.Element {
               </Text>
             </View>
             <View className="flex-1 rounded-2xl bg-background px-4 py-3 dark:bg-dark-bg-elevated">
-              <Text className="text-[11px] font-semibold uppercase tracking-[0.8px] text-text-muted dark:text-text-muted-dark">
+              <Text className="text-[11px] font-semibold uppercase tracking-[0.8px] text-text-muted dark:text-text-secondary-dark">
                 {t('nightsLeft')}
               </Text>
               <Text className="mt-1 text-sm font-bold text-text dark:text-text-primary-dark">
@@ -451,7 +461,7 @@ export default function ProfileScreen(): React.JSX.Element {
               </Text>
             </View>
             <View className="flex-1 rounded-2xl bg-background px-4 py-3 dark:bg-dark-bg-elevated">
-              <Text className="text-[11px] font-semibold uppercase tracking-[0.8px] text-text-muted dark:text-text-muted-dark">
+              <Text className="text-[11px] font-semibold uppercase tracking-[0.8px] text-text-muted dark:text-text-secondary-dark">
                 {t('savedEventsCount')}
               </Text>
               <Text className="mt-1 text-sm font-bold text-text dark:text-text-primary-dark">
@@ -472,11 +482,11 @@ export default function ProfileScreen(): React.JSX.Element {
             >
               <View
                 className="absolute left-[-14px] size-7 rounded-full"
-                style={{ backgroundColor: '#E8F0F8', top: '45%' }}
+                style={{ backgroundColor: voucherNotchBg, top: '45%' }}
               />
               <View
                 className="absolute right-[-14px] size-7 rounded-full"
-                style={{ backgroundColor: '#E8F0F8', top: '45%' }}
+                style={{ backgroundColor: voucherNotchBg, top: '45%' }}
               />
               <View className="mb-2 flex-row items-center">
                 <Ticket color={Colors.primary} size={22} />
@@ -491,7 +501,7 @@ export default function ProfileScreen(): React.JSX.Element {
                 {t(welcomeOfferSubtitleKey)}
               </Text>
               <View className="mb-3.5 h-px w-4/5 bg-border dark:bg-dark-border" />
-              <Text className="mb-1.5 text-lg font-extrabold tracking-[2px] text-secondary">
+              <Text className="mb-1.5 text-lg font-extrabold tracking-[2px] text-secondary dark:text-secondary-bright">
                 {t('codeLabel', { code: welcomeOfferCode })}
               </Text>
               <Text className="mb-4 text-xs text-text-muted dark:text-text-muted-dark">
@@ -540,8 +550,11 @@ export default function ProfileScreen(): React.JSX.Element {
             onPress={handleSupport}
             testID="contact-support"
           >
-            <Headphones size={20} color={Colors.secondary} />
-            <Text className="ml-2.5 text-base font-bold text-secondary">
+            <Headphones
+              size={20}
+              color={isDark ? Colors.secondaryBright : Colors.secondary}
+            />
+            <Text className="ml-2.5 text-base font-bold text-secondary dark:text-secondary-bright">
               {t('contactSupport')}
             </Text>
           </Pressable>
@@ -562,9 +575,14 @@ export default function ProfileScreen(): React.JSX.Element {
                 >
                   <View
                     className="mr-3.5 size-[38px] items-center justify-center rounded-[10px] opacity-60"
-                    style={{ backgroundColor: `${item.color}15` }}
+                    style={{
+                      backgroundColor: `${accentOnDarkBackground(item.color, isDark)}15`,
+                    }}
                   >
-                    <item.icon size={20} color={item.color} />
+                    <item.icon
+                      size={20}
+                      color={accentOnDarkBackground(item.color, isDark)}
+                    />
                   </View>
                   <Text className="flex-1 text-[15px] font-semibold text-text-muted dark:text-text-muted-dark">
                     {item.label}
@@ -587,14 +605,22 @@ export default function ProfileScreen(): React.JSX.Element {
               >
                 <View
                   className="mr-3.5 size-[38px] items-center justify-center rounded-[10px]"
-                  style={{ backgroundColor: `${item.color}15` }}
+                  style={{
+                    backgroundColor: `${accentOnDarkBackground(item.color, isDark)}15`,
+                  }}
                 >
-                  <item.icon size={20} color={item.color} />
+                  <item.icon
+                    size={20}
+                    color={accentOnDarkBackground(item.color, isDark)}
+                  />
                 </View>
                 <Text className="flex-1 text-[15px] font-semibold text-text dark:text-text-primary-dark">
                   {item.label}
                 </Text>
-                <ChevronRight size={18} color={Colors.textLight} />
+                <ChevronRight
+                  size={18}
+                  color={isDark ? Colors.textMutedDark : Colors.textLight}
+                />
               </Pressable>
             );
           })}

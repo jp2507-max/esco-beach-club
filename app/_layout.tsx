@@ -3,6 +3,7 @@ import '@/src/lib/location/restaurant-geofence';
 import '../global.css';
 
 import NetInfo from '@react-native-community/netinfo';
+import { ThemeProvider } from '@react-navigation/native';
 import * as Sentry from '@sentry/react-native';
 import {
   focusManager,
@@ -11,10 +12,11 @@ import {
   QueryClientProvider,
 } from '@tanstack/react-query';
 import { isRunningInExpoGo } from 'expo';
+import * as Linking from 'expo-linking';
 import { Stack, useNavigationContainerRef } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Updates from 'expo-updates';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AppState, type AppStateStatus, Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -23,8 +25,19 @@ import { Colors } from '@/constants/colors';
 import { AuthProvider, useAuth } from '@/providers/AuthProvider';
 import { DataProvider } from '@/providers/DataProvider';
 import { RestaurantPresenceProvider } from '@/providers/RestaurantPresenceProvider';
+import { ReferralClaimEffect } from '@/src/components/referral/referral-claim-effect';
 import { configureGoogleSignIn } from '@/src/lib/auth/social-auth';
-import { useThemePreferenceStore } from '@/src/stores/theme-preference-store';
+import { getEscoNavigationTheme } from '@/src/lib/navigation/app-navigation-theme';
+import { createNativeHeaderOptions } from '@/src/lib/navigation/stack-header-options';
+import {
+  extractInviteCodeFromUrl,
+  setPendingReferralCode,
+} from '@/src/lib/referral/pending-referral';
+import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
+import {
+  applyThemePreference,
+  useThemePreferenceStore,
+} from '@/src/stores/theme-preference-store';
 import { ActivityIndicator, Text, View } from '@/src/tw';
 
 const navigationIntegration = Sentry.reactNavigationIntegration({
@@ -196,10 +209,38 @@ function ReactQueryLifecycle(): null {
 }
 
 function AuthRuntimeBootstrap(): null {
-  useThemePreferenceStore((state) => state.preference);
+  const preference = useThemePreferenceStore((state) => state.preference);
 
   useEffect(() => {
     configureGoogleSignIn();
+  }, []);
+
+  useEffect(() => {
+    applyThemePreference(preference);
+  }, [preference]);
+
+  return null;
+}
+
+function ReferralDeepLinkCapture(): null {
+  useEffect(() => {
+    function handleUrl(url: string | null): void {
+      if (!url) return;
+      const code = extractInviteCodeFromUrl(url);
+      if (code) {
+        setPendingReferralCode(code);
+      }
+    }
+
+    const subscription = Linking.addEventListener('url', (event) => {
+      handleUrl(event.url);
+    });
+
+    void Linking.getInitialURL().then(handleUrl);
+
+    return () => {
+      subscription.remove();
+    };
   }, []);
 
   return null;
@@ -216,7 +257,10 @@ function AuthenticatedDataProvider({
 
   return (
     <DataProvider>
-      <RestaurantPresenceProvider>{children}</RestaurantPresenceProvider>
+      <RestaurantPresenceProvider>
+        <ReferralClaimEffect />
+        {children}
+      </RestaurantPresenceProvider>
     </DataProvider>
   );
 }
@@ -224,6 +268,7 @@ function AuthenticatedDataProvider({
 function RootLayoutNav() {
   const { isAuthenticated, isLoading } = useAuth();
   const { t } = useTranslation('common');
+  const isDark = useAppIsDark();
 
   useEffect(() => {
     if (!isLoading) {
@@ -236,9 +281,17 @@ function RootLayoutNav() {
   }
 
   return (
-    <Stack screenOptions={{ headerBackTitle: t('back') }}>
+    <Stack
+      screenOptions={createNativeHeaderOptions(isDark, {
+        headerBackTitle: t('back'),
+      })}
+    >
       <Stack.Screen
         name="(auth)"
+        options={{ headerShown: false, animation: 'fade' }}
+      />
+      <Stack.Screen
+        name="invite/[code]"
         options={{ headerShown: false, animation: 'fade' }}
       />
       <Stack.Protected guard={isAuthenticated}>
@@ -254,6 +307,16 @@ function RootLayoutNav() {
   );
 }
 
+function EscoNavigationTheme({ children }: { children: React.ReactNode }) {
+  const isDark = useAppIsDark();
+  const navigationTheme = useMemo(
+    () => getEscoNavigationTheme(isDark),
+    [isDark]
+  );
+
+  return <ThemeProvider value={navigationTheme}>{children}</ThemeProvider>;
+}
+
 function RootLayout(): React.JSX.Element {
   const navigationRef = useNavigationContainerRef();
 
@@ -266,18 +329,21 @@ function RootLayout(): React.JSX.Element {
       <ReactQueryLifecycle />
       <AuthRuntimeBootstrap />
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <AuthProvider>
-          <Sentry.ErrorBoundary
-            beforeCapture={(scope) => {
-              scope.setTag('component_boundary', 'root_layout');
-            }}
-            fallback={<AppErrorFallback />}
-          >
-            <AuthenticatedDataProvider>
-              <RootLayoutNav />
-            </AuthenticatedDataProvider>
-          </Sentry.ErrorBoundary>
-        </AuthProvider>
+        <EscoNavigationTheme>
+          <AuthProvider>
+            <ReferralDeepLinkCapture />
+            <Sentry.ErrorBoundary
+              beforeCapture={(scope) => {
+                scope.setTag('component_boundary', 'root_layout');
+              }}
+              fallback={<AppErrorFallback />}
+            >
+              <AuthenticatedDataProvider>
+                <RootLayoutNav />
+              </AuthenticatedDataProvider>
+            </Sentry.ErrorBoundary>
+          </AuthProvider>
+        </EscoNavigationTheme>
       </GestureHandlerRootView>
     </QueryClientProvider>
   );

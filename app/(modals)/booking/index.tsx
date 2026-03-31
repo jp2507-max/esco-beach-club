@@ -8,10 +8,10 @@ import {
 } from 'lucide-react-native';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert } from 'react-native';
+import { Alert, useColorScheme } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Colors } from '@/constants/colors';
+import { accentOnDarkBackground, Colors } from '@/constants/colors';
 import { submitTableReservation } from '@/lib/api';
 import {
   useBookingContentData,
@@ -157,6 +157,8 @@ export default function BookingModalScreen(): React.JSX.Element {
   const { profile, userId } = useProfileData();
   const { bookingOccasions, bookingTimeSlots } = useBookingContentData();
   const { t } = useTranslation(['booking', 'common']);
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
 
   const [now, setNow] = useState(() => new Date());
   const dates = useMemo(() => getNext7Days(now), [now]);
@@ -311,7 +313,10 @@ export default function BookingModalScreen(): React.JSX.Element {
         <Animated.View style={contentStyle}>
           <View className="mb-7">
             <View className="mb-3.5 flex-row items-center">
-              <CalendarDays color={Colors.primary} size={18} />
+              <CalendarDays
+                color={accentOnDarkBackground(Colors.primary, isDark)}
+                size={18}
+              />
               <Text className="ml-2 text-[17px] font-bold text-text dark:text-text-primary-dark">
                 {t('booking:selectDate')}
               </Text>
@@ -363,7 +368,10 @@ export default function BookingModalScreen(): React.JSX.Element {
 
           <View className="mb-7">
             <View className="mb-3.5 flex-row items-center">
-              <Sparkles color={Colors.primary} size={18} />
+              <Sparkles
+                color={accentOnDarkBackground(Colors.primary, isDark)}
+                size={18}
+              />
               <Text className="ml-2 text-[17px] font-bold text-text dark:text-text-primary-dark">
                 {t('booking:pickTime')}
               </Text>
@@ -384,15 +392,23 @@ export default function BookingModalScreen(): React.JSX.Element {
                     disabled={!slot.available || isSubmitting}
                     style={{
                       backgroundColor: !slot.available
-                        ? Colors.sand
+                        ? isDark
+                          ? Colors.darkBgElevated
+                          : Colors.sand
                         : active
                           ? Colors.primary
-                          : Colors.surface,
+                          : isDark
+                            ? Colors.darkBgCard
+                            : Colors.surface,
                       borderColor: !slot.available
-                        ? Colors.sandDark
+                        ? isDark
+                          ? Colors.darkBorder
+                          : Colors.sandDark
                         : active
                           ? Colors.primary
-                          : Colors.border,
+                          : isDark
+                            ? Colors.darkBorder
+                            : Colors.border,
                       borderWidth: 1.5,
                       marginRight: 10,
                       opacity: !slot.available ? 0.6 : isSubmitting ? 0.7 : 1,
@@ -404,10 +420,14 @@ export default function BookingModalScreen(): React.JSX.Element {
                       className="text-[15px] font-bold"
                       style={{
                         color: !slot.available
-                          ? Colors.textLight
+                          ? isDark
+                            ? Colors.textMutedDark
+                            : Colors.textLight
                           : active
                             ? '#fff'
-                            : Colors.text,
+                            : isDark
+                              ? Colors.textPrimaryDark
+                              : Colors.text,
                       }}
                     >
                       {slot.time}
@@ -425,7 +445,10 @@ export default function BookingModalScreen(): React.JSX.Element {
 
           <View className="mb-7">
             <View className="mb-3.5 flex-row items-center">
-              <Users color={Colors.primary} size={18} />
+              <Users
+                color={accentOnDarkBackground(Colors.primary, isDark)}
+                size={18}
+              />
               <Text className="ml-2 text-[17px] font-bold text-text dark:text-text-primary-dark">
                 {t('booking:numGuests')}
               </Text>
@@ -440,7 +463,15 @@ export default function BookingModalScreen(): React.JSX.Element {
                 testID="pax-minus"
               >
                 <Minus
-                  color={pax <= 1 ? Colors.textLight : Colors.text}
+                  color={
+                    pax <= 1
+                      ? isDark
+                        ? Colors.textMutedDark
+                        : Colors.textLight
+                      : isDark
+                        ? Colors.textPrimaryDark
+                        : Colors.text
+                  }
                   size={20}
                 />
               </Pressable>
@@ -461,7 +492,15 @@ export default function BookingModalScreen(): React.JSX.Element {
                 testID="pax-plus"
               >
                 <Plus
-                  color={pax >= 20 ? Colors.textLight : Colors.text}
+                  color={
+                    pax >= 20
+                      ? isDark
+                        ? Colors.textMutedDark
+                        : Colors.textLight
+                      : isDark
+                        ? Colors.textPrimaryDark
+                        : Colors.text
+                  }
                   size={20}
                 />
               </Pressable>
@@ -484,9 +523,19 @@ export default function BookingModalScreen(): React.JSX.Element {
                     disabled={isSubmitting}
                     style={{
                       backgroundColor: active
-                        ? Colors.secondary
-                        : Colors.surface,
-                      borderColor: active ? Colors.secondary : Colors.border,
+                        ? isDark
+                          ? Colors.secondaryBright
+                          : Colors.secondary
+                        : isDark
+                          ? Colors.darkBgCard
+                          : Colors.surface,
+                      borderColor: active
+                        ? isDark
+                          ? Colors.secondaryBright
+                          : Colors.secondary
+                        : isDark
+                          ? Colors.darkBorder
+                          : Colors.border,
                       borderWidth: 1.5,
                       opacity: isSubmitting ? 0.7 : 1,
                     }}
@@ -494,7 +543,15 @@ export default function BookingModalScreen(): React.JSX.Element {
                   >
                     <Text
                       className="text-sm font-semibold"
-                      style={{ color: active ? '#fff' : Colors.text }}
+                      style={{
+                        color: active
+                          ? isDark
+                            ? Colors.secondaryDeeper
+                            : '#fff'
+                          : isDark
+                            ? Colors.textPrimaryDark
+                            : Colors.text,
+                      }}
                     >
                       {option.label}
                     </Text>

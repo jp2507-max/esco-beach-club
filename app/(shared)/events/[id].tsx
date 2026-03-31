@@ -15,7 +15,7 @@ import {
 } from 'lucide-react-native';
 import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Share } from 'react-native';
+import { Share, useColorScheme } from 'react-native';
 import {
   cancelAnimation,
   useAnimatedStyle,
@@ -24,7 +24,7 @@ import {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Colors } from '@/constants/colors';
+import { accentOnDarkBackground, Colors } from '@/constants/colors';
 import { useEventById, useSavedEventsData } from '@/providers/DataProvider';
 import { HeaderGlassButton } from '@/src/components/ui';
 import { rmTiming } from '@/src/lib/animations/motion';
@@ -63,6 +63,8 @@ export default function EventDetailsScreen(): React.JSX.Element {
   const headerOpacity = useSharedValue(0);
 
   const { t } = useTranslation('events');
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const foundEvent = useEventById(id);
   const { isEventSaved, toggleSavedEvent } = useSavedEventsData();
 
@@ -264,13 +266,19 @@ export default function EventDetailsScreen(): React.JSX.Element {
         <Animated.View style={contentStyle}>
           <View className="mb-6 flex-row">
             <View className="mr-2.5 flex-row items-center rounded-xl border border-border bg-white px-3.5 py-2.5 dark:border-dark-border dark:bg-dark-bg-card">
-              <MapPin color={Colors.secondary} size={16} />
+              <MapPin
+                color={accentOnDarkBackground(Colors.secondary, isDark)}
+                size={16}
+              />
               <Text className="ml-1.5 text-[13px] font-semibold text-text dark:text-text-primary-dark">
                 {event.location}
               </Text>
             </View>
             <View className="flex-row items-center rounded-xl border border-border bg-white px-3.5 py-2.5 dark:border-dark-border dark:bg-dark-bg-card">
-              <Users color={Colors.primary} size={16} />
+              <Users
+                color={accentOnDarkBackground(Colors.primary, isDark)}
+                size={16}
+              />
               <Text className="ml-1.5 text-[13px] font-semibold text-text dark:text-text-primary-dark">
                 {t('attendeesCount', { count: event.attendees })}
               </Text>
@@ -299,10 +307,20 @@ export default function EventDetailsScreen(): React.JSX.Element {
             {priceTiers.map((tier) => (
               <View
                 key={tier.labelKey}
-                className="mb-3 rounded-[18px] border bg-white p-[18px] dark:bg-dark-bg-card"
+                className="mb-3 rounded-[18px] border p-[18px]"
                 style={{
-                  backgroundColor: tier.highlight ? '#FFF5F8' : Colors.surface,
-                  borderColor: tier.highlight ? Colors.primary : Colors.border,
+                  backgroundColor: tier.highlight
+                    ? isDark
+                      ? `${Colors.primary}22`
+                      : '#FFF5F8'
+                    : isDark
+                      ? Colors.darkBgCard
+                      : Colors.surface,
+                  borderColor: tier.highlight
+                    ? Colors.primary
+                    : isDark
+                      ? Colors.darkBorder
+                      : Colors.border,
                   borderWidth: tier.highlight ? 2 : 1,
                 }}
               >
@@ -321,19 +339,29 @@ export default function EventDetailsScreen(): React.JSX.Element {
                       style={{
                         backgroundColor: tier.highlight
                           ? Colors.primary
-                          : `${Colors.tealLight}40`,
+                          : isDark
+                            ? `${Colors.secondaryBright}30`
+                            : `${Colors.tealLight}40`,
                       }}
                     >
                       <tier.icon
                         size={20}
-                        color={tier.highlight ? '#fff' : Colors.secondary}
+                        color={
+                          tier.highlight
+                            ? '#fff'
+                            : accentOnDarkBackground(Colors.secondary, isDark)
+                        }
                       />
                     </View>
                     <View>
                       <Text
                         className="text-base font-bold"
                         style={{
-                          color: tier.highlight ? Colors.primary : Colors.text,
+                          color: tier.highlight
+                            ? Colors.primary
+                            : isDark
+                              ? Colors.textPrimaryDark
+                              : Colors.text,
                         }}
                       >
                         {t(tier.labelKey)}
@@ -346,7 +374,11 @@ export default function EventDetailsScreen(): React.JSX.Element {
                   <Text
                     className="text-[28px] font-extrabold"
                     style={{
-                      color: tier.highlight ? Colors.primary : Colors.text,
+                      color: tier.highlight
+                        ? Colors.primary
+                        : isDark
+                          ? Colors.textPrimaryDark
+                          : Colors.text,
                     }}
                   >
                     {tier.price}
@@ -362,7 +394,7 @@ export default function EventDetailsScreen(): React.JSX.Element {
                       style={{
                         backgroundColor: tier.highlight
                           ? Colors.primary
-                          : Colors.secondary,
+                          : accentOnDarkBackground(Colors.secondary, isDark),
                       }}
                     />
                     <Text className="text-[13px] font-medium text-text-secondary dark:text-text-secondary-dark">
@@ -379,16 +411,27 @@ export default function EventDetailsScreen(): React.JSX.Element {
             className="flex-row items-center rounded-2xl border px-4 py-4"
             onPress={() => router.push('/private-event')}
             style={{
-              backgroundColor: `${Colors.tealLight}25`,
-              borderColor: `${Colors.secondary}20`,
+              backgroundColor: isDark
+                ? `${Colors.secondaryBright}18`
+                : `${Colors.tealLight}25`,
+              borderColor: isDark
+                ? `${Colors.secondaryBright}35`
+                : `${Colors.secondary}20`,
             }}
             testID="private-party-link"
           >
             <View
-              className="mr-3.5 size-11 items-center justify-center rounded-[14px] border bg-white"
-              style={{ borderColor: `${Colors.secondary}20` }}
+              className="mr-3.5 size-11 items-center justify-center rounded-[14px] border border-border bg-white dark:border-dark-border dark:bg-dark-bg-elevated"
+              style={{
+                borderColor: isDark
+                  ? `${Colors.secondaryBright}35`
+                  : `${Colors.secondary}20`,
+              }}
             >
-              <PartyPopper color={Colors.secondary} size={20} />
+              <PartyPopper
+                color={accentOnDarkBackground(Colors.secondary, isDark)}
+                size={20}
+              />
             </View>
             <View className="flex-1">
               <Text className="mb-0.5 text-[15px] font-bold text-text dark:text-text-primary-dark">

@@ -1,7 +1,9 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { Wifi } from 'lucide-react-native';
-import React from 'react';
+import React, { useMemo } from 'react';
+import { useColorScheme } from 'react-native';
 
+import { Colors } from '@/constants/colors';
 import { cn } from '@/src/lib/utils';
 import { Text, View } from '@/src/tw';
 
@@ -37,14 +39,28 @@ export function MemberCard({
   tierLabel,
   variant = 'compact',
 }: MemberCardProps): React.JSX.Element {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const isCompact = variant === 'compact';
   const clampedProgress =
     `${Math.max(0, Math.min(tierProgressPercent, 100))}%` as `${number}%`;
   const qrSize = isCompact ? 36 : 148;
 
+  const gradientColors = useMemo((): readonly [string, string, string] => {
+    if (isDark) {
+      const [a, b, c] = Colors.cardGradientDark;
+      return [a, b, c];
+    }
+    return [
+      Colors.cardGradientStart,
+      Colors.cardGradientMiddle,
+      Colors.cardGradientEnd,
+    ];
+  }, [isDark]);
+
   return (
     <LinearGradient
-      colors={['#E91E63', '#F06292', '#FF9800']}
+      colors={gradientColors}
       end={{ x: 1, y: 1 }}
       start={{ x: 0, y: 0 }}
       style={{ borderRadius: 20, overflow: 'hidden' }}
@@ -74,12 +90,12 @@ export function MemberCard({
             >
               {tierLabel}
             </Text>
-            <Text className="mt-0.5 text-xs font-medium text-white/75">
+            <Text className="mt-0.5 text-xs font-medium text-white/85">
               {copy.balanceLabel}
             </Text>
           </View>
           {copy.statusLabel ? (
-            <Text className="mt-1 text-right text-xs font-semibold text-white/70">
+            <Text className="mt-1 text-right text-xs font-semibold text-white/85">
               {copy.statusLabel}
             </Text>
           ) : null}
@@ -94,7 +110,7 @@ export function MemberCard({
           >
             {cashbackPoints.toLocaleString()}
           </Text>
-          <Text className="ml-1.5 text-sm font-medium text-white/60">
+          <Text className="ml-1.5 text-sm font-medium text-white/80">
             {copy.balanceSuffix}
           </Text>
         </View>
@@ -108,7 +124,7 @@ export function MemberCard({
 
         <View className="flex-row items-end justify-between gap-4">
           <View className="flex-1">
-            <Text className="text-[10px] font-semibold tracking-[1px] text-white/55">
+            <Text className="text-[10px] font-semibold tracking-[1px] text-white/80">
               {copy.memberNameLabel}
             </Text>
             <Text

@@ -13,6 +13,7 @@ If additional rule files are added under `.cursor/rules/`, treat them as part of
 
 These rules should be considered required repository context before making code changes, proposing implementations, or reviewing code.
 
+As you are running in a Linux Subsystem on Windows you can not run bun typecheck and lint so no compiler verification possible
 Additional repo-specific expectations:
 
 - Reply concisely; no filler.

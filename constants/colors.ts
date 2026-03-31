@@ -1,30 +1,38 @@
+/**
+ * JS mirror of semantic colors in `global.css` `@theme`. Keep both in sync when
+ * changing tokens — Uniwind classes read CSS; native headers, gradients, and
+ * `StyleSheet` props read this file.
+ */
 export const Colors = {
   primary: '#E91E63',
-  primaryBright: '#FF4F8B',
+  primaryBright: '#FF6B9D',
   primaryDark: '#C2185B',
   secondary: '#009688',
+  secondaryBright: '#5EEAD4',
   secondaryDark: '#00796B',
   secondaryDeeper: '#004D40',
   background: '#FFFDF5',
-  darkBg: '#0F172A',
+  darkBg: '#0D0B14',
   surface: '#FFFFFF',
   card: '#FFFFFF',
-  darkBgCard: '#111827',
-  darkBgElevated: '#1F2937',
+  darkBgCard: '#1A1622',
+  darkBgElevated: '#272230',
   text: '#1A1A2E',
-  textPrimaryDark: '#F8FAFC',
+  textPrimaryDark: '#F1F5F9',
   textSecondary: '#6B7280',
-  textSecondaryDark: '#CBD5E1',
+  textSecondaryDark: '#D4C8E0',
   textLight: '#9CA3AF',
   textMuted: '#9CA3AF',
-  textMutedDark: '#94A3B8',
+  textMutedDark: '#A89CB8',
   border: '#F0EDE5',
   borderLight: '#F4E7DC',
-  darkBorder: '#334155',
-  darkBorderBright: '#475569',
+  darkBorder: '#3A3342',
+  darkBorderBright: '#524859',
   cardGradientStart: '#E91E63',
   cardGradientMiddle: '#F06292',
   cardGradientEnd: '#FF9800',
+  /** Member card gradient in dark mode (deeper, less glare). */
+  cardGradientDark: ['#9D1744', '#C45B8A', '#D4652E'] as const,
   teal: '#009688',
   tealLight: '#B2DFDB',
   pinkLight: '#FCE4EC',
@@ -32,6 +40,7 @@ export const Colors = {
   sandDark: '#E8E0CC',
   success: '#4CAF50',
   gold: '#C8A24D',
+  goldBright: '#F0D896',
   primaryFixed: '#FCE4EC',
   secondaryFixed: '#B2DFDB',
   surfaceContainerLow: '#FAF8F0',
@@ -59,5 +68,17 @@ export const Colors = {
     feature: 'rgba(143, 90, 54, 0.85)',
   },
 } as const;
+
+/** Icon / accent color on dark surfaces (cards, nav). Light mode returns `accent` unchanged. */
+export function accentOnDarkBackground(
+  accent: string,
+  isDark: boolean
+): string {
+  if (!isDark) return accent;
+  if (accent === Colors.gold) return Colors.goldBright;
+  if (accent === Colors.secondary) return Colors.secondaryBright;
+  if (accent === Colors.primary) return Colors.primaryBright;
+  return accent;
+}
 
 export default Colors;

@@ -11,7 +11,7 @@ export default function TabLayout(): React.JSX.Element {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
 
-  const tabBarBackground = isDark ? Colors.darkBgCard : '#F8F7F2';
+  const tabBarBackground = isDark ? Colors.darkBgCard : Colors.background;
   const inactiveTint = isDark ? Colors.textMutedDark : Colors.textSecondary;
   const activeTint = isDark ? Colors.primaryBright : Colors.primary;
   const handleTabPress = React.useCallback((): void => {

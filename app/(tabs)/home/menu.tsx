@@ -6,6 +6,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { useColorScheme } from 'react-native';
 
 import { Colors } from '@/constants/colors';
 import { useMenuContentData } from '@/providers/DataProvider';
@@ -219,7 +220,7 @@ function MenuItemRow({ item, tMenu }: MenuItemRowProps): React.JSX.Element {
         >
           {tMenu(item.descriptionKey)}
         </Text>
-        <Text className="text-[17px] font-extrabold text-secondary">
+        <Text className="text-[17px] font-extrabold text-secondary dark:text-secondary-bright">
           {item.price}
         </Text>
       </View>
@@ -229,6 +230,7 @@ function MenuItemRow({ item, tMenu }: MenuItemRowProps): React.JSX.Element {
 
 export default function MenuScreen(): React.JSX.Element {
   const tMenu = useMenuTranslation();
+  const isDark = useColorScheme() === 'dark';
   const [activeCategory, setActiveCategory] = useState<string>('cocktails');
   const { contentStyle } = useScreenEntry();
   const { menuCategories: menuCategoryRecords, menuItems: menuItemRecords } =
@@ -301,15 +303,35 @@ export default function MenuScreen(): React.JSX.Element {
                 className="rounded-full px-5 py-2.5"
                 onPress={() => setActiveCategory(cat.key)}
                 style={{
-                  backgroundColor: active ? Colors.text : Colors.surface,
-                  borderColor: active ? Colors.text : Colors.border,
+                  backgroundColor: active
+                    ? isDark
+                      ? Colors.textPrimaryDark
+                      : Colors.text
+                    : isDark
+                      ? Colors.darkBgCard
+                      : Colors.surface,
+                  borderColor: active
+                    ? isDark
+                      ? Colors.textPrimaryDark
+                      : Colors.text
+                    : isDark
+                      ? Colors.darkBorder
+                      : Colors.border,
                   borderWidth: 1.5,
                 }}
                 testID={`tab-${cat.key}`}
               >
                 <Text
                   className="text-sm font-semibold"
-                  style={{ color: active ? '#fff' : Colors.textSecondary }}
+                  style={{
+                    color: active
+                      ? isDark
+                        ? Colors.darkBg
+                        : '#fff'
+                      : isDark
+                        ? Colors.textSecondaryDark
+                        : Colors.textSecondary,
+                  }}
                 >
                   {tMenu(cat.labelKey)}
                 </Text>
