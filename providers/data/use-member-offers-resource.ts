@@ -3,13 +3,10 @@ import { useMemo } from 'react';
 import { db } from '@/src/lib/instant';
 import { type InstantRecord, mapMemberOffer } from '@/src/lib/mappers';
 
-import {
-  EMPTY_MEMBER_OFFERS,
-  type MemberOffersData,
-} from './context';
+import { EMPTY_MEMBER_OFFERS, type MemberOffersData } from './context';
 
 type MemberOffersResourceParams = {
-  userId: string;
+  userId: string | null | undefined;
 };
 
 export function useMemberOffersResource(

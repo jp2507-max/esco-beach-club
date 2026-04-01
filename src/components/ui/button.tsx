@@ -29,7 +29,7 @@ const BUTTON_VARIANTS = {
   },
   secondary: {
     container: 'bg-secondary dark:bg-secondary-bright',
-    text: 'text-white dark:text-secondaryDeeper',
+    text: 'text-white dark:text-secondary-deeper',
   },
 } as const;
 

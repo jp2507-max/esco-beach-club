@@ -18,7 +18,7 @@ import {
 } from 'lucide-react-native';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Linking, useColorScheme } from 'react-native';
+import { Alert, Linking } from 'react-native';
 import {
   cancelAnimation,
   useAnimatedStyle,
@@ -44,6 +44,7 @@ import {
   hasRewardBenefit,
   rewardBenefitKeys,
 } from '@/src/lib/loyalty';
+import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 
@@ -126,8 +127,7 @@ export default function ProfileScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { t } = useTranslation('profile');
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const isDark = useAppIsDark();
   const voucherScale = useSharedValue(0.9);
   const voucherOpacity = useSharedValue(0);
 
@@ -328,11 +328,17 @@ export default function ProfileScreen(): React.JSX.Element {
   const earnedProgress = cashbackLifetimePoints > 0 ? 100 : 0;
   const savedProgress = saved > 0 ? 100 : 0;
 
-  const profileCanvasBg = isDark ? Colors.darkBg : '#E8F0F8';
-  const profileOrbLarge = isDark ? '#E9255E22' : '#F8BBD020';
-  const profileOrbMid = isDark ? '#5ED4AF1C' : '#B2EBF220';
-  const profileOrbSmall = isDark ? '#FF6B9D18' : '#F3E5F520';
-  const voucherNotchBg = isDark ? Colors.darkBg : '#E8F0F8';
+  const profileCanvasBg = isDark ? Colors.darkBg : Colors.profileCanvasBg;
+  const profileOrbLarge = isDark
+    ? Colors.profileOrbLargeDark
+    : Colors.profileOrbLarge;
+  const profileOrbMid = isDark
+    ? Colors.profileOrbMidDark
+    : Colors.profileOrbMid;
+  const profileOrbSmall = isDark
+    ? Colors.profileOrbSmallDark
+    : Colors.profileOrbSmall;
+  const voucherNotchBg = isDark ? Colors.darkBg : Colors.voucherNotchBg;
 
   return (
     <View

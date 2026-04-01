@@ -23,7 +23,7 @@ const BADGE_TONES = {
   },
   success: {
     container: 'bg-success/15 dark:bg-success/25',
-    text: 'text-success',
+    text: 'text-success dark:text-success-bright',
   },
   warning: {
     container: 'bg-warning/15 dark:bg-warning-dark/25',

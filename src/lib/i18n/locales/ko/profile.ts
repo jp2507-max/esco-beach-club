@@ -233,6 +233,13 @@ const profile = {
     viewAllHint: '전체 추천 목록을 엽니다',
     joinedViaYourLink: '내 링크로 가입함',
     noReferralsYet: '아직 추천이 없습니다. 코드를 공유해 보세요!',
+    status: {
+      completed: '완료',
+      pending: '대기 중',
+      accepted: '수락됨',
+      rejected: '거절됨',
+      unknown: '알 수 없음',
+    },
     shareInviteLink: '초대 링크 공유',
     shareMessage:
       '내 추천 코드로 Esco Life에 가입하세요: {{code}}\nhttps://escolife.app/invite/{{code}}',

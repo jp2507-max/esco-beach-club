@@ -65,8 +65,8 @@ export function normalizeSignupOnboardingData(
 ): SignupOnboardingData | null {
   if (!value) return null;
 
-  const normalizedDisplayName = value.displayName.trim();
-  const normalizedDateOfBirth = value.dateOfBirth.trim();
+  const normalizedDisplayName = value.displayName?.trim() ?? '';
+  const normalizedDateOfBirth = value.dateOfBirth?.trim() ?? '';
 
   const hasValidDisplayName =
     normalizedDisplayName.length >= 2 && normalizedDisplayName.length <= 60;

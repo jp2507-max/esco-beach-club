@@ -153,7 +153,11 @@ export default function HelpCenterScreen(): React.JSX.Element {
             transition={180}
           />
           <LinearGradient
-            colors={['rgba(255,255,255,0)', 'rgba(251,249,241,0.92)']}
+            colors={
+              isDark
+                ? ['rgba(13,11,20,0)', 'rgba(13,11,20,0.92)']
+                : ['rgba(255,255,255,0)', 'rgba(251,249,241,0.92)']
+            }
             style={{
               bottom: 0,
               left: 0,

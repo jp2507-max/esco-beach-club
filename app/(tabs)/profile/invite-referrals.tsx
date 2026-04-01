@@ -10,8 +10,21 @@ import { shadows } from '@/src/lib/styles/shadows';
 import { ScrollView, Text, View } from '@/src/tw';
 import { Image } from '@/src/tw/image';
 
-const defaultAvatar =
-  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face';
+const defaultAvatar = require('@/assets/images/icon.png');
+
+const statusToKey: Record<string, string> = {
+  Completed: 'invite.status.completed',
+  Pending: 'invite.status.pending',
+  Accepted: 'invite.status.accepted',
+  Rejected: 'invite.status.rejected',
+};
+
+type StatusKey =
+  | 'invite.status.completed'
+  | 'invite.status.pending'
+  | 'invite.status.accepted'
+  | 'invite.status.rejected'
+  | 'invite.status.unknown';
 
 export default function InviteReferralsScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
@@ -77,7 +90,10 @@ export default function InviteReferralsScreen(): React.JSX.Element {
                 className="text-xs font-bold"
                 style={{ color: referralStatusText }}
               >
-                {ref.status}
+                {t(
+                  (statusToKey[ref.status] ||
+                    'invite.status.unknown') as StatusKey
+                )}
               </Text>
             </View>
           </View>

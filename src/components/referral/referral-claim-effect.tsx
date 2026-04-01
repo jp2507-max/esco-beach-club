@@ -7,14 +7,28 @@ import {
   getPendingReferralCode,
 } from '@/src/lib/referral/pending-referral';
 import { postClaimReferral } from '@/src/lib/referral/referral-api';
+import { usePendingReferralSignal } from '@/src/stores/pending-referral-signal-store';
 
 /**
  * After sign-in, submits a pending invite code (from deep link) to the trusted API once.
+ *
+ * Subscribes to a Zustand signal so deep links that arrive while the user is
+ * already authenticated still trigger a claim attempt.
  */
 export function ReferralClaimEffect(): null {
   const { isLoading, user } = db.useAuth();
   const { profile } = useProfileData();
   const attemptedForUserRef = useRef<string | null>(null);
+  const referralSignalVersion = usePendingReferralSignal((s) => s.version);
+  const prevVersionRef = useRef(referralSignalVersion);
+
+  // When a new deep-link bumps the signal, allow a re-attempt for the current user.
+  useEffect(() => {
+    if (referralSignalVersion !== prevVersionRef.current) {
+      prevVersionRef.current = referralSignalVersion;
+      attemptedForUserRef.current = null;
+    }
+  }, [referralSignalVersion]);
 
   useEffect(() => {
     if (isLoading || !user?.refresh_token || !profile?.id) return;
@@ -52,11 +66,12 @@ export function ReferralClaimEffect(): null {
         }
 
         attemptedForUserRef.current = null;
-      } catch {
+      } catch (error) {
+        console.error('[ReferralClaimEffect] Claim failed:', error);
         attemptedForUserRef.current = null;
       }
     })();
-  }, [isLoading, profile?.id, user?.id, user?.refresh_token]);
+  }, [isLoading, profile?.id, user?.id, user?.refresh_token, referralSignalVersion]);
 
   return null;
 }

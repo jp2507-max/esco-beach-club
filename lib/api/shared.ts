@@ -5,12 +5,9 @@ import type {
   Profile,
   RewardTransaction,
 } from '@/lib/types';
-import {
-  onboardingPermissionStatuses,
-  rewardTierKeys,
-} from '@/lib/types';
-import { rewardServiceResponseSchema } from '@/src/lib/reward-backend-contract';
+import { onboardingPermissionStatuses, rewardTierKeys } from '@/lib/types';
 import type { InstantRecord } from '@/src/lib/mappers';
+import { rewardServiceResponseSchema } from '@/src/lib/reward-backend-contract';
 import { normalizeMemberSegment } from '@/src/lib/utils/member-segment';
 
 export function nowIso(): string {
@@ -31,7 +28,8 @@ export function getRewardServiceEndpoint(): string {
 export function normalizeMemberSince(
   value: string | null | undefined
 ): string | null | undefined {
-  if (value === undefined || value === null) return undefined;
+  if (value === undefined) return undefined;
+  if (value === null) return null;
 
   const trimmed = value.trim();
   if (!trimmed) return undefined;

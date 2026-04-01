@@ -63,7 +63,7 @@ export type Profile = {
   nights_left: number;
   cashback_points_balance: number;
   cashback_points_lifetime_earned: number;
-  lifetime_tier_key: RewardTierKey;
+  lifetime_tier_key: RewardTierKey | null;
   next_tier_key: RewardTierKey | null;
   tier_progress_points: number;
   tier_progress_target_points: number;

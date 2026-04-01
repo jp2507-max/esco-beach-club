@@ -22,19 +22,30 @@ export async function verifyInstantRefreshToken(
   if (!appId || !refreshToken) return null;
 
   const apiURI = getInstantApiUriForServer();
-  const response = await fetch(`${apiURI}/runtime/auth/verify_refresh_token`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      'app-id': appId,
-      'refresh-token': refreshToken,
-    }),
-  });
+
+  let response: Response;
+  try {
+    response = await fetch(`${apiURI}/runtime/auth/verify_refresh_token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        'app-id': appId,
+        'refresh-token': refreshToken,
+      }),
+    });
+  } catch (err) {
+    console.error('verify_refresh_token network error:', err);
+    return null;
+  }
 
   if (!response.ok) return null;
 
-  const data = (await response.json()) as VerifyRefreshJson;
-  const userId = data.user?.id;
-  if (typeof userId !== 'string' || !userId) return null;
-  return { userId };
+  try {
+    const data = (await response.json()) as VerifyRefreshJson;
+    const userId = data.user?.id;
+    if (typeof userId !== 'string' || !userId) return null;
+    return { userId };
+  } catch {
+    return null;
+  }
 }

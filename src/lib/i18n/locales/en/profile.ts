@@ -236,6 +236,13 @@ const profile = {
     viewAllHint: 'Opens the full list of your referrals',
     joinedViaYourLink: 'Joined via your link',
     noReferralsYet: 'No referrals yet. Share your code!',
+    status: {
+      completed: 'Completed',
+      pending: 'Pending',
+      accepted: 'Accepted',
+      rejected: 'Rejected',
+      unknown: 'Unknown',
+    },
     shareInviteLink: 'Share Invite Link',
     shareMessage:
       'Join Esco Life with my referral code: {{code}}\nhttps://escolife.app/invite/{{code}}',

@@ -22,6 +22,10 @@ type ThemePreferenceState = {
   setPreference: (preference: ThemePreference) => void;
 };
 
+type ApplyThemePreferenceOptions = {
+  allowSystemReset?: boolean;
+};
+
 const themeStorage = createMMKV({ id: 'esco.theme-preference' });
 
 const mmkvStateStorage: StateStorage = {
@@ -35,10 +39,20 @@ const mmkvStateStorage: StateStorage = {
   },
 };
 
-export function applyThemePreference(preference: ThemePreference): void {
-  Appearance.setColorScheme(
-    preference === 'system' ? 'unspecified' : preference
-  );
+export function applyThemePreference(
+  preference: ThemePreference,
+  options: ApplyThemePreferenceOptions = {}
+): void {
+  if (preference === 'system') {
+    // RN 0.83 can surface `unspecified` through `useColorScheme()` after
+    // resetting to system. Skip that reset during cold start and only use it
+    // for an explicit in-app change back to system mode.
+    if (!options.allowSystemReset) return;
+    Appearance.setColorScheme('unspecified');
+    return;
+  }
+
+  Appearance.setColorScheme(preference);
 }
 
 function isThemePreference(value: unknown): value is ThemePreference {
@@ -67,7 +81,7 @@ function getStoredThemePreference(): ThemePreference {
 
 const initialThemePreference = getStoredThemePreference();
 
-applyThemePreference(initialThemePreference);
+applyThemePreference(initialThemePreference, { allowSystemReset: false });
 
 export function getThemePreferenceLabelKey(
   preference: ThemePreference
@@ -82,17 +96,15 @@ export const useThemePreferenceStore = create<ThemePreferenceState>()(
     (set) => ({
       preference: initialThemePreference,
       setPreference: (preference: ThemePreference): void => {
-        applyThemePreference(preference);
-        set({ preference });
+        set((state) => {
+          if (state.preference === preference) return state;
+          applyThemePreference(preference, { allowSystemReset: true });
+          return { preference };
+        });
       },
     }),
     {
       name: 'theme-preference',
-      onRehydrateStorage: () => (state) => {
-        if (state?.preference) {
-          applyThemePreference(state.preference);
-        }
-      },
       partialize: (state) => ({ preference: state.preference }),
       storage: createJSONStorage(() => mmkvStateStorage),
       version: 1,

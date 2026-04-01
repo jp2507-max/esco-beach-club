@@ -118,6 +118,7 @@ const common = {
     title: "This screen doesn't exist.",
     cta: 'Go to home screen',
   },
+  Member: 'Member',
 } as const;
 
 export default common;

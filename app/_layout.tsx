@@ -16,7 +16,7 @@ import * as Linking from 'expo-linking';
 import { Stack, useNavigationContainerRef } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Updates from 'expo-updates';
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AppState, type AppStateStatus, Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -33,6 +33,7 @@ import {
   extractInviteCodeFromUrl,
   setPendingReferralCode,
 } from '@/src/lib/referral/pending-referral';
+import { usePendingReferralSignal } from '@/src/stores/pending-referral-signal-store';
 import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
 import {
   applyThemePreference,
@@ -210,25 +211,33 @@ function ReactQueryLifecycle(): null {
 
 function AuthRuntimeBootstrap(): null {
   const preference = useThemePreferenceStore((state) => state.preference);
+  const hasAppliedThemePreferenceRef = useRef(false);
 
   useEffect(() => {
     configureGoogleSignIn();
   }, []);
 
+  // Re-apply when preference changes (and after mount) so native UI stays aligned
+  // with the store; module init already applied once on import.
   useEffect(() => {
-    applyThemePreference(preference);
+    applyThemePreference(preference, {
+      allowSystemReset: hasAppliedThemePreferenceRef.current,
+    });
+    hasAppliedThemePreferenceRef.current = true;
   }, [preference]);
 
   return null;
 }
 
 function ReferralDeepLinkCapture(): null {
+  const bumpReferralSignal = usePendingReferralSignal((s) => s.bump);
+
   useEffect(() => {
     function handleUrl(url: string | null): void {
       if (!url) return;
       const code = extractInviteCodeFromUrl(url);
-      if (code) {
-        setPendingReferralCode(code);
+      if (code && setPendingReferralCode(code)) {
+        bumpReferralSignal();
       }
     }
 
@@ -241,7 +250,7 @@ function ReferralDeepLinkCapture(): null {
     return () => {
       subscription.remove();
     };
-  }, []);
+  }, [bumpReferralSignal]);
 
   return null;
 }

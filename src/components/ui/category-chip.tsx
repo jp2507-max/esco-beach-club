@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { useColorScheme } from 'react-native';
 import {
+  cancelAnimation,
   interpolateColor,
   useAnimatedStyle,
   useSharedValue,
@@ -46,6 +47,7 @@ export function CategoryChip({
 
   useEffect(() => {
     progress.set(withTiming(isActive ? 1 : 0, rmTiming(motion.dur.sm)));
+    return () => cancelAnimation(progress);
   }, [isActive, progress]);
 
   const activeBg = isDark ? Colors.secondaryBright : Colors.secondary;

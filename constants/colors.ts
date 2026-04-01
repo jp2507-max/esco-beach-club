@@ -67,6 +67,23 @@ export const Colors = {
     faceLight: '#ffd9bc',
     feature: 'rgba(143, 90, 54, 0.85)',
   },
+  ACTIVE_BG_DARK: 'rgba(255,107,157,0.14)',
+  ACTIVE_BG_LIGHT: 'rgba(233,30,99,0.1)',
+  badgeDarkBackground: '#1A1622',
+  badgeLightBackground: '#FFF8F5',
+  badgeWarningDarkBackground: 'rgba(245, 158, 11, 0.13)',
+  badgeWarningLightBackground: '#FFF8E1',
+  badgeWarningDarkBorder: '#F59E0B',
+  badgeWarningLightBorder: '#F9A825',
+  eventTierHighlightLight: '#FFF5F8',
+  profileCanvasBg: '#E8F0F8',
+  profileOrbLarge: '#F8BBD020',
+  profileOrbLargeDark: '#E9255E22',
+  profileOrbMid: '#B2EBF220',
+  profileOrbMidDark: '#5ED4AF1C',
+  profileOrbSmall: '#F3E5F520',
+  profileOrbSmallDark: '#FF6B9D18',
+  voucherNotchBg: '#E8F0F8',
 } as const;
 
 /** Icon / accent color on dark surfaces (cards, nav). Light mode returns `accent` unchanged. */

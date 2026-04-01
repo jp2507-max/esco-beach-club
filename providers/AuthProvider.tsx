@@ -1,23 +1,12 @@
 import createContextHook from '@nkzw/create-context-hook';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
-import {
-  canTryGoogleAudienceFallback,
-  getAppleIdToken,
-  getGoogleIdToken,
-  getGoogleIdTokenWithOptions,
-} from '@/src/lib/auth/social-auth';
 import {
   getIdTokenAudienceClaim,
   getIdTokenNonceClaim,
   resolveDisplayNameForCreate,
 } from '@/src/lib/auth/id-token';
-import {
-  applyOnboardingProfileDataForNewUser,
-  hasRequiredSignupConsent,
-  normalizeSignupOnboardingData,
-  type SignupOnboardingData,
-} from '@/src/lib/auth/signup-onboarding';
 import {
   DEFAULT_GOOGLE_CLIENT_NAME,
   extractAuthErrorMessage,
@@ -25,6 +14,18 @@ import {
   shouldTryGoogleAudienceFallback,
   toError,
 } from '@/src/lib/auth/provider-error-mapping';
+import {
+  applyOnboardingProfileDataForNewUser,
+  hasRequiredSignupConsent,
+  normalizeSignupOnboardingData,
+  type SignupOnboardingData,
+} from '@/src/lib/auth/signup-onboarding';
+import {
+  canTryGoogleAudienceFallback,
+  getAppleIdToken,
+  getGoogleIdToken,
+  getGoogleIdTokenWithOptions,
+} from '@/src/lib/auth/social-auth';
 import { db } from '@/src/lib/instant';
 import { captureHandledError } from '@/src/lib/monitoring';
 
@@ -45,6 +46,7 @@ type SignInProviderParams = {
 };
 
 export const [AuthProvider, useAuth] = createContextHook(() => {
+  const { t } = useTranslation(['auth', 'common']);
   const { error: authError, isLoading, user } = db.useAuth();
   const [appleSignInLoading, setAppleSignInLoading] = useState<boolean>(false);
   const [googleSignInLoading, setGoogleSignInLoading] =
@@ -89,10 +91,11 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       ) {
         throw new Error('signupConsentRequired');
       }
-      const displayNameForCreate = resolveDisplayNameForCreate({
-        idToken,
-        onboardingDisplayName: onboardingData?.displayName,
-      });
+      const displayNameForCreate =
+        resolveDisplayNameForCreate({
+          idToken,
+          onboardingDisplayName: onboardingData?.displayName,
+        }) ?? t('auth:member', { defaultValue: 'Member' });
       const createFields = {
         display_name: displayNameForCreate,
       };
@@ -142,10 +145,11 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       const primaryToken = await getGoogleIdToken();
       const { clientName, idToken } = primaryToken;
       const primaryTokenNonce = getIdTokenNonceClaim(idToken);
-      const primaryDisplayNameForCreate = resolveDisplayNameForCreate({
-        idToken,
-        onboardingDisplayName: onboardingData?.displayName,
-      });
+      const primaryDisplayNameForCreate =
+        resolveDisplayNameForCreate({
+          idToken,
+          onboardingDisplayName: onboardingData?.displayName,
+        }) ?? t('auth:member', { defaultValue: 'Member' });
       const primaryCreateFields = {
         display_name: primaryDisplayNameForCreate,
       };
@@ -188,10 +192,11 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
             const fallbackTokenNonce = getIdTokenNonceClaim(
               fallbackToken.idToken
             );
-            const fallbackDisplayNameForCreate = resolveDisplayNameForCreate({
-              idToken: fallbackToken.idToken,
-              onboardingDisplayName: onboardingData?.displayName,
-            });
+            const fallbackDisplayNameForCreate =
+              resolveDisplayNameForCreate({
+                idToken: fallbackToken.idToken,
+                onboardingDisplayName: onboardingData?.displayName,
+              }) ?? t('auth:member', { defaultValue: 'Member' });
             const fallbackCreateFields = {
               display_name: fallbackDisplayNameForCreate,
             };
@@ -314,10 +319,11 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       ) {
         throw new Error('signupConsentRequired');
       }
-      const displayNameForCreate = resolveDisplayNameForCreate({
-        email: trimmedEmail,
-        onboardingDisplayName: onboardingData?.displayName,
-      });
+      const displayNameForCreate =
+        resolveDisplayNameForCreate({
+          email: trimmedEmail,
+          onboardingDisplayName: onboardingData?.displayName,
+        }) ?? t('auth:member', { defaultValue: 'Member' });
       const createFields = {
         display_name: displayNameForCreate,
       };

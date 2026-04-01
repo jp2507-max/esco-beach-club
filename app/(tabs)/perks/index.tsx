@@ -4,18 +4,14 @@ import { useRouter } from 'expo-router';
 import { Compass, ExternalLink } from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  Alert,
-  Linking,
-  useColorScheme,
-  useWindowDimensions,
-} from 'react-native';
+import { Alert, Linking, useWindowDimensions } from 'react-native';
 
 import { accentOnDarkBackground, Colors } from '@/constants/colors';
 import type { Partner } from '@/lib/types';
 import { useFilteredPartners, usePartnersData } from '@/providers/DataProvider';
 import { CategoryChip } from '@/src/components/ui';
 import { shadows } from '@/src/lib/styles/shadows';
+import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Image } from '@/src/tw/image';
 
@@ -32,8 +28,7 @@ const DANANG_365_URL = 'https://danang365.com/en/home/';
 export default function PerksScreen(): React.JSX.Element {
   const router = useRouter();
   const { t } = useTranslation('perks');
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const isDark = useAppIsDark();
   const headerAccent = accentOnDarkBackground(Colors.primary, isDark);
   const { width } = useWindowDimensions();
   const [activeCategory, setActiveCategory] = useState<string>('All');

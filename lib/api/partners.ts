@@ -2,11 +2,7 @@ import { id } from '@instantdb/react-native';
 
 import type { Partner, PartnerRedemption } from '@/lib/types';
 import { db } from '@/src/lib/instant';
-import {
-  type InstantRecord,
-  mapPartner,
-  mapPartnerRedemption,
-} from '@/src/lib/mappers';
+import { type InstantRecord, mapPartner } from '@/src/lib/mappers';
 
 import { nowIso } from './shared';
 

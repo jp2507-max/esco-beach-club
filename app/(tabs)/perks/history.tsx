@@ -11,7 +11,6 @@ import {
 } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useColorScheme } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { accentOnDarkBackground, Colors } from '@/constants/colors';
@@ -21,6 +20,7 @@ import {
 } from '@/providers/DataProvider';
 import { CategoryChip } from '@/src/components/ui';
 import { shadows } from '@/src/lib/styles/shadows';
+import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
 import { cn } from '@/src/lib/utils';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from '@/src/tw';
 
@@ -46,8 +46,7 @@ const historyCategories = [
 ] as const satisfies readonly { labelKey: string; value: HistoryCategory }[];
 
 function HistoryItemIcon({ icon }: { icon: HistoryIcon }): React.JSX.Element {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const isDark = useAppIsDark();
   if (icon === 'hotel')
     return (
       <Hotel color={isDark ? Colors.primaryBright : Colors.primary} size={18} />
@@ -81,8 +80,7 @@ export default function PerkHistoryScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { t, i18n } = useTranslation('perks');
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const isDark = useAppIsDark();
   const headerAccent = accentOnDarkBackground(Colors.primary, isDark);
   const [activeCategory, setActiveCategory] = useState<HistoryCategory>('all');
   const { partnerRedemptions, partnerRedemptionsLoading } =
@@ -197,7 +195,7 @@ export default function PerkHistoryScreen(): React.JSX.Element {
               <Sparkles color={headerAccent} size={20} />
             </View>
 
-            <Text className="mb-1 text-[11px] font-extrabold uppercase tracking-[2px] text-secondary dark:text-text-secondary-dark">
+            <Text className="mb-1 text-[11px] font-extrabold uppercase tracking-[2px] text-text-secondary dark:text-text-secondary-dark">
               {t('history.hero.status')}
             </Text>
             <Text className="text-4xl font-black tracking-[-1px] text-text dark:text-text-primary-dark">
@@ -261,7 +259,7 @@ export default function PerkHistoryScreen(): React.JSX.Element {
             {filteredItems.map((item) => {
               const statusBadgeClassName =
                 item.status === 'claimed' || item.status === 'used'
-                  ? 'bg-secondary/20 text-secondary dark:bg-secondary/25 dark:text-secondary-bright'
+                  ? 'bg-secondary/20 text-text-secondary dark:bg-secondary/25 dark:text-text-secondary-dark'
                   : 'bg-background text-text-secondary dark:bg-dark-bg-elevated dark:text-text-secondary-dark';
 
               return (

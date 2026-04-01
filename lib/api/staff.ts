@@ -6,10 +6,7 @@ import {
 import { db } from '@/src/lib/instant';
 import { type InstantRecord, mapStaffAccess } from '@/src/lib/mappers';
 
-import {
-  getRewardServiceEndpoint,
-  parseRewardServiceResponse,
-} from './shared';
+import { getRewardServiceEndpoint, parseRewardServiceResponse } from './shared';
 
 export async function fetchStaffAccess(
   userId: string
@@ -44,11 +41,16 @@ export async function submitRewardAdjustment(params: {
   transaction: RewardTransaction;
 }> {
   const memberId = params.memberId.trim();
+  const staffUserId = params.staffUserId.trim();
   const billAmountVnd = Math.trunc(params.billAmountVnd);
   const receiptReference = params.receiptReference?.trim() ?? '';
 
   if (!memberId) {
     throw new Error('memberNotFound');
+  }
+
+  if (!staffUserId) {
+    throw new Error('staffUserIdRequired');
   }
 
   if (!Number.isFinite(billAmountVnd) || billAmountVnd <= 0) {

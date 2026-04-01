@@ -235,6 +235,13 @@ const profile = {
     viewAllHint: 'Mở danh sách đầy đủ các lượt giới thiệu của bạn',
     joinedViaYourLink: 'Đã tham gia qua liên kết của bạn',
     noReferralsYet: 'Chưa có lượt giới thiệu nào. Hãy chia sẻ mã của bạn!',
+    status: {
+      completed: 'Hoàn tất',
+      pending: 'Đang chờ',
+      accepted: 'Đã chấp nhận',
+      rejected: 'Đã từ chối',
+      unknown: 'Không xác định',
+    },
     shareInviteLink: 'Chia sẻ liên kết mời',
     shareMessage:
       'Tham gia Esco Life với mã giới thiệu của tôi: {{code}}\nhttps://escolife.app/invite/{{code}}',

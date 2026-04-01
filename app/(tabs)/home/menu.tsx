@@ -228,6 +228,21 @@ function MenuItemRow({ item, tMenu }: MenuItemRowProps): React.JSX.Element {
   );
 }
 
+const getTabStyles = (active: boolean, isDark: boolean) => {
+  if (active) {
+    return {
+      backgroundColor: isDark ? Colors.textPrimaryDark : Colors.text,
+      borderColor: isDark ? Colors.textPrimaryDark : Colors.text,
+      color: isDark ? Colors.darkBg : '#fff',
+    };
+  }
+  return {
+    backgroundColor: isDark ? Colors.darkBgCard : Colors.surface,
+    borderColor: isDark ? Colors.darkBorder : Colors.border,
+    color: isDark ? Colors.textSecondaryDark : Colors.textSecondary,
+  };
+};
+
 export default function MenuScreen(): React.JSX.Element {
   const tMenu = useMenuTranslation();
   const isDark = useColorScheme() === 'dark';
@@ -296,6 +311,8 @@ export default function MenuScreen(): React.JSX.Element {
         >
           {resolvedCategories.map((cat) => {
             const active = activeCategory === cat.key;
+            const tabStyles = getTabStyles(active, isDark);
+
             return (
               <Pressable
                 accessibilityRole="button"
@@ -303,35 +320,15 @@ export default function MenuScreen(): React.JSX.Element {
                 className="rounded-full px-5 py-2.5"
                 onPress={() => setActiveCategory(cat.key)}
                 style={{
-                  backgroundColor: active
-                    ? isDark
-                      ? Colors.textPrimaryDark
-                      : Colors.text
-                    : isDark
-                      ? Colors.darkBgCard
-                      : Colors.surface,
-                  borderColor: active
-                    ? isDark
-                      ? Colors.textPrimaryDark
-                      : Colors.text
-                    : isDark
-                      ? Colors.darkBorder
-                      : Colors.border,
+                  backgroundColor: tabStyles.backgroundColor,
+                  borderColor: tabStyles.borderColor,
                   borderWidth: 1.5,
                 }}
                 testID={`tab-${cat.key}`}
               >
                 <Text
                   className="text-sm font-semibold"
-                  style={{
-                    color: active
-                      ? isDark
-                        ? Colors.darkBg
-                        : '#fff'
-                      : isDark
-                        ? Colors.textSecondaryDark
-                        : Colors.textSecondary,
-                  }}
+                  style={{ color: tabStyles.color }}
                 >
                   {tMenu(cat.labelKey)}
                 </Text>

@@ -77,8 +77,23 @@ export async function POST(request: Request): Promise<Response> {
         { upsert: false }
       ),
     ]);
-  } catch {
-    return jsonResponse({ error: 'not_found' }, 404);
+  } catch (err) {
+    console.error(
+      `[referrals/complete] Transaction failed for referralId: ${referralId}`,
+      err
+    );
+
+    const isNotFound =
+      typeof err === 'object' &&
+      err !== null &&
+      'body' in err &&
+      (err as { body?: { type?: string } }).body?.type === 'record-not-found';
+
+    if (isNotFound) {
+      return jsonResponse({ error: 'not_found' }, 404);
+    }
+
+    return jsonResponse({ error: 'internal_server_error' }, 500);
   }
 
   return jsonResponse({ ok: true }, 200);

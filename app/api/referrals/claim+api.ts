@@ -4,23 +4,30 @@ import { getInstantAdminDb } from '@/src/lib/referral/instant-admin-server';
 import { verifyInstantRefreshToken } from '@/src/lib/referral/instant-runtime-server';
 import { normalizeReferralCode } from '@/src/lib/referral/referral-code';
 
-type ClaimBody = {
-  referralCode?: string;
-  refreshToken?: string;
-};
-
 type ProfileRecord = {
   avatar_url?: string | null;
   full_name?: string;
   id?: string;
 };
 
+type LinkedUserRecord = {
+  id?: string;
+  profile?: ProfileRecord | ProfileRecord[] | null;
+};
+
 function jsonResponse(body: unknown, status: number): Response {
   return Response.json(body, { status });
 }
 
+function parseBearerRefreshToken(request: Request): string | null {
+  const header = request.headers.get('Authorization');
+  if (!header?.startsWith('Bearer ')) return null;
+  const token = header.slice('Bearer '.length).trim();
+  return token.length > 0 ? token : null;
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function firstProfileRecord(value: unknown): ProfileRecord | null {
@@ -30,6 +37,15 @@ function firstProfileRecord(value: unknown): ProfileRecord | null {
   }
 
   return isRecord(value) ? (value as ProfileRecord) : null;
+}
+
+function firstLinkedUserRecord(value: unknown): LinkedUserRecord | null {
+  if (Array.isArray(value)) {
+    const [first] = value;
+    return isRecord(first) ? (first as LinkedUserRecord) : null;
+  }
+
+  return isRecord(value) ? (value as LinkedUserRecord) : null;
 }
 
 async function resolveProfileForUser(
@@ -52,10 +68,8 @@ async function resolveProfileForUser(
       profile: {},
     },
   });
-  const linkedUser = firstProfileRecord(linkedResult.$users);
-  const linkedProfile = firstProfileRecord(
-    isRecord(linkedUser) ? linkedUser.profile : null
-  );
+  const linkedUser = firstLinkedUserRecord(linkedResult.$users);
+  const linkedProfile = firstProfileRecord(linkedUser?.profile ?? null);
 
   return linkedProfile?.id ? linkedProfile : null;
 }
@@ -69,15 +83,20 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
-  let parsed: ClaimBody;
+  let parsed: unknown;
   try {
-    parsed = (await request.json()) as ClaimBody;
+    parsed = await request.json();
   } catch {
     return jsonResponse({ error: 'invalid_json' }, 400);
   }
 
-  const refreshToken =
+  if (!isRecord(parsed)) {
+    return jsonResponse({ error: 'invalid_body' }, 400);
+  }
+
+  const refreshTokenFromBody =
     typeof parsed.refreshToken === 'string' ? parsed.refreshToken.trim() : '';
+  const refreshToken = parseBearerRefreshToken(request) ?? refreshTokenFromBody;
   const referralCodeRaw =
     typeof parsed.referralCode === 'string' ? parsed.referralCode : '';
 
@@ -86,7 +105,7 @@ export async function POST(request: Request): Promise<Response> {
     return jsonResponse(
       {
         error: 'invalid_body',
-        message: 'refreshToken and referralCode required',
+        message: 'Authorization token and referralCode required',
       },
       400
     );
@@ -140,7 +159,7 @@ export async function POST(request: Request): Promise<Response> {
     typeof refereeProfile?.full_name === 'string' &&
     refereeProfile.full_name.trim().length > 0
       ? refereeProfile.full_name.trim()
-      : 'Member';
+      : '';
   const referredAvatar =
     typeof refereeProfile?.avatar_url === 'string'
       ? refereeProfile.avatar_url
@@ -148,18 +167,44 @@ export async function POST(request: Request): Promise<Response> {
 
   const newReferralId = id();
 
-  await adminDb.transact([
-    adminDb.tx.referrals[newReferralId]
-      .create({
-        created_at: new Date(),
-        referred_name: referredName,
-        referred_avatar: referredAvatar,
-        referee_profile_id: refereeProfileId,
-        status: 'Pending',
-        referrer_id: referrerProfileId,
-      })
-      .link({ referrer: referrerProfileId }),
-  ]);
+  try {
+    await adminDb.transact([
+      adminDb.tx.referrals[newReferralId]
+        .create({
+          created_at: new Date().toISOString(),
+          referred_name: referredName,
+          referred_avatar: referredAvatar,
+          referee_profile_id: refereeProfileId,
+          status: 'Pending',
+          referrer_id: referrerProfileId,
+        })
+        .link({ referrer: referrerProfileId }),
+    ]);
+  } catch (error) {
+    // 1. Surgical check for InstantDB unique constraint violation
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'body' in error &&
+      (error as { body: { type?: string } }).body?.type === 'record-not-unique'
+    ) {
+      return jsonResponse({ ok: true, alreadyClaimed: true }, 200);
+    }
+
+    // 2. Fallback: Re-query for race conditions or variant error shapes
+    const raceCheck = await adminDb.query({
+      referrals: {
+        $: { where: { referee_profile_id: refereeProfileId } },
+      },
+    });
+
+    if ((raceCheck.referrals ?? []).length > 0) {
+      return jsonResponse({ ok: true, alreadyClaimed: true }, 200);
+    }
+
+    // 3. Surface other unexpected errors
+    throw error;
+  }
 
   return jsonResponse({ ok: true, referralId: newReferralId }, 201);
 }

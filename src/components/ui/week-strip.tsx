@@ -72,7 +72,7 @@ function WeekStripDay({
 
   const activeBorder = isDark ? Colors.primaryBright : Colors.primary;
   const inactiveBorder = isDark ? Colors.darkBorder : Colors.border;
-  const activeBg = isDark ? 'rgba(255,107,157,0.14)' : 'rgba(233,30,99,0.1)';
+  const activeBg = isDark ? Colors.ACTIVE_BG_DARK : Colors.ACTIVE_BG_LIGHT;
   const inactiveBg = isDark ? Colors.darkBgCard : Colors.card;
   const activeText = isDark ? Colors.primaryBright : Colors.primary;
   const inactiveShortText = isDark

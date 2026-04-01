@@ -160,7 +160,9 @@ export default function PartnerModal(): React.JSX.Element {
       <View
         className="absolute bottom-0 left-0 right-0 rounded-t-[28px] px-7 pb-10 pt-3"
         style={{
-          backgroundColor: isDark ? Colors.darkBgCard : '#FFF8F5',
+          backgroundColor: isDark
+            ? Colors.badgeDarkBackground
+            : Colors.badgeLightBackground,
           minHeight: '60%',
         }}
       >
@@ -179,19 +181,35 @@ export default function PartnerModal(): React.JSX.Element {
             <View
               className="mb-1.5 size-20 items-center justify-center rounded-full border-[3px]"
               style={{
-                backgroundColor: isDark ? `${Colors.warningDark}22` : '#FFF8E1',
-                borderColor: isDark ? Colors.warningDark : '#F9A825',
+                backgroundColor: isDark
+                  ? Colors.badgeWarningDarkBackground
+                  : Colors.badgeWarningLightBackground,
+                borderColor: isDark
+                  ? Colors.badgeWarningDarkBorder
+                  : Colors.badgeWarningLightBorder,
               }}
             >
               <Star
                 size={32}
-                color={isDark ? Colors.warningDark : '#F9A825'}
-                fill={isDark ? Colors.warningDark : '#F9A825'}
+                color={
+                  isDark
+                    ? Colors.badgeWarningDarkBorder
+                    : Colors.badgeWarningLightBorder
+                }
+                fill={
+                  isDark
+                    ? Colors.badgeWarningDarkBorder
+                    : Colors.badgeWarningLightBorder
+                }
               />
             </View>
             <Text
               className="text-[11px] font-extrabold tracking-[1.5px]"
-              style={{ color: isDark ? Colors.warningDark : '#F9A825' }}
+              style={{
+                color: isDark
+                  ? Colors.badgeWarningDarkBorder
+                  : Colors.badgeWarningLightBorder,
+              }}
             >
               {t('partner.unlocked')}
             </Text>

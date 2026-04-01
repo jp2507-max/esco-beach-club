@@ -33,6 +33,38 @@ const TIME_SLOTS = [
   { time: '21:30', available: true },
 ];
 
+function getSlotColors(isDark: boolean, available: boolean, active: boolean) {
+  return {
+    backgroundColor: !available
+      ? isDark
+        ? Colors.darkBgElevated
+        : Colors.sand
+      : active
+        ? Colors.primary
+        : isDark
+          ? Colors.darkBgCard
+          : Colors.surface,
+    borderColor: !available
+      ? isDark
+        ? Colors.darkBorder
+        : Colors.sandDark
+      : active
+        ? Colors.primary
+        : isDark
+          ? Colors.darkBorder
+          : Colors.border,
+    color: !available
+      ? isDark
+        ? Colors.textMutedDark
+        : Colors.textLight
+      : active
+        ? '#fff'
+        : isDark
+          ? Colors.textPrimaryDark
+          : Colors.text,
+  };
+}
+
 const OCCASIONS = [
   'dateNight',
   'birthday',
@@ -391,24 +423,13 @@ export default function BookingModalScreen(): React.JSX.Element {
                     }
                     disabled={!slot.available || isSubmitting}
                     style={{
-                      backgroundColor: !slot.available
-                        ? isDark
-                          ? Colors.darkBgElevated
-                          : Colors.sand
-                        : active
-                          ? Colors.primary
-                          : isDark
-                            ? Colors.darkBgCard
-                            : Colors.surface,
-                      borderColor: !slot.available
-                        ? isDark
-                          ? Colors.darkBorder
-                          : Colors.sandDark
-                        : active
-                          ? Colors.primary
-                          : isDark
-                            ? Colors.darkBorder
-                            : Colors.border,
+                      backgroundColor: getSlotColors(
+                        isDark,
+                        slot.available,
+                        active
+                      ).backgroundColor,
+                      borderColor: getSlotColors(isDark, slot.available, active)
+                        .borderColor,
                       borderWidth: 1.5,
                       marginRight: 10,
                       opacity: !slot.available ? 0.6 : isSubmitting ? 0.7 : 1,
@@ -419,15 +440,8 @@ export default function BookingModalScreen(): React.JSX.Element {
                     <Text
                       className="text-[15px] font-bold"
                       style={{
-                        color: !slot.available
-                          ? isDark
-                            ? Colors.textMutedDark
-                            : Colors.textLight
-                          : active
-                            ? '#fff'
-                            : isDark
-                              ? Colors.textPrimaryDark
-                              : Colors.text,
+                        color: getSlotColors(isDark, slot.available, active)
+                          .color,
                       }}
                     >
                       {slot.time}

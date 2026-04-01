@@ -26,6 +26,20 @@ export function extractAuthErrorMessage(error: unknown): string | null {
   return null;
 }
 
+const GOOGLE_AUDIENCE_MISMATCH_MARKERS = [
+  'audience',
+  'claim aud',
+  'invalid aud',
+  'jwt aud',
+  'wrong audience',
+  'id token',
+  'id_token',
+  'token verification',
+  'nonce parameter was not provided',
+  'nonce',
+  'nonces mismatch',
+] as const;
+
 function mapAuthErrorMessageToKey(
   message: string,
   options?: MapAuthErrorOptions
@@ -38,18 +52,9 @@ function mapAuthErrorMessageToKey(
       normalizedMessage.includes('oauth_client') ||
       normalizedMessage.includes('oauth client'));
 
-  const isGoogleAudienceMismatch =
-    normalizedMessage.includes('audience') ||
-    normalizedMessage.includes('claim aud') ||
-    normalizedMessage.includes('invalid aud') ||
-    normalizedMessage.includes('jwt aud') ||
-    normalizedMessage.includes('wrong audience') ||
-    normalizedMessage.includes('id token') ||
-    normalizedMessage.includes('id_token') ||
-    normalizedMessage.includes('token verification') ||
-    normalizedMessage.includes('nonce parameter was not provided') ||
-    normalizedMessage.includes('nonce') ||
-    normalizedMessage.includes('nonces mismatch');
+  const isGoogleAudienceMismatch = GOOGLE_AUDIENCE_MISMATCH_MARKERS.some(
+    (marker) => normalizedMessage.includes(marker)
+  );
 
   if (!isOauthClientNotFound && !isGoogleAudienceMismatch) {
     return null;
@@ -93,18 +98,9 @@ export function shouldTryGoogleAudienceFallback(error: unknown): boolean {
     return false;
   }
 
-  const mismatchMarkers = [
-    'audience',
-    'claim aud',
-    'invalid aud',
-    'jwt aud',
-    'wrong audience',
-    'token verification',
-    'nonce parameter was not provided',
-    'nonces mismatch',
-  ] as const;
-
-  return mismatchMarkers.some((marker) => message.includes(marker));
+  return GOOGLE_AUDIENCE_MISMATCH_MARKERS.some((marker) =>
+    message.includes(marker)
+  );
 }
 
 export function toError(

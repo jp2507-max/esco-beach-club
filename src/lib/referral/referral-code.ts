@@ -10,6 +10,12 @@ export function normalizeReferralCode(raw: string): string | null {
 export function extractInviteCodeFromUrl(url: string): string | null {
   try {
     const parsed = new URL(url);
+
+    if (parsed.host.toLowerCase() === 'invite') {
+      const hostSegment = parsed.pathname.split('/').filter(Boolean)[0] ?? '';
+      return normalizeReferralCode(hostSegment);
+    }
+
     const path = parsed.pathname.replace(/^\/+|\/+$/g, '');
     const segments = path.split('/').filter(Boolean);
     const inviteIdx = segments.indexOf('invite');

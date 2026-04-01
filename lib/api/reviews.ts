@@ -14,6 +14,9 @@ export async function submitReview(
   id: string;
   rating: number;
 }> {
+  if (rating < 1 || rating > 5 || !Number.isInteger(rating)) {
+    throw new Error('Rating must be an integer between 1 and 5');
+  }
   const createdAt = nowIso();
   const reviewId = id();
 

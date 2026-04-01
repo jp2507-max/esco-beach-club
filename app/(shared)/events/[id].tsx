@@ -15,7 +15,7 @@ import {
 } from 'lucide-react-native';
 import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Share, useColorScheme } from 'react-native';
+import { Share } from 'react-native';
 import {
   cancelAnimation,
   useAnimatedStyle,
@@ -28,6 +28,7 @@ import { accentOnDarkBackground, Colors } from '@/constants/colors';
 import { useEventById, useSavedEventsData } from '@/providers/DataProvider';
 import { HeaderGlassButton } from '@/src/components/ui';
 import { rmTiming } from '@/src/lib/animations/motion';
+import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 import { Image } from '@/src/tw/image';
@@ -63,8 +64,7 @@ export default function EventDetailsScreen(): React.JSX.Element {
   const headerOpacity = useSharedValue(0);
 
   const { t } = useTranslation('events');
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const isDark = useAppIsDark();
   const foundEvent = useEventById(id);
   const { isEventSaved, toggleSavedEvent } = useSavedEventsData();
 
@@ -312,7 +312,7 @@ export default function EventDetailsScreen(): React.JSX.Element {
                   backgroundColor: tier.highlight
                     ? isDark
                       ? `${Colors.primary}22`
-                      : '#FFF5F8'
+                      : Colors.eventTierHighlightLight
                     : isDark
                       ? Colors.darkBgCard
                       : Colors.surface,
@@ -348,7 +348,7 @@ export default function EventDetailsScreen(): React.JSX.Element {
                         size={20}
                         color={
                           tier.highlight
-                            ? '#fff'
+                            ? Colors.white
                             : accentOnDarkBackground(Colors.secondary, isDark)
                         }
                       />

@@ -12,12 +12,16 @@ import {
   toStringOr,
 } from './shared';
 
-export function toRewardTierKey(value: unknown): Profile['lifetime_tier_key'] {
-  if (value === rewardTierKeys.escoLifeMember) {
+export function toRewardTierKey(
+  value: unknown
+): Profile['lifetime_tier_key'] | null {
+  const normalized = typeof value === 'string' ? value.trim() : '';
+
+  if (normalized === rewardTierKeys.escoLifeMember) {
     return rewardTierKeys.escoLifeMember;
   }
 
-  return rewardTierKeys.escoLifeMember;
+  return null;
 }
 
 export function toNullableRewardTierKey(

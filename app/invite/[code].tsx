@@ -15,7 +15,7 @@ export default function InviteDeepLinkScreen(): React.JSX.Element | null {
   useEffect(() => {
     if (isLoading) return;
 
-    if (!code || typeof code !== 'string') {
+    if (!code) {
       router.replace(isAuthenticated ? '/(tabs)' : '/(auth)/login');
       return;
     }

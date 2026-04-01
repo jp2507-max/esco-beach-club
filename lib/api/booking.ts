@@ -69,13 +69,7 @@ export async function submitTableReservation(params: {
     };
   } catch (error) {
     if (error instanceof Error) {
-      const message = error.message.toLowerCase();
-      const isConflict =
-        message.includes('unique') ||
-        message.includes('already exists') ||
-        message.includes('duplicate');
-
-      if (isConflict) {
+      if ((error as Error & { type?: string }).type === 'record-not-unique') {
         const { data } = await db.queryOnce({
           table_reservations: {
             $: {
@@ -150,13 +144,7 @@ export async function submitPrivateEventInquiry(params: {
     };
   } catch (error) {
     if (error instanceof Error) {
-      const message = error.message.toLowerCase();
-      const isConflict =
-        message.includes('unique') ||
-        message.includes('already exists') ||
-        message.includes('duplicate');
-
-      if (isConflict) {
+      if ((error as Error & { type?: string }).type === 'record-not-unique') {
         const { data } = await db.queryOnce({
           private_event_inquiries: {
             $: {

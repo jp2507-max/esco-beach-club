@@ -100,6 +100,8 @@ export function useFilteredPartners(category: string): Partner[] {
   );
 }
 
+const REFERRAL_GOAL = 3;
+
 export function useReferralProgress(): { current: number; goal: number } {
   const { referrals } = useReferralsData();
   const completed = useMemo(
@@ -107,7 +109,7 @@ export function useReferralProgress(): { current: number; goal: number } {
       referrals.filter((referral) => referral.status === 'Completed').length,
     [referrals]
   );
-  return { current: completed, goal: 3 };
+  return { current: completed, goal: REFERRAL_GOAL };
 }
 
 export function useSavedEventsCount(): number {

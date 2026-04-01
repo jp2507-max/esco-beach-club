@@ -10,7 +10,7 @@ import React, {
   useState,
 } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Platform, useColorScheme } from 'react-native';
+import { Platform } from 'react-native';
 
 import { Colors } from '@/constants/colors';
 import type { Event } from '@/lib/types';
@@ -20,6 +20,7 @@ import {
   WeekStrip,
   type WeekStripItem,
 } from '@/src/components/ui';
+import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Image } from '@/src/tw/image';
 
@@ -239,8 +240,7 @@ export default function EventsScreen(): React.JSX.Element {
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const router = useRouter();
   const { i18n, t } = useTranslation('events');
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const isDark = useAppIsDark();
 
   const { events, eventsLoading } = useEventsData();
   const { isEventSaved, toggleSavedEvent } = useSavedEventsData();

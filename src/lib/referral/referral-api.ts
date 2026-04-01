@@ -35,14 +35,20 @@ export async function postClaimReferral(params: {
 
   const url = `${base}/api/referrals/claim`;
 
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
+
   try {
     const response = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${params.refreshToken}`,
+      },
       body: JSON.stringify({
         referralCode: params.referralCode,
-        refreshToken: params.refreshToken,
       }),
+      signal: controller.signal,
     });
 
     let body: unknown = null;
@@ -63,11 +69,16 @@ export async function postClaimReferral(params: {
       message: `HTTP ${response.status}`,
     };
   } catch (e) {
+    if (e instanceof Error && e.name === 'AbortError') {
+      return { ok: false, reason: 'network', message: 'request timed out' };
+    }
     return {
       ok: false,
       reason: 'network',
       message: e instanceof Error ? e.message : 'fetch failed',
     };
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 
@@ -86,6 +97,9 @@ export async function postCompleteReferral(params: {
 
   const url = `${base}/api/referrals/complete`;
 
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
+
   try {
     const response = await fetch(url, {
       method: 'POST',
@@ -94,6 +108,7 @@ export async function postCompleteReferral(params: {
         Authorization: `Bearer ${params.refreshToken}`,
       },
       body: JSON.stringify({ referralId: params.referralId }),
+      signal: controller.signal,
     });
 
     let body: unknown = null;
@@ -113,10 +128,15 @@ export async function postCompleteReferral(params: {
       message: `HTTP ${response.status}`,
     };
   } catch (e) {
+    if (e instanceof Error && e.name === 'AbortError') {
+      return { ok: false, reason: 'network', message: 'request timed out' };
+    }
     return {
       ok: false,
       reason: 'network',
       message: e instanceof Error ? e.message : 'fetch failed',
     };
+  } finally {
+    clearTimeout(timeoutId);
   }
 }

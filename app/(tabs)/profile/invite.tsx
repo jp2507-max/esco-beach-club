@@ -178,7 +178,7 @@ export default function InviteScreen(): React.JSX.Element {
         message: t('invite.shareMessage', { code }),
       });
     } catch (e) {
-      console.log('Share failed', e);
+      console.error('Share failed', e);
     }
   }
 
@@ -428,7 +428,9 @@ export default function InviteScreen(): React.JSX.Element {
                     className="text-xs font-bold"
                     style={{ color: referralStatusText }}
                   >
-                    {ref.status}
+                    {ref.status === 'Completed'
+                      ? t('invite.status.completed')
+                      : t('invite.status.pending')}
                   </Text>
                 </View>
               </View>

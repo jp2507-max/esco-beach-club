@@ -32,9 +32,7 @@ function firstInstantRecord(value: unknown): InstantRecord | null {
   return isInstantRecord(value) ? value : null;
 }
 
-export function useProfileResource(
-  params: ProfileResourceParams
-): ProfileData {
+export function useProfileResource(params: ProfileResourceParams): ProfileData {
   const { authEmail, isAuthLoading, userId } = params;
   const [isProvisioningProfile, setIsProvisioningProfile] =
     useState<boolean>(false);
@@ -135,15 +133,14 @@ export function useProfileResource(
         });
       })
       .finally(() => {
-        if (!isMounted) return;
         isProvisioningProfileRef.current = false;
-        setIsProvisioningProfile(false);
+        if (isMounted) {
+          setIsProvisioningProfile(false);
+        }
       });
 
     return () => {
       isMounted = false;
-      isProvisioningProfileRef.current = false;
-      setIsProvisioningProfile(false);
     };
   }, [
     authEmail,

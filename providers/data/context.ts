@@ -115,13 +115,12 @@ export const PartnerRedemptionsContext =
   createContext<PartnerRedemptionsData | null>(null);
 export const ReferralsContext = createContext<ReferralsData | null>(null);
 export const SavedEventsContext = createContext<SavedEventsData | null>(null);
-export const BookingContentContext =
-  createContext<BookingContentData | null>(null);
-export const MemberOffersContext =
-  createContext<MemberOffersData | null>(null);
+export const BookingContentContext = createContext<BookingContentData | null>(
+  null
+);
+export const MemberOffersContext = createContext<MemberOffersData | null>(null);
 export const MenuContentContext = createContext<MenuContentData | null>(null);
-export const StaffAccessContext =
-  createContext<StaffAccessData | null>(null);
+export const StaffAccessContext = createContext<StaffAccessData | null>(null);
 
 export const EMPTY_EVENTS: Event[] = [];
 export const EMPTY_NEWS: NewsItem[] = [];
