@@ -1,4 +1,4 @@
-# Esco Beach Club MVP
+# Esco Beach Club
 
 Members-only lifestyle app for curated events, partner perks, loyalty experiences, and premium member flows.
 
@@ -28,9 +28,24 @@ EXPO_PUBLIC_INSTANT_APP_ID=your_instant_app_id
 
 # Optional (runtime SDK)
 EXPO_PUBLIC_SENTRY_DSN=
+EXPO_PUBLIC_REFERRAL_API_BASE_URL=
+EXPO_PUBLIC_ACCOUNT_API_BASE_URL=
+EXPO_PUBLIC_PRIVACY_POLICY_URL=https://escolife.app/privacy
+EXPO_PUBLIC_TERMS_OF_SERVICE_URL=https://escolife.app/terms
+EXPO_PUBLIC_SUPPORT_URL=https://escolife.app/support
 
 # Required for EAS Build/Update sourcemap upload (do not commit real value)
 SENTRY_AUTH_TOKEN=
+
+# Required on the server / API route host
+INSTANT_APP_ADMIN_TOKEN=
+INSTANT_APP_ID=
+
+# Required for Sign in with Apple token revocation during account deletion
+APPLE_TEAM_ID=
+APPLE_KEY_ID=
+APPLE_SERVICES_ID=
+APPLE_PRIVATE_KEY=
 ```
 
 `EXPO_PUBLIC_INSTANT_APP_ID` is required at runtime by `src/lib/instant.ts`.
@@ -159,6 +174,13 @@ bun run sentry:upload-sourcemaps
 ```
 
 5. Confirm Sentry event tags include update metadata (`expo-update-id`, `expo-update-group-id`, `expo-update-debug-url`).
+
+### iOS App Review release gate
+
+- Account deletion is implemented in `Profile > Delete Account` and is finalized after a 30-day grace period by `bun run account-deletion:process-expired`.
+- `config/apple/privacy-manifest.json` is the source of truth for the iOS privacy manifest, and `./plugins/with-apple-privacy-manifest` writes it into the native iOS project during prebuild.
+- `docs/app-review/review-notes-template.md` and `docs/app-review/ios-release-checklist.md` must be completed before submission.
+- `eas.json` contains a placeholder `submit.production.ios.ascAppId`; replace it with the real App Store Connect app ID before running `bun run submit:production:ios`.
 
 ## Invite & Earn (referrals)
 

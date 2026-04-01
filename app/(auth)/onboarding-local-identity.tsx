@@ -13,6 +13,7 @@ import { OnboardingHeader } from '@/src/components/onboarding/onboarding-header'
 import { InfoDot } from '@/src/components/ui';
 import { motion, withRM } from '@/src/lib/animations/motion';
 import { useButtonPress } from '@/src/lib/animations/use-button-press';
+import { config } from '@/src/lib/config';
 import {
   type OnboardingLocalIdentityFormValues,
   onboardingLocalIdentitySchema,
@@ -331,9 +332,7 @@ export default function OnboardingLocalIdentityScreen(): React.JSX.Element {
                             hitSlop={6}
                             onPress={(event) => {
                               event.stopPropagation();
-                              void Linking.openURL(
-                                'https://esco-beach-club.com/terms'
-                              );
+                              void Linking.openURL(config.legal.termsOfServiceUrl);
                             }}
                           >
                             <Text className="text-[12px] leading-4 text-primary dark:text-primary-bright">
@@ -418,9 +417,7 @@ export default function OnboardingLocalIdentityScreen(): React.JSX.Element {
                             hitSlop={6}
                             onPress={(event) => {
                               event.stopPropagation();
-                              void Linking.openURL(
-                                'https://esco-beach-club.com/privacy'
-                              );
+                              void Linking.openURL(config.legal.privacyPolicyUrl);
                             }}
                           >
                             <Text className="text-[12px] leading-4 text-primary dark:text-primary-bright">

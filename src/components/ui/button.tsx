@@ -6,7 +6,7 @@ import { useColorScheme } from 'react-native';
 import { Colors } from '@/constants/colors';
 import { useButtonPress } from '@/src/lib/animations/use-button-press';
 import { cn } from '@/src/lib/utils';
-import { ActivityIndicator, type Pressable, Text, View } from '@/src/tw';
+import { ActivityIndicator, Pressable, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 
 const BUTTON_VARIANTS = {

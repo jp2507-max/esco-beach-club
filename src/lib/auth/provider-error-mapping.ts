@@ -26,8 +26,13 @@ export function extractAuthErrorMessage(error: unknown): string | null {
   return null;
 }
 
+/** Matches "record not found" with optional trailing colon (Instant / OAuth errors). */
+const RECORD_NOT_FOUND_PATTERN = /\brecord not found:?\b/;
+
+/** Matches oauth-client, oauth_client, "oauth client", etc. */
+const OAUTH_CLIENT_PATTERN = /\boauth[-_\s]?client\b/;
+
 const GOOGLE_AUDIENCE_MISMATCH_MARKERS = [
-  'audience',
   'claim aud',
   'invalid aud',
   'jwt aud',
@@ -36,7 +41,6 @@ const GOOGLE_AUDIENCE_MISMATCH_MARKERS = [
   'id_token',
   'token verification',
   'nonce parameter was not provided',
-  'nonce',
   'nonces mismatch',
 ] as const;
 
@@ -47,10 +51,8 @@ function mapAuthErrorMessageToKey(
   const normalizedMessage = message.trim().toLowerCase();
 
   const isOauthClientNotFound =
-    normalizedMessage.includes('record not found') &&
-    (normalizedMessage.includes('oauth-client') ||
-      normalizedMessage.includes('oauth_client') ||
-      normalizedMessage.includes('oauth client'));
+    RECORD_NOT_FOUND_PATTERN.test(normalizedMessage) &&
+    OAUTH_CLIENT_PATTERN.test(normalizedMessage);
 
   const isGoogleAudienceMismatch = GOOGLE_AUDIENCE_MISMATCH_MARKERS.some(
     (marker) => normalizedMessage.includes(marker)
@@ -74,7 +76,11 @@ export function shouldRetryGoogleSignInWithDefaultClientName(
   error: unknown,
   clientName: string
 ): boolean {
-  if (clientName === DEFAULT_GOOGLE_CLIENT_NAME) {
+  const normalizedClientName = clientName.trim().toLowerCase();
+  if (
+    !normalizedClientName ||
+    normalizedClientName === DEFAULT_GOOGLE_CLIENT_NAME
+  ) {
     return false;
   }
 
@@ -85,9 +91,9 @@ export function shouldRetryGoogleSignInWithDefaultClientName(
   }
 
   return (
-    message.includes('record not found:') &&
-    (message.includes(clientName.toLowerCase()) ||
-      message.includes('oauth-client'))
+    RECORD_NOT_FOUND_PATTERN.test(message) &&
+    (OAUTH_CLIENT_PATTERN.test(message) ||
+      message.includes(normalizedClientName))
   );
 }
 
@@ -112,7 +118,7 @@ export function toError(
 
   if (message) {
     const mappedKey = mapAuthErrorMessageToKey(message, mapOptions);
-    if (mappedKey) {
+    if (mappedKey && isAuthErrorKey(mappedKey)) {
       return new Error(mappedKey);
     }
 

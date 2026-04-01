@@ -10,7 +10,7 @@ import {
 } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Linking, useColorScheme } from 'react-native';
+import { Alert, Linking } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { accentOnDarkBackground, Colors } from '@/constants/colors';
@@ -21,6 +21,7 @@ import {
 } from '@/src/components/ui';
 import { config } from '@/src/lib/config';
 import { shadows } from '@/src/lib/styles/shadows';
+import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
 import { ScrollView, Text, TextInput, View } from '@/src/tw';
 import { Image } from '@/src/tw/image';
 
@@ -42,8 +43,7 @@ const heroImageUri =
 
 export default function HelpCenterScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const isDark = useAppIsDark();
   const { t } = useTranslation('profile');
 
   const [expandedFaqId, setExpandedFaqId] = useState<string | null>(null);

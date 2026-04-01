@@ -1,0 +1,34 @@
+{
+  "publicAppName": "Esco Beach Club",
+  "reviewFeatures": [
+    "magic_code_auth",
+    "google_sign_in",
+    "sign_in_with_apple",
+    "staff_qr_scanner",
+    "restaurant_presence_geofence",
+    "invite_deep_links",
+    "account_deletion_30_day_grace_period"
+  ],
+  "sdkInventory": [
+    "@instantdb/react-native",
+    "@sentry/react-native",
+    "@react-native-google-signin/google-signin",
+    "expo-camera",
+    "expo-location",
+    "expo-notifications",
+    "expo-apple-authentication"
+  ],
+  "appStoreConnectPrivacyChecklist": {
+    "dataCollectionNotes": [
+      "Describe account email and user identifiers stored for authentication and member profile access.",
+      "Describe optional precise and background location use for venue arrival offers.",
+      "Describe camera access for staff-only QR scanning.",
+      "Describe crash/error telemetry for Sentry and any user feedback payloads it may capture."
+    ],
+    "reviewArtifacts": [
+      "Provide a member demo account.",
+      "Provide a staff review account if QR scanner review is required.",
+      "Provide a sample member QR payload."
+    ]
+  }
+}

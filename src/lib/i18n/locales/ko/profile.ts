@@ -16,6 +16,7 @@ const profile = {
     helpSupport: '도움말 및 지원',
     restartOnboarding: '온보딩 다시 시작',
     logOut: '로그아웃',
+    deleteAccount: '계정 삭제',
   },
   restartOnboarding: {
     confirmTitle: '온보딩을 다시 시작할까요?',
@@ -101,6 +102,63 @@ const profile = {
     languageChangeFailed: '언어를 변경할 수 없습니다. 다시 시도해 주세요.',
     saveProfileFailed: '프로필을 저장할 수 없습니다. 다시 시도해 주세요.',
     signOutFailed: '로그아웃할 수 없습니다. 다시 시도해 주세요.',
+  },
+  deleteAccount: {
+    title: '계정 삭제',
+    heroTitle: 'Esco 계정을 삭제합니다',
+    heroDescription:
+      '이 작업을 시작하면 유예 기간이 끝난 뒤 회원 프로필과 계정 접근 권한이 제거됩니다.',
+    permanentDataLossTitle: '영구적인 데이터 삭제',
+    permanentDataLossDescription:
+      '유예 기간이 끝나면 Esco 계정과 연결된 회원 데이터가 영구적으로 삭제됩니다.',
+    gracePeriodTitle: '30일 유예 기간',
+    gracePeriodDescription:
+      '삭제가 확정되기 전까지 30일 동안 다시 로그인하여 계정을 복원할 수 있습니다.',
+    whatWillBeDeletedTitle: '삭제되는 항목',
+    whatWillBeDeletedItems: {
+      profileData: '프로필 및 계정 정보',
+      savedEvents: '저장한 이벤트와 추천 진행 현황',
+      bookings: '예약 및 프라이빗 이벤트 요청 내역',
+      memberBenefits: '계정에 연결된 회원 혜택 및 접근 권한',
+    },
+    confirmLabel: '최종 확인',
+    confirmHint:
+      '계정 삭제를 예약하려면 아래에 DELETE를 입력해 주세요.',
+    confirmPlaceholder: 'DELETE 입력',
+    finalNotice: '이 작업은 30일 후 최종 확정됩니다.',
+    confirmAction: '계정 삭제 예약',
+    pendingEyebrow: '삭제 예약됨',
+    pendingTitle: '계정이 삭제 예정 상태입니다',
+    pendingDescription:
+      '{{date}} 전까지 복원하지 않으면 계정이 영구적으로 삭제됩니다.',
+    pendingRestoreHint:
+      '마감 전이라면 언제든지 계정을 복원하여 삭제를 취소할 수 있습니다.',
+    restoreAction: '계정 복원',
+    reviewAction: '세부 정보 보기',
+    backToApp: '앱으로 돌아가기',
+    bannerTitle: '계정 삭제가 예약되었습니다',
+    bannerDescription:
+      '복원하지 않으면 {{date}}에 계정이 삭제됩니다.',
+    bannerCountdown: '복원 가능 기간 30일',
+    bannerRestoreHint:
+      '계정 복원을 누르면 삭제 요청이 취소되고 멤버 접근 권한이 유지됩니다.',
+    scheduleSuccessTitle: '삭제 요청이 생성되었습니다',
+    scheduleSuccessMessage:
+      '계정 삭제가 예약되었습니다. 복원하려면 30일 이내에 다시 로그인해 주세요.',
+    restoreSuccessTitle: '계정이 복원되었습니다',
+    footerNote:
+      '먼저 도움이 필요하신가요? 계정을 삭제하기 전에 지원팀에 문의하세요.',
+    loadingState: '계정 삭제 상태를 확인하는 중...',
+    errors: {
+      appleVerificationCanceled:
+        'Apple 확인이 취소되어 삭제가 예약되지 않았습니다.',
+      restoreFailed:
+        '계정을 복원할 수 없습니다. 다시 시도해 주세요.',
+      scheduleFailed:
+        '계정 삭제를 예약할 수 없습니다. 다시 시도해 주세요.',
+      sessionExpired:
+        '보안 세션이 만료되었습니다. 다시 로그인한 뒤 재시도해 주세요.',
+    },
   },
   editProfile: {
     title: '프로필 수정',
@@ -219,6 +277,7 @@ const profile = {
     allReferralsTitle: '추천 내역',
     codeCopied: '복사됨!',
     codeCopyFailed: '코드를 복사할 수 없습니다',
+    shareFailed: '초대 링크를 공유할 수 없습니다',
     codeLoading: '불러오는 중…',
     copyReferralCode: '초대 코드 복사',
     copyReferralCodeHint: '추천 코드를 클립보드에 복사합니다',

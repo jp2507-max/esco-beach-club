@@ -53,9 +53,28 @@ export const memberSegments = {
 export type MemberSegment =
   (typeof memberSegments)[keyof typeof memberSegments];
 
+export const authProviderTypes = {
+  apple: 'apple',
+  google: 'google',
+  magicCode: 'magic_code',
+} as const;
+
+export type AuthProviderType =
+  (typeof authProviderTypes)[keyof typeof authProviderTypes];
+
+export const accountDeletionStatuses = {
+  completed: 'completed',
+  pending: 'pending',
+  restored: 'restored',
+} as const;
+
+export type AccountDeletionStatus =
+  (typeof accountDeletionStatuses)[keyof typeof accountDeletionStatuses];
+
 export type Profile = {
   id: string;
   full_name: string;
+  auth_provider: AuthProviderType | null;
   date_of_birth: string | null;
   bio: string;
   member_id: string;
@@ -78,6 +97,23 @@ export type Profile = {
   referral_code: string;
   has_seen_welcome_voucher: boolean;
   created_at: string;
+  updated_at: string;
+};
+
+export type AccountDeletionRequest = {
+  id: string;
+  apple_revocation_error: string | null;
+  apple_revocation_status: string | null;
+  auth_provider: AuthProviderType | null;
+  auth_user_id: string;
+  completed_at: string | null;
+  created_at: string;
+  email: string | null;
+  profile_id: string | null;
+  requested_at: string;
+  restored_at: string | null;
+  scheduled_for_at: string;
+  status: AccountDeletionStatus;
   updated_at: string;
 };
 

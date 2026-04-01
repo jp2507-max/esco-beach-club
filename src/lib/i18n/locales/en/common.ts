@@ -18,6 +18,7 @@ const common = {
     commentMax: 'Comment must be at most 500 characters.',
     invalidDate: 'Please enter a valid date in YYYY-MM-DD format.',
     invalidCode: 'Please enter a 6-digit verification code.',
+    deleteConfirmation: 'Type DELETE exactly to continue.',
     loyaltyManagerPin:
       'Please enter a valid manager PIN to approve this amount.',
     loyaltyMinimumSpend:

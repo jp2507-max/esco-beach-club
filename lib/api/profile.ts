@@ -1,4 +1,5 @@
 import type {
+  AuthProviderType,
   MemberSegment,
   OnboardingPermissionStatus,
   Profile,
@@ -184,6 +185,7 @@ export async function updateProfile(
     onboarding_completed_at: normalizeOnboardingCompletedAt(
       updates.onboarding_completed_at
     ),
+    auth_provider: updates.auth_provider,
     push_notification_permission_status: normalizePermissionStatus(
       updates.push_notification_permission_status
     ),
@@ -198,6 +200,7 @@ export async function updateProfile(
     member_segment?: MemberSegment | null;
     nights_left?: Profile['nights_left'];
     onboarding_completed_at?: string | null;
+    auth_provider?: AuthProviderType | null;
     push_notification_permission_status?: OnboardingPermissionStatus;
   };
 
@@ -213,4 +216,21 @@ export async function updateProfile(
   );
 
   return fetchProfile(userId);
+}
+
+export async function setProfileAuthProvider(
+  userId: string,
+  authProvider: AuthProviderType
+): Promise<void> {
+  if (!userId) return;
+
+  const profile = await ensureProfile({ userId });
+  if (!profile || profile.auth_provider === authProvider) return;
+
+  await db.transact(
+    db.tx.profiles[profile.id].update({
+      auth_provider: authProvider,
+      updated_at: nowIso(),
+    })
+  );
 }

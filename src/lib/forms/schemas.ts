@@ -186,3 +186,13 @@ export const staffRewardAdjustmentSchema = z.object({
 export type StaffRewardAdjustmentFormValues = z.infer<
   typeof staffRewardAdjustmentSchema
 >;
+
+export const accountDeletionConfirmSchema = z.object({
+  confirmation: z.literal('DELETE', {
+    error: v('deleteConfirmation'),
+  }),
+});
+
+export type AccountDeletionConfirmFormValues = z.infer<
+  typeof accountDeletionConfirmSchema
+>;

@@ -2,6 +2,8 @@ import createContextHook from '@nkzw/create-context-hook';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { setProfileAuthProvider } from '@/lib/api';
+import { authProviderTypes } from '@/lib/types';
 import {
   getIdTokenAudienceClaim,
   getIdTokenNonceClaim,
@@ -16,6 +18,7 @@ import {
 } from '@/src/lib/auth/provider-error-mapping';
 import {
   applyOnboardingProfileDataForNewUser,
+  extractSignInUser,
   hasRequiredSignupConsent,
   normalizeSignupOnboardingData,
   type SignupOnboardingData,
@@ -111,6 +114,11 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         onboardingData,
         signInResult,
       });
+
+      const signInUser = extractSignInUser(signInResult);
+      if (signInUser.id) {
+        await setProfileAuthProvider(signInUser.id, authProviderTypes.apple);
+      }
     } catch (error: unknown) {
       const nextError = toError(error, 'unableToSignInWithApple');
       captureHandledError(nextError, {
@@ -229,6 +237,14 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
               signInResult,
             });
 
+            const fallbackSignInUser = extractSignInUser(signInResult);
+            if (fallbackSignInUser.id) {
+              await setProfileAuthProvider(
+                fallbackSignInUser.id,
+                authProviderTypes.google
+              );
+            }
+
             return;
           }
 
@@ -247,6 +263,11 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         onboardingData,
         signInResult,
       });
+
+      const signInUser = extractSignInUser(signInResult);
+      if (signInUser.id) {
+        await setProfileAuthProvider(signInUser.id, authProviderTypes.google);
+      }
     } catch (error: unknown) {
       if (__DEV__) {
         console.error('[AuthProvider] Google sign-in flow failed', {
@@ -337,6 +358,14 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         onboardingData,
         signInResult,
       });
+
+      const signInUser = extractSignInUser(signInResult);
+      if (signInUser.id) {
+        await setProfileAuthProvider(
+          signInUser.id,
+          authProviderTypes.magicCode
+        );
+      }
     } catch (error: unknown) {
       const nextError = toError(error, 'unableToVerifyCode');
       captureHandledError(nextError, {

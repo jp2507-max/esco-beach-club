@@ -18,6 +18,7 @@ const common = {
     commentMax: '코멘트는 최대 500자까지 입력 가능합니다.',
     invalidDate: 'YYYY-MM-DD 형식의 유효한 날짜를 입력해 주세요.',
     invalidCode: '6자리의 인증 코드를 입력해 주세요.',
+    deleteConfirmation: '계속하려면 DELETE를 정확히 입력해 주세요.',
     loyaltyManagerPin:
       '이 금액을 승인하려면 유효한 관리자 PIN을 입력해 주세요.',
     loyaltyMinimumSpend: '이 청구 금액은 최소 캐시백 기준보다 낮습니다.',

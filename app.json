@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Esco Beach Club MVP",
+    "name": "Esco Beach Club",
     "slug": "escolife",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -57,6 +57,7 @@
     "plugins": [
       "expo-router",
       "expo-image",
+      "./plugins/with-apple-privacy-manifest",
       [
         "expo-camera",
         {

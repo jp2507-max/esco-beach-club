@@ -27,7 +27,9 @@ import {
   useHomeEvents,
   useMemberSummary,
   useNewsData,
+  useProfileData,
 } from '@/providers/DataProvider';
+import { AccountDeletionBanner } from '@/src/components/account-deletion/account-deletion-banner';
 import {
   Avatar,
   Card,
@@ -226,6 +228,7 @@ export default function HomeScreen(): React.JSX.Element {
 
   const { eventsLoading } = useEventsData();
   const { news, newsLoading } = useNewsData();
+  const { userId } = useProfileData();
   const homeEvents = useHomeEvents();
   const memberSummary = useMemberSummary();
 
@@ -425,6 +428,8 @@ export default function HomeScreen(): React.JSX.Element {
                   tierLabel={userTier}
                 />
               </Animated.View>
+
+              <AccountDeletionBanner userId={userId} />
 
               <Animated.View className="mb-6" style={sectionStyle}>
                 <ScrollView

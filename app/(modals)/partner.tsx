@@ -4,7 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Award, Check, Copy, Percent, Star, X } from 'lucide-react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, useColorScheme } from 'react-native';
+import { Alert } from 'react-native';
 import {
   cancelAnimation,
   useAnimatedStyle,
@@ -20,6 +20,7 @@ import { usePartnerById, useUserId } from '@/providers/DataProvider';
 import { HeaderGlassButton } from '@/src/components/ui';
 import { motion, rmTiming } from '@/src/lib/animations/motion';
 import { captureHandledError } from '@/src/lib/monitoring';
+import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
 import { Pressable, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 import { Image } from '@/src/tw/image';
@@ -28,8 +29,7 @@ export default function PartnerModal(): React.JSX.Element {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const isDark = useAppIsDark();
   const { t } = useTranslation('perks');
   const scale = useSharedValue(0.8);
   const opacity = useSharedValue(0);

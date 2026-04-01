@@ -1,3 +1,4 @@
+export * from './account-deletion';
 export * from './booking';
 export * from './content';
 export * from './events';

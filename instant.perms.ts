@@ -24,6 +24,14 @@ const rules = {
       update: 'false',
     },
   },
+  account_deletion_requests: {
+    allow: {
+      view: 'auth.id != null && auth.id == data.auth_user_id',
+      create: 'false',
+      delete: 'false',
+      update: 'false',
+    },
+  },
   partners: {
     allow: {
       view: 'auth.id != null',
@@ -78,7 +86,7 @@ const rules = {
       isOwner: "auth.id != null && auth.id in data.ref('user.id')",
       isOwnerOrLinkedProfile: 'isOwner || isLinkedProfile',
       onlySafeProfileFields:
-        "request.modifiedFields.all(field, field in ['full_name', 'avatar_url', 'has_seen_welcome_voucher', 'bio', 'member_since', 'member_segment', 'nights_left', 'date_of_birth', 'location_permission_status', 'push_notification_permission_status', 'onboarding_completed_at', 'updated_at'])",
+        "request.modifiedFields.all(field, field in ['full_name', 'avatar_url', 'has_seen_welcome_voucher', 'bio', 'member_since', 'member_segment', 'nights_left', 'date_of_birth', 'location_permission_status', 'push_notification_permission_status', 'onboarding_completed_at', 'auth_provider', 'updated_at'])",
       canCreateOwnedProfile:
         "auth.id != null && auth.id in data.ref('user.id')",
     },

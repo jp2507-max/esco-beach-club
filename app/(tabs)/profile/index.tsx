@@ -14,6 +14,7 @@ import {
   Settings,
   Star,
   Ticket,
+  Trash2,
   Users,
 } from 'lucide-react-native';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -238,6 +239,13 @@ export default function ProfileScreen(): React.JSX.Element {
         id: 'log-out',
         label: t('menu.logOut'),
         route: null,
+      },
+      {
+        color: Colors.danger,
+        icon: Trash2,
+        id: 'delete-account',
+        label: t('menu.deleteAccount'),
+        route: '/profile/delete-account',
       },
     ],
     [t]
@@ -552,7 +560,7 @@ export default function ProfileScreen(): React.JSX.Element {
         ) : (
           <Pressable
             accessibilityRole="button"
-            className="mb-5 flex-row items-center justify-center rounded-2xl border-2 border-secondary py-3.5"
+            className="mb-5 flex-row items-center justify-center rounded-2xl border-2 border-secondary py-3.5 dark:border-secondary-bright"
             onPress={handleSupport}
             testID="contact-support"
           >
@@ -577,7 +585,11 @@ export default function ProfileScreen(): React.JSX.Element {
                 <View
                   key={item.id}
                   className={rowClassName}
-                  testID={`menu-${item.id}`}
+                  testID={
+                    item.id === 'delete-account'
+                      ? 'delete-account-option'
+                      : `menu-${item.id}`
+                  }
                 >
                   <View
                     className="mr-3.5 size-[38px] items-center justify-center rounded-[10px] opacity-60"
@@ -607,7 +619,11 @@ export default function ProfileScreen(): React.JSX.Element {
                 onPress={() => {
                   void handleMenuPress(item);
                 }}
-                testID={`menu-${item.id}`}
+                testID={
+                  item.id === 'delete-account'
+                    ? 'delete-account-option'
+                    : `menu-${item.id}`
+                }
               >
                 <View
                   className="mr-3.5 size-[38px] items-center justify-center rounded-[10px]"

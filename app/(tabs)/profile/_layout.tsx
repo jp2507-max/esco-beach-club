@@ -35,6 +35,10 @@ export default function ProfileStackLayout(): React.JSX.Element {
         name="membership"
         options={{ headerShown: false, presentation: 'card' }}
       />
+      <Stack.Screen
+        name="delete-account"
+        options={{ headerShown: false, presentation: 'card' }}
+      />
     </Stack>
   );
 }

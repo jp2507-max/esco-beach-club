@@ -143,6 +143,8 @@ const auth = {
   codeNotSentTitle: 'Chưa gửi được mã',
   verificationFailedTitle: 'Xác minh thất bại',
   appleAuthUnavailable: 'Apple Sign In không khả dụng trên thiết bị này.',
+  appleAuthorizationCodeMissing:
+    'Apple không trả về mã xác thực cần thiết để xác minh xóa tài khoản.',
   appleIdTokenMissing: 'Apple không trả về mã thông báo danh tính.',
   googleAuthNotConfigured: 'Google Sign-In chưa được cấu hình.',
   googleOauthClientNotConfigured:

@@ -11,12 +11,7 @@ import {
 } from 'lucide-react-native';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  Alert,
-  type LayoutChangeEvent,
-  Share,
-  useColorScheme,
-} from 'react-native';
+import { Alert, type LayoutChangeEvent, Share } from 'react-native';
 import {
   cancelAnimation,
   useAnimatedStyle,
@@ -34,6 +29,7 @@ import {
 import { ProfileSubScreenHeader } from '@/src/components/ui';
 import { rmTiming } from '@/src/lib/animations/motion';
 import { shadows } from '@/src/lib/styles/shadows';
+import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 import { Image } from '@/src/tw/image';
@@ -53,8 +49,8 @@ const PRIORITY_ENTRY_COMPLETED_THRESHOLD = 5;
 export default function InviteScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+
+  const isDark = useAppIsDark();
   const { t } = useTranslation('profile');
   const { profile } = useProfileData();
   const { referrals } = useReferralsData();
@@ -179,6 +175,7 @@ export default function InviteScreen(): React.JSX.Element {
       });
     } catch (e) {
       console.error('Share failed', e);
+      Alert.alert(t('invite.shareFailed'));
     }
   }
 
@@ -186,6 +183,10 @@ export default function InviteScreen(): React.JSX.Element {
   const progressTrackColor = isDark ? `${Colors.primaryBright}28` : '#FCE4EC';
   const referralStatusBg = isDark ? 'rgba(34,197,94,0.22)' : '#E8F5E9';
   const referralStatusText = isDark ? '#86EFAC' : '#4CAF50';
+  const referralWarningBg = isDark
+    ? 'rgba(245, 158, 11, 0.13)'
+    : Colors.badgeWarningLightBackground;
+  const referralWarningText = isDark ? Colors.warningDark : Colors.warning;
   const milestoneUnlockedBg = isDark ? 'rgba(34,197,94,0.2)' : '#E8F5E9';
   const milestoneLockedBg = isDark ? Colors.darkBgElevated : '#F0F0F0';
   const milestoneUnlockedIcon = isDark ? '#86EFAC' : '#4CAF50';
@@ -422,13 +423,23 @@ export default function InviteScreen(): React.JSX.Element {
                 </View>
                 <View
                   className="rounded-[10px] px-3 py-[5px]"
-                  style={{ backgroundColor: referralStatusBg }}
+                  style={{
+                    backgroundColor:
+                      ref.status === 'Pending'
+                        ? referralWarningBg
+                        : referralStatusBg,
+                  }}
                 >
                   <Text
                     className="text-xs font-bold"
-                    style={{ color: referralStatusText }}
+                    style={{
+                      color:
+                        ref.status === 'Pending'
+                          ? referralWarningText
+                          : referralStatusText,
+                    }}
                   >
-                    {ref.status === 'Completed'
+                    {ref.status === 'Completed' || ref.status === 'Accepted'
                       ? t('invite.status.completed')
                       : t('invite.status.pending')}
                   </Text>

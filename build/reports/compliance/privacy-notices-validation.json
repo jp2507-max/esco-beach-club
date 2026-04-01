@@ -1,0 +1,49 @@
+{
+  "success": false,
+  "validatedAt": "2026-04-01T04:06:23.013Z",
+  "checks": {
+    "associatedDomains": [
+      "applinks:escolife.app"
+    ],
+    "deleteAccountScreenExists": true,
+    "reviewNotesExists": true,
+    "sampleQrExists": true,
+    "supportUrl": "https://escolife.app/support",
+    "termsOfServiceUrl": "https://escolife.app/terms",
+    "privacyPolicyUrl": "https://escolife.app/privacy",
+    "urlChecks": [
+      {
+        "ok": false,
+        "status": null,
+        "url": "https://escolife.app/privacy",
+        "message": "fetch failed"
+      },
+      {
+        "ok": false,
+        "status": null,
+        "url": "https://escolife.app/terms",
+        "message": "fetch failed"
+      },
+      {
+        "ok": false,
+        "status": null,
+        "url": "https://escolife.app/support",
+        "message": "fetch failed"
+      }
+    ],
+    "domainChecks": [
+      {
+        "ok": false,
+        "status": null,
+        "url": "https://escolife.app/.well-known/apple-app-site-association",
+        "message": "fetch failed"
+      }
+    ]
+  },
+  "errors": [
+    "Unreachable legal/support URL: https://escolife.app/privacy",
+    "Unreachable legal/support URL: https://escolife.app/terms",
+    "Unreachable legal/support URL: https://escolife.app/support",
+    "Associated domain verification failed: https://escolife.app/.well-known/apple-app-site-association"
+  ]
+}

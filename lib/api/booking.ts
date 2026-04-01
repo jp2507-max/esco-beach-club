@@ -10,6 +10,12 @@ import {
 
 import { nowIso } from './shared';
 
+function normalizedOptionalString(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+  const trimmed = value.trim();
+  return trimmed === '' ? undefined : trimmed;
+}
+
 export async function submitTableReservation(params: {
   user_id: string;
   event_id?: string;
@@ -20,6 +26,9 @@ export async function submitTableReservation(params: {
   reservation_time: string;
   source: string;
 }): Promise<TableReservation> {
+  if (params.party_size < 1 || !Number.isInteger(params.party_size)) {
+    throw new Error('Party size must be a positive integer');
+  }
   const createdAt = nowIso();
   const reservationId = id();
   const entryKey = [
@@ -68,22 +77,21 @@ export async function submitTableReservation(params: {
       updated_at: createdAt,
     };
   } catch (error) {
-    if (error instanceof Error) {
-      if ((error as Error & { type?: string }).type === 'record-not-unique') {
-        const { data } = await db.queryOnce({
-          table_reservations: {
-            $: {
-              where: { entry_key: entryKey },
-            },
+    if (
+      error instanceof Error &&
+      (error as Error & { type?: string }).type === 'record-not-unique'
+    ) {
+      const { data } = await db.queryOnce({
+        table_reservations: {
+          $: {
+            where: { entry_key: entryKey },
           },
-        });
+        },
+      });
 
-        const existing = data.table_reservations[0] as
-          | InstantRecord
-          | undefined;
-        if (existing) {
-          return mapTableReservation(existing);
-        }
+      const existing = data.table_reservations[0] as InstantRecord | undefined;
+      if (existing) {
+        return mapTableReservation(existing);
       }
     }
 
@@ -100,13 +108,20 @@ export async function submitPrivateEventInquiry(params: {
   contact_email?: string;
   notes?: string;
 }): Promise<PrivateEventInquiry> {
+  if (params.estimated_pax < 1 || !Number.isInteger(params.estimated_pax)) {
+    throw new Error('Estimated pax must be a positive integer');
+  }
+  const contactEmail = normalizedOptionalString(params.contact_email);
+  const contactName = normalizedOptionalString(params.contact_name);
+  const notes = normalizedOptionalString(params.notes);
+
   const createdAt = nowIso();
   const inquiryId = id();
   const entryKey = [
     params.user_id,
     params.event_type,
     params.preferred_date,
-    params.contact_email?.trim() || 'no-email',
+    contactEmail ?? 'no-email',
   ].join(':');
 
   const createPayload = {
@@ -115,13 +130,9 @@ export async function submitPrivateEventInquiry(params: {
     estimated_pax: params.estimated_pax,
     event_type: params.event_type,
     preferred_date: params.preferred_date,
-    ...(params.contact_email !== undefined
-      ? { contact_email: params.contact_email }
-      : {}),
-    ...(params.contact_name !== undefined
-      ? { contact_name: params.contact_name }
-      : {}),
-    ...(params.notes !== undefined ? { notes: params.notes } : {}),
+    ...(contactEmail !== undefined ? { contact_email: contactEmail } : {}),
+    ...(contactName !== undefined ? { contact_name: contactName } : {}),
+    ...(notes !== undefined ? { notes } : {}),
   };
 
   const tx = db.tx.private_event_inquiries[inquiryId]
@@ -134,12 +145,12 @@ export async function submitPrivateEventInquiry(params: {
     return {
       id: inquiryId,
       entry_key: entryKey,
-      contact_email: params.contact_email || null,
-      contact_name: params.contact_name || null,
+      contact_email: contactEmail ?? null,
+      contact_name: contactName ?? null,
       created_at: createdAt,
       estimated_pax: params.estimated_pax,
       event_type: params.event_type,
-      notes: params.notes || null,
+      notes: notes ?? null,
       preferred_date: params.preferred_date,
     };
   } catch (error) {

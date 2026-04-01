@@ -1,12 +1,11 @@
-import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { useColorScheme } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
 import { useReferralsData } from '@/providers/DataProvider';
 import { ProfileSubScreenHeader } from '@/src/components/ui';
 import { shadows } from '@/src/lib/styles/shadows';
+import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
 import { ScrollView, Text, View } from '@/src/tw';
 import { Image } from '@/src/tw/image';
 
@@ -28,12 +27,15 @@ type StatusKey =
 
 export default function InviteReferralsScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const isDark = useAppIsDark();
   const { t } = useTranslation('profile');
   const { referrals } = useReferralsData();
   const referralStatusBg = isDark ? 'rgba(34,197,94,0.22)' : '#E8F5E9';
   const referralStatusText = isDark ? '#86EFAC' : '#4CAF50';
+  const referralWarningBg = isDark
+    ? 'rgba(245, 158, 11, 0.13)'
+    : Colors.badgeWarningLightBackground;
+  const referralWarningText = isDark ? Colors.warningDark : Colors.warning;
 
   return (
     <View
@@ -60,9 +62,11 @@ export default function InviteReferralsScreen(): React.JSX.Element {
               <View className="mr-3 size-11">
                 <Image
                   className="size-11 rounded-full"
-                  source={{
-                    uri: ref.referred_avatar ?? defaultAvatar,
-                  }}
+                  source={
+                    ref.referred_avatar
+                      ? { uri: ref.referred_avatar }
+                      : defaultAvatar
+                  }
                 />
                 <View
                   className="absolute bottom-0 left-0 size-3 rounded-full"
@@ -84,11 +88,21 @@ export default function InviteReferralsScreen(): React.JSX.Element {
             </View>
             <View
               className="rounded-[10px] px-3 py-[5px]"
-              style={{ backgroundColor: referralStatusBg }}
+              style={{
+                backgroundColor:
+                  ref.status === 'Pending'
+                    ? referralWarningBg
+                    : referralStatusBg,
+              }}
             >
               <Text
                 className="text-xs font-bold"
-                style={{ color: referralStatusText }}
+                style={{
+                  color:
+                    ref.status === 'Pending'
+                      ? referralWarningText
+                      : referralStatusText,
+                }}
               >
                 {t(
                   (statusToKey[ref.status] ||

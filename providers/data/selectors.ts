@@ -10,7 +10,18 @@ import {
 } from '@/src/lib/loyalty';
 
 import {
+  type BookingContentData,
+  type EventsData,
+  type MemberOffersData,
   type MemberSummary,
+  type MenuContentData,
+  type NewsData,
+  type PartnerRedemptionsData,
+  type PartnersData,
+  type ProfileData,
+  type ReferralsData,
+  type SavedEventsData,
+  type StaffAccessData,
   useBookingContentData,
   useEventsData,
   useMemberOffersData,
@@ -21,9 +32,23 @@ import {
   useProfileData,
   useReferralsData,
   useSavedEventsData,
+  useStaffAccessData,
 } from './context';
 
-export function useData() {
+export type UseDataReturn =
+  BookingContentData &
+  ProfileData &
+  EventsData &
+  MemberOffersData &
+  MenuContentData &
+  NewsData &
+  PartnersData &
+  PartnerRedemptionsData &
+  ReferralsData &
+  SavedEventsData &
+  StaffAccessData;
+
+export function useData(): UseDataReturn {
   const profileData = useProfileData();
   const eventsData = useEventsData();
   const newsData = useNewsData();
@@ -34,6 +59,7 @@ export function useData() {
   const bookingContentData = useBookingContentData();
   const memberOffersData = useMemberOffersData();
   const menuContentData = useMenuContentData();
+  const staffAccessData = useStaffAccessData();
 
   return useMemo(
     () => ({
@@ -47,6 +73,7 @@ export function useData() {
       ...partnerRedemptionsData,
       ...referralsData,
       ...savedEventsData,
+      ...staffAccessData,
     }),
     [
       bookingContentData,
@@ -59,6 +86,7 @@ export function useData() {
       profileData,
       referralsData,
       savedEventsData,
+      staffAccessData,
     ]
   );
 }

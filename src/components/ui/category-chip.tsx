@@ -36,6 +36,7 @@ export function CategoryChip({
   onPressIn,
   onPressOut,
   style,
+  accessibilityState: accessibilityStateProp,
   ...props
 }: CategoryChipProps): React.JSX.Element {
   const isDark = useColorScheme() === 'dark';
@@ -110,6 +111,7 @@ export function CategoryChip({
   return (
     <Animated.Pressable
       accessibilityRole="button"
+      accessibilityState={{ ...accessibilityStateProp, selected: !!isActive }}
       className={cn('rounded-full border px-5 py-2.5', className)}
       onPress={onPress}
       onPressIn={handlePressInCombined}

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Appearance, useColorScheme, type ColorSchemeName } from 'react-native';
+import { Appearance, type ColorSchemeName, useColorScheme } from 'react-native';
 
 import { useThemePreferenceStore } from '@/src/stores/theme-preference-store';
 

@@ -37,7 +37,9 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
   const [isProvisioningProfile, setIsProvisioningProfile] =
     useState<boolean>(false);
   const isDismissingRef = useRef(false);
-  const isProvisioningProfileRef = useRef(false);
+  const isProvisioningProfileRef = useRef<Map<string, boolean>>(new Map());
+  const latestUserIdRef = useRef<string>(userId);
+  latestUserIdRef.current = userId;
   const profileProvisionAttemptsRef = useRef<Map<string, number>>(new Map());
 
   const profileQuery = db.useQuery(
@@ -84,18 +86,19 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
 
     if (!userId) {
       profileProvisionAttemptsRef.current.clear();
-      isProvisioningProfileRef.current = false;
+      isProvisioningProfileRef.current.clear();
       setIsProvisioningProfile(false);
       return;
     }
 
     if (profile) {
       profileProvisionAttemptsRef.current.delete(userId);
+      isProvisioningProfileRef.current.delete(userId);
       return;
     }
 
     if (profileQuery.isLoading || profileViaUserQuery.isLoading) return;
-    if (isProvisioningProfileRef.current) return;
+    if (isProvisioningProfileRef.current.get(userId)) return;
 
     const attemptCount = profileProvisionAttemptsRef.current.get(userId) ?? 0;
     if (attemptCount >= MAX_PROFILE_PROVISION_ATTEMPTS) {
@@ -104,7 +107,7 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
 
     profileProvisionAttemptsRef.current.set(userId, attemptCount + 1);
 
-    isProvisioningProfileRef.current = true;
+    isProvisioningProfileRef.current.set(userId, true);
     setIsProvisioningProfile(true);
     let isMounted = true;
 
@@ -118,7 +121,6 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
       .catch((error: unknown) => {
         if (!isMounted) return;
         captureHandledError(error, {
-          extras: { userId },
           tags: {
             area: 'profile',
             operation: 'ensure_profile',
@@ -129,14 +131,15 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
           isAuthLoading,
           profileQueryLoading: profileQuery.isLoading,
           profileViaUserQueryLoading: profileViaUserQuery.isLoading,
-          userId,
         });
       })
       .finally(() => {
-        isProvisioningProfileRef.current = false;
-        if (isMounted) {
-          setIsProvisioningProfile(false);
-        }
+        isProvisioningProfileRef.current.delete(userId);
+        setIsProvisioningProfile(
+          Boolean(
+            isProvisioningProfileRef.current.get(latestUserIdRef.current)
+          )
+        );
       });
 
     return () => {

@@ -16,6 +16,7 @@ const profile = {
     helpSupport: 'Help & Support',
     restartOnboarding: 'Restart Onboarding',
     logOut: 'Log Out',
+    deleteAccount: 'Delete Account',
   },
   restartOnboarding: {
     confirmTitle: 'Restart onboarding?',
@@ -101,6 +102,62 @@ const profile = {
     languageChangeFailed: 'Could not change language. Please try again.',
     saveProfileFailed: 'Could not save your profile. Please try again.',
     signOutFailed: 'Could not sign out. Please try again.',
+  },
+  deleteAccount: {
+    title: 'Delete Account',
+    heroTitle: 'Delete your Esco account',
+    heroDescription:
+      'This starts the full account deletion process and removes access to your member profile after the grace period ends.',
+    permanentDataLossTitle: 'Permanent data loss',
+    permanentDataLossDescription:
+      'Once the grace period ends, your Esco account and linked member data are permanently removed.',
+    gracePeriodTitle: '30-day grace period',
+    gracePeriodDescription:
+      'You will have 30 days to sign back in and restore your account before the deletion is finalized.',
+    whatWillBeDeletedTitle: 'What will be deleted',
+    whatWillBeDeletedItems: {
+      profileData: 'Profile and account information',
+      savedEvents: 'Saved events and referral progress',
+      bookings: 'Reservation and private-event request history',
+      memberBenefits: 'Member-specific access and benefits attached to your account',
+    },
+    confirmLabel: 'Final confirmation',
+    confirmHint:
+      'Type DELETE below to confirm that you want to schedule this account for deletion.',
+    confirmPlaceholder: 'Type DELETE',
+    finalNotice: 'This action will be final in 30 days.',
+    confirmAction: 'Schedule account deletion',
+    pendingEyebrow: 'Deletion scheduled',
+    pendingTitle: 'Your account is scheduled for deletion',
+    pendingDescription:
+      'Unless you restore it first, your account will be permanently deleted on {{date}}.',
+    pendingRestoreHint:
+      'Restore your account at any time before the deadline to cancel deletion.',
+    restoreAction: 'Restore account',
+    reviewAction: 'Review details',
+    backToApp: 'Back to app',
+    bannerTitle: 'Account scheduled for deletion',
+    bannerDescription:
+      'Your account will be deleted on {{date}} unless you restore it first.',
+    bannerCountdown: '30 days to restore',
+    bannerRestoreHint:
+      'Use Restore account to cancel the request and keep your member access.',
+    scheduleSuccessTitle: 'Deletion request created',
+    scheduleSuccessMessage:
+      'Your account has been scheduled for deletion. Sign back in within 30 days if you want to restore it.',
+    restoreSuccessTitle: 'Account restored',
+    footerNote:
+      'Need help first? Contact support before deleting your account.',
+    loadingState: 'Checking account deletion status...',
+    errors: {
+      appleVerificationCanceled:
+        'Apple verification was canceled, so deletion was not scheduled.',
+      restoreFailed: 'Could not restore your account. Please try again.',
+      scheduleFailed:
+        'Could not schedule account deletion. Please try again.',
+      sessionExpired:
+        'Your secure session expired. Please sign in again and retry.',
+    },
   },
   editProfile: {
     title: 'Edit Profile',
@@ -221,6 +278,7 @@ const profile = {
     allReferralsTitle: 'Your referrals',
     codeCopied: 'Copied!',
     codeCopyFailed: 'Could not copy code',
+    shareFailed: 'Could not share invite link',
     codeLoading: 'Loading…',
     copyReferralCode: 'Copy invite code',
     copyReferralCodeHint: 'Copies your referral code to the clipboard',

@@ -44,9 +44,9 @@ export function applyThemePreference(
   options: ApplyThemePreferenceOptions = {}
 ): void {
   if (preference === 'system') {
-    // RN 0.83 can surface `unspecified` through `useColorScheme()` after
-    // resetting to system. Skip that reset during cold start and only use it
-    // for an explicit in-app change back to system mode.
+    // Use the native reset value RN passes through to iOS/Android (see AppearanceModule /
+    // RCTConvert). `null` is documented for newer RN stacks but on 0.83.x can mis-sync
+    // native chrome vs JS theme. Skip reset during cold start; only on explicit change.
     if (!options.allowSystemReset) return;
     Appearance.setColorScheme('unspecified');
     return;

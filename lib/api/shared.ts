@@ -119,7 +119,7 @@ export function buildMemberId(userId: string): string {
 }
 
 export function buildReferralCode(): string {
-  return `ESCO-${id().replace(/-/g, '').slice(0, 6).toUpperCase()}`;
+  return `ESCO-${id().replace(/-/g, '').slice(0, 8).toUpperCase()}`;
 }
 
 export function isMemberIdConflict(error: Error): boolean {
@@ -180,7 +180,11 @@ function normalizeNullableIsoDateTime(
 }
 
 function normalizeRequiredIsoDateTime(value: string): string {
-  return normalizeOnboardingCompletedAt(value) ?? value;
+  const normalized = normalizeOnboardingCompletedAt(value);
+  if (!normalized) {
+    console.warn('Invalid required ISO datetime:', value);
+  }
+  return normalized ?? value;
 }
 
 export function parseRewardServiceResponse(

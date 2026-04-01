@@ -47,7 +47,9 @@ export function ReferralClaimEffect(): null {
         });
 
         if (result.ok) {
-          clearPendingReferralCode();
+          if (getPendingReferralCode() === pending) {
+            clearPendingReferralCode();
+          }
           return;
         }
 
@@ -61,7 +63,9 @@ export function ReferralClaimEffect(): null {
           result.status !== undefined &&
           terminalStatuses.has(result.status)
         ) {
-          clearPendingReferralCode();
+          if (getPendingReferralCode() === pending) {
+            clearPendingReferralCode();
+          }
           return;
         }
 

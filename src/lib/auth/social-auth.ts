@@ -204,6 +204,42 @@ export async function getAppleIdToken(): Promise<{
   }
 }
 
+export async function getAppleAuthorizationCode(): Promise<string> {
+  if (Platform.OS !== 'ios') {
+    throw new Error('appleAuthUnavailable');
+  }
+
+  const isAvailable = await AppleAuthentication.isAvailableAsync();
+
+  if (!isAvailable) {
+    throw new Error('appleAuthUnavailable');
+  }
+
+  try {
+    const credential = await AppleAuthentication.signInAsync({
+      requestedScopes: [],
+    });
+    const authorizationCode = credential.authorizationCode?.trim();
+
+    if (!authorizationCode) {
+      throw new Error('appleAuthorizationCodeMissing');
+    }
+
+    return authorizationCode;
+  } catch (error: unknown) {
+    if (
+      error &&
+      typeof error === 'object' &&
+      'code' in error &&
+      error.code === 'ERR_REQUEST_CANCELED'
+    ) {
+      throw new Error('providerSignInCanceled');
+    }
+
+    throw error;
+  }
+}
+
 export async function getGoogleIdToken(): Promise<{
   clientName: string;
   idToken: string;

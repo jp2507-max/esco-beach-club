@@ -112,7 +112,7 @@ export function hasRequiredSignupConsent(
   );
 }
 
-function extractSignInUser(result: unknown): {
+export function extractSignInUser(result: unknown): {
   created: boolean;
   email: string | null;
   id: string | null;

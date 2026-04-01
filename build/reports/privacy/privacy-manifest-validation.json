@@ -1,0 +1,16 @@
+{
+  "success": true,
+  "validatedAt": "2026-04-01T04:06:22.576Z",
+  "checks": {
+    "appJsonExists": true,
+    "checklistExists": true,
+    "manifestSourceExists": true,
+    "pluginExists": true,
+    "registeredPlugin": true,
+    "publicAppName": "Esco Beach Club"
+  },
+  "warnings": [
+    "NSPrivacyCollectedDataTypes is empty. Confirm App Store Connect privacy answers are covered separately."
+  ],
+  "errors": []
+}

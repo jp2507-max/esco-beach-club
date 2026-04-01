@@ -1,5 +1,5 @@
-import type { MemberSegment, Profile } from '@/lib/types';
-import { memberSegments, rewardTierKeys } from '@/lib/types';
+import type { AuthProviderType, MemberSegment, Profile } from '@/lib/types';
+import { authProviderTypes, memberSegments, rewardTierKeys } from '@/lib/types';
 
 import {
   type InstantRecord,
@@ -27,11 +27,7 @@ export function toRewardTierKey(
 export function toNullableRewardTierKey(
   value: unknown
 ): Profile['next_tier_key'] {
-  if (value === rewardTierKeys.escoLifeMember) {
-    return rewardTierKeys.escoLifeMember;
-  }
-
-  return null;
+  return toRewardTierKey(value);
 }
 
 function toMemberSegment(value: unknown): MemberSegment | null {
@@ -49,10 +45,30 @@ function toMemberSegment(value: unknown): MemberSegment | null {
   return null;
 }
 
+function toAuthProvider(value: unknown): AuthProviderType | null {
+  const normalized =
+    typeof value === 'string' ? value.trim().toLowerCase() : '';
+
+  if (normalized === authProviderTypes.apple) {
+    return authProviderTypes.apple;
+  }
+
+  if (normalized === authProviderTypes.google) {
+    return authProviderTypes.google;
+  }
+
+  if (normalized === authProviderTypes.magicCode) {
+    return authProviderTypes.magicCode;
+  }
+
+  return null;
+}
+
 export function mapProfile(record: InstantRecord): Profile {
   return {
     id: record.id,
     full_name: toStringOr(record.full_name),
+    auth_provider: toAuthProvider(record.auth_provider),
     date_of_birth: toNullableString(record.date_of_birth),
     bio: toStringOr(record.bio),
     member_id: toStringOr(record.member_id),
