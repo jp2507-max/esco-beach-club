@@ -16,6 +16,7 @@ const profile = {
     helpSupport: '도움말 및 지원',
     restartOnboarding: '온보딩 다시 시작',
     logOut: '로그아웃',
+    deleteAccount: '계정 삭제',
   },
   restartOnboarding: {
     confirmTitle: '온보딩을 다시 시작할까요?',
@@ -41,6 +42,13 @@ const profile = {
   memberSince: '가입일',
   nightsLeft: '남은 숙박',
   savedEventsCount: '저장한 이벤트',
+  memberCard: {
+    brandMark: 'ESCO LIFE',
+    cashbackBalance: '캐시백 잔액',
+    cashbackSuffix: '캐시백 포인트',
+    memberName: '멤버 이름',
+    lifetimeTier: '평생 등급',
+  },
   noBio: '프로필을 더 잘 보여줄 짧은 소개를 추가해 보세요.',
   welcomeGift: '웰컴 기프트',
   welcomeDiscount: '10% 할인',
@@ -101,6 +109,68 @@ const profile = {
     languageChangeFailed: '언어를 변경할 수 없습니다. 다시 시도해 주세요.',
     saveProfileFailed: '프로필을 저장할 수 없습니다. 다시 시도해 주세요.',
     signOutFailed: '로그아웃할 수 없습니다. 다시 시도해 주세요.',
+  },
+  deleteAccount: {
+    title: '계정 삭제',
+    heroTitle: 'Esco 계정을 삭제합니다',
+    heroDescription:
+      '이 작업을 시작하면 유예 기간이 끝난 뒤 회원 프로필과 계정 접근 권한이 제거됩니다.',
+    permanentDataLossTitle: '영구적인 데이터 삭제',
+    permanentDataLossDescription:
+      '유예 기간이 끝나면 Esco 계정과 연결된 회원 데이터가 영구적으로 삭제됩니다.',
+    gracePeriodTitle: '30일 유예 기간',
+    gracePeriodDescription:
+      '삭제가 확정되기 전까지 30일 동안 다시 로그인하여 계정을 복원할 수 있습니다.',
+    defaultGracePeriod: '30일',
+    whatWillBeDeletedTitle: '삭제되는 항목',
+    whatWillBeDeletedItems: {
+      profileData: '프로필 및 계정 정보',
+      savedEvents: '저장한 이벤트와 추천 진행 현황',
+      bookings: '예약 및 프라이빗 이벤트 요청 내역',
+      memberBenefits: '계정에 연결된 회원 혜택 및 접근 권한',
+    },
+    confirmLabel: '최종 확인',
+    confirmHint: '계정 삭제를 예약하려면 아래에 DELETE를 입력해 주세요.',
+    confirmPlaceholder: 'DELETE 입력',
+    finalNotice: '이 작업은 30일 후 최종 확정됩니다.',
+    confirmAction: '계정 삭제 예약',
+    pendingEyebrow: '삭제 예약됨',
+    pendingTitle: '계정이 삭제 예정 상태입니다',
+    pendingDescription:
+      '{{date}} 전까지 복원하지 않으면 계정이 영구적으로 삭제됩니다.',
+    pendingRestoreHint:
+      '마감 전이라면 언제든지 계정을 복원하여 삭제를 취소할 수 있습니다.',
+    restoreAction: '계정 복원',
+    reviewAction: '세부 정보 보기',
+    backToApp: '앱으로 돌아가기',
+    bannerTitle: '계정 삭제가 예약되었습니다',
+    bannerDescription: '복원하지 않으면 {{date}}에 계정이 삭제됩니다.',
+    bannerCountdown: '복원 가능 기간 30일',
+    bannerRestoreHint:
+      '계정 복원을 누르면 삭제 요청이 취소되고 멤버 접근 권한이 유지됩니다.',
+    scheduleSuccessTitle: '삭제 요청이 생성되었습니다',
+    scheduleSuccessMessage:
+      '계정 삭제가 예약되었습니다. 복원하려면 30일 이내에 다시 로그인해 주세요.',
+    restoreSuccessTitle: '계정이 복원되었습니다',
+    footerNote:
+      '먼저 도움이 필요하신가요? 계정을 삭제하기 전에 지원팀에 문의하세요.',
+    loadingState: '계정 삭제 상태를 확인하는 중...',
+    errors: {
+      appleVerificationCanceled:
+        'Apple 확인이 취소되어 삭제가 예약되지 않았습니다.',
+      apiUnavailable:
+        '이 빌드에서는 계정 삭제가 아직 구성되지 않았습니다. API routes가 포함된 Expo dev server를 시작하거나 EXPO_PUBLIC_ACCOUNT_API_BASE_URL을 설정해 주세요.',
+      instantAuthUnavailable:
+        '로컬 API 서버가 InstantDB에 연결할 수 없어 계정 삭제를 일시적으로 사용할 수 없습니다. 이 기기의 DNS 또는 인터넷 연결을 확인한 뒤 다시 시도해 주세요.',
+      networkUnavailable:
+        '계정 삭제 서비스에 연결할 수 없습니다. 네트워크를 확인한 뒤 다시 시도해 주세요.',
+      restoreFailed: '계정을 복원할 수 없습니다. 다시 시도해 주세요.',
+      scheduleFailed: '계정 삭제를 예약할 수 없습니다. 다시 시도해 주세요.',
+      serverMisconfigured:
+        '서버에 Instant 관리자 자격 증명이 없어 계정 삭제를 일시적으로 사용할 수 없습니다.',
+      sessionExpired:
+        '보안 세션이 만료되었습니다. 다시 로그인한 뒤 재시도해 주세요.',
+    },
   },
   editProfile: {
     title: '프로필 수정',
@@ -216,8 +286,11 @@ const profile = {
     title: '리워드 스캐너',
   },
   invite: {
+    allReferralsTitle: '추천 내역',
     codeCopied: '복사됨!',
     codeCopyFailed: '코드를 복사할 수 없습니다',
+    shareFailed: '초대 링크를 공유할 수 없습니다',
+    codeLoading: '불러오는 중…',
     copyReferralCode: '초대 코드 복사',
     copyReferralCodeHint: '추천 코드를 클립보드에 복사합니다',
     titlePrefix: '지금',
@@ -228,8 +301,17 @@ const profile = {
     friendsJoined: '{{goal}}명 중 {{current}}명 가입',
     recentReferrals: '최근 추천',
     viewAll: '모두 보기',
+    viewAllHint: '전체 추천 목록을 엽니다',
     joinedViaYourLink: '내 링크로 가입함',
+    loadingReferrals: '추천 내역을 불러오는 중…',
     noReferralsYet: '아직 추천이 없습니다. 코드를 공유해 보세요!',
+    status: {
+      completed: '완료',
+      pending: '대기 중',
+      accepted: '수락됨',
+      rejected: '거절됨',
+      unknown: '알 수 없음',
+    },
     shareInviteLink: '초대 링크 공유',
     shareMessage:
       '내 추천 코드로 Esco Life에 가입하세요: {{code}}\nhttps://escolife.app/invite/{{code}}',
@@ -237,6 +319,8 @@ const profile = {
       freeCocktail: '무료 칵테일',
       vipBadge: 'VIP 배지',
       priorityEntry: '우선 입장',
+      priorityProgress_one: '완료된 초대 {{count}}명 더 필요',
+      priorityProgress_other: '완료된 초대 {{count}}명 더 필요',
       unlocked: '해제됨',
       twoMoreInvites: '초대 {{count}}명 더 필요',
       locked: '잠김',

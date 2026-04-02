@@ -16,6 +16,7 @@ const profile = {
     helpSupport: 'Trợ giúp & hỗ trợ',
     restartOnboarding: 'Bắt đầu lại onboarding',
     logOut: 'Đăng xuất',
+    deleteAccount: 'Xóa tài khoản',
   },
   restartOnboarding: {
     confirmTitle: 'Bắt đầu lại onboarding?',
@@ -41,6 +42,13 @@ const profile = {
   memberSince: 'Thành viên từ',
   nightsLeft: 'Đêm còn lại',
   savedEventsCount: 'Sự kiện đã lưu',
+  memberCard: {
+    brandMark: 'ESCO LIFE',
+    cashbackBalance: 'Số dư cashback',
+    cashbackSuffix: 'điểm cashback',
+    memberName: 'TÊN THÀNH VIÊN',
+    lifetimeTier: 'Hạng trọn đời',
+  },
   noBio: 'Thêm một đoạn giới thiệu ngắn để cá nhân hóa hồ sơ của bạn.',
   welcomeGift: 'QUÀ CHÀO MỪNG',
   welcomeDiscount: 'GIẢM 10%',
@@ -102,6 +110,70 @@ const profile = {
     languageChangeFailed: 'Không thể thay đổi ngôn ngữ. Vui lòng thử lại.',
     saveProfileFailed: 'Không thể lưu hồ sơ của bạn. Vui lòng thử lại.',
     signOutFailed: 'Không thể đăng xuất. Vui lòng thử lại.',
+  },
+  deleteAccount: {
+    title: 'Xóa tài khoản',
+    heroTitle: 'Xóa tài khoản Esco của bạn',
+    heroDescription:
+      'Thao tác này bắt đầu quy trình xóa tài khoản đầy đủ và sẽ gỡ quyền truy cập hội viên của bạn khi thời gian chờ kết thúc.',
+    permanentDataLossTitle: 'Mất dữ liệu vĩnh viễn',
+    permanentDataLossDescription:
+      'Sau khi thời gian chờ kết thúc, tài khoản Esco và dữ liệu hội viên liên kết sẽ bị xóa vĩnh viễn.',
+    gracePeriodTitle: 'Thời gian chờ 30 ngày',
+    gracePeriodDescription:
+      'Bạn sẽ có 30 ngày để đăng nhập lại và khôi phục tài khoản trước khi việc xóa được hoàn tất.',
+    defaultGracePeriod: '30 ngày',
+    whatWillBeDeletedTitle: 'Những gì sẽ bị xóa',
+    whatWillBeDeletedItems: {
+      profileData: 'Thông tin hồ sơ và tài khoản',
+      savedEvents: 'Sự kiện đã lưu và tiến độ giới thiệu',
+      bookings: 'Lịch sử đặt chỗ và yêu cầu sự kiện riêng',
+      memberBenefits: 'Quyền lợi và quyền truy cập hội viên gắn với tài khoản',
+    },
+    confirmLabel: 'Xác nhận cuối cùng',
+    confirmHint:
+      'Hãy nhập DELETE bên dưới để xác nhận bạn muốn lên lịch xóa tài khoản này.',
+    confirmPlaceholder: 'Nhập DELETE',
+    finalNotice: 'Hành động này sẽ trở thành cuối cùng sau 30 ngày.',
+    confirmAction: 'Lên lịch xóa tài khoản',
+    pendingEyebrow: 'Đã lên lịch xóa',
+    pendingTitle: 'Tài khoản của bạn đang chờ bị xóa',
+    pendingDescription:
+      'Nếu không khôi phục trước, tài khoản của bạn sẽ bị xóa vĩnh viễn vào {{date}}.',
+    pendingRestoreHint:
+      'Bạn có thể khôi phục tài khoản bất cứ lúc nào trước thời hạn để hủy việc xóa.',
+    restoreAction: 'Khôi phục tài khoản',
+    reviewAction: 'Xem chi tiết',
+    backToApp: 'Quay lại ứng dụng',
+    bannerTitle: 'Tài khoản đã được lên lịch xóa',
+    bannerDescription:
+      'Tài khoản của bạn sẽ bị xóa vào {{date}} nếu bạn không khôi phục trước.',
+    bannerCountdown: 'Còn 30 ngày để khôi phục',
+    bannerRestoreHint:
+      'Dùng Khôi phục tài khoản để hủy yêu cầu và giữ quyền truy cập hội viên.',
+    scheduleSuccessTitle: 'Đã tạo yêu cầu xóa',
+    scheduleSuccessMessage:
+      'Tài khoản của bạn đã được lên lịch xóa. Hãy đăng nhập lại trong vòng 30 ngày nếu bạn muốn khôi phục.',
+    restoreSuccessTitle: 'Đã khôi phục tài khoản',
+    footerNote:
+      'Cần hỗ trợ trước? Hãy liên hệ bộ phận hỗ trợ trước khi xóa tài khoản.',
+    loadingState: 'Đang kiểm tra trạng thái xóa tài khoản...',
+    errors: {
+      appleVerificationCanceled:
+        'Đã hủy xác minh Apple nên việc xóa chưa được lên lịch.',
+      apiUnavailable:
+        'Tính năng xóa tài khoản chưa được cấu hình cho bản dựng này. Hãy khởi động Expo dev server có API routes hoặc đặt EXPO_PUBLIC_ACCOUNT_API_BASE_URL.',
+      instantAuthUnavailable:
+        'Tính năng xóa tài khoản tạm thời không khả dụng vì API cục bộ không thể kết nối tới InstantDB. Hãy kiểm tra DNS hoặc kết nối internet của máy này rồi thử lại.',
+      networkUnavailable:
+        'Không thể kết nối tới dịch vụ xóa tài khoản. Hãy kiểm tra kết nối rồi thử lại.',
+      restoreFailed: 'Không thể khôi phục tài khoản của bạn. Vui lòng thử lại.',
+      scheduleFailed: 'Không thể lên lịch xóa tài khoản. Vui lòng thử lại.',
+      serverMisconfigured:
+        'Tính năng xóa tài khoản hiện tạm thời không khả dụng vì máy chủ thiếu thông tin xác thực Instant admin.',
+      sessionExpired:
+        'Phiên bảo mật của bạn đã hết hạn. Hãy đăng nhập lại rồi thử lại.',
+    },
   },
   editProfile: {
     title: 'Chỉnh sửa hồ sơ',
@@ -217,8 +289,11 @@ const profile = {
     title: 'Máy quét phần thưởng',
   },
   invite: {
+    allReferralsTitle: 'Lượt giới thiệu của bạn',
     codeCopied: 'Đã sao chép!',
     codeCopyFailed: 'Không thể sao chép mã',
+    shareFailed: 'Không thể chia sẻ liên kết mời',
+    codeLoading: 'Đang tải…',
     copyReferralCode: 'Sao chép mã mời',
     copyReferralCodeHint: 'Sao chép mã giới thiệu của bạn vào bảng nhớ tạm',
     titlePrefix: 'Mở khóa',
@@ -230,8 +305,17 @@ const profile = {
     friendsJoined: '{{current}} trên {{goal}} bạn đã tham gia',
     recentReferrals: 'Lượt giới thiệu gần đây',
     viewAll: 'Xem tất cả',
+    viewAllHint: 'Mở danh sách đầy đủ các lượt giới thiệu của bạn',
     joinedViaYourLink: 'Đã tham gia qua liên kết của bạn',
+    loadingReferrals: 'Đang tải lượt giới thiệu…',
     noReferralsYet: 'Chưa có lượt giới thiệu nào. Hãy chia sẻ mã của bạn!',
+    status: {
+      completed: 'Hoàn tất',
+      pending: 'Đang chờ',
+      accepted: 'Đã chấp nhận',
+      rejected: 'Đã từ chối',
+      unknown: 'Không xác định',
+    },
     shareInviteLink: 'Chia sẻ liên kết mời',
     shareMessage:
       'Tham gia Esco Life với mã giới thiệu của tôi: {{code}}\nhttps://escolife.app/invite/{{code}}',
@@ -239,6 +323,8 @@ const profile = {
       freeCocktail: 'Cocktail miễn phí',
       vipBadge: 'Huy hiệu VIP',
       priorityEntry: 'Ưu tiên vào cửa',
+      priorityProgress_one: 'Cần thêm {{count}} lượt giới thiệu hoàn tất',
+      priorityProgress_other: 'Cần thêm {{count}} lượt giới thiệu hoàn tất',
       unlocked: 'Đã mở khóa',
       twoMoreInvites: 'Thêm {{count}} lời mời nữa',
       locked: 'Đã khóa',

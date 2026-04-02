@@ -140,6 +140,7 @@ const auth = {
   codeNotSentTitle: 'Code Not Sent',
   verificationFailedTitle: 'Verification Failed',
   appleAuthUnavailable: 'Apple Sign In is not available on this device.',
+  appleAuthorizationCodeMissing: 'Apple did not return an authorization code.',
   appleIdTokenMissing: 'Apple did not return an identity token.',
   googleAuthNotConfigured: 'Google Sign-In is not configured yet.',
   googleOauthClientNotConfigured:

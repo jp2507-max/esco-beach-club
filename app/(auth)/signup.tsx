@@ -9,11 +9,14 @@ import {
   UserRound,
   Waves,
 } from 'lucide-react-native';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Alert, Platform } from 'react-native';
 import {
+  cancelAnimation,
+  FadeInUp,
+  type SharedValue,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
@@ -21,13 +24,9 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
-import {
-  type OnboardingPermissionStatus,
-  onboardingPermissionStatuses,
-} from '@/lib/types';
 import { type SignupOnboardingData, useAuth } from '@/providers/AuthProvider';
 import { ErrorBanner, SocialAuthButtons } from '@/src/components/ui';
-import { motion } from '@/src/lib/animations/motion';
+import { motion, withRM } from '@/src/lib/animations/motion';
 import { isAuthErrorKey } from '@/src/lib/auth-errors';
 import { ControlledTextInput } from '@/src/lib/forms/controlled-text-input';
 import {
@@ -36,8 +35,14 @@ import {
   type VerifyCodeFormValues,
   verifyCodeSchema,
 } from '@/src/lib/forms/schemas';
+import { hapticMedium } from '@/src/lib/haptics/haptics';
 import { shadows } from '@/src/lib/styles/shadows';
 import { parseOnboardingMemberSegmentSearchParam } from '@/src/lib/utils/member-segment';
+import {
+  parseBooleanSearchParam,
+  parseOnboardingPermissionStatusSearchParam,
+  readTrimmedSearchParam,
+} from '@/src/lib/utils/search-params';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -48,61 +53,51 @@ import {
 } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 
-function parseBooleanSearchParam(
-  value: string | string[] | undefined
-): boolean | undefined {
-  if (Array.isArray(value)) {
-    return parseBooleanSearchParam(value[0]);
-  }
+function SignupStepDot({
+  scaleSV,
+}: {
+  scaleSV: SharedValue<number>;
+}): React.JSX.Element {
+  const style = useAnimatedStyle(() => ({
+    transform: [{ scale: scaleSV.get() }],
+  }));
 
-  if (value === '1' || value === 'true') {
-    return true;
-  }
-
-  if (value === '0' || value === 'false') {
-    return false;
-  }
-
-  return undefined;
+  return (
+    <Animated.View className="h-1.5 w-8 rounded-full bg-white" style={style} />
+  );
 }
 
-function parseOptionalSearchParam(
-  value: string | string[] | undefined
-): string | undefined {
-  if (Array.isArray(value)) {
-    return parseOptionalSearchParam(value[0]);
-  }
+function SignupStepDots({
+  isCodeStep,
+}: {
+  isCodeStep: boolean;
+}): React.JSX.Element {
+  const s0 = useSharedValue(isCodeStep ? 1 : 1.2);
+  const s1 = useSharedValue(isCodeStep ? 1 : 1.2);
+  const s2 = useSharedValue(isCodeStep ? 1 : 1.2);
+  const s3 = useSharedValue(isCodeStep ? 1.2 : 1);
+  const s4 = useSharedValue(isCodeStep ? 1.2 : 1);
+  const s5 = useSharedValue(isCodeStep ? 1.2 : 1);
+  const scales = [s0, s1, s2, s3, s4, s5];
 
-  if (!value) return undefined;
+  useEffect(() => {
+    const stepScales = [s0, s1, s2, s3, s4, s5];
+    stepScales.forEach((sv, i) => {
+      const active = isCodeStep ? i >= 3 : i < 3;
+      sv.set(withSpring(active ? 1.2 : 1, motion.spring.gentle));
+    });
+    return () => {
+      for (const sv of stepScales) cancelAnimation(sv);
+    };
+  }, [isCodeStep, s0, s1, s2, s3, s4, s5]);
 
-  const normalized = value.trim();
-  return normalized.length > 0 ? normalized : undefined;
-}
-
-function parsePermissionStatusSearchParam(
-  value: string | string[] | undefined
-): OnboardingPermissionStatus | undefined {
-  if (Array.isArray(value)) {
-    return parsePermissionStatusSearchParam(value[0]);
-  }
-
-  if (!value) return undefined;
-
-  const normalized = value.trim().toUpperCase();
-
-  if (normalized === onboardingPermissionStatuses.granted) {
-    return onboardingPermissionStatuses.granted;
-  }
-
-  if (normalized === onboardingPermissionStatuses.denied) {
-    return onboardingPermissionStatuses.denied;
-  }
-
-  if (normalized === onboardingPermissionStatuses.undetermined) {
-    return onboardingPermissionStatuses.undetermined;
-  }
-
-  return undefined;
+  return (
+    <View className="flex-row items-center gap-1.5">
+      {scales.map((sv, i) => (
+        <SignupStepDot key={i} scaleSV={sv} />
+      ))}
+    </View>
+  );
 }
 
 export default function SignupScreen(): React.JSX.Element {
@@ -154,12 +149,13 @@ export default function SignupScreen(): React.JSX.Element {
       hasAcceptedTerms:
         parseBooleanSearchParam(searchParams.onboardingTermsAccepted) === true,
       memberSegment,
-      locationPermissionStatus: parsePermissionStatusSearchParam(
+      locationPermissionStatus: parseOnboardingPermissionStatusSearchParam(
         searchParams.onboardingLocationPermissionStatus
       ),
-      pushNotificationPermissionStatus: parsePermissionStatusSearchParam(
-        searchParams.onboardingPushPermissionStatus
-      ),
+      pushNotificationPermissionStatus:
+        parseOnboardingPermissionStatusSearchParam(
+          searchParams.onboardingPushPermissionStatus
+        ),
     };
   }, [
     searchParams.onboardingCompletedSetup,
@@ -171,12 +167,12 @@ export default function SignupScreen(): React.JSX.Element {
   ]);
 
   const prefilledDateOfBirth = React.useMemo(
-    () => parseOptionalSearchParam(searchParams.onboardingDateOfBirth) ?? '',
+    () => readTrimmedSearchParam(searchParams.onboardingDateOfBirth) ?? '',
     [searchParams.onboardingDateOfBirth]
   );
 
   const prefilledDisplayName = React.useMemo(
-    () => parseOptionalSearchParam(searchParams.onboardingDisplayName) ?? '',
+    () => readTrimmedSearchParam(searchParams.onboardingDisplayName) ?? '',
     [searchParams.onboardingDisplayName]
   );
 
@@ -420,21 +416,20 @@ export default function SignupScreen(): React.JSX.Element {
             <View className="size-10" />
           </View>
 
-          <View className="mb-8 items-center gap-2">
+          <Animated.View
+            className="mb-8 items-center gap-2"
+            entering={withRM(FadeInUp.delay(60).duration(motion.dur.md))}
+          >
             <Text className="text-[11px] font-bold uppercase tracking-[3.5px] text-white/90">
               {t('onboardingBasicsStep', { step: 6, total: 6 })}
             </Text>
-            <View className="flex-row items-center gap-1.5">
-              <View className="h-1.5 w-8 rounded-full bg-white" />
-              <View className="h-1.5 w-8 rounded-full bg-white" />
-              <View className="h-1.5 w-8 rounded-full bg-white" />
-              <View className="h-1.5 w-8 rounded-full bg-white" />
-              <View className="h-1.5 w-8 rounded-full bg-white" />
-              <View className="h-1.5 w-8 rounded-full bg-white" />
-            </View>
-          </View>
+            <SignupStepDots isCodeStep={isCodeStep} />
+          </Animated.View>
 
-          <View className="mb-8 items-center">
+          <Animated.View
+            className="mb-8 items-center"
+            entering={withRM(FadeInUp.delay(100).duration(motion.dur.md))}
+          >
             <View
               className="mb-4 size-18 items-center justify-center rounded-full bg-white"
               style={shadows.level4}
@@ -447,102 +442,138 @@ export default function SignupScreen(): React.JSX.Element {
             <Text className="mt-1 text-sm font-medium text-white/75">
               {t('signupTagline')}
             </Text>
-          </View>
+          </Animated.View>
 
-          <View
+          <Animated.View
             className="rounded-3xl bg-white p-7 dark:bg-dark-bg-elevated"
+            entering={withRM(FadeInUp.delay(160).duration(motion.dur.md))}
             style={shadows.level5}
           >
-            <Text className="mb-1 text-2xl font-bold text-text dark:text-text-primary-dark">
-              {isCodeStep ? t('signupVerifyTitle') : t('signupTitle')}
-            </Text>
-            <Text className="mb-6 text-sm text-text-secondary dark:text-text-secondary-dark">
-              {isCodeStep
-                ? t('signupVerifySubtitle', { email: sentEmail })
-                : t('signupSubtitle')}
-            </Text>
+            <Animated.View
+              entering={withRM(FadeInUp.delay(0).duration(motion.dur.sm))}
+            >
+              <Text className="mb-1 text-2xl font-bold text-text dark:text-text-primary-dark">
+                {isCodeStep ? t('signupVerifyTitle') : t('signupTitle')}
+              </Text>
+              <Text className="mb-6 text-sm text-text-secondary dark:text-text-secondary-dark">
+                {isCodeStep
+                  ? t('signupVerifySubtitle', { email: sentEmail })
+                  : t('signupSubtitle')}
+              </Text>
+            </Animated.View>
 
-            <ErrorBanner className="mb-4" message={resolvedErrorMessage} />
+            <Animated.View
+              entering={withRM(FadeInUp.delay(40).duration(motion.dur.sm))}
+            >
+              <ErrorBanner className="mb-4" message={resolvedErrorMessage} />
+            </Animated.View>
 
             {isCodeStep ? (
-              <ControlledTextInput<VerifyCodeFormValues>
-                key="signup-code-input"
-                autoFocus
-                autoCapitalize="none"
-                autoComplete={
-                  Platform.OS === 'android' ? 'sms-otp' : 'one-time-code'
-                }
-                autoCorrect={false}
-                control={codeControl}
-                icon={({ color, size }) => (
-                  <ShieldCheck color={color} size={size} />
-                )}
-                keyboardType={Platform.OS === 'ios' ? 'number-pad' : 'numeric'}
-                maxLength={6}
-                name="code"
-                placeholder={t('codePlaceholder')}
-                returnKeyType="done"
-                testID="signup-code"
-                textContentType={
-                  Platform.OS === 'ios' ? 'oneTimeCode' : undefined
-                }
-              />
-            ) : (
-              <>
-                <ControlledTextInput<SignupFormValues>
-                  autoCapitalize="words"
-                  autoCorrect={false}
-                  control={control}
-                  icon={({ color, size }) => (
-                    <UserRound color={color} size={size} />
-                  )}
-                  label={t('displayNameLabel')}
-                  maxLength={60}
-                  name="displayName"
-                  placeholder={t('displayNamePlaceholder')}
-                  testID="signup-display-name"
-                  textContentType="name"
-                />
-                <ControlledTextInput<SignupFormValues>
+              <Animated.View
+                entering={withRM(FadeInUp.delay(80).duration(motion.dur.md))}
+              >
+                <ControlledTextInput<VerifyCodeFormValues>
+                  key="signup-code-input"
+                  autoFocus
                   autoCapitalize="none"
-                  autoComplete="email"
-                  control={control}
-                  icon={({ color, size }) => <Mail color={color} size={size} />}
-                  keyboardType="email-address"
-                  label={t('emailLabel')}
-                  name="email"
-                  placeholder={t('emailPlaceholder')}
-                  testID="signup-email"
-                  textContentType="emailAddress"
-                />
-                <ControlledTextInput<SignupFormValues>
-                  autoCapitalize="none"
+                  autoComplete={
+                    Platform.OS === 'android' ? 'sms-otp' : 'one-time-code'
+                  }
                   autoCorrect={false}
-                  control={control}
+                  control={codeControl}
                   icon={({ color, size }) => (
-                    <CalendarDays color={color} size={size} />
+                    <ShieldCheck color={color} size={size} />
                   )}
                   keyboardType={
-                    Platform.OS === 'ios'
-                      ? 'numbers-and-punctuation'
-                      : 'default'
+                    Platform.OS === 'ios' ? 'number-pad' : 'numeric'
                   }
-                  label={t('dateOfBirthLabel')}
-                  maxLength={10}
-                  name="dateOfBirth"
-                  placeholder={t('dateOfBirthPlaceholder')}
-                  testID="signup-date-of-birth"
-                  textContentType="birthdate"
+                  maxLength={6}
+                  name="code"
+                  placeholder={t('codePlaceholder')}
+                  returnKeyType="done"
+                  testID="signup-code"
+                  textContentType={
+                    Platform.OS === 'ios' ? 'oneTimeCode' : undefined
+                  }
                 />
+              </Animated.View>
+            ) : (
+              <>
+                <Animated.View
+                  entering={withRM(FadeInUp.delay(80).duration(motion.dur.md))}
+                >
+                  <ControlledTextInput<SignupFormValues>
+                    autoCapitalize="words"
+                    autoCorrect={false}
+                    control={control}
+                    icon={({ color, size }) => (
+                      <UserRound color={color} size={size} />
+                    )}
+                    label={t('displayNameLabel')}
+                    maxLength={60}
+                    name="displayName"
+                    placeholder={t('displayNamePlaceholder')}
+                    testID="signup-display-name"
+                    textContentType="name"
+                  />
+                </Animated.View>
+                <Animated.View
+                  entering={withRM(FadeInUp.delay(100).duration(motion.dur.md))}
+                >
+                  <ControlledTextInput<SignupFormValues>
+                    autoCapitalize="none"
+                    autoComplete="email"
+                    control={control}
+                    icon={({ color, size }) => (
+                      <Mail color={color} size={size} />
+                    )}
+                    keyboardType="email-address"
+                    label={t('emailLabel')}
+                    name="email"
+                    placeholder={t('emailPlaceholder')}
+                    testID="signup-email"
+                    textContentType="emailAddress"
+                  />
+                </Animated.View>
+                <Animated.View
+                  entering={withRM(FadeInUp.delay(120).duration(motion.dur.md))}
+                >
+                  <ControlledTextInput<SignupFormValues>
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    control={control}
+                    icon={({ color, size }) => (
+                      <CalendarDays color={color} size={size} />
+                    )}
+                    keyboardType={
+                      Platform.OS === 'ios'
+                        ? 'numbers-and-punctuation'
+                        : 'default'
+                    }
+                    label={t('dateOfBirthLabel')}
+                    maxLength={10}
+                    name="dateOfBirth"
+                    placeholder={t('dateOfBirthPlaceholder')}
+                    testID="signup-date-of-birth"
+                    textContentType="birthdate"
+                  />
+                </Animated.View>
               </>
             )}
 
-            <Animated.View style={buttonStyle}>
+            <Animated.View
+              entering={withRM(FadeInUp.delay(140).duration(motion.dur.sm))}
+              style={buttonStyle}
+            >
               <Pressable
                 accessibilityRole="button"
                 className="mt-1 overflow-hidden rounded-full"
                 disabled={isAuthBusy}
-                onPress={isCodeStep ? onCodeSubmit : onEmailSubmit}
+                onPress={(e) => {
+                  hapticMedium();
+                  if (isCodeStep) void onCodeSubmit(e);
+                  else void onEmailSubmit(e);
+                }}
                 onPressIn={handlePressIn}
                 onPressOut={handlePressOut}
                 testID="signup-submit"
@@ -616,7 +647,7 @@ export default function SignupScreen(): React.JSX.Element {
                 </Text>
               </Text>
             </Pressable>
-          </View>
+          </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>

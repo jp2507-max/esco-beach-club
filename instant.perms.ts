@@ -24,6 +24,14 @@ const rules = {
       update: 'false',
     },
   },
+  account_deletion_requests: {
+    allow: {
+      view: 'auth.id != null && auth.id == data.auth_user_id',
+      create: 'false',
+      delete: 'false',
+      update: 'false',
+    },
+  },
   partners: {
     allow: {
       view: 'auth.id != null',

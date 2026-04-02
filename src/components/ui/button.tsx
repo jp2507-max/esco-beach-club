@@ -1,8 +1,13 @@
 import type { ComponentProps, ReactNode } from 'react';
 import React from 'react';
+import type { StyleProp, ViewStyle } from 'react-native';
+import { useColorScheme } from 'react-native';
 
+import { Colors } from '@/constants/colors';
+import { useButtonPress } from '@/src/lib/animations/use-button-press';
 import { cn } from '@/src/lib/utils';
-import { ActivityIndicator, Pressable, Text, View } from '@/src/tw';
+import { ActivityIndicator, type Pressable, Text, View } from '@/src/tw';
+import { Animated } from '@/src/tw/animated';
 
 const BUTTON_VARIANTS = {
   danger: {
@@ -23,8 +28,8 @@ const BUTTON_VARIANTS = {
     text: 'text-white',
   },
   secondary: {
-    container: 'bg-secondary',
-    text: 'text-white',
+    container: 'bg-secondary dark:bg-secondary-bright',
+    text: 'text-white dark:text-secondary-deeper',
   },
 } as const;
 
@@ -36,6 +41,18 @@ const BUTTON_SIZES = {
 
 export type ButtonVariant = keyof typeof BUTTON_VARIANTS;
 export type ButtonSize = keyof typeof BUTTON_SIZES;
+
+function getSpinnerColor(variant: ButtonVariant, isDark: boolean): string {
+  if (variant === 'ghost' || variant === 'outline') {
+    return isDark ? Colors.primaryBright : Colors.primary;
+  }
+
+  if (variant === 'secondary' && isDark) {
+    return Colors.secondaryDeeper;
+  }
+
+  return '#fff';
+}
 
 export type ButtonProps = Omit<ComponentProps<typeof Pressable>, 'children'> & {
   children: ReactNode;
@@ -57,8 +74,11 @@ export function Button({
   disabled,
   isLoading = false,
   leftIcon,
+  onPressIn,
+  onPressOut,
   rightIcon,
   size = 'md',
+  style,
   testID,
   textClassName,
   variant = 'primary',
@@ -66,9 +86,43 @@ export function Button({
 }: ButtonProps): React.JSX.Element {
   const isDisabled = disabled || isLoading;
   const variantStyles = BUTTON_VARIANTS[variant];
+  const isDark = useColorScheme() === 'dark';
+  const spinnerColor = getSpinnerColor(variant, isDark);
+  const { animatedStyle, handlePressIn, handlePressOut } = useButtonPress();
+
+  const handlePressInCombined = React.useCallback<
+    NonNullable<ComponentProps<typeof Pressable>['onPressIn']>
+  >(
+    (event) => {
+      if (!isDisabled) handlePressIn();
+      onPressIn?.(event);
+    },
+    [handlePressIn, isDisabled, onPressIn]
+  );
+
+  const handlePressOutCombined = React.useCallback<
+    NonNullable<ComponentProps<typeof Pressable>['onPressOut']>
+  >(
+    (event) => {
+      handlePressOut();
+      onPressOut?.(event);
+    },
+    [handlePressOut, onPressOut]
+  );
+
+  const animatedPressStyle = animatedStyle as unknown as StyleProp<ViewStyle>;
+  const resolvedStyle = React.useMemo<
+    ComponentProps<typeof Pressable>['style']
+  >(
+    () =>
+      typeof style === 'function'
+        ? (state) => [animatedPressStyle, style(state)]
+        : [animatedPressStyle, style],
+    [animatedPressStyle, style]
+  );
 
   return (
-    <Pressable
+    <Animated.Pressable
       accessibilityRole={accessibilityRole}
       className={cn(
         'items-center justify-center',
@@ -78,6 +132,9 @@ export function Button({
         className
       )}
       disabled={isDisabled}
+      onPressIn={handlePressInCombined}
+      onPressOut={handlePressOutCombined}
+      style={resolvedStyle}
       testID={testID}
       {...props}
     >
@@ -85,7 +142,7 @@ export function Button({
         className={cn('flex-row items-center justify-center', contentClassName)}
       >
         {isLoading ? (
-          <ActivityIndicator color="#fff" />
+          <ActivityIndicator color={spinnerColor} />
         ) : (
           <>
             {leftIcon ? <View className="mr-2">{leftIcon}</View> : null}
@@ -102,6 +159,6 @@ export function Button({
           </>
         )}
       </View>
-    </Pressable>
+    </Animated.Pressable>
   );
 }

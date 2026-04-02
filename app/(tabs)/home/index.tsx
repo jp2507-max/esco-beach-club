@@ -8,36 +8,34 @@ import {
   UtensilsCrossed,
   Wine,
 } from 'lucide-react-native';
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  cancelAnimation,
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withTiming,
-} from 'react-native-reanimated';
+import { useColorScheme } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
 import type { Event, NewsItem } from '@/lib/types';
 import {
+  NewsDataProvider,
   useEventsData,
   useHomeEvents,
   useMemberSummary,
   useNewsData,
+  useProfileData,
 } from '@/providers/DataProvider';
+import { AccountDeletionBanner } from '@/src/components/account-deletion/account-deletion-banner';
 import {
   Avatar,
   Card,
   HeaderGlassButton,
-  MemberCard,
   SectionHeader,
+  Skeleton,
+  SkeletonCard,
 } from '@/src/components/ui';
-import { rmTiming } from '@/src/lib/animations/motion';
 import { useScreenEntry } from '@/src/lib/animations/use-screen-entry';
-import { getRewardTierLabelKey } from '@/src/lib/loyalty';
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from '@/src/tw';
+import { useStaggeredListEntering } from '@/src/lib/animations/use-staggered-entry';
+import { hapticLight } from '@/src/lib/haptics/haptics';
+import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 import { Image } from '@/src/tw/image';
 
@@ -82,7 +80,10 @@ function QuickActionChip({
     <Pressable
       accessibilityRole="button"
       className="flex-row items-center rounded-full border border-border bg-white px-5 py-3.5 dark:border-dark-border dark:bg-dark-bg-card"
-      onPress={() => onPress(action.route)}
+      onPress={() => {
+        hapticLight();
+        onPress(action.route);
+      }}
       testID={`action-${action.id}`}
     >
       <action.icon size={18} color={action.color} />
@@ -150,7 +151,7 @@ function HomeEventCard({
         </View>
       </View>
       <View className="absolute bottom-5 right-4.5 size-10.5 items-center justify-center rounded-full bg-primary">
-        <ArrowRight size={18} color="#fff" />
+        <ArrowRight size={18} color={Colors.white} />
       </View>
     </Pressable>
   );
@@ -194,62 +195,52 @@ function HomeNewsRow({ item }: { item: NewsItem }): React.JSX.Element {
 
 const MemoizedHomeNewsRow = React.memo(HomeNewsRow);
 
-export default function HomeScreen(): React.JSX.Element {
+function StaggeredFeedBlock({
+  children,
+  index,
+}: {
+  children: React.ReactNode;
+  index: number;
+}): React.JSX.Element {
+  const entering = useStaggeredListEntering(index);
+  return <Animated.View entering={entering}>{children}</Animated.View>;
+}
+
+function HomeScreenContent(): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { t } = useTranslation('home');
-  const cardScale = useSharedValue(0.95);
-  const cardOpacity = useSharedValue(0);
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const { contentStyle: sectionStyle } = useScreenEntry({ durationMs: 500 });
-
-  useEffect(() => {
-    cardScale.set(
-      withSpring(1, {
-        damping: 15,
-        stiffness: 120,
-      })
-    );
-    cardOpacity.set(withTiming(1, rmTiming(600)));
-    return () => {
-      cancelAnimation(cardScale);
-      cancelAnimation(cardOpacity);
-    };
-  }, [cardOpacity, cardScale]);
-
-  const cardStyle = useAnimatedStyle(() => ({
-    opacity: cardOpacity.get(),
-    transform: [{ scale: cardScale.get() }],
-  }));
 
   const { eventsLoading } = useEventsData();
   const { news, newsLoading } = useNewsData();
+  const { userId } = useProfileData();
   const homeEvents = useHomeEvents();
   const memberSummary = useMemberSummary();
 
   const userName = memberSummary.fullName || t('guest');
-  const userTier = t(
-    `tier.${getRewardTierLabelKey(memberSummary.lifetimeTierKey)}`
-  );
   const isFeedLoading = eventsLoading || newsLoading;
 
   const quickActions = useMemo<QuickAction[]>(
     () => [
       {
-        color: Colors.secondary,
+        color: isDark ? Colors.secondaryBright : Colors.secondary,
         id: 'book-table',
         icon: UtensilsCrossed,
         label: t('quickActions.bookTable'),
         route: '/booking',
       },
       {
-        color: Colors.primary,
+        color: isDark ? Colors.primaryBright : Colors.primary,
         id: 'menu',
         icon: Wine,
         label: t('quickActions.menu'),
         route: '/home/menu',
       },
     ],
-    [t]
+    [isDark, t]
   );
 
   const feedRows = useMemo<HomeFeedRow[]>(
@@ -302,7 +293,7 @@ export default function HomeScreen(): React.JSX.Element {
   }, [router]);
 
   const renderFeedItem = useCallback(
-    ({ item }: ListRenderItemInfo<HomeFeedRow>): React.JSX.Element => {
+    ({ index, item }: ListRenderItemInfo<HomeFeedRow>): React.JSX.Element => {
       if (item.type === 'section')
         return (
           <SectionHeader
@@ -318,12 +309,18 @@ export default function HomeScreen(): React.JSX.Element {
         );
       if (item.type === 'event')
         return (
-          <MemoizedHomeEventCard
-            event={item.event}
-            onPress={handleEventPress}
-          />
+          <StaggeredFeedBlock index={index}>
+            <MemoizedHomeEventCard
+              event={item.event}
+              onPress={handleEventPress}
+            />
+          </StaggeredFeedBlock>
         );
-      return <MemoizedHomeNewsRow item={item.item} />;
+      return (
+        <StaggeredFeedBlock index={index}>
+          <MemoizedHomeNewsRow item={item.item} />
+        </StaggeredFeedBlock>
+      );
     },
     [handleEventPress, handleSeeAllEvents, t]
   );
@@ -341,15 +338,27 @@ export default function HomeScreen(): React.JSX.Element {
       <View className="absolute left-0 right-0 top-0 h-75 overflow-hidden">
         <View
           className="absolute size-45 rounded-full"
-          style={{ backgroundColor: '#E91E6310', right: -20, top: -40 }}
+          style={{
+            backgroundColor: isDark ? '#FF6B9D22' : '#E91E6310',
+            right: -20,
+            top: -40,
+          }}
         />
         <View
           className="absolute size-30 rounded-full"
-          style={{ backgroundColor: '#00968812', right: 80, top: 30 }}
+          style={{
+            backgroundColor: isDark ? '#5ED4AF1C' : '#00968812',
+            right: 80,
+            top: 30,
+          }}
         />
         <View
           className="absolute size-25 rounded-full"
-          style={{ backgroundColor: '#FF980010', left: -20, top: 10 }}
+          style={{
+            backgroundColor: isDark ? '#FF6B9D18' : '#FF980010',
+            left: -20,
+            top: 10,
+          }}
         />
       </View>
 
@@ -364,16 +373,19 @@ export default function HomeScreen(): React.JSX.Element {
         ListHeaderComponent={
           <>
             <View className="px-5">
-              <View className="flex-row items-center justify-between pb-5 pt-4">
-                <View>
-                  <Text className="text-[28px] font-extrabold text-text dark:text-text-primary-dark">
+              <View className="flex-row items-center justify-between gap-3 pb-5 pt-4">
+                <View className="min-w-0 flex-1">
+                  <Text
+                    className="text-[28px] font-extrabold text-primary dark:text-primary-bright"
+                    numberOfLines={2}
+                  >
                     {t('welcomeBackName', { name: userName })}
                   </Text>
                 </View>
                 <HeaderGlassButton
                   accessibilityLabel={t('openProfile')}
                   accessibilityHint={t('openProfileHint')}
-                  className="size-12 border-white/35 dark:border-white/20"
+                  className="size-12 shrink-0 border-white/35 dark:border-white/20"
                   glassStyle="regular"
                   onPress={handleProfilePress}
                   testID="profile-avatar"
@@ -385,7 +397,7 @@ export default function HomeScreen(): React.JSX.Element {
                   <View
                     className="absolute -bottom-px -right-px size-3.5 rounded-full"
                     style={{
-                      backgroundColor: '#4CAF50',
+                      backgroundColor: Colors.success,
                       borderColor: Colors.background,
                       borderWidth: 2.5,
                     }}
@@ -393,23 +405,7 @@ export default function HomeScreen(): React.JSX.Element {
                 </HeaderGlassButton>
               </View>
 
-              <Animated.View className="mb-4" style={cardStyle}>
-                <MemberCard
-                  copy={{
-                    balanceLabel: t('cashbackBalance'),
-                    balanceSuffix: t('cashbackSuffix'),
-                    brandLabel: t('brandMark'),
-                    emptyQrLabel: t('guest'),
-                    memberNameLabel: t('memberName'),
-                    statusLabel: t('lifetimeTier'),
-                  }}
-                  cashbackPoints={memberSummary.cashbackBalancePoints}
-                  memberId={memberSummary.memberId}
-                  memberName={userName}
-                  tierProgressPercent={memberSummary.tierProgressPercent}
-                  tierLabel={userTier}
-                />
-              </Animated.View>
+              <AccountDeletionBanner userId={userId} />
 
               <Animated.View className="mb-6" style={sectionStyle}>
                 <ScrollView
@@ -438,11 +434,14 @@ export default function HomeScreen(): React.JSX.Element {
         }
         ListEmptyComponent={
           isFeedLoading ? (
-            <View className="items-center px-5 py-12">
-              <ActivityIndicator color={Colors.primary} size="large" />
-              <Text className="mt-4 text-sm font-medium text-text-secondary dark:text-text-secondary-dark">
-                {t('loading')}
-              </Text>
+            <View className="px-5 py-10">
+              <SkeletonCard className="mb-5" height={200} />
+              <View className="mb-6 flex-row gap-2.5">
+                <Skeleton className="h-12 flex-1 rounded-full" />
+                <Skeleton className="h-12 flex-1 rounded-full" />
+              </View>
+              <SkeletonCard className="mb-4" height={200} />
+              <SkeletonCard height={88} />
             </View>
           ) : (
             <View className="px-5 py-12">
@@ -458,5 +457,13 @@ export default function HomeScreen(): React.JSX.Element {
         ListFooterComponent={<View className="h-7.5" />}
       />
     </View>
+  );
+}
+
+export default function HomeScreen(): React.JSX.Element {
+  return (
+    <NewsDataProvider>
+      <HomeScreenContent />
+    </NewsDataProvider>
   );
 }

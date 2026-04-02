@@ -17,9 +17,13 @@ import { OnboardingHeader } from '@/src/components/onboarding/onboarding-header'
 import { InfoDot } from '@/src/components/ui';
 import { motion, withRM } from '@/src/lib/animations/motion';
 import { useButtonPress } from '@/src/lib/animations/use-button-press';
+import { hapticLight, hapticSuccess } from '@/src/lib/haptics/haptics';
 import { ensureVenueUpsellNotificationChannel } from '@/src/lib/notifications';
 import { shadows } from '@/src/lib/styles/shadows';
-import { readSingleSearchParam } from '@/src/lib/utils/search-params';
+import {
+  parseOnboardingPermissionStatusSearchParam,
+  readSingleSearchParam,
+} from '@/src/lib/utils/search-params';
 import { ActivityIndicator, Pressable, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 
@@ -32,22 +36,6 @@ type OnboardingPermissionsSearchParams = {
   onboardingSegment?: string | string[];
   onboardingTermsAccepted?: string | string[];
 };
-
-function parseOnboardingPermissionStatus(
-  value: string | string[] | undefined
-): OnboardingPermissionStatus {
-  const normalized = readSingleSearchParam(value)?.trim().toUpperCase();
-
-  if (normalized === onboardingPermissionStatuses.granted) {
-    return onboardingPermissionStatuses.granted;
-  }
-
-  if (normalized === onboardingPermissionStatuses.denied) {
-    return onboardingPermissionStatuses.denied;
-  }
-
-  return onboardingPermissionStatuses.undetermined;
-}
 
 function mapExpoPermissionStatus(
   status: string | null | undefined
@@ -79,15 +67,15 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
 
   const [locationStatus, setLocationStatus] =
     React.useState<OnboardingPermissionStatus>(
-      parseOnboardingPermissionStatus(
+      parseOnboardingPermissionStatusSearchParam(
         searchParams.onboardingLocationPermissionStatus
-      )
+      ) ?? onboardingPermissionStatuses.undetermined
     );
   const [pushStatus, setPushStatus] =
     React.useState<OnboardingPermissionStatus>(
-      parseOnboardingPermissionStatus(
+      parseOnboardingPermissionStatusSearchParam(
         searchParams.onboardingPushPermissionStatus
-      )
+      ) ?? onboardingPermissionStatuses.undetermined
     );
   const [isRequestingLocation, setIsRequestingLocation] =
     React.useState<boolean>(false);
@@ -215,6 +203,10 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
 
       setLocationStatus(nextLocationStatus);
 
+      if (nextLocationStatus === onboardingPermissionStatuses.granted) {
+        hapticSuccess();
+      }
+
       if (nextLocationStatus !== onboardingPermissionStatuses.granted) {
         return;
       }
@@ -256,6 +248,7 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
 
       if (currentPermission.status === 'granted') {
         setPushStatus(onboardingPermissionStatuses.granted);
+        hapticSuccess();
         return;
       }
 
@@ -267,7 +260,11 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
         },
       });
 
-      setPushStatus(mapExpoPermissionStatus(requestedPermission.status));
+      const mappedPush = mapExpoPermissionStatus(requestedPermission.status);
+      setPushStatus(mappedPush);
+      if (mappedPush === onboardingPermissionStatuses.granted) {
+        hapticSuccess();
+      }
     } catch {
       Alert.alert(
         t('onboardingPermissionsErrorTitle'),
@@ -293,6 +290,7 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
   }
 
   function handleNavigateNext(): void {
+    hapticLight();
     const effectiveLocationStatus = resolveEffectiveLocationStatus();
 
     continueToFinalDetails({

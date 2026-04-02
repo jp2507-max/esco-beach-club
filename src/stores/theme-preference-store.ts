@@ -11,9 +11,19 @@ export const themePreferences = ['system', 'light', 'dark'] as const;
 
 export type ThemePreference = (typeof themePreferences)[number];
 
+type PersistedThemePreferenceState = {
+  state?: {
+    preference?: ThemePreference;
+  };
+};
+
 type ThemePreferenceState = {
   preference: ThemePreference;
   setPreference: (preference: ThemePreference) => void;
+};
+
+type ApplyThemePreferenceOptions = {
+  allowSystemReset?: boolean;
 };
 
 const themeStorage = createMMKV({ id: 'esco.theme-preference' });
@@ -29,11 +39,49 @@ const mmkvStateStorage: StateStorage = {
   },
 };
 
-export function applyThemePreference(preference: ThemePreference): void {
-  Appearance.setColorScheme(
-    preference === 'system' ? 'unspecified' : preference
+export function applyThemePreference(
+  preference: ThemePreference,
+  options: ApplyThemePreferenceOptions = {}
+): void {
+  if (preference === 'system') {
+    // Use the native reset value RN passes through to iOS/Android (see AppearanceModule /
+    // RCTConvert). `null` is documented for newer RN stacks but on 0.83.x can mis-sync
+    // native chrome vs JS theme. Skip reset during cold start; only on explicit change.
+    if (!options.allowSystemReset) return;
+    Appearance.setColorScheme('unspecified');
+    return;
+  }
+
+  Appearance.setColorScheme(preference);
+}
+
+function isThemePreference(value: unknown): value is ThemePreference {
+  return (
+    typeof value === 'string' &&
+    themePreferences.includes(value as ThemePreference)
   );
 }
+
+function getStoredThemePreference(): ThemePreference {
+  const rawPreferenceState = themeStorage.getString('theme-preference');
+
+  if (!rawPreferenceState) return 'system';
+
+  try {
+    const parsedPreferenceState = JSON.parse(
+      rawPreferenceState
+    ) as PersistedThemePreferenceState;
+    const storedPreference = parsedPreferenceState.state?.preference;
+
+    return isThemePreference(storedPreference) ? storedPreference : 'system';
+  } catch {
+    return 'system';
+  }
+}
+
+const initialThemePreference = getStoredThemePreference();
+
+applyThemePreference(initialThemePreference, { allowSystemReset: false });
 
 export function getThemePreferenceLabelKey(
   preference: ThemePreference
@@ -46,19 +94,17 @@ export function getThemePreferenceLabelKey(
 export const useThemePreferenceStore = create<ThemePreferenceState>()(
   persist(
     (set) => ({
-      preference: 'system',
+      preference: initialThemePreference,
       setPreference: (preference: ThemePreference): void => {
-        applyThemePreference(preference);
-        set({ preference });
+        set((state) => {
+          if (state.preference === preference) return state;
+          applyThemePreference(preference, { allowSystemReset: true });
+          return { preference };
+        });
       },
     }),
     {
       name: 'theme-preference',
-      onRehydrateStorage: () => (state) => {
-        if (state?.preference) {
-          applyThemePreference(state.preference);
-        }
-      },
       partialize: (state) => ({ preference: state.preference }),
       storage: createJSONStorage(() => mmkvStateStorage),
       version: 1,

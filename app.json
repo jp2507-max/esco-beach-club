@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Esco Beach Club MVP",
+    "name": "Esco Beach Club",
     "slug": "escolife",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -14,6 +14,7 @@
     },
     "ios": {
       "supportsTablet": false,
+      "associatedDomains": ["applinks:escolife.app"],
       "bundleIdentifier": "com.escobeachclub.app",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
@@ -28,6 +29,20 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "escolife.app",
+              "pathPrefix": "/invite"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ],
       "permissions": [
         "ACCESS_BACKGROUND_LOCATION",
         "ACCESS_COARSE_LOCATION",
@@ -37,11 +52,13 @@
       "package": "com.escobeachclub.app"
     },
     "web": {
+      "output": "server",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
       "expo-router",
       "expo-image",
+      "./plugins/with-apple-privacy-manifest",
       [
         "expo-camera",
         {

@@ -1,22 +1,36 @@
 import createContextHook from '@nkzw/create-context-hook';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
-import { ensureProfile, updateProfile } from '@/lib/api';
+import { setProfileAuthProvider } from '@/lib/api';
+import { type AuthProviderType, authProviderTypes } from '@/lib/types';
 import {
-  type MemberSegment,
-  type OnboardingPermissionStatus,
-  onboardingPermissionStatuses,
-} from '@/lib/types';
+  getIdTokenAudienceClaim,
+  getIdTokenNonceClaim,
+  resolveDisplayNameForCreate,
+} from '@/src/lib/auth/id-token';
+import {
+  DEFAULT_GOOGLE_CLIENT_NAME,
+  extractAuthErrorMessage,
+  shouldRetryGoogleSignInWithDefaultClientName,
+  shouldTryGoogleAudienceFallback,
+  toError,
+} from '@/src/lib/auth/provider-error-mapping';
+import {
+  applyOnboardingProfileDataForNewUser,
+  extractSignInUser,
+  hasRequiredSignupConsent,
+  normalizeSignupOnboardingData,
+  type SignupOnboardingData,
+} from '@/src/lib/auth/signup-onboarding';
 import {
   canTryGoogleAudienceFallback,
   getAppleIdToken,
   getGoogleIdToken,
   getGoogleIdTokenWithOptions,
 } from '@/src/lib/auth/social-auth';
-import { isAuthErrorKey } from '@/src/lib/auth-errors';
 import { db } from '@/src/lib/instant';
 import { captureHandledError } from '@/src/lib/monitoring';
-import { normalizeMemberSegment } from '@/src/lib/utils/member-segment';
 
 type SendCodeParams = {
   email: string;
@@ -28,510 +42,14 @@ type VerifyCodeParams = {
   onboardingData?: SignupOnboardingData;
 };
 
-export type SignupOnboardingData = {
-  dateOfBirth: string;
-  displayName: string;
-  hasCompletedSetup?: boolean;
-  hasAcceptedPrivacyPolicy?: boolean;
-  hasAcceptedTerms?: boolean;
-  memberSegment?: MemberSegment;
-  locationPermissionStatus?: OnboardingPermissionStatus;
-  pushNotificationPermissionStatus?: OnboardingPermissionStatus;
-};
+export type { SignupOnboardingData } from '@/src/lib/auth/signup-onboarding';
 
 type SignInProviderParams = {
   onboardingData?: SignupOnboardingData;
 };
 
-const DEFAULT_GOOGLE_CLIENT_NAME = 'google';
-
-type JwtPayload = Record<string, unknown>;
-
-function decodeJwtPayload(idToken: string): JwtPayload | null {
-  const tokenParts = idToken.split('.');
-
-  if (tokenParts.length < 2) {
-    return null;
-  }
-
-  const base64Url = tokenParts[1];
-  const paddedBase64 = `${base64Url}${'='.repeat((4 - (base64Url.length % 4)) % 4)}`;
-  const base64 = paddedBase64.replace(/-/g, '+').replace(/_/g, '/');
-  const atobFn = (globalThis as { atob?: (value: string) => string }).atob;
-
-  if (!atobFn) {
-    return null;
-  }
-
-  try {
-    const decoded = atobFn(base64);
-    const parsed = JSON.parse(decoded) as unknown;
-
-    if (parsed && typeof parsed === 'object') {
-      return parsed as JwtPayload;
-    }
-
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-function getIdTokenAudienceClaim(idToken: string): string | null {
-  const payload = decodeJwtPayload(idToken);
-
-  if (!payload || payload.aud === undefined || payload.aud === null) {
-    return null;
-  }
-
-  if (typeof payload.aud === 'string') {
-    return payload.aud;
-  }
-
-  if (Array.isArray(payload.aud)) {
-    const audValues = payload.aud.filter(
-      (value): value is string => typeof value === 'string'
-    );
-
-    if (audValues.length > 0) {
-      return audValues.join(',');
-    }
-  }
-
-  return null;
-}
-
-function getIdTokenNonceClaim(idToken: string): string | null {
-  const payload = decodeJwtPayload(idToken);
-
-  if (!payload || payload.nonce === undefined || payload.nonce === null) {
-    return null;
-  }
-
-  if (typeof payload.nonce === 'string') {
-    const normalizedNonce = payload.nonce.trim();
-    return normalizedNonce || null;
-  }
-
-  return null;
-}
-
-function extractAuthErrorMessage(error: unknown): string | null {
-  if (
-    error &&
-    typeof error === 'object' &&
-    'body' in error &&
-    error.body &&
-    typeof error.body === 'object' &&
-    'message' in error.body &&
-    typeof error.body.message === 'string'
-  ) {
-    return error.body.message;
-  }
-
-  if (error instanceof Error && error.message) {
-    return error.message;
-  }
-
-  return null;
-}
-
-function normalizeDisplayNameForCreate(
-  value: string | null | undefined
-): string {
-  const trimmed = value?.trim().replace(/\s+/g, ' ');
-
-  if (!trimmed) return '';
-
-  return trimmed.slice(0, 60);
-}
-
-function deriveDisplayNameFromEmail(email: string | null | undefined): string {
-  if (!email) return '';
-
-  const emailPrefix = email.split('@')[0]?.trim() ?? '';
-  if (!emailPrefix) return '';
-
-  const normalized = emailPrefix
-    .replace(/[._-]+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-
-  return normalizeDisplayNameForCreate(normalized);
-}
-
-function deriveDisplayNameFromIdToken(idToken: string): string {
-  const payload = decodeJwtPayload(idToken);
-  if (!payload) return '';
-
-  const directClaims = [
-    payload.name,
-    payload.given_name,
-    payload.preferred_username,
-    payload.nickname,
-  ];
-
-  for (const claim of directClaims) {
-    if (typeof claim !== 'string') continue;
-
-    const normalized = normalizeDisplayNameForCreate(claim);
-    if (normalized.length >= 2) return normalized;
-  }
-
-  const claimEmail = typeof payload.email === 'string' ? payload.email : null;
-  return deriveDisplayNameFromEmail(claimEmail);
-}
-
-function resolveDisplayNameForCreate(params: {
-  onboardingDisplayName?: string;
-  email?: string | null;
-  idToken?: string;
-}): string {
-  const fromOnboarding = normalizeDisplayNameForCreate(
-    params.onboardingDisplayName
-  );
-  if (fromOnboarding.length >= 2) return fromOnboarding;
-
-  if (params.idToken) {
-    const fromIdToken = deriveDisplayNameFromIdToken(params.idToken);
-    if (fromIdToken.length >= 2) return fromIdToken;
-  }
-
-  const fromEmail = deriveDisplayNameFromEmail(params.email);
-  if (fromEmail.length >= 2) return fromEmail;
-
-  return 'Member';
-}
-
-function isValidCalendarDate(value: string): boolean {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-  if (!match) return false;
-
-  const year = Number.parseInt(match[1], 10);
-  const month = Number.parseInt(match[2], 10);
-  const day = Number.parseInt(match[3], 10);
-
-  const date = new Date(Date.UTC(year, month - 1, day));
-
-  return (
-    date.getUTCFullYear() === year &&
-    date.getUTCMonth() === month - 1 &&
-    date.getUTCDate() === day
-  );
-}
-
-function nowIso(): string {
-  return new Date().toISOString();
-}
-
-function normalizeOnboardingPermissionStatus(
-  value: string | undefined
-): OnboardingPermissionStatus | undefined {
-  if (!value) return undefined;
-
-  const normalized = value.trim().toUpperCase();
-
-  if (normalized === onboardingPermissionStatuses.granted) {
-    return onboardingPermissionStatuses.granted;
-  }
-
-  if (normalized === onboardingPermissionStatuses.denied) {
-    return onboardingPermissionStatuses.denied;
-  }
-
-  if (normalized === onboardingPermissionStatuses.undetermined) {
-    return onboardingPermissionStatuses.undetermined;
-  }
-
-  return undefined;
-}
-
-function normalizeSignupOnboardingData(
-  value?: SignupOnboardingData
-): SignupOnboardingData | null {
-  if (!value) return null;
-
-  const normalizedDisplayName = value.displayName.trim();
-  const normalizedDateOfBirth = value.dateOfBirth.trim();
-
-  const hasValidDisplayName =
-    normalizedDisplayName.length >= 2 && normalizedDisplayName.length <= 60;
-
-  if (!hasValidDisplayName || !isValidCalendarDate(normalizedDateOfBirth)) {
-    return null;
-  }
-
-  const normalizedMemberSegment = normalizeMemberSegment(value.memberSegment);
-  const locationPermissionStatus = normalizeOnboardingPermissionStatus(
-    value.locationPermissionStatus
-  );
-  const pushNotificationPermissionStatus = normalizeOnboardingPermissionStatus(
-    value.pushNotificationPermissionStatus
-  );
-
-  const hasAcceptedTerms = value.hasAcceptedTerms === true;
-  const hasAcceptedPrivacyPolicy = value.hasAcceptedPrivacyPolicy === true;
-  const hasCompletedSetup = value.hasCompletedSetup === true;
-
-  return {
-    dateOfBirth: normalizedDateOfBirth,
-    displayName: normalizedDisplayName,
-    ...(hasCompletedSetup ? { hasCompletedSetup } : {}),
-    ...(normalizedMemberSegment
-      ? { memberSegment: normalizedMemberSegment }
-      : {}),
-    ...(locationPermissionStatus ? { locationPermissionStatus } : {}),
-    ...(pushNotificationPermissionStatus
-      ? { pushNotificationPermissionStatus }
-      : {}),
-    ...(hasAcceptedTerms ? { hasAcceptedTerms } : {}),
-    ...(hasAcceptedPrivacyPolicy ? { hasAcceptedPrivacyPolicy } : {}),
-  };
-}
-
-function hasRequiredSignupConsent(
-  onboardingData: SignupOnboardingData | null
-): boolean {
-  return (
-    onboardingData?.hasAcceptedTerms === true &&
-    onboardingData?.hasAcceptedPrivacyPolicy === true
-  );
-}
-
-function extractSignInUser(result: unknown): {
-  created: boolean;
-  email: string | null;
-  id: string | null;
-} {
-  if (!result || typeof result !== 'object') {
-    return { created: false, email: null, id: null };
-  }
-
-  const created =
-    'created' in result && typeof result.created === 'boolean'
-      ? result.created
-      : false;
-
-  const userRecord =
-    'user' in result && result.user && typeof result.user === 'object'
-      ? result.user
-      : null;
-
-  if (!userRecord) {
-    return { created, email: null, id: null };
-  }
-
-  const id =
-    'id' in userRecord && typeof userRecord.id === 'string'
-      ? userRecord.id
-      : null;
-  const email =
-    'email' in userRecord && typeof userRecord.email === 'string'
-      ? userRecord.email
-      : null;
-
-  return {
-    created,
-    email,
-    id,
-  };
-}
-
-async function applyOnboardingProfileDataForNewUser(params: {
-  onboardingData: SignupOnboardingData | null;
-  signInResult: unknown;
-}): Promise<void> {
-  if (!params.onboardingData) return;
-
-  const signInUser = extractSignInUser(params.signInResult);
-  if (!signInUser.created || !signInUser.id) return;
-
-  const profile = await ensureProfile({
-    userId: signInUser.id,
-    email: signInUser.email ?? undefined,
-    displayName: params.onboardingData.displayName,
-    dateOfBirth: params.onboardingData.dateOfBirth,
-  });
-
-  if (!profile) return;
-
-  const needsDateOfBirthUpdate =
-    profile.date_of_birth !== params.onboardingData.dateOfBirth;
-  const needsFullNameUpdate =
-    profile.full_name !== params.onboardingData.displayName;
-  const hasMemberSegmentData = params.onboardingData.memberSegment !== undefined;
-  const needsMemberSegmentUpdate =
-    hasMemberSegmentData &&
-    profile.member_segment !== params.onboardingData.memberSegment;
-  const hasLocationPermissionStatus =
-    params.onboardingData.locationPermissionStatus !== undefined;
-  const needsLocationPermissionStatusUpdate =
-    hasLocationPermissionStatus &&
-    profile.location_permission_status !==
-      params.onboardingData.locationPermissionStatus;
-  const hasPushPermissionStatus =
-    params.onboardingData.pushNotificationPermissionStatus !== undefined;
-  const needsPushPermissionStatusUpdate =
-    hasPushPermissionStatus &&
-    profile.push_notification_permission_status !==
-      params.onboardingData.pushNotificationPermissionStatus;
-  const hasCompletedIdentityOnboarding =
-    params.onboardingData.hasCompletedSetup === true;
-  const needsCompletedAtUpdate =
-    hasCompletedIdentityOnboarding && !profile.onboarding_completed_at;
-
-  if (
-    !needsDateOfBirthUpdate &&
-    !needsFullNameUpdate &&
-    !needsMemberSegmentUpdate &&
-    !needsLocationPermissionStatusUpdate &&
-    !needsPushPermissionStatusUpdate &&
-    !needsCompletedAtUpdate
-  ) {
-    return;
-  }
-
-  await updateProfile(signInUser.id, {
-    ...(needsDateOfBirthUpdate
-      ? { date_of_birth: params.onboardingData.dateOfBirth }
-      : {}),
-    ...(needsFullNameUpdate
-      ? { full_name: params.onboardingData.displayName }
-      : {}),
-    ...(needsMemberSegmentUpdate
-      ? { member_segment: params.onboardingData.memberSegment }
-      : {}),
-    ...(needsLocationPermissionStatusUpdate
-      ? {
-          location_permission_status:
-            params.onboardingData.locationPermissionStatus,
-        }
-      : {}),
-    ...(needsPushPermissionStatusUpdate
-      ? {
-          push_notification_permission_status:
-            params.onboardingData.pushNotificationPermissionStatus,
-        }
-      : {}),
-    ...(needsCompletedAtUpdate ? { onboarding_completed_at: nowIso() } : {}),
-  });
-}
-
-type MapAuthErrorOptions = {
-  /** Set when handling Google OAuth so oauth-client errors map without relying on server wording. */
-  oauthProvider?: 'google';
-};
-
-function mapAuthErrorMessageToKey(
-  message: string,
-  options?: MapAuthErrorOptions
-): string | null {
-  const normalizedMessage = message.trim().toLowerCase();
-
-  const isOauthClientNotFound =
-    normalizedMessage.includes('record not found') &&
-    (normalizedMessage.includes('oauth-client') ||
-      normalizedMessage.includes('oauth_client') ||
-      normalizedMessage.includes('oauth client'));
-
-  const isGoogleAudienceMismatch =
-    normalizedMessage.includes('audience') ||
-    normalizedMessage.includes('claim aud') ||
-    normalizedMessage.includes('invalid aud') ||
-    normalizedMessage.includes('jwt aud') ||
-    normalizedMessage.includes('wrong audience') ||
-    normalizedMessage.includes('id token') ||
-    normalizedMessage.includes('id_token') ||
-    normalizedMessage.includes('token verification') ||
-    normalizedMessage.includes('nonce parameter was not provided') ||
-    normalizedMessage.includes('nonce') ||
-    normalizedMessage.includes('nonces mismatch');
-
-  if (!isOauthClientNotFound && !isGoogleAudienceMismatch) {
-    return null;
-  }
-
-  const isGoogleScoped =
-    normalizedMessage.includes('google') || options?.oauthProvider === 'google';
-
-  if (isGoogleScoped) {
-    return 'googleOauthClientNotConfigured';
-  }
-
-  return null;
-}
-
-function shouldRetryGoogleSignInWithDefaultClientName(
-  error: unknown,
-  clientName: string
-): boolean {
-  if (clientName === DEFAULT_GOOGLE_CLIENT_NAME) {
-    return false;
-  }
-
-  const message = extractAuthErrorMessage(error)?.trim().toLowerCase();
-
-  if (!message) {
-    return false;
-  }
-
-  return (
-    message.includes('record not found:') &&
-    (message.includes(clientName.toLowerCase()) ||
-      message.includes('oauth-client'))
-  );
-}
-
-function shouldTryGoogleAudienceFallback(error: unknown): boolean {
-  const message = extractAuthErrorMessage(error)?.trim().toLowerCase();
-
-  if (!message) {
-    return false;
-  }
-
-  const mismatchMarkers = [
-    'audience',
-    'claim aud',
-    'invalid aud',
-    'jwt aud',
-    'wrong audience',
-    'token verification',
-    'nonce parameter was not provided',
-    'nonces mismatch',
-  ] as const;
-
-  return mismatchMarkers.some((marker) => message.includes(marker));
-}
-
-function toError(
-  error: unknown,
-  fallbackMessage: string,
-  mapOptions?: MapAuthErrorOptions
-): Error {
-  const message = extractAuthErrorMessage(error);
-
-  if (message) {
-    const mappedKey = mapAuthErrorMessageToKey(message, mapOptions);
-    if (mappedKey) {
-      return new Error(mappedKey);
-    }
-
-    const normalizedMessage = message.trim();
-    if (isAuthErrorKey(normalizedMessage)) {
-      return new Error(normalizedMessage);
-    }
-
-    if (__DEV__) {
-      return new Error(normalizedMessage);
-    }
-
-    return new Error(fallbackMessage);
-  }
-
-  return new Error(fallbackMessage);
-}
-
 export const [AuthProvider, useAuth] = createContextHook(() => {
+  const { t } = useTranslation(['auth', 'common']);
   const { error: authError, isLoading, user } = db.useAuth();
   const [appleSignInLoading, setAppleSignInLoading] = useState<boolean>(false);
   const [googleSignInLoading, setGoogleSignInLoading] =
@@ -557,6 +75,23 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     setVerifyCodeError(null);
   }
 
+  async function setProfileAuthProviderSafely(params: {
+    userId: string;
+    providerType: AuthProviderType;
+  }): Promise<void> {
+    try {
+      await setProfileAuthProvider(params.userId, params.providerType);
+    } catch (profileError: unknown) {
+      captureHandledError(toError(profileError, 'unableToSetProfileAuthProvider'), {
+        tags: {
+          area: 'auth',
+          operation: 'set_profile_auth_provider',
+          provider: params.providerType,
+        },
+      });
+    }
+  }
+
   async function signInWithApple(params?: SignInProviderParams): Promise<void> {
     setAppleSignInLoading(true);
     setAppleSignInError(null);
@@ -576,10 +111,11 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       ) {
         throw new Error('signupConsentRequired');
       }
-      const displayNameForCreate = resolveDisplayNameForCreate({
-        idToken,
-        onboardingDisplayName: onboardingData?.displayName,
-      });
+      const displayNameForCreate =
+        resolveDisplayNameForCreate({
+          idToken,
+          onboardingDisplayName: onboardingData?.displayName,
+        }) ?? t('auth:member', { defaultValue: 'Member' });
       const createFields = {
         display_name: displayNameForCreate,
       };
@@ -595,6 +131,14 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         onboardingData,
         signInResult,
       });
+
+      const signInUser = extractSignInUser(signInResult);
+      if (signInUser.id) {
+        await setProfileAuthProviderSafely({
+          userId: signInUser.id,
+          providerType: authProviderTypes.apple,
+        });
+      }
     } catch (error: unknown) {
       const nextError = toError(error, 'unableToSignInWithApple');
       captureHandledError(nextError, {
@@ -629,10 +173,11 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       const primaryToken = await getGoogleIdToken();
       const { clientName, idToken } = primaryToken;
       const primaryTokenNonce = getIdTokenNonceClaim(idToken);
-      const primaryDisplayNameForCreate = resolveDisplayNameForCreate({
-        idToken,
-        onboardingDisplayName: onboardingData?.displayName,
-      });
+      const primaryDisplayNameForCreate =
+        resolveDisplayNameForCreate({
+          idToken,
+          onboardingDisplayName: onboardingData?.displayName,
+        }) ?? t('auth:member', { defaultValue: 'Member' });
       const primaryCreateFields = {
         display_name: primaryDisplayNameForCreate,
       };
@@ -675,10 +220,11 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
             const fallbackTokenNonce = getIdTokenNonceClaim(
               fallbackToken.idToken
             );
-            const fallbackDisplayNameForCreate = resolveDisplayNameForCreate({
-              idToken: fallbackToken.idToken,
-              onboardingDisplayName: onboardingData?.displayName,
-            });
+            const fallbackDisplayNameForCreate =
+              resolveDisplayNameForCreate({
+                idToken: fallbackToken.idToken,
+                onboardingDisplayName: onboardingData?.displayName,
+              }) ?? t('auth:member', { defaultValue: 'Member' });
             const fallbackCreateFields = {
               display_name: fallbackDisplayNameForCreate,
             };
@@ -711,6 +257,14 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
               signInResult,
             });
 
+            const fallbackSignInUser = extractSignInUser(signInResult);
+            if (fallbackSignInUser.id) {
+              await setProfileAuthProviderSafely({
+                userId: fallbackSignInUser.id,
+                providerType: authProviderTypes.google,
+              });
+            }
+
             return;
           }
 
@@ -729,6 +283,14 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         onboardingData,
         signInResult,
       });
+
+      const signInUser = extractSignInUser(signInResult);
+      if (signInUser.id) {
+        await setProfileAuthProviderSafely({
+          userId: signInUser.id,
+          providerType: authProviderTypes.google,
+        });
+      }
     } catch (error: unknown) {
       if (__DEV__) {
         console.error('[AuthProvider] Google sign-in flow failed', {
@@ -801,10 +363,11 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       ) {
         throw new Error('signupConsentRequired');
       }
-      const displayNameForCreate = resolveDisplayNameForCreate({
-        email: trimmedEmail,
-        onboardingDisplayName: onboardingData?.displayName,
-      });
+      const displayNameForCreate =
+        resolveDisplayNameForCreate({
+          email: trimmedEmail,
+          onboardingDisplayName: onboardingData?.displayName,
+        }) ?? t('auth:member', { defaultValue: 'Member' });
       const createFields = {
         display_name: displayNameForCreate,
       };
@@ -818,6 +381,14 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         onboardingData,
         signInResult,
       });
+
+      const signInUser = extractSignInUser(signInResult);
+      if (signInUser.id) {
+        await setProfileAuthProviderSafely({
+          userId: signInUser.id,
+          providerType: authProviderTypes.magicCode,
+        });
+      }
     } catch (error: unknown) {
       const nextError = toError(error, 'unableToVerifyCode');
       captureHandledError(nextError, {

@@ -16,23 +16,32 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
 import { claimPartnerRedemption } from '@/lib/api';
-import { usePartnerById, useUserId } from '@/providers/DataProvider';
+import {
+  PartnersDataProvider,
+  usePartnerById,
+  usePartnersData,
+  useUserId,
+} from '@/providers/DataProvider';
 import { HeaderGlassButton } from '@/src/components/ui';
 import { motion, rmTiming } from '@/src/lib/animations/motion';
+import { hapticLight, hapticSuccess } from '@/src/lib/haptics/haptics';
 import { captureHandledError } from '@/src/lib/monitoring';
-import { Pressable, Text, View } from '@/src/tw';
+import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
+import { ActivityIndicator, Pressable, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 import { Image } from '@/src/tw/image';
 
-export default function PartnerModal(): React.JSX.Element {
+function PartnerModalContent(): React.JSX.Element {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const isDark = useAppIsDark();
   const { t } = useTranslation('perks');
   const scale = useSharedValue(0.8);
   const opacity = useSharedValue(0);
 
   const partner = usePartnerById(id);
+  const { partnersLoading } = usePartnersData();
   const userId = useUserId();
   const [copied, setCopied] = useState(false);
   const copyResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -74,6 +83,7 @@ export default function PartnerModal(): React.JSX.Element {
 
   async function handleCopy(): Promise<void> {
     if (!partner || claimMutation.isPending) return;
+    hapticLight();
 
     try {
       await claimMutation.mutateAsync('code_copy');
@@ -102,6 +112,7 @@ export default function PartnerModal(): React.JSX.Element {
 
     try {
       await claimMutation.mutateAsync('cta_unlock');
+      hapticSuccess();
       router.back();
     } catch (error: unknown) {
       captureHandledError(error, {
@@ -117,6 +128,23 @@ export default function PartnerModal(): React.JSX.Element {
         t('partner.redemptionFailedMessage')
       );
     }
+  }
+
+  if (partnersLoading && !partner) {
+    return (
+      <View
+        className="flex-1 items-center justify-center bg-black/70 px-6"
+        style={{ paddingTop: insets.top }}
+      >
+        <ActivityIndicator
+          color={isDark ? Colors.primaryBright : Colors.primary}
+          size="large"
+        />
+        <Text className="mt-4 text-base font-semibold text-white">
+          {t('loading')}
+        </Text>
+      </View>
+    );
   }
 
   if (!partner) {
@@ -152,14 +180,19 @@ export default function PartnerModal(): React.JSX.Element {
         testID="close-modal"
         variant="overlay"
       >
-        <X color={Colors.text} size={20} />
+        <X color="#FFFFFF" size={20} />
       </HeaderGlassButton>
 
       <View
         className="absolute bottom-0 left-0 right-0 rounded-t-[28px] px-7 pb-10 pt-3"
-        style={{ backgroundColor: '#FFF8F5', minHeight: '60%' }}
+        style={{
+          backgroundColor: isDark
+            ? Colors.badgeDarkBackground
+            : Colors.badgeLightBackground,
+          minHeight: '60%',
+        }}
       >
-        <View className="mb-4 h-1 w-10 self-center rounded bg-border" />
+        <View className="mb-4 h-1 w-10 self-center rounded bg-border dark:bg-dark-border-bright" />
 
         <Animated.View className="items-center" style={contentStyle}>
           <Image
@@ -173,22 +206,48 @@ export default function PartnerModal(): React.JSX.Element {
           <View className="mb-4 items-center">
             <View
               className="mb-1.5 size-20 items-center justify-center rounded-full border-[3px]"
-              style={{ backgroundColor: '#FFF8E1', borderColor: '#F9A825' }}
+              style={{
+                backgroundColor: isDark
+                  ? Colors.badgeWarningDarkBackground
+                  : Colors.badgeWarningLightBackground,
+                borderColor: isDark
+                  ? Colors.badgeWarningDarkBorder
+                  : Colors.badgeWarningLightBorder,
+              }}
             >
-              <Star size={32} color="#F9A825" fill="#F9A825" />
+              <Star
+                size={32}
+                color={
+                  isDark
+                    ? Colors.badgeWarningDarkBorder
+                    : Colors.badgeWarningLightBorder
+                }
+                fill={
+                  isDark
+                    ? Colors.badgeWarningDarkBorder
+                    : Colors.badgeWarningLightBorder
+                }
+              />
             </View>
-            <Text className="text-[11px] font-extrabold tracking-[1.5px] text-[#F9A825]">
+            <Text
+              className="text-[11px] font-extrabold tracking-[1.5px]"
+              style={{
+                color: isDark
+                  ? Colors.badgeWarningDarkBorder
+                  : Colors.badgeWarningLightBorder,
+              }}
+            >
               {t('partner.unlocked')}
             </Text>
           </View>
 
-          <Text className="text-center text-[28px] font-extrabold text-text">
+          <Text className="text-center text-[28px] font-extrabold text-text dark:text-text-primary-dark">
             {t('partner.congratulations')}
           </Text>
-          <Text className="mb-2.5 text-center text-[28px] font-extrabold text-primary">
+          <Text className="mb-2.5 text-center text-[28px] font-extrabold text-primary dark:text-primary-bright">
             {partner.discount_label}!
           </Text>
-          <Text className="mb-6 text-center text-sm leading-[22px] text-text-secondary">
+          <Text className="mb-6 text-center text-sm leading-[22px] text-text-secondary dark:text-text-secondary-dark">
             {t('partner.benefitsDescription', {
               name: partner.name,
               description: partner.description,
@@ -196,32 +255,41 @@ export default function PartnerModal(): React.JSX.Element {
           </Text>
 
           <View className="mb-6 flex-row">
-            <View className="mr-4 size-[90px] items-center justify-center rounded-2xl border border-border bg-white">
-              <Award size={24} color={Colors.primary} />
-              <Text className="mt-1.5 text-xs font-semibold text-text">
+            <View className="mr-4 size-[90px] items-center justify-center rounded-2xl border border-border bg-white dark:border-dark-border dark:bg-dark-bg-elevated">
+              <Award
+                size={24}
+                color={isDark ? Colors.primaryBright : Colors.primary}
+              />
+              <Text className="mt-1.5 text-xs font-semibold text-text dark:text-text-primary-dark">
                 {t('partner.exclusive')}
               </Text>
             </View>
-            <View className="mr-4 size-[90px] items-center justify-center rounded-2xl border border-border bg-white">
-              <Percent size={24} color={Colors.primary} />
-              <Text className="mt-1.5 text-xs font-semibold text-text">
+            <View className="mr-4 size-[90px] items-center justify-center rounded-2xl border border-border bg-white dark:border-dark-border dark:bg-dark-bg-elevated">
+              <Percent
+                size={24}
+                color={isDark ? Colors.primaryBright : Colors.primary}
+              />
+              <Text className="mt-1.5 text-xs font-semibold text-text dark:text-text-primary-dark">
                 {t('partner.discount')}
               </Text>
             </View>
-            <View className="size-[90px] items-center justify-center rounded-2xl border border-border bg-white">
-              <Star size={24} color={Colors.primary} />
-              <Text className="mt-1.5 text-xs font-semibold text-text">
+            <View className="size-[90px] items-center justify-center rounded-2xl border border-border bg-white dark:border-dark-border dark:bg-dark-bg-elevated">
+              <Star
+                size={24}
+                color={isDark ? Colors.primaryBright : Colors.primary}
+              />
+              <Text className="mt-1.5 text-xs font-semibold text-text dark:text-text-primary-dark">
                 {t('partner.vipPerk')}
               </Text>
             </View>
           </View>
 
-          <View className="mb-5 w-full rounded-2xl border border-border bg-white p-4">
-            <Text className="mb-2.5 text-[10px] font-bold tracking-[1px] text-text-secondary">
+          <View className="mb-5 w-full rounded-2xl border border-border bg-white p-4 dark:border-dark-border dark:bg-dark-bg-elevated">
+            <Text className="mb-2.5 text-[10px] font-bold tracking-[1px] text-text-secondary dark:text-text-secondary-dark">
               {t('partner.yourDiscountCode')}
             </Text>
             <View className="flex-row items-center justify-between">
-              <Text className="text-lg font-extrabold tracking-[0.5px] text-text">
+              <Text className="text-lg font-extrabold tracking-[0.5px] text-text dark:text-text-primary-dark">
                 {partner.code}
               </Text>
               <Pressable
@@ -230,7 +298,11 @@ export default function PartnerModal(): React.JSX.Element {
                 disabled={claimMutation.isPending}
                 onPress={handleCopy}
                 style={[
-                  { backgroundColor: `${Colors.secondary}15` },
+                  {
+                    backgroundColor: isDark
+                      ? `${Colors.secondaryBright}22`
+                      : `${Colors.secondary}15`,
+                  },
                   claimMutation.isPending && { opacity: 0.5 },
                 ]}
                 testID="copy-discount"
@@ -238,7 +310,10 @@ export default function PartnerModal(): React.JSX.Element {
                 {copied ? (
                   <Check size={18} color={Colors.success} />
                 ) : (
-                  <Copy size={18} color={Colors.secondary} />
+                  <Copy
+                    size={18}
+                    color={isDark ? Colors.secondaryBright : Colors.secondary}
+                  />
                 )}
               </Pressable>
             </View>
@@ -246,7 +321,7 @@ export default function PartnerModal(): React.JSX.Element {
 
           <Pressable
             accessibilityRole="button"
-            className="mb-3.5 w-full items-center rounded-[18px] bg-primary py-[17px]"
+            className="mb-3.5 w-full items-center rounded-[18px] bg-primary py-[17px] dark:bg-primary-bright"
             disabled={claimMutation.isPending}
             onPress={() => {
               void handleClaim();
@@ -261,12 +336,20 @@ export default function PartnerModal(): React.JSX.Element {
           </Pressable>
 
           <Pressable accessibilityRole="button" onPress={() => router.back()}>
-            <Text className="text-sm font-medium text-text-secondary">
+            <Text className="text-sm font-medium text-text-secondary dark:text-text-secondary-dark">
               {t('partner.maybeLater')}
             </Text>
           </Pressable>
         </Animated.View>
       </View>
     </View>
+  );
+}
+
+export default function PartnerModal(): React.JSX.Element {
+  return (
+    <PartnersDataProvider>
+      <PartnerModalContent />
+    </PartnersDataProvider>
   );
 }

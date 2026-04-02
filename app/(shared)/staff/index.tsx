@@ -23,7 +23,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/colors';
 import { fetchProfileByMemberId, submitRewardAdjustment } from '@/lib/api';
 import type { Profile } from '@/lib/types';
-import { useStaffAccessData } from '@/providers/DataProvider';
+import {
+  StaffAccessDataProvider,
+  useStaffAccessData,
+} from '@/providers/DataProvider';
 import { Button, Card } from '@/src/components/ui';
 import { ControlledTextInput } from '@/src/lib/forms/controlled-text-input';
 import {
@@ -65,7 +68,7 @@ function isStaffErrorMessageKey(value: string): value is StaffErrorMessageKey {
   return value in staffErrorMessageByKey;
 }
 
-export default function StaffScanScreen(): React.JSX.Element {
+function StaffScanScreenContent(): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { t } = useTranslation('profile');
@@ -493,5 +496,13 @@ export default function StaffScanScreen(): React.JSX.Element {
         ) : null}
       </ScrollView>
     </View>
+  );
+}
+
+export default function StaffScanScreen(): React.JSX.Element {
+  return (
+    <StaffAccessDataProvider>
+      <StaffScanScreenContent />
+    </StaffAccessDataProvider>
   );
 }

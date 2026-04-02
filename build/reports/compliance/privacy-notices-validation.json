@@ -1,0 +1,18 @@
+{
+  "success": true,
+  "validatedAt": "2026-04-02T03:52:28.402Z",
+  "checks": {
+    "associatedDomains": [
+      "applinks:escolife.app"
+    ],
+    "deleteAccountScreenExists": true,
+    "reviewNotesExists": true,
+    "sampleQrExists": true,
+    "supportUrl": "https://escolife.app/support",
+    "termsOfServiceUrl": "https://escolife.app/terms",
+    "privacyPolicyUrl": "https://escolife.app/privacy",
+    "urlChecks": [],
+    "domainChecks": []
+  },
+  "errors": []
+}

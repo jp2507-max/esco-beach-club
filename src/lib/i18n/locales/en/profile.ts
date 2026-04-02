@@ -16,6 +16,7 @@ const profile = {
     helpSupport: 'Help & Support',
     restartOnboarding: 'Restart Onboarding',
     logOut: 'Log Out',
+    deleteAccount: 'Delete Account',
   },
   restartOnboarding: {
     confirmTitle: 'Restart onboarding?',
@@ -41,6 +42,13 @@ const profile = {
   memberSince: 'Member since',
   nightsLeft: 'Nights left',
   savedEventsCount: 'Saved events',
+  memberCard: {
+    brandMark: 'ESCO LIFE',
+    cashbackBalance: 'Cashback Balance',
+    cashbackSuffix: 'cashback pts',
+    memberName: 'MEMBER NAME',
+    lifetimeTier: 'Lifetime Tier',
+  },
   noBio: 'Add a short bio to personalize your profile.',
   welcomeGift: 'WELCOME GIFT',
   welcomeDiscount: '10% OFF',
@@ -101,6 +109,71 @@ const profile = {
     languageChangeFailed: 'Could not change language. Please try again.',
     saveProfileFailed: 'Could not save your profile. Please try again.',
     signOutFailed: 'Could not sign out. Please try again.',
+  },
+  deleteAccount: {
+    title: 'Delete Account',
+    heroTitle: 'Delete your Esco account',
+    heroDescription:
+      'This starts the full account deletion process and removes access to your member profile after the grace period ends.',
+    permanentDataLossTitle: 'Permanent data loss',
+    permanentDataLossDescription:
+      'Once the grace period ends, your Esco account and linked member data are permanently removed.',
+    gracePeriodTitle: '30-day grace period',
+    gracePeriodDescription:
+      'You will have 30 days to sign back in and restore your account before the deletion is finalized.',
+    defaultGracePeriod: '30 days',
+    whatWillBeDeletedTitle: 'What will be deleted',
+    whatWillBeDeletedItems: {
+      profileData: 'Profile and account information',
+      savedEvents: 'Saved events and referral progress',
+      bookings: 'Reservation and private-event request history',
+      memberBenefits:
+        'Member-specific access and benefits attached to your account',
+    },
+    confirmLabel: 'Final confirmation',
+    confirmHint:
+      'Type DELETE below to confirm that you want to schedule this account for deletion.',
+    confirmPlaceholder: 'Type DELETE',
+    finalNotice: 'This action will be final in 30 days.',
+    confirmAction: 'Schedule account deletion',
+    pendingEyebrow: 'Deletion scheduled',
+    pendingTitle: 'Your account is scheduled for deletion',
+    pendingDescription:
+      'Unless you restore it first, your account will be permanently deleted on {{date}}.',
+    pendingRestoreHint:
+      'Restore your account at any time before the deadline to cancel deletion.',
+    restoreAction: 'Restore account',
+    reviewAction: 'Review details',
+    backToApp: 'Back to app',
+    bannerTitle: 'Account scheduled for deletion',
+    bannerDescription:
+      'Your account will be deleted on {{date}} unless you restore it first.',
+    bannerCountdown: '30 days to restore',
+    bannerRestoreHint:
+      'Use Restore account to cancel the request and keep your member access.',
+    scheduleSuccessTitle: 'Deletion request created',
+    scheduleSuccessMessage:
+      'Your account has been scheduled for deletion. Sign back in within 30 days if you want to restore it.',
+    restoreSuccessTitle: 'Account restored',
+    footerNote:
+      'Need help first? Contact support before deleting your account.',
+    loadingState: 'Checking account deletion status...',
+    errors: {
+      appleVerificationCanceled:
+        'Apple verification was canceled, so deletion was not scheduled.',
+      apiUnavailable:
+        'Account deletion is not configured for this build yet. Start the Expo dev server with API routes or set EXPO_PUBLIC_ACCOUNT_API_BASE_URL.',
+      instantAuthUnavailable:
+        'Account deletion is temporarily unavailable because the local API server cannot reach InstantDB. Check this machine’s DNS or internet connection and try again.',
+      networkUnavailable:
+        'Could not reach the account deletion service. Check your connection and try again.',
+      restoreFailed: 'Could not restore your account. Please try again.',
+      scheduleFailed: 'Could not schedule account deletion. Please try again.',
+      serverMisconfigured:
+        'Account deletion is temporarily unavailable because the server is missing Instant admin credentials.',
+      sessionExpired:
+        'Your secure session expired. Please sign in again and retry.',
+    },
   },
   editProfile: {
     title: 'Edit Profile',
@@ -218,8 +291,11 @@ const profile = {
     title: 'Reward scanner',
   },
   invite: {
+    allReferralsTitle: 'Your referrals',
     codeCopied: 'Copied!',
     codeCopyFailed: 'Could not copy code',
+    shareFailed: 'Could not share invite link',
+    codeLoading: 'Loading…',
     copyReferralCode: 'Copy invite code',
     copyReferralCodeHint: 'Copies your referral code to the clipboard',
     titlePrefix: 'Unlock the',
@@ -231,8 +307,17 @@ const profile = {
     friendsJoined: '{{current}} of {{goal}} Friends Joined',
     recentReferrals: 'Recent Referrals',
     viewAll: 'View All',
+    viewAllHint: 'Opens the full list of your referrals',
     joinedViaYourLink: 'Joined via your link',
+    loadingReferrals: 'Loading referrals…',
     noReferralsYet: 'No referrals yet. Share your code!',
+    status: {
+      completed: 'Completed',
+      pending: 'Pending',
+      accepted: 'Accepted',
+      rejected: 'Rejected',
+      unknown: 'Unknown',
+    },
     shareInviteLink: 'Share Invite Link',
     shareMessage:
       'Join Esco Life with my referral code: {{code}}\nhttps://escolife.app/invite/{{code}}',
@@ -240,6 +325,8 @@ const profile = {
       freeCocktail: 'Free Cocktail',
       vipBadge: 'VIP Badge',
       priorityEntry: 'Priority Entry',
+      priorityProgress_one: '{{count}} more completed invite',
+      priorityProgress_other: '{{count}} more completed invites',
       unlocked: 'Unlocked',
       twoMoreInvites: '{{count}} more invites',
       locked: 'Locked',

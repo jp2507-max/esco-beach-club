@@ -18,17 +18,31 @@ import { useTranslation } from 'react-i18next';
 import { Share } from 'react-native';
 import {
   cancelAnimation,
+  Extrapolation,
+  interpolate,
+  useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Colors } from '@/constants/colors';
-import { useEventById, useSavedEventsData } from '@/providers/DataProvider';
-import { HeaderGlassButton } from '@/src/components/ui';
+import { accentOnDarkBackground, Colors } from '@/constants/colors';
+import {
+  useEventById,
+  useEventsData,
+  useSavedEventsData,
+} from '@/providers/DataProvider';
+import {
+  HeaderGlassButton,
+  Skeleton,
+  SkeletonCard,
+  SkeletonText,
+} from '@/src/components/ui';
 import { rmTiming } from '@/src/lib/animations/motion';
-import { Pressable, ScrollView, Text, View } from '@/src/tw';
+import { hapticMedium } from '@/src/lib/haptics/haptics';
+import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
+import { Pressable, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 import { Image } from '@/src/tw/image';
 
@@ -61,10 +75,19 @@ export default function EventDetailsScreen(): React.JSX.Element {
   const fade = useSharedValue(0);
   const slide = useSharedValue(40);
   const headerOpacity = useSharedValue(0);
+  const scrollY = useSharedValue(0);
 
   const { t } = useTranslation('events');
+  const isDark = useAppIsDark();
+  const { eventsLoading } = useEventsData();
   const foundEvent = useEventById(id);
   const { isEventSaved, toggleSavedEvent } = useSavedEventsData();
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.set(event.contentOffset.y);
+    },
+  });
 
   useEffect(() => {
     headerOpacity.set(withTiming(1, rmTiming(400)));
@@ -85,6 +108,75 @@ export default function EventDetailsScreen(): React.JSX.Element {
     opacity: fade.get(),
     transform: [{ translateY: slide.get() }],
   }));
+
+  const imageParallaxStyle = useAnimatedStyle(() => {
+    const y = scrollY.get();
+    const translateY = interpolate(y, [0, 280], [0, -72], Extrapolation.CLAMP);
+    return {
+      transform: [{ translateY }],
+    };
+  });
+
+  const hasValidId = Boolean(id);
+
+  if (!hasValidId) {
+    return (
+      <View className="flex-1 items-center justify-center bg-background dark:bg-dark-bg">
+        <Text className="mb-4 text-base font-semibold text-text dark:text-text-primary-dark">
+          {t('eventNotFound')}
+        </Text>
+        <Pressable
+          accessibilityRole="button"
+          className="rounded-xl bg-primary px-5 py-3"
+          onPress={() => router.back()}
+        >
+          <Text className="text-white">{t('goBack')}</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  if (eventsLoading && !foundEvent) {
+    return (
+      <View className="flex-1 bg-background dark:bg-dark-bg">
+        <View className="relative h-80 overflow-hidden">
+          <SkeletonCard
+            className="absolute inset-0 rounded-none"
+            height={320}
+          />
+          <View
+            className="absolute left-4 right-4 z-10 flex-row items-center justify-between"
+            style={{ top: insets.top + 8 }}
+          >
+            <HeaderGlassButton
+              accessibilityLabel={t('goBack')}
+              accessibilityHint={t('goBack')}
+              onPress={() => router.back()}
+              testID="back-btn-skeleton"
+              variant="overlay"
+            >
+              <ArrowLeft size={20} color="#fff" />
+            </HeaderGlassButton>
+          </View>
+          <View className="absolute bottom-0 left-0 right-0 p-5">
+            <SkeletonText className="mb-3 h-8 w-4/5" lines={1} />
+            <View className="flex-row gap-2">
+              <Skeleton className="h-4 w-28 rounded-md" />
+              <Skeleton className="h-4 w-24 rounded-md" />
+            </View>
+          </View>
+        </View>
+        <View className="flex-1 rounded-t-[20px] bg-background px-5 pt-6 dark:bg-dark-bg">
+          <SkeletonText className="mb-6" lines={3} />
+          <SkeletonText className="mb-2 h-6 w-48" lines={1} />
+          <SkeletonText className="mb-4" lines={2} />
+          <SkeletonCard className="mb-3" height={100} />
+          <SkeletonCard className="mb-3" height={100} />
+          <SkeletonCard height={100} />
+        </View>
+      </View>
+    );
+  }
 
   if (!foundEvent) {
     return (
@@ -135,6 +227,7 @@ export default function EventDetailsScreen(): React.JSX.Element {
   ];
 
   function handleBook(): void {
+    hapticMedium();
     router.push({
       pathname: '/booking' as never,
       params: { eventId: event.id, eventTitle: event.title },
@@ -162,14 +255,19 @@ export default function EventDetailsScreen(): React.JSX.Element {
 
   return (
     <View className="flex-1 bg-background dark:bg-dark-bg">
-      <Animated.View className="relative h-80" style={heroStyle}>
-        <Image
-          className="h-full w-full"
-          source={{ uri: event.image }}
-          cachePolicy="memory-disk"
-          contentFit="cover"
-          transition={180}
-        />
+      <Animated.View
+        className="relative h-80 overflow-hidden"
+        style={heroStyle}
+      >
+        <Animated.View className="absolute inset-0" style={imageParallaxStyle}>
+          <Image
+            className="h-full w-full"
+            source={{ uri: event.image }}
+            cachePolicy="memory-disk"
+            contentFit="cover"
+            transition={180}
+          />
+        </Animated.View>
         <LinearGradient
           colors={['rgba(0,0,0,0.3)', 'transparent', 'rgba(0,0,0,0.7)']}
           locations={[0, 0.4, 1]}
@@ -254,23 +352,31 @@ export default function EventDetailsScreen(): React.JSX.Element {
         </View>
       </Animated.View>
 
-      <ScrollView
+      <Animated.ScrollView
         contentInsetAdjustmentBehavior="automatic"
         className="flex-1 rounded-t-[20px] bg-background dark:bg-dark-bg"
         contentContainerClassName="px-5 pt-6"
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
         style={{ marginTop: -16 }}
       >
         <Animated.View style={contentStyle}>
           <View className="mb-6 flex-row">
             <View className="mr-2.5 flex-row items-center rounded-xl border border-border bg-white px-3.5 py-2.5 dark:border-dark-border dark:bg-dark-bg-card">
-              <MapPin color={Colors.secondary} size={16} />
+              <MapPin
+                color={accentOnDarkBackground(Colors.secondary, isDark)}
+                size={16}
+              />
               <Text className="ml-1.5 text-[13px] font-semibold text-text dark:text-text-primary-dark">
                 {event.location}
               </Text>
             </View>
             <View className="flex-row items-center rounded-xl border border-border bg-white px-3.5 py-2.5 dark:border-dark-border dark:bg-dark-bg-card">
-              <Users color={Colors.primary} size={16} />
+              <Users
+                color={accentOnDarkBackground(Colors.primary, isDark)}
+                size={16}
+              />
               <Text className="ml-1.5 text-[13px] font-semibold text-text dark:text-text-primary-dark">
                 {t('attendeesCount', { count: event.attendees })}
               </Text>
@@ -299,10 +405,20 @@ export default function EventDetailsScreen(): React.JSX.Element {
             {priceTiers.map((tier) => (
               <View
                 key={tier.labelKey}
-                className="mb-3 rounded-[18px] border bg-white p-[18px] dark:bg-dark-bg-card"
+                className="mb-3 rounded-[18px] border p-[18px]"
                 style={{
-                  backgroundColor: tier.highlight ? '#FFF5F8' : Colors.surface,
-                  borderColor: tier.highlight ? Colors.primary : Colors.border,
+                  backgroundColor: tier.highlight
+                    ? isDark
+                      ? `${Colors.primary}22`
+                      : Colors.eventTierHighlightLight
+                    : isDark
+                      ? Colors.darkBgCard
+                      : Colors.surface,
+                  borderColor: tier.highlight
+                    ? Colors.primary
+                    : isDark
+                      ? Colors.darkBorder
+                      : Colors.border,
                   borderWidth: tier.highlight ? 2 : 1,
                 }}
               >
@@ -321,19 +437,29 @@ export default function EventDetailsScreen(): React.JSX.Element {
                       style={{
                         backgroundColor: tier.highlight
                           ? Colors.primary
-                          : `${Colors.tealLight}40`,
+                          : isDark
+                            ? `${Colors.secondaryBright}30`
+                            : `${Colors.tealLight}40`,
                       }}
                     >
                       <tier.icon
                         size={20}
-                        color={tier.highlight ? '#fff' : Colors.secondary}
+                        color={
+                          tier.highlight
+                            ? Colors.white
+                            : accentOnDarkBackground(Colors.secondary, isDark)
+                        }
                       />
                     </View>
                     <View>
                       <Text
                         className="text-base font-bold"
                         style={{
-                          color: tier.highlight ? Colors.primary : Colors.text,
+                          color: tier.highlight
+                            ? Colors.primary
+                            : isDark
+                              ? Colors.textPrimaryDark
+                              : Colors.text,
                         }}
                       >
                         {t(tier.labelKey)}
@@ -346,7 +472,11 @@ export default function EventDetailsScreen(): React.JSX.Element {
                   <Text
                     className="text-[28px] font-extrabold"
                     style={{
-                      color: tier.highlight ? Colors.primary : Colors.text,
+                      color: tier.highlight
+                        ? Colors.primary
+                        : isDark
+                          ? Colors.textPrimaryDark
+                          : Colors.text,
                     }}
                   >
                     {tier.price}
@@ -362,7 +492,7 @@ export default function EventDetailsScreen(): React.JSX.Element {
                       style={{
                         backgroundColor: tier.highlight
                           ? Colors.primary
-                          : Colors.secondary,
+                          : accentOnDarkBackground(Colors.secondary, isDark),
                       }}
                     />
                     <Text className="text-[13px] font-medium text-text-secondary dark:text-text-secondary-dark">
@@ -379,16 +509,27 @@ export default function EventDetailsScreen(): React.JSX.Element {
             className="flex-row items-center rounded-2xl border px-4 py-4"
             onPress={() => router.push('/private-event')}
             style={{
-              backgroundColor: `${Colors.tealLight}25`,
-              borderColor: `${Colors.secondary}20`,
+              backgroundColor: isDark
+                ? `${Colors.secondaryBright}18`
+                : `${Colors.tealLight}25`,
+              borderColor: isDark
+                ? `${Colors.secondaryBright}35`
+                : `${Colors.secondary}20`,
             }}
             testID="private-party-link"
           >
             <View
-              className="mr-3.5 size-11 items-center justify-center rounded-[14px] border bg-white"
-              style={{ borderColor: `${Colors.secondary}20` }}
+              className="mr-3.5 size-11 items-center justify-center rounded-[14px] border border-border bg-white dark:border-dark-border dark:bg-dark-bg-elevated"
+              style={{
+                borderColor: isDark
+                  ? `${Colors.secondaryBright}35`
+                  : `${Colors.secondary}20`,
+              }}
             >
-              <PartyPopper color={Colors.secondary} size={20} />
+              <PartyPopper
+                color={accentOnDarkBackground(Colors.secondary, isDark)}
+                size={20}
+              />
             </View>
             <View className="flex-1">
               <Text className="mb-0.5 text-[15px] font-bold text-text dark:text-text-primary-dark">
@@ -402,7 +543,7 @@ export default function EventDetailsScreen(): React.JSX.Element {
 
           <View className="h-[120px]" />
         </Animated.View>
-      </ScrollView>
+      </Animated.ScrollView>
 
       <View
         className="absolute bottom-0 left-0 right-0 flex-row items-center justify-between border-t border-border bg-white px-5 pt-3.5 dark:border-dark-border dark:bg-dark-bg-card"

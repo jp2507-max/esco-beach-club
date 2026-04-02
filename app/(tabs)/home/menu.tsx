@@ -6,9 +6,13 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { useColorScheme } from 'react-native';
 
 import { Colors } from '@/constants/colors';
-import { useMenuContentData } from '@/providers/DataProvider';
+import {
+  MenuContentDataProvider,
+  useMenuContentData,
+} from '@/providers/DataProvider';
 import { Badge, Card } from '@/src/components/ui';
 import { useScreenEntry } from '@/src/lib/animations/use-screen-entry';
 import {
@@ -219,7 +223,7 @@ function MenuItemRow({ item, tMenu }: MenuItemRowProps): React.JSX.Element {
         >
           {tMenu(item.descriptionKey)}
         </Text>
-        <Text className="text-[17px] font-extrabold text-secondary">
+        <Text className="text-[17px] font-extrabold text-secondary dark:text-secondary-bright">
           {item.price}
         </Text>
       </View>
@@ -227,8 +231,24 @@ function MenuItemRow({ item, tMenu }: MenuItemRowProps): React.JSX.Element {
   );
 }
 
-export default function MenuScreen(): React.JSX.Element {
+const getTabStyles = (active: boolean, isDark: boolean) => {
+  if (active) {
+    return {
+      backgroundColor: isDark ? Colors.textPrimaryDark : Colors.text,
+      borderColor: isDark ? Colors.textPrimaryDark : Colors.text,
+      color: isDark ? Colors.darkBg : Colors.white,
+    };
+  }
+  return {
+    backgroundColor: isDark ? Colors.darkBgCard : Colors.surface,
+    borderColor: isDark ? Colors.darkBorder : Colors.border,
+    color: isDark ? Colors.textSecondaryDark : Colors.textSecondary,
+  };
+};
+
+function MenuScreenContent(): React.JSX.Element {
   const tMenu = useMenuTranslation();
+  const isDark = useColorScheme() === 'dark';
   const [activeCategory, setActiveCategory] = useState<string>('cocktails');
   const { contentStyle } = useScreenEntry();
   const { menuCategories: menuCategoryRecords, menuItems: menuItemRecords } =
@@ -294,6 +314,8 @@ export default function MenuScreen(): React.JSX.Element {
         >
           {resolvedCategories.map((cat) => {
             const active = activeCategory === cat.key;
+            const tabStyles = getTabStyles(active, isDark);
+
             return (
               <Pressable
                 accessibilityRole="button"
@@ -301,15 +323,15 @@ export default function MenuScreen(): React.JSX.Element {
                 className="rounded-full px-5 py-2.5"
                 onPress={() => setActiveCategory(cat.key)}
                 style={{
-                  backgroundColor: active ? Colors.text : Colors.surface,
-                  borderColor: active ? Colors.text : Colors.border,
+                  backgroundColor: tabStyles.backgroundColor,
+                  borderColor: tabStyles.borderColor,
                   borderWidth: 1.5,
                 }}
                 testID={`tab-${cat.key}`}
               >
                 <Text
                   className="text-sm font-semibold"
-                  style={{ color: active ? '#fff' : Colors.textSecondary }}
+                  style={{ color: tabStyles.color }}
                 >
                   {tMenu(cat.labelKey)}
                 </Text>
@@ -329,5 +351,13 @@ export default function MenuScreen(): React.JSX.Element {
         />
       </Animated.View>
     </View>
+  );
+}
+
+export default function MenuScreen(): React.JSX.Element {
+  return (
+    <MenuContentDataProvider>
+      <MenuScreenContent />
+    </MenuContentDataProvider>
   );
 }

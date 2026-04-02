@@ -205,7 +205,9 @@ export function HeaderGlassButton({
           tintColor={
             variant === 'overlay'
               ? Colors.overlayTintDark
-              : Colors.overlayTintLight
+              : isDark
+                ? Colors.overlayTintDark
+                : Colors.overlayTintLight
           }
         />
       ) : (

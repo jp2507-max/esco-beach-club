@@ -1,17 +1,16 @@
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { useColorScheme } from 'react-native';
 
 import { Colors } from '@/constants/colors';
 import { triggerTabPressHapticFeedback } from '@/src/lib/haptics/tab-press-feedback';
+import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
 
 export default function TabLayout(): React.JSX.Element {
   const { t } = useTranslation('common');
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const isDark = useAppIsDark();
 
-  const tabBarBackground = isDark ? Colors.darkBgCard : '#F8F7F2';
+  const tabBarBackground = isDark ? Colors.darkBgCard : Colors.background;
   const inactiveTint = isDark ? Colors.textMutedDark : Colors.textSecondary;
   const activeTint = isDark ? Colors.primaryBright : Colors.primary;
   const handleTabPress = React.useCallback((): void => {

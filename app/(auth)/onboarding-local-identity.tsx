@@ -13,10 +13,12 @@ import { OnboardingHeader } from '@/src/components/onboarding/onboarding-header'
 import { InfoDot } from '@/src/components/ui';
 import { motion, withRM } from '@/src/lib/animations/motion';
 import { useButtonPress } from '@/src/lib/animations/use-button-press';
+import { config } from '@/src/lib/config';
 import {
   type OnboardingLocalIdentityFormValues,
   onboardingLocalIdentitySchema,
 } from '@/src/lib/forms/schemas';
+import { hapticLight, hapticSelection } from '@/src/lib/haptics/haptics';
 import { shadows } from '@/src/lib/styles/shadows';
 import { readSingleSearchParam } from '@/src/lib/utils/search-params';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
@@ -174,7 +176,10 @@ export default function OnboardingLocalIdentityScreen(): React.JSX.Element {
                           ? 'border-primary bg-primary/5 dark:border-primary-bright dark:bg-primary-bright/15'
                           : 'border-border bg-surface dark:border-dark-border dark:bg-dark-bg-elevated'
                       }`}
-                      onPress={() => field.onChange('LOCAL')}
+                      onPress={() => {
+                        hapticSelection();
+                        field.onChange('LOCAL');
+                      }}
                       testID="onboarding-local-identity-local"
                     >
                       <View
@@ -217,7 +222,10 @@ export default function OnboardingLocalIdentityScreen(): React.JSX.Element {
                           ? 'border-primary bg-primary/5 dark:border-primary-bright dark:bg-primary-bright/15'
                           : 'border-border bg-surface dark:border-dark-border dark:bg-dark-bg-elevated'
                       }`}
-                      onPress={() => field.onChange('FOREIGNER')}
+                      onPress={() => {
+                        hapticSelection();
+                        field.onChange('FOREIGNER');
+                      }}
                       testID="onboarding-local-identity-foreigner"
                     >
                       <View
@@ -280,7 +288,10 @@ export default function OnboardingLocalIdentityScreen(): React.JSX.Element {
                     accessibilityRole="checkbox"
                     accessibilityState={{ checked: field.value }}
                     className="rounded-2xl border border-border bg-white px-4 py-3 dark:border-dark-border dark:bg-dark-bg-card"
-                    onPress={() => field.onChange(!field.value)}
+                    onPress={() => {
+                      hapticSelection();
+                      field.onChange(!field.value);
+                    }}
                     testID="onboarding-local-identity-terms"
                   >
                     <View className="flex-row items-start gap-3">
@@ -332,7 +343,7 @@ export default function OnboardingLocalIdentityScreen(): React.JSX.Element {
                             onPress={(event) => {
                               event.stopPropagation();
                               void Linking.openURL(
-                                'https://esco-beach-club.com/terms'
+                                config.legal.termsOfServiceUrl
                               );
                             }}
                           >
@@ -367,7 +378,10 @@ export default function OnboardingLocalIdentityScreen(): React.JSX.Element {
                     accessibilityRole="checkbox"
                     accessibilityState={{ checked: field.value }}
                     className="rounded-2xl border border-border bg-white px-4 py-3 dark:border-dark-border dark:bg-dark-bg-card"
-                    onPress={() => field.onChange(!field.value)}
+                    onPress={() => {
+                      hapticSelection();
+                      field.onChange(!field.value);
+                    }}
                     testID="onboarding-local-identity-privacy"
                   >
                     <View className="flex-row items-start gap-3">
@@ -419,7 +433,7 @@ export default function OnboardingLocalIdentityScreen(): React.JSX.Element {
                             onPress={(event) => {
                               event.stopPropagation();
                               void Linking.openURL(
-                                'https://esco-beach-club.com/privacy'
+                                config.legal.privacyPolicyUrl
                               );
                             }}
                           >
@@ -451,7 +465,10 @@ export default function OnboardingLocalIdentityScreen(): React.JSX.Element {
             <Pressable
               accessibilityRole="button"
               className="overflow-hidden rounded-full"
-              onPress={onSubmit}
+              onPress={(e) => {
+                hapticLight();
+                onSubmit(e);
+              }}
               onPressIn={ctaButton.handlePressIn}
               onPressOut={ctaButton.handlePressOut}
               testID="onboarding-local-identity-continue"
@@ -471,7 +488,7 @@ export default function OnboardingLocalIdentityScreen(): React.JSX.Element {
                   <Text className="text-[17px] font-bold text-white">
                     {t('onboardingLocalIdentityContinue')}
                   </Text>
-                  <ArrowRight color="#ffffff" size={22} />
+                  <ArrowRight color={Colors.white} size={22} />
                 </View>
               </LinearGradient>
             </Pressable>

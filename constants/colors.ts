@@ -1,30 +1,38 @@
+/**
+ * JS mirror of semantic colors in `global.css` `@theme`. Keep both in sync when
+ * changing tokens — Uniwind classes read CSS; native headers, gradients, and
+ * `StyleSheet` props read this file.
+ */
 export const Colors = {
   primary: '#E91E63',
-  primaryBright: '#FF4F8B',
+  primaryBright: '#FF6B9D',
   primaryDark: '#C2185B',
   secondary: '#009688',
+  secondaryBright: '#5EEAD4',
   secondaryDark: '#00796B',
   secondaryDeeper: '#004D40',
   background: '#FFFDF5',
-  darkBg: '#0F172A',
+  darkBg: '#0D0B14',
   surface: '#FFFFFF',
   card: '#FFFFFF',
-  darkBgCard: '#111827',
-  darkBgElevated: '#1F2937',
+  darkBgCard: '#1A1622',
+  darkBgElevated: '#272230',
   text: '#1A1A2E',
-  textPrimaryDark: '#F8FAFC',
+  textPrimaryDark: '#F1F5F9',
   textSecondary: '#6B7280',
-  textSecondaryDark: '#CBD5E1',
+  textSecondaryDark: '#D4C8E0',
   textLight: '#9CA3AF',
   textMuted: '#9CA3AF',
-  textMutedDark: '#94A3B8',
+  textMutedDark: '#A89CB8',
   border: '#F0EDE5',
   borderLight: '#F4E7DC',
-  darkBorder: '#334155',
-  darkBorderBright: '#475569',
+  darkBorder: '#3A3342',
+  darkBorderBright: '#524859',
   cardGradientStart: '#E91E63',
   cardGradientMiddle: '#F06292',
   cardGradientEnd: '#FF9800',
+  /** Member card gradient in dark mode (deeper, less glare). */
+  cardGradientDark: ['#9D1744', '#C45B8A', '#D4652E'] as const,
   teal: '#009688',
   tealLight: '#B2DFDB',
   pinkLight: '#FCE4EC',
@@ -32,6 +40,9 @@ export const Colors = {
   sandDark: '#E8E0CC',
   success: '#4CAF50',
   gold: '#C8A24D',
+  goldBright: '#F0D896',
+  /** Star rating active state (rate-us, etc.). */
+  starActive: '#FFB300',
   primaryFixed: '#FCE4EC',
   secondaryFixed: '#B2DFDB',
   surfaceContainerLow: '#FAF8F0',
@@ -58,6 +69,49 @@ export const Colors = {
     faceLight: '#ffd9bc',
     feature: 'rgba(143, 90, 54, 0.85)',
   },
+  ACTIVE_BG_DARK: 'rgba(255,107,157,0.14)',
+  ACTIVE_BG_LIGHT: 'rgba(233,30,99,0.1)',
+  badgeDarkBackground: '#1A1622',
+  badgeLightBackground: '#FFF8F5',
+  badgeWarningDarkBackground: 'rgba(245, 158, 11, 0.13)',
+  badgeWarningLightBackground: '#FFF8E1',
+  badgeWarningDarkBorder: '#F59E0B',
+  badgeWarningLightBorder: '#F9A825',
+  eventTierHighlightLight: '#FFF5F8',
+  profileCanvasBg: '#E8F0F8',
+  profileOrbLarge: '#F8BBD020',
+  profileOrbLargeDark: '#E9255E22',
+  profileOrbMid: '#B2EBF220',
+  profileOrbMidDark: '#5ED4AF1C',
+  profileOrbSmall: '#F3E5F520',
+  profileOrbSmallDark: '#FF6B9D18',
+  voucherNotchBg: '#E8F0F8',
+  inviteHeroBlobLight: 'rgba(252, 228, 236, 0.25)',
+  inviteHeroBlobDark: 'rgba(255, 107, 157, 0.08)',
+  inviteProgressTrackLight: '#FCE4EC',
+  inviteProgressTrackDark: 'rgba(255, 107, 157, 0.16)',
+  inviteReferralStatusBgLight: '#E8F5E9',
+  inviteReferralStatusBgDark: 'rgba(34, 197, 94, 0.22)',
+  inviteReferralStatusTextLight: '#4CAF50',
+  inviteReferralStatusTextDark: '#86EFAC',
+  inviteMilestoneUnlockedBgLight: '#E8F5E9',
+  inviteMilestoneUnlockedBgDark: 'rgba(34, 197, 94, 0.2)',
+  inviteMilestoneLockedBgLight: '#F0F0F0',
+  inviteMilestoneUnlockedIconLight: '#4CAF50',
+  inviteMilestoneUnlockedIconDark: '#86EFAC',
+  inviteReferralCodeBgLight: '#F9F5F0',
 } as const;
+
+/** Icon / accent color on dark surfaces (cards, nav). Light mode returns `accent` unchanged. */
+export function accentOnDarkBackground(
+  accent: string,
+  isDark: boolean
+): string {
+  if (!isDark) return accent;
+  if (accent === Colors.gold) return Colors.goldBright;
+  if (accent === Colors.secondary) return Colors.secondaryBright;
+  if (accent === Colors.primary) return Colors.primaryBright;
+  return accent;
+}
 
 export default Colors;

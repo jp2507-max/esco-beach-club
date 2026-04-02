@@ -16,6 +16,10 @@ export default function ProfileStackLayout(): React.JSX.Element {
         options={{ headerShown: false, presentation: 'card' }}
       />
       <Stack.Screen
+        name="invite-referrals"
+        options={{ headerShown: false, presentation: 'card' }}
+      />
+      <Stack.Screen
         name="saved-events"
         options={{ headerShown: false, presentation: 'card' }}
       />
@@ -29,6 +33,10 @@ export default function ProfileStackLayout(): React.JSX.Element {
       />
       <Stack.Screen
         name="membership"
+        options={{ headerShown: false, presentation: 'card' }}
+      />
+      <Stack.Screen
+        name="delete-account"
         options={{ headerShown: false, presentation: 'card' }}
       />
     </Stack>

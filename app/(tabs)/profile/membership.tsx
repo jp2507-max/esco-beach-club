@@ -12,7 +12,7 @@ import {
   TrendingUp,
   UtensilsCrossed,
 } from 'lucide-react-native';
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useColorScheme } from 'react-native';
 import {
@@ -24,11 +24,13 @@ import {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Colors } from '@/constants/colors';
-import type { RewardTierKey } from '@/lib/types';
+import { accentOnDarkBackground, Colors } from '@/constants/colors';
+import { type RewardTierKey, rewardTierKeys } from '@/lib/types';
 import { useMemberSummary, useProfileData } from '@/providers/DataProvider';
-import { ProfileSubScreenHeader } from '@/src/components/ui';
+import { ProfileSubScreenHeader, SkeletonText } from '@/src/components/ui';
 import { motion, rmTiming } from '@/src/lib/animations/motion';
+import { useStaggeredListEntering } from '@/src/lib/animations/use-staggered-entry';
+import { hapticLight, hapticSuccess } from '@/src/lib/haptics/haptics';
 import { db } from '@/src/lib/instant';
 import {
   getRewardTierDefinition,
@@ -38,7 +40,7 @@ import {
 import { type InstantRecord, mapRewardTransaction } from '@/src/lib/mappers';
 import { shadows } from '@/src/lib/styles/shadows';
 import { cn } from '@/src/lib/utils';
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from '@/src/tw';
+import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 
 // ── Tier helpers ────────────────────────────────────────────────
@@ -123,6 +125,17 @@ type ManageItem = {
     | 'manageAccount.upgradeTier';
 };
 
+function StaggeredBenefitShell({
+  children,
+  index,
+}: {
+  children: React.ReactNode;
+  index: number;
+}): React.JSX.Element {
+  const entering = useStaggeredListEntering(index);
+  return <Animated.View entering={entering}>{children}</Animated.View>;
+}
+
 const MANAGE_ITEMS: ManageItem[] = [
   {
     color: Colors.primary,
@@ -160,8 +173,13 @@ export default function MembershipScreen(): React.JSX.Element {
   const heroScale = useSharedValue(0.92);
   const heroOpacity = useSharedValue(0);
   const contentOpacity = useSharedValue(0);
+  const didPlayTierHaptic = useRef(false);
 
   useEffect(() => {
+    if (!didPlayTierHaptic.current) {
+      didPlayTierHaptic.current = true;
+      hapticSuccess();
+    }
     heroScale.set(withSpring(1, motion.spring.gentle));
     heroOpacity.set(withTiming(1, rmTiming(500)));
     contentOpacity.set(withTiming(1, rmTiming(700)));
@@ -182,7 +200,8 @@ export default function MembershipScreen(): React.JSX.Element {
   }));
 
   // Derived data
-  const tierLevel: RewardTierKey = memberSummary.lifetimeTierKey;
+  const tierLevel: RewardTierKey =
+    memberSummary.lifetimeTierKey ?? rewardTierKeys.escoLifeMember;
   const tierConfig = TIER_CONFIG[tierLevel];
   const userName = memberSummary.fullName || '—';
   const memberSince = useMemo(() => {
@@ -319,6 +338,7 @@ export default function MembershipScreen(): React.JSX.Element {
   }
 
   function handleManagePress(): void {
+    hapticLight();
     router.push('/profile/help-center' as never);
   }
 
@@ -443,7 +463,7 @@ export default function MembershipScreen(): React.JSX.Element {
         {/* ── Section 2: Unlocked Benefits ──────────────────────── */}
         <Animated.View className="mb-8" style={fadeStyle}>
           <View className="mb-4 flex-row items-end justify-between px-1">
-            <Text className="text-lg font-bold tracking-tight text-secondary dark:text-teal-light">
+            <Text className="text-lg font-bold tracking-tight text-secondary dark:text-secondary-bright">
               {t('benefits.title')}
             </Text>
             <Text className="text-[11px] font-bold uppercase tracking-[2px] text-primary dark:text-primary-bright">
@@ -452,50 +472,56 @@ export default function MembershipScreen(): React.JSX.Element {
           </View>
 
           <View className="flex-row flex-wrap gap-3">
-            {benefits.map((benefit) => {
+            {benefits.map((benefit, benefitIndex) => {
               const IconComp = benefit.icon;
+              const benefitAccent = accentOnDarkBackground(
+                benefit.color,
+                isDark
+              );
               if (benefit.wide) {
                 return (
-                  <View
-                    key={benefit.key}
-                    className="w-full flex-row items-center gap-4 rounded-2xl border border-border bg-white p-5 dark:border-dark-border dark:bg-dark-bg-card"
-                    style={shadows.level1}
-                  >
+                  <StaggeredBenefitShell key={benefit.key} index={benefitIndex}>
                     <View
-                      className="size-14 items-center justify-center rounded-full"
-                      style={{ backgroundColor: `${benefit.color}15` }}
+                      className="w-full flex-row items-center gap-4 rounded-2xl border border-border bg-white p-5 dark:border-dark-border dark:bg-dark-bg-card"
+                      style={shadows.level1}
                     >
-                      <IconComp color={benefit.color} size={26} />
-                    </View>
-                    <View className="flex-1">
-                      <Text className="text-[15px] font-bold text-text dark:text-text-primary-dark">
-                        {t(benefit.titleKey)}
-                      </Text>
-                      {benefit.descKey ? (
-                        <Text className="mt-0.5 text-xs text-text-secondary dark:text-text-secondary-dark">
-                          {t(benefit.descKey)}
+                      <View
+                        className="size-14 items-center justify-center rounded-full"
+                        style={{ backgroundColor: `${benefitAccent}15` }}
+                      >
+                        <IconComp color={benefitAccent} size={26} />
+                      </View>
+                      <View className="flex-1">
+                        <Text className="text-[15px] font-bold text-text dark:text-text-primary-dark">
+                          {t(benefit.titleKey)}
                         </Text>
-                      ) : null}
+                        {benefit.descKey ? (
+                          <Text className="mt-0.5 text-xs text-text-secondary dark:text-text-secondary-dark">
+                            {t(benefit.descKey)}
+                          </Text>
+                        ) : null}
+                      </View>
                     </View>
-                  </View>
+                  </StaggeredBenefitShell>
                 );
               }
               return (
-                <View
-                  key={benefit.key}
-                  className="flex-1 gap-3 rounded-2xl border border-border bg-white p-5 dark:border-dark-border dark:bg-dark-bg-card"
-                  style={[shadows.level1, { minWidth: '45%' }]}
-                >
+                <StaggeredBenefitShell key={benefit.key} index={benefitIndex}>
                   <View
-                    className="size-12 items-center justify-center rounded-full"
-                    style={{ backgroundColor: `${benefit.color}15` }}
+                    className="flex-1 gap-3 rounded-2xl border border-border bg-white p-5 dark:border-dark-border dark:bg-dark-bg-card"
+                    style={[shadows.level1, { minWidth: '45%' }]}
                   >
-                    <IconComp color={benefit.color} size={22} />
+                    <View
+                      className="size-12 items-center justify-center rounded-full"
+                      style={{ backgroundColor: `${benefitAccent}15` }}
+                    >
+                      <IconComp color={benefitAccent} size={22} />
+                    </View>
+                    <Text className="text-[15px] font-bold leading-tight text-text dark:text-text-primary-dark">
+                      {t(benefit.titleKey)}
+                    </Text>
                   </View>
-                  <Text className="text-[15px] font-bold leading-tight text-text dark:text-text-primary-dark">
-                    {t(benefit.titleKey)}
-                  </Text>
-                </View>
+                </StaggeredBenefitShell>
               );
             })}
           </View>
@@ -503,13 +529,14 @@ export default function MembershipScreen(): React.JSX.Element {
 
         {/* ── Section 3: Manage Account ─────────────────────────── */}
         <Animated.View className="mb-8" style={fadeStyle}>
-          <Text className="mb-4 px-1 text-lg font-bold tracking-tight text-secondary dark:text-teal-light">
+          <Text className="mb-4 px-1 text-lg font-bold tracking-tight text-secondary dark:text-secondary-bright">
             {t('manageAccount.title')}
           </Text>
 
           <View className="gap-3">
             {MANAGE_ITEMS.map((item) => {
               const IconComp = item.icon;
+              const manageAccent = accentOnDarkBackground(item.color, isDark);
               return (
                 <Pressable
                   key={item.id}
@@ -528,7 +555,7 @@ export default function MembershipScreen(): React.JSX.Element {
                           : Colors.sand,
                       }}
                     >
-                      <IconComp color={item.color} size={20} />
+                      <IconComp color={manageAccent} size={20} />
                     </View>
                     <Text className="text-[15px] font-semibold text-text dark:text-text-primary-dark">
                       {t(item.labelKey)}
@@ -547,18 +574,15 @@ export default function MembershipScreen(): React.JSX.Element {
         {/* ── Section 4: Recent Activity ────────────────────────── */}
         <Animated.View className="mb-4" style={fadeStyle}>
           <View className="mb-4 flex-row items-center justify-between px-1">
-            <Text className="text-lg font-bold tracking-tight text-secondary dark:text-teal-light">
+            <Text className="text-lg font-bold tracking-tight text-secondary dark:text-secondary-bright">
               {t('activity.title')}
             </Text>
           </View>
 
           <View className="overflow-hidden rounded-2xl border border-border bg-white dark:border-dark-border dark:bg-dark-bg-card">
             {isActivityLoading ? (
-              <View className="items-center p-5">
-                <ActivityIndicator color={Colors.primary} size="small" />
-                <Text className="mt-3 text-sm font-medium text-text-secondary dark:text-text-secondary-dark">
-                  {t('activity.loading')}
-                </Text>
+              <View className="gap-3 p-5">
+                <SkeletonText lines={3} />
               </View>
             ) : hasActivity ? (
               activities.map(
@@ -584,7 +608,11 @@ export default function MembershipScreen(): React.JSX.Element {
                     >
                       <View
                         className="mt-1.5 size-2.5 rounded-full"
-                        style={{ backgroundColor: Colors.secondary }}
+                        style={{
+                          backgroundColor: isDark
+                            ? Colors.secondaryBright
+                            : Colors.secondary,
+                        }}
                       />
                       <View className="flex-1">
                         <Text className="text-sm font-bold text-text dark:text-text-primary-dark">

@@ -18,6 +18,7 @@ const common = {
     commentMax: 'Nhận xét tối đa 500 ký tự.',
     invalidDate: 'Vui lòng nhập ngày hợp lệ theo định dạng YYYY-MM-DD.',
     invalidCode: 'Vui lòng nhập mã xác minh 6 chữ số.',
+    deleteConfirmation: 'Hãy nhập chính xác DELETE để tiếp tục.',
     loyaltyManagerPin:
       'Vui lòng nhập mã PIN quản lý hợp lệ để phê duyệt số tiền này.',
     loyaltyMinimumSpend: 'Hóa đơn này chưa đạt ngưỡng cashback tối thiểu.',
@@ -115,6 +116,7 @@ const common = {
     title: 'Màn hình này không tồn tại.',
     cta: 'Đi đến trang chủ',
   },
+  member: 'Thành viên',
 } as const;
 
 export default common;

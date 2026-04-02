@@ -1,4 +1,4 @@
-# Esco Beach Club MVP
+# Esco Beach Club
 
 Members-only lifestyle app for curated events, partner perks, loyalty experiences, and premium member flows.
 
@@ -26,11 +26,26 @@ Create a `.env` file in the project root:
 ```env
 EXPO_PUBLIC_INSTANT_APP_ID=your_instant_app_id
 
-# Optional (runtime SDK)
+# Optional runtime API origins
 EXPO_PUBLIC_SENTRY_DSN=
+EXPO_PUBLIC_REFERRAL_API_BASE_URL=
+EXPO_PUBLIC_ACCOUNT_API_BASE_URL=
+EXPO_PUBLIC_PRIVACY_POLICY_URL=https://escolife.app/privacy
+EXPO_PUBLIC_TERMS_OF_SERVICE_URL=https://escolife.app/terms
+EXPO_PUBLIC_SUPPORT_URL=https://escolife.app/support
 
 # Required for EAS Build/Update sourcemap upload (do not commit real value)
 SENTRY_AUTH_TOKEN=
+
+# Required on the server / API route host
+INSTANT_APP_ADMIN_TOKEN=
+INSTANT_APP_ID=
+
+# Required for Sign in with Apple token revocation during account deletion
+APPLE_TEAM_ID=
+APPLE_KEY_ID=
+APPLE_SERVICES_ID=
+APPLE_PRIVATE_KEY=
 ```
 
 `EXPO_PUBLIC_INSTANT_APP_ID` is required at runtime by `src/lib/instant.ts`.
@@ -38,6 +53,8 @@ SENTRY_AUTH_TOKEN=
 ## Local development (native)
 
 Because MMKV is used for auth/session persistence, run this project with a custom native build (not Expo Go).
+
+Expo Router API routes under `app/api/*` are expected to run through the Expo dev server during local development. In local native dev, the client now calls those routes through the dev-server origin by default. For production or preview native builds, set `EXPO_PUBLIC_REFERRAL_API_BASE_URL` and `EXPO_PUBLIC_ACCOUNT_API_BASE_URL` to a real deployed server origin if those routes need to be reachable outside local development.
 
 1. Install dependencies
 
@@ -159,6 +176,22 @@ bun run sentry:upload-sourcemaps
 ```
 
 5. Confirm Sentry event tags include update metadata (`expo-update-id`, `expo-update-group-id`, `expo-update-debug-url`).
+
+### iOS App Review release gate
+
+- Account deletion is implemented in `Profile > Delete Account` and is finalized after a 30-day grace period by `bun run account-deletion:process-expired`.
+- `config/apple/privacy-manifest.json` is the source of truth for the iOS privacy manifest, and `./plugins/with-apple-privacy-manifest` writes it into the native iOS project during prebuild.
+- `docs/app-review/review-notes-template.md` and `docs/app-review/ios-release-checklist.md` must be completed before submission.
+- `eas.json` contains a placeholder `submit.production.ios.ascAppId`; replace it with the real App Store Connect app ID before running `bun run submit:production:ios`.
+
+## Invite & Earn (referrals)
+
+- **Deep links**: `esco-beach-club://invite/<CODE>` and `https://escolife.app/invite/<CODE>` (universal links require Apple/Google verification + hosting `apple-app-site-association` / Digital Asset Links).
+- **Client env**: `EXPO_PUBLIC_REFERRAL_API_BASE_URL` — base URL where Expo Router serves API routes (for example a deployed production web/API host). In local development the app uses the Expo dev-server origin automatically; for preview/production native builds you must provide a deployed origin.
+- **Client env**: `EXPO_PUBLIC_ACCOUNT_API_BASE_URL` — optional override for account deletion API routes. If omitted, account deletion reuses `EXPO_PUBLIC_REFERRAL_API_BASE_URL`.
+- **Server secrets** (never ship to the client): `INSTANT_APP_ADMIN_TOKEN` — Instant dashboard admin token; optional `INSTANT_APP_ID` if you do not want to reuse `EXPO_PUBLIC_INSTANT_APP_ID` on the server.
+- **API routes**: `POST /api/referrals/claim` (body: `referralCode`, `refreshToken`) creates a pending referral for the signed-in user; `POST /api/referrals/complete` (`Authorization: Bearer <refreshToken>`, body: `referralId`) marks a referral completed for active staff/manager in `staff_access`.
+- **Schema**: after pulling changes, run `npx instant-cli@latest push schema` so `referrals.referee_profile_id` exists in production.
 
 ## App identifiers
 

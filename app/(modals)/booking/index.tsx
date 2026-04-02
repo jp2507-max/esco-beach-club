@@ -8,10 +8,10 @@ import {
 } from 'lucide-react-native';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert } from 'react-native';
+import { Alert, useColorScheme } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Colors } from '@/constants/colors';
+import { accentOnDarkBackground, Colors } from '@/constants/colors';
 import { submitTableReservation } from '@/lib/api';
 import {
   useBookingContentData,
@@ -19,7 +19,8 @@ import {
 } from '@/providers/DataProvider';
 import { Button, ModalHeader } from '@/src/components/ui';
 import { useScreenEntry } from '@/src/lib/animations/use-screen-entry';
-import { Pressable, ScrollView, Text, View } from '@/src/tw';
+import { hapticMedium, hapticSelection } from '@/src/lib/haptics/haptics';
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 
 const TIME_SLOTS = [
@@ -32,6 +33,48 @@ const TIME_SLOTS = [
   { time: '21:00', available: true },
   { time: '21:30', available: true },
 ];
+
+type SlotColors = {
+  backgroundColor: string;
+  borderColor: string;
+  color: string;
+};
+
+function getSlotColors(
+  isDark: boolean,
+  available: boolean,
+  active: boolean
+): SlotColors {
+  return {
+    backgroundColor: !available
+      ? isDark
+        ? Colors.darkBgElevated
+        : Colors.sand
+      : active
+        ? Colors.primary
+        : isDark
+          ? Colors.darkBgCard
+          : Colors.surface,
+    borderColor: !available
+      ? isDark
+        ? Colors.darkBorder
+        : Colors.sandDark
+      : active
+        ? Colors.primary
+        : isDark
+          ? Colors.darkBorder
+          : Colors.border,
+    color: !available
+      ? isDark
+        ? Colors.textMutedDark
+        : Colors.textLight
+      : active
+        ? '#fff'
+        : isDark
+          ? Colors.textPrimaryDark
+          : Colors.text,
+  };
+}
 
 const OCCASIONS = [
   'dateNight',
@@ -155,8 +198,11 @@ export default function BookingModalScreen(): React.JSX.Element {
     eventTitle?: string;
   }>();
   const { profile, userId } = useProfileData();
-  const { bookingOccasions, bookingTimeSlots } = useBookingContentData();
+  const { bookingContentLoading, bookingOccasions, bookingTimeSlots } =
+    useBookingContentData();
   const { t } = useTranslation(['booking', 'common']);
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
 
   const [now, setNow] = useState(() => new Date());
   const dates = useMemo(() => getNext7Days(now), [now]);
@@ -180,6 +226,10 @@ export default function BookingModalScreen(): React.JSX.Element {
   const { contentStyle } = useScreenEntry();
 
   const resolvedTimeSlots = useMemo<ResolvedTimeSlot[]>(() => {
+    if (bookingContentLoading) {
+      return [];
+    }
+
     if (bookingTimeSlots.length === 0) {
       return TIME_SLOTS;
     }
@@ -188,9 +238,13 @@ export default function BookingModalScreen(): React.JSX.Element {
       available: slot.available,
       time: slot.time,
     }));
-  }, [bookingTimeSlots]);
+  }, [bookingContentLoading, bookingTimeSlots]);
 
   const resolvedOccasions = useMemo<ResolvedOccasion[]>(() => {
+    if (bookingContentLoading) {
+      return [];
+    }
+
     if (bookingOccasions.length === 0) {
       return OCCASIONS.map((value) => ({
         label: t(getOccasionTranslationKey(value), {
@@ -206,7 +260,7 @@ export default function BookingModalScreen(): React.JSX.Element {
         : option.value,
       value: option.value,
     }));
-  }, [bookingOccasions, t]);
+  }, [bookingContentLoading, bookingOccasions, t]);
 
   const isSelectedTimeValid = useMemo(
     () =>
@@ -254,6 +308,7 @@ export default function BookingModalScreen(): React.JSX.Element {
       return;
     }
 
+    hapticMedium();
     setIsSubmitting(true);
 
     try {
@@ -290,6 +345,29 @@ export default function BookingModalScreen(): React.JSX.Element {
     }
   }
 
+  if (bookingContentLoading) {
+    return (
+      <View
+        className="flex-1 bg-background dark:bg-dark-bg"
+        style={{ paddingTop: insets.top }}
+      >
+        <ModalHeader
+          className="border-b border-border dark:border-dark-border"
+          closeTestID="close-booking"
+          onClose={() => router.back()}
+          subtitle={eventTitle}
+          title={t('booking:reserveSpot')}
+        />
+        <View className="flex-1 items-center justify-center px-6">
+          <ActivityIndicator
+            color={isDark ? Colors.primaryBright : Colors.primary}
+            size="large"
+          />
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View
       className="flex-1 bg-background dark:bg-dark-bg"
@@ -311,7 +389,10 @@ export default function BookingModalScreen(): React.JSX.Element {
         <Animated.View style={contentStyle}>
           <View className="mb-7">
             <View className="mb-3.5 flex-row items-center">
-              <CalendarDays color={Colors.primary} size={18} />
+              <CalendarDays
+                color={accentOnDarkBackground(Colors.primary, isDark)}
+                size={18}
+              />
               <Text className="ml-2 text-[17px] font-bold text-text dark:text-text-primary-dark">
                 {t('booking:selectDate')}
               </Text>
@@ -332,7 +413,11 @@ export default function BookingModalScreen(): React.JSX.Element {
                         ? 'h-20 w-17 items-center justify-center rounded-2xl bg-primary'
                         : 'h-20 w-17 items-center justify-center rounded-2xl border-[1.5px] border-border bg-white dark:border-dark-border dark:bg-dark-bg-card'
                     }
-                    onPress={() => !isSubmitting && setSelectedDate(i)}
+                    onPress={() => {
+                      if (isSubmitting) return;
+                      hapticSelection();
+                      setSelectedDate(i);
+                    }}
                     disabled={isSubmitting}
                     style={isSubmitting ? { opacity: 0.7 } : undefined}
                     testID={`date-${i}`}
@@ -363,7 +448,10 @@ export default function BookingModalScreen(): React.JSX.Element {
 
           <View className="mb-7">
             <View className="mb-3.5 flex-row items-center">
-              <Sparkles color={Colors.primary} size={18} />
+              <Sparkles
+                color={accentOnDarkBackground(Colors.primary, isDark)}
+                size={18}
+              />
               <Text className="ml-2 text-[17px] font-bold text-text dark:text-text-primary-dark">
                 {t('booking:pickTime')}
               </Text>
@@ -376,23 +464,20 @@ export default function BookingModalScreen(): React.JSX.Element {
                     accessibilityRole="button"
                     key={slot.time}
                     className="mb-2.5 items-center rounded-[14px] py-3.5"
-                    onPress={() =>
-                      slot.available &&
-                      !isSubmitting &&
-                      setSelectedTime(slot.time)
-                    }
+                    onPress={() => {
+                      if (!slot.available || isSubmitting) return;
+                      hapticSelection();
+                      setSelectedTime(slot.time);
+                    }}
                     disabled={!slot.available || isSubmitting}
                     style={{
-                      backgroundColor: !slot.available
-                        ? Colors.sand
-                        : active
-                          ? Colors.primary
-                          : Colors.surface,
-                      borderColor: !slot.available
-                        ? Colors.sandDark
-                        : active
-                          ? Colors.primary
-                          : Colors.border,
+                      backgroundColor: getSlotColors(
+                        isDark,
+                        slot.available,
+                        active
+                      ).backgroundColor,
+                      borderColor: getSlotColors(isDark, slot.available, active)
+                        .borderColor,
                       borderWidth: 1.5,
                       marginRight: 10,
                       opacity: !slot.available ? 0.6 : isSubmitting ? 0.7 : 1,
@@ -403,11 +488,8 @@ export default function BookingModalScreen(): React.JSX.Element {
                     <Text
                       className="text-[15px] font-bold"
                       style={{
-                        color: !slot.available
-                          ? Colors.textLight
-                          : active
-                            ? '#fff'
-                            : Colors.text,
+                        color: getSlotColors(isDark, slot.available, active)
+                          .color,
                       }}
                     >
                       {slot.time}
@@ -425,7 +507,10 @@ export default function BookingModalScreen(): React.JSX.Element {
 
           <View className="mb-7">
             <View className="mb-3.5 flex-row items-center">
-              <Users color={Colors.primary} size={18} />
+              <Users
+                color={accentOnDarkBackground(Colors.primary, isDark)}
+                size={18}
+              />
               <Text className="ml-2 text-[17px] font-bold text-text dark:text-text-primary-dark">
                 {t('booking:numGuests')}
               </Text>
@@ -434,13 +519,25 @@ export default function BookingModalScreen(): React.JSX.Element {
               <Pressable
                 accessibilityRole="button"
                 className="size-12 items-center justify-center rounded-full bg-sand dark:bg-dark-bg"
-                onPress={() => !isSubmitting && setPax(Math.max(1, pax - 1))}
+                onPress={() => {
+                  if (isSubmitting) return;
+                  hapticSelection();
+                  setPax(Math.max(1, pax - 1));
+                }}
                 disabled={pax <= 1 || isSubmitting}
                 style={pax <= 1 || isSubmitting ? { opacity: 0.4 } : undefined}
                 testID="pax-minus"
               >
                 <Minus
-                  color={pax <= 1 ? Colors.textLight : Colors.text}
+                  color={
+                    pax <= 1
+                      ? isDark
+                        ? Colors.textMutedDark
+                        : Colors.textLight
+                      : isDark
+                        ? Colors.textPrimaryDark
+                        : Colors.text
+                  }
                   size={20}
                 />
               </Pressable>
@@ -455,13 +552,25 @@ export default function BookingModalScreen(): React.JSX.Element {
               <Pressable
                 accessibilityRole="button"
                 className="size-12 items-center justify-center rounded-full bg-sand dark:bg-dark-bg"
-                onPress={() => !isSubmitting && setPax(Math.min(20, pax + 1))}
+                onPress={() => {
+                  if (isSubmitting) return;
+                  hapticSelection();
+                  setPax(Math.min(20, pax + 1));
+                }}
                 disabled={pax >= 20 || isSubmitting}
                 style={pax >= 20 || isSubmitting ? { opacity: 0.4 } : undefined}
                 testID="pax-plus"
               >
                 <Plus
-                  color={pax >= 20 ? Colors.textLight : Colors.text}
+                  color={
+                    pax >= 20
+                      ? isDark
+                        ? Colors.textMutedDark
+                        : Colors.textLight
+                      : isDark
+                        ? Colors.textPrimaryDark
+                        : Colors.text
+                  }
                   size={20}
                 />
               </Pressable>
@@ -480,13 +589,27 @@ export default function BookingModalScreen(): React.JSX.Element {
                     accessibilityRole="button"
                     key={option.value}
                     className="mb-2.5 mr-2.5 rounded-full px-4.5 py-3"
-                    onPress={() => !isSubmitting && setOccasion(option.value)}
+                    onPress={() => {
+                      if (isSubmitting) return;
+                      hapticSelection();
+                      setOccasion(option.value);
+                    }}
                     disabled={isSubmitting}
                     style={{
                       backgroundColor: active
-                        ? Colors.secondary
-                        : Colors.surface,
-                      borderColor: active ? Colors.secondary : Colors.border,
+                        ? isDark
+                          ? Colors.secondaryBright
+                          : Colors.secondary
+                        : isDark
+                          ? Colors.darkBgCard
+                          : Colors.surface,
+                      borderColor: active
+                        ? isDark
+                          ? Colors.secondaryBright
+                          : Colors.secondary
+                        : isDark
+                          ? Colors.darkBorder
+                          : Colors.border,
                       borderWidth: 1.5,
                       opacity: isSubmitting ? 0.7 : 1,
                     }}
@@ -494,7 +617,15 @@ export default function BookingModalScreen(): React.JSX.Element {
                   >
                     <Text
                       className="text-sm font-semibold"
-                      style={{ color: active ? '#fff' : Colors.text }}
+                      style={{
+                        color: active
+                          ? isDark
+                            ? Colors.secondaryDeeper
+                            : '#fff'
+                          : isDark
+                            ? Colors.textPrimaryDark
+                            : Colors.text,
+                      }}
                     >
                       {option.label}
                     </Text>

@@ -30,9 +30,20 @@ export const config = {
       : null,
     supportEmail:
       process.env.EXPO_PUBLIC_SUPPORT_EMAIL?.trim() || 'support@escolife.com',
+    supportUrl:
+      process.env.EXPO_PUBLIC_SUPPORT_URL?.trim() ||
+      'https://escolife.app/support',
   },
   /** Bundled hero image for onboarding welcome screen. */
   heroImage: require('@/assets/images/splash-icon.png'),
+  legal: {
+    privacyPolicyUrl:
+      process.env.EXPO_PUBLIC_PRIVACY_POLICY_URL?.trim() ||
+      'https://escolife.app/privacy',
+    termsOfServiceUrl:
+      process.env.EXPO_PUBLIC_TERMS_OF_SERVICE_URL?.trim() ||
+      'https://escolife.app/terms',
+  },
   onboardingClubVoucher: {
     code: process.env.EXPO_PUBLIC_ONBOARDING_VOUCHER_CODE?.trim() || 'ES-2026',
     scope:

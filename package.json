@@ -4,10 +4,11 @@
   "version": "1.0.0",
   "scripts": {
     "app-release": "node scripts/app-release.js",
-    "prebuild": "bunx expo prebuild --platform android",
-    "prebuild:development": "bunx expo prebuild --platform android",
-    "prebuild:staging": "bunx expo prebuild --platform android",
-    "prebuild:production": "bunx expo prebuild --platform android",
+    "prebuild": "bunx expo prebuild --platform all",
+    "prebuild:development": "bunx expo prebuild --platform all",
+    "prebuild:staging": "bunx expo prebuild --platform all",
+    "prebuild:production": "bunx expo prebuild --platform all",
+    "account-deletion:process-expired": "bun scripts/account-deletion/process-expired.ts",
     "type-check": "bunx tsc --noEmit",
     "install-maestro": "curl -Ls \"https://get.maestro.mobile.dev\" | bash",
     "test:ci": "node scripts/test-ci.js",
@@ -24,19 +25,22 @@
     "build:staging:ios": "eas build --platform ios --profile preview",
     "build:production:android": "eas build --platform android --profile production",
     "build:production:ios": "eas build --platform ios --profile production",
+    "submit:production:ios": "eas submit --platform ios --profile production",
     "sentry:upload-sourcemaps": "npx sentry-expo-upload-sourcemaps dist",
     "start": "bunx expo start --tunnel",
     "start-web": "bunx expo start --web --tunnel",
     "start-web-dev": "bunx expo start --web --clear",
     "check:expo": "expo install --check",
     "doctor": "expo install --check && expo-doctor",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "prepare": "husky"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
     "@hookform/resolvers": "^5.2.2",
-    "@instantdb/react-native": "^0.22.157",
-    "@instantdb/react-native-mmkv": "^0.22.157",
+    "@instantdb/admin": "^0.22.174",
+    "@instantdb/react-native": "^0.22.174",
+    "@instantdb/react-native-mmkv": "^0.22.174",
     "@nkzw/create-context-hook": "^1.1.0",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/datetimepicker": "8.6.0",
@@ -101,20 +105,31 @@
     "@babel/core": "^7.25.2",
     "@babel/plugin-proposal-export-namespace-from": "^7.18.9",
     "@expo/ngrok": "^4.1.0",
+    "@commitlint/cli": "^20.4.4",
+    "@commitlint/config-conventional": "^20.4.4",
     "@types/react": "~19.2.10",
+    "babel-plugin-react-compiler": "^19.1.0-rc.2",
     "eslint": "^9.31.0",
     "eslint-config-expo": "~55.0.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.5",
-    "babel-plugin-react-compiler": "^19.1.0-rc.2",
     "eslint-plugin-react-compiler": "^19.1.0-rc.2",
     "eslint-plugin-react-native-a11y": "^3.5.1",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "eslint-plugin-testing-library": "^7.16.0",
     "eslint-plugin-unused-imports": "^4.4.1",
+    "husky": "^9.1.7",
+    "instant-cli": "0.22.160",
+    "lint-staged": "^16.4.0",
+    "prettier": "^3.8.1",
     "tailwindcss": "^4.2.1",
     "typescript": "~5.9.2",
     "typescript-eslint": "^8.57.0"
   },
-  "private": true
+  "private": true,
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,mjs,cjs,json,md,mdx,yml,yaml,css}": [
+      "prettier --write"
+    ]
+  }
 }
