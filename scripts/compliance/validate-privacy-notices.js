@@ -2,6 +2,10 @@
 /**
  * Validates privacy notices, legal links, and App Review artifacts.
  * Used by: .github/workflows/validate-privacy-notices.yml
+ *
+ * Network probes (legal/support URLs + AASA) run only when
+ * RUN_PUBLIC_ENDPOINT_PROBES=true — avoids hitting production URLs from local
+ * or unset-env runs.
  */
 
 const fs = require('node:fs');
@@ -49,7 +53,77 @@ function getConfiguredValue(key, fallback) {
 
 const FETCH_TIMEOUT_MS = 10000; // 10 seconds
 
-async function fetchUrlStatus(url) {
+/**
+ * Validates Apple App Site Association JSON (Universal Links).
+ * Accepts legacy (appID + paths) and modern (appIDs + components) detail shapes.
+ * @param {unknown} data
+ * @returns {{ valid: true } | { valid: false; message: string; detail: string }}
+ */
+function validateAasaStructure(data) {
+  if (data === null || typeof data !== 'object' || Array.isArray(data)) {
+    return {
+      valid: false,
+      message: 'invalid_aasa_structure',
+      detail: 'root_not_object',
+    };
+  }
+
+  const applinks = data.applinks;
+  if (
+    !applinks ||
+    typeof applinks !== 'object' ||
+    Array.isArray(applinks)
+  ) {
+    return {
+      valid: false,
+      message: 'invalid_aasa_structure',
+      detail: 'applinks_missing_or_invalid',
+    };
+  }
+
+  const details = applinks.details;
+  if (!Array.isArray(details) || details.length === 0) {
+    return {
+      valid: false,
+      message: 'invalid_aasa_structure',
+      detail: 'details_missing_or_empty',
+    };
+  }
+
+  for (const detail of details) {
+    if (!detail || typeof detail !== 'object' || Array.isArray(detail)) {
+      continue;
+    }
+
+    const hasAppId =
+      (typeof detail.appID === 'string' && detail.appID.trim().length > 0) ||
+      (Array.isArray(detail.appIDs) &&
+        detail.appIDs.some(
+          (id) => typeof id === 'string' && id.trim().length > 0
+        ));
+
+    const hasPaths =
+      (Array.isArray(detail.paths) && detail.paths.length > 0) ||
+      (Array.isArray(detail.components) && detail.components.length > 0);
+
+    if (hasAppId && hasPaths) {
+      return { valid: true };
+    }
+  }
+
+  return {
+    valid: false,
+    message: 'invalid_aasa_structure',
+    detail: 'no_detail_with_appid_and_paths',
+  };
+}
+
+/**
+ * @param {string} url
+ * @param {{ expectAasa?: boolean }} [options]
+ */
+async function fetchUrlStatus(url, options = {}) {
+  const { expectAasa = false } = options;
   const controller = new AbortController();
   let timeoutId;
 
@@ -66,8 +140,66 @@ async function fetchUrlStatus(url) {
 
     clearTimeout(timeoutId);
 
+    if (!response.ok) {
+      return {
+        ok: false,
+        status: response.status,
+        url,
+        message: `http_${response.status}`,
+      };
+    }
+
+    if (!expectAasa) {
+      return {
+        ok: true,
+        status: response.status,
+        url,
+      };
+    }
+
+    let text;
+    try {
+      text = await response.text();
+    } catch (readError) {
+      const readMessage =
+        readError instanceof Error ? readError.message : String(readError);
+      return {
+        ok: false,
+        status: response.status,
+        url,
+        message: 'aasa_body_read_error',
+        detail: readMessage,
+      };
+    }
+
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (parseError) {
+      const parseMessage =
+        parseError instanceof Error ? parseError.message : String(parseError);
+      return {
+        ok: false,
+        status: response.status,
+        url,
+        message: 'aasa_parse_error',
+        detail: parseMessage,
+      };
+    }
+
+    const validation = validateAasaStructure(data);
+    if (!validation.valid) {
+      return {
+        ok: false,
+        status: response.status,
+        url,
+        message: validation.message,
+        detail: validation.detail,
+      };
+    }
+
     return {
-      ok: response.ok,
+      ok: true,
       status: response.status,
       url,
     };
@@ -94,6 +226,8 @@ async function fetchUrlStatus(url) {
 async function main() {
   const requireReviewArtifacts =
     process.env.REQUIRE_APP_REVIEW_ARTIFACTS === 'true';
+  const runPublicEndpointProbes =
+    process.env.RUN_PUBLIC_ENDPOINT_PROBES === 'true';
   const appJsonPath = path.join(rootDir, 'app.json');
 
   let appJson = null;
@@ -167,18 +301,24 @@ async function main() {
   );
 
   const urls = [privacyPolicyUrl, termsOfServiceUrl, supportUrl];
-  const urlChecks = await Promise.all(urls.map(fetchUrlStatus));
-  const domainChecks = await Promise.all(
-    associatedDomains
-      .filter(
-        (domain) => typeof domain === 'string' && domain.startsWith('applinks:')
+  const urlChecks = runPublicEndpointProbes
+    ? await Promise.all(urls.map(fetchUrlStatus))
+    : [];
+  const domainChecks = runPublicEndpointProbes
+    ? await Promise.all(
+        associatedDomains
+          .filter(
+            (domain) =>
+              typeof domain === 'string' && domain.startsWith('applinks:')
+          )
+          .map((domain) =>
+            fetchUrlStatus(
+              `https://${domain.replace(/^applinks:/, '')}/.well-known/apple-app-site-association`,
+              { expectAasa: true }
+            )
+          )
       )
-      .map((domain) =>
-        fetchUrlStatus(
-          `https://${domain.replace(/^applinks:/, '')}/.well-known/apple-app-site-association`
-        )
-      )
-  );
+    : [];
 
   const errors = [];
 
@@ -190,7 +330,13 @@ async function main() {
 
   for (const result of domainChecks) {
     if (!result.ok) {
-      errors.push(`Associated domain verification failed: ${result.url}`);
+      const reason =
+        result.message != null
+          ? ` (${result.message}${
+              result.detail != null ? `: ${result.detail}` : ''
+            })`
+          : '';
+      errors.push(`Associated domain verification failed: ${result.url}${reason}`);
     }
   }
 

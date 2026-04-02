@@ -13,4 +13,6 @@ jobs:
       - name: 📦 Setup Node + Bun + install deps
         uses: ./.github/actions/setup-node-bun-install
       - name: Run privacy notices validation
+        env:
+          RUN_PUBLIC_ENDPOINT_PROBES: 'true'
         run: bun run validate:privacy-notices

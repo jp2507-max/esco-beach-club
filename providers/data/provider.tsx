@@ -39,39 +39,137 @@ export function DataProvider({
     userId,
   });
   const { eventsValue, savedEventsValue } = useEventsResource({ userId });
-  const newsValue = useNewsResource({ userId });
-  const { partnerRedemptionsValue, partnersValue } = usePartnersResource({
-    userId,
-  });
-  const referralsValue = useReferralsResource({ userId });
-  const bookingContentValue = useBookingResource({ userId });
-  const memberOffersValue = useMemberOffersResource({ userId });
-  const menuContentValue = useMenuResource({ userId });
-  const staffAccessValue = useStaffResource({ userId });
-
   return (
     <ProfileContext.Provider value={profileValue}>
       <EventsContext.Provider value={eventsValue}>
-        <NewsContext.Provider value={newsValue}>
-          <PartnersContext.Provider value={partnersValue}>
-            <PartnerRedemptionsContext.Provider value={partnerRedemptionsValue}>
-              <ReferralsContext.Provider value={referralsValue}>
-                <SavedEventsContext.Provider value={savedEventsValue}>
-                  <BookingContentContext.Provider value={bookingContentValue}>
-                    <MemberOffersContext.Provider value={memberOffersValue}>
-                      <MenuContentContext.Provider value={menuContentValue}>
-                        <StaffAccessContext.Provider value={staffAccessValue}>
-                          {children}
-                        </StaffAccessContext.Provider>
-                      </MenuContentContext.Provider>
-                    </MemberOffersContext.Provider>
-                  </BookingContentContext.Provider>
-                </SavedEventsContext.Provider>
-              </ReferralsContext.Provider>
-            </PartnerRedemptionsContext.Provider>
-          </PartnersContext.Provider>
-        </NewsContext.Provider>
+        <SavedEventsContext.Provider value={savedEventsValue}>
+          {children}
+        </SavedEventsContext.Provider>
       </EventsContext.Provider>
     </ProfileContext.Provider>
+  );
+}
+
+function useFeatureUserId(): string {
+  const { user } = useAuth();
+  return user?.id ?? '';
+}
+
+export function NewsDataProvider({
+  children,
+}: DataProviderProps): React.JSX.Element {
+  const userId = useFeatureUserId();
+  const newsValue = useNewsResource({ userId });
+
+  return (
+    <NewsContext.Provider value={newsValue}>{children}</NewsContext.Provider>
+  );
+}
+
+export function PartnersDataProvider({
+  children,
+}: DataProviderProps): React.JSX.Element {
+  const userId = useFeatureUserId();
+  const { partnersValue } = usePartnersResource({ userId });
+
+  return (
+    <PartnersContext.Provider value={partnersValue}>
+      {children}
+    </PartnersContext.Provider>
+  );
+}
+
+export function PerksDataProvider({
+  children,
+}: DataProviderProps): React.JSX.Element {
+  const userId = useFeatureUserId();
+  const { partnerRedemptionsValue, partnersValue } = usePartnersResource({
+    userId,
+  });
+
+  return (
+    <PartnersContext.Provider value={partnersValue}>
+      <PartnerRedemptionsContext.Provider value={partnerRedemptionsValue}>
+        {children}
+      </PartnerRedemptionsContext.Provider>
+    </PartnersContext.Provider>
+  );
+}
+
+export function PartnerRedemptionsDataProvider({
+  children,
+}: DataProviderProps): React.JSX.Element {
+  const userId = useFeatureUserId();
+  const { partnerRedemptionsValue } = usePartnersResource({ userId });
+
+  return (
+    <PartnerRedemptionsContext.Provider value={partnerRedemptionsValue}>
+      {children}
+    </PartnerRedemptionsContext.Provider>
+  );
+}
+
+export function ReferralsDataProvider({
+  children,
+}: DataProviderProps): React.JSX.Element {
+  const userId = useFeatureUserId();
+  const referralsValue = useReferralsResource({ userId });
+
+  return (
+    <ReferralsContext.Provider value={referralsValue}>
+      {children}
+    </ReferralsContext.Provider>
+  );
+}
+
+export function BookingContentDataProvider({
+  children,
+}: DataProviderProps): React.JSX.Element {
+  const userId = useFeatureUserId();
+  const bookingContentValue = useBookingResource({ userId });
+
+  return (
+    <BookingContentContext.Provider value={bookingContentValue}>
+      {children}
+    </BookingContentContext.Provider>
+  );
+}
+
+export function MemberOffersDataProvider({
+  children,
+}: DataProviderProps): React.JSX.Element {
+  const userId = useFeatureUserId();
+  const memberOffersValue = useMemberOffersResource({ userId });
+
+  return (
+    <MemberOffersContext.Provider value={memberOffersValue}>
+      {children}
+    </MemberOffersContext.Provider>
+  );
+}
+
+export function MenuContentDataProvider({
+  children,
+}: DataProviderProps): React.JSX.Element {
+  const userId = useFeatureUserId();
+  const menuContentValue = useMenuResource({ userId });
+
+  return (
+    <MenuContentContext.Provider value={menuContentValue}>
+      {children}
+    </MenuContentContext.Provider>
+  );
+}
+
+export function StaffAccessDataProvider({
+  children,
+}: DataProviderProps): React.JSX.Element {
+  const userId = useFeatureUserId();
+  const staffAccessValue = useStaffResource({ userId });
+
+  return (
+    <StaffAccessContext.Provider value={staffAccessValue}>
+      {children}
+    </StaffAccessContext.Provider>
   );
 }

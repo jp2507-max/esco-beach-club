@@ -22,9 +22,10 @@ function escapeXml(value) {
     .replace(/'/g, '&apos;');
 }
 
-function toPlistValue(value, depth = 0) {
+function toPlistValue(value, depth = 0, keyPath = '') {
   const indent = '  '.repeat(depth);
   const childIndent = '  '.repeat(depth + 1);
+  const pathLabel = keyPath === '' ? '(root)' : keyPath;
 
   if (typeof value === 'boolean') {
     return `${indent}<${value ? 'true' : 'false'}/>`;
@@ -46,7 +47,9 @@ function toPlistValue(value, depth = 0) {
     }
 
     const items = value
-      .map((entry) => toPlistValue(entry, depth + 1))
+      .map((entry, index) =>
+        toPlistValue(entry, depth + 1, `${pathLabel}[${index}]`)
+      )
       .join('\n');
     return `${indent}<array>\n${items}\n${indent}</array>`;
   }
@@ -58,22 +61,30 @@ function toPlistValue(value, depth = 0) {
     }
 
     const lines = entries
-      .map(
-        ([key, entry]) =>
-          `${childIndent}<key>${escapeXml(key)}</key>\n${toPlistValue(
-            entry,
-            depth + 1
-          )}`
-      )
+      .map(([key, entry]) => {
+        const entryPath = keyPath === '' ? key : `${keyPath}.${key}`;
+        return `${childIndent}<key>${escapeXml(key)}</key>\n${toPlistValue(
+          entry,
+          depth + 1,
+          entryPath
+        )}`;
+      })
       .join('\n');
 
     return `${indent}<dict>\n${lines}\n${indent}</dict>`;
   }
 
-  return `${indent}<string/>`;
+  throw new TypeError(
+    `Unsupported privacy manifest value at "${pathLabel}" (depth ${depth}): ${
+      value === null ? 'null' : typeof value
+    }`
+  );
 }
 
 function buildPrivacyManifestPlist(source) {
+  if (!source || Array.isArray(source) || typeof source !== 'object') {
+    throw new TypeError('Privacy manifest root must be a JSON object.');
+  }
   return `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">

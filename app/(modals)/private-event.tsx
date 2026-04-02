@@ -22,7 +22,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
 import { submitPrivateEventInquiry } from '@/lib/api';
-import { useBookingContentData, useUserId } from '@/providers/DataProvider';
+import {
+  BookingContentDataProvider,
+  useBookingContentData,
+  useUserId,
+} from '@/providers/DataProvider';
 import { Button, ModalHeader } from '@/src/components/ui';
 import { motion, withRM } from '@/src/lib/animations/motion';
 import { ControlledTextInput } from '@/src/lib/forms/controlled-text-input';
@@ -31,10 +35,11 @@ import {
   type PrivateEventFormValues,
   privateEventSchema,
 } from '@/src/lib/forms/schemas';
-import { hapticSelection } from '@/src/lib/haptics/use-haptic';
+import { hapticSelection } from '@/src/lib/haptics/haptics';
 import { captureHandledError } from '@/src/lib/monitoring';
 import { cn } from '@/src/lib/utils';
 import {
+  ActivityIndicator,
   KeyboardAvoidingView,
   Pressable,
   ScrollView,
@@ -58,7 +63,7 @@ type EventTypeOption = {
   value: string;
 };
 
-export default function PrivateEventScreen(): React.JSX.Element {
+function PrivateEventScreenContent(): React.JSX.Element {
   const { t } = useTranslation('common');
   const insets = useSafeAreaInsets();
   const isDark = useColorScheme() === 'dark';
@@ -68,7 +73,7 @@ export default function PrivateEventScreen(): React.JSX.Element {
   const successScale = useSharedValue(0);
 
   const userId = useUserId();
-  const { privateEventTypes } = useBookingContentData();
+  const { bookingContentLoading, privateEventTypes } = useBookingContentData();
   const { control, handleSubmit, setValue } = useForm<
     PrivateEventFormInput,
     unknown,
@@ -95,6 +100,10 @@ export default function PrivateEventScreen(): React.JSX.Element {
   });
 
   const resolvedEventTypeOptions = React.useMemo<EventTypeOption[]>(() => {
+    if (bookingContentLoading) {
+      return [];
+    }
+
     if (privateEventTypes.length === 0) {
       return EVENT_TYPE_KEYS.map((key) => ({
         label: t(`privateEvent.eventTypes.${key}` as never) as string,
@@ -106,7 +115,7 @@ export default function PrivateEventScreen(): React.JSX.Element {
       label: t(option.label_key as never) as string,
       value: option.value,
     }));
-  }, [privateEventTypes, t]);
+  }, [bookingContentLoading, privateEventTypes, t]);
 
   const selectedEventTypeLabel = React.useMemo<string>(() => {
     if (!eventType) return '';
@@ -175,6 +184,31 @@ export default function PrivateEventScreen(): React.JSX.Element {
 
   function handleValidSubmit(values: PrivateEventFormValues): void {
     inquiryMutation.mutate(values);
+  }
+
+  if (bookingContentLoading) {
+    return (
+      <View
+        className="flex-1 bg-background dark:bg-dark-bg"
+        style={{ paddingTop: insets.top }}
+      >
+        <ModalHeader
+          className="px-4 py-3"
+          closeButtonClassName="size-10 items-center justify-center rounded-full border border-border bg-white dark:border-dark-border dark:bg-dark-bg-card"
+          closePosition="left"
+          closeTestID="close-inquiry"
+          onClose={() => router.back()}
+          title={t('privateEvent.title')}
+          titleAlign="center"
+        />
+        <View className="flex-1 items-center justify-center px-6">
+          <ActivityIndicator
+            color={isDark ? Colors.primaryBright : Colors.primary}
+            size="large"
+          />
+        </View>
+      </View>
+    );
   }
 
   return (
@@ -480,5 +514,13 @@ export default function PrivateEventScreen(): React.JSX.Element {
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
+  );
+}
+
+export default function PrivateEventScreen(): React.JSX.Element {
+  return (
+    <BookingContentDataProvider>
+      <PrivateEventScreenContent />
+    </BookingContentDataProvider>
   );
 }

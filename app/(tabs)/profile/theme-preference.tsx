@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/colors';
 import { ProfileSubScreenHeader, SurfaceCard } from '@/src/components/ui';
 import { useScreenEntry } from '@/src/lib/animations/use-screen-entry';
-import { hapticSelection } from '@/src/lib/haptics/use-haptic';
+import { hapticSelection } from '@/src/lib/haptics/haptics';
 import {
   changeAppLanguage,
   changeAppLanguageToDevice,

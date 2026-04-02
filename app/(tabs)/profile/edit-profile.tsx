@@ -22,7 +22,7 @@ import {
   type EditProfileFormValues,
   editProfileSchema,
 } from '@/src/lib/forms/schemas';
-import { hapticSuccess } from '@/src/lib/haptics/use-haptic';
+import { hapticSuccess } from '@/src/lib/haptics/haptics';
 import { captureHandledError } from '@/src/lib/monitoring';
 import { cn } from '@/src/lib/utils';
 import {

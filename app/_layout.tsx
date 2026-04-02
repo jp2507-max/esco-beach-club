@@ -316,7 +316,11 @@ function RootLayoutNav() {
   );
 }
 
-function EscoNavigationTheme({ children }: { children: React.ReactNode }) {
+function EscoNavigationTheme({
+  children,
+}: {
+  children: React.ReactNode;
+}): React.JSX.Element {
   const isDark = useAppIsDark();
   const navigationTheme = useMemo(
     () => getEscoNavigationTheme(isDark),

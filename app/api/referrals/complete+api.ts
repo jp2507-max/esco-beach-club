@@ -1,9 +1,9 @@
 import { getInstantAdminDb } from '@/src/lib/referral/instant-admin-server';
 import { verifyInstantRefreshToken } from '@/src/lib/referral/instant-runtime-server';
 
-type CompleteBody = {
-  referralId?: string;
-};
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
 
 function jsonResponse(body: unknown, status: number): Response {
   return Response.json(body, { status });
@@ -52,11 +52,15 @@ export async function POST(request: Request): Promise<Response> {
     return jsonResponse({ error: 'unauthorized' }, 401);
   }
 
-  let parsed: CompleteBody;
+  let parsed: unknown;
   try {
-    parsed = (await request.json()) as CompleteBody;
+    parsed = await request.json();
   } catch {
     return jsonResponse({ error: 'invalid_json' }, 400);
+  }
+
+  if (!isRecord(parsed)) {
+    return jsonResponse({ error: 'invalid_body' }, 400);
   }
 
   const referralId =

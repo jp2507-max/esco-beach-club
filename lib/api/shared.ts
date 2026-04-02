@@ -50,7 +50,7 @@ export function normalizeMemberSince(
 export function normalizeDateOfBirth(
   value: string | null | undefined
 ): string | null | undefined {
-  if (value === undefined || value === null) return undefined;
+  if (value === undefined || value === null) return value;
 
   const trimmed = value.trim();
   if (!trimmed) return undefined;
@@ -117,8 +117,8 @@ export function buildMemberId(userId: string): string {
 }
 
 export function buildReferralCode(userId: string): string {
-  // Use different slice range than buildMemberId to avoid prefix collision
-  return `ESCO-${userId.replace(/-/g, '').slice(16, 24).toUpperCase()}`;
+  // Second half of UUID hex (disjoint from buildMemberId's slice(0,16)); 16 chars entropy.
+  return `ESCO-${userId.replace(/-/g, '').slice(16, 32).toUpperCase()}`;
 }
 
 export function isMemberIdConflict(error: Error): boolean {
@@ -178,12 +178,12 @@ function normalizeNullableIsoDateTime(
   return normalized ?? null;
 }
 
-function normalizeRequiredIsoDateTime(value: string): string {
+function normalizeRequiredIsoDateTime(value: string): string | null {
   const normalized = normalizeOnboardingCompletedAt(value);
   if (!normalized) {
     console.warn('Invalid required ISO datetime:', value);
   }
-  return normalized ?? value;
+  return normalized ?? null;
 }
 
 export function parseRewardServiceResponse(
@@ -200,6 +200,14 @@ export function parseRewardServiceResponse(
 
   const { cashbackPointsDelta, member, tierProgressPointsDelta, transaction } =
     parsed.data;
+
+  const createdAt = normalizeRequiredIsoDateTime(transaction.created_at);
+  const occurredAt = normalizeRequiredIsoDateTime(transaction.occurred_at);
+  const updatedAt = normalizeRequiredIsoDateTime(transaction.updated_at);
+
+  if (!createdAt || !occurredAt || !updatedAt) {
+    return null;
+  }
 
   return {
     cashbackPointsDelta,
@@ -231,10 +239,10 @@ export function parseRewardServiceResponse(
     tierProgressPointsDelta,
     transaction: {
       ...transaction,
-      created_at: normalizeRequiredIsoDateTime(transaction.created_at),
-      occurred_at: normalizeRequiredIsoDateTime(transaction.occurred_at),
+      created_at: createdAt,
+      occurred_at: occurredAt,
       reference: transaction.reference ?? null,
-      updated_at: normalizeRequiredIsoDateTime(transaction.updated_at),
+      updated_at: updatedAt,
     },
   };
 }

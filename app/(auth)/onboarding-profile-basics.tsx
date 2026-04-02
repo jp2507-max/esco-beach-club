@@ -18,7 +18,7 @@ import {
   type OnboardingBasicsFormValues,
   onboardingBasicsSchema,
 } from '@/src/lib/forms/schemas';
-import { hapticLight } from '@/src/lib/haptics/use-haptic';
+import { hapticLight } from '@/src/lib/haptics/haptics';
 import { shadows } from '@/src/lib/styles/shadows';
 import {
   KeyboardAvoidingView,

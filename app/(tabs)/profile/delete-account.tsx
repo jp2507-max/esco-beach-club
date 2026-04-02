@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRouter } from 'expo-router';
+import { type Href, useRouter } from 'expo-router';
 import {
   AlertTriangle,
   Clock3,
@@ -35,7 +35,7 @@ import {
   type AccountDeletionConfirmFormValues,
   accountDeletionConfirmSchema,
 } from '@/src/lib/forms/schemas';
-import { hapticError } from '@/src/lib/haptics/use-haptic';
+import { hapticError } from '@/src/lib/haptics/haptics';
 import { ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 
@@ -138,7 +138,6 @@ export default function DeleteAccountScreen(): React.JSX.Element {
       return;
     }
 
-    hapticError();
     setIsSubmitting(true);
     try {
       const authProvider = resolveAuthProviderForDeletion(
@@ -157,6 +156,7 @@ export default function DeleteAccountScreen(): React.JSX.Element {
       });
 
       if (!result.ok) {
+        hapticError();
         Alert.alert(getAccountDeletionErrorMessage(result, t));
         return;
       }
@@ -179,6 +179,7 @@ export default function DeleteAccountScreen(): React.JSX.Element {
         Alert.alert(t('errors.signOutFailed'));
       }
     } catch (error) {
+      hapticError();
       console.error('[DeleteAccount] Schedule failed', error);
       const message =
         error instanceof Error && error.message === 'providerSignInCanceled'
@@ -260,7 +261,7 @@ export default function DeleteAccountScreen(): React.JSX.Element {
                 </Button>
                 <Button
                   className="flex-1"
-                  onPress={() => router.replace('/home' as never)}
+                  onPress={() => router.replace('/home' as Href)}
                   variant="outline"
                 >
                   {t('deleteAccount.backToApp')}

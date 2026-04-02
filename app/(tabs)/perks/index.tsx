@@ -14,7 +14,7 @@ import { CategoryChip, SkeletonCard } from '@/src/components/ui';
 import { useButtonPress } from '@/src/lib/animations/use-button-press';
 import { useScreenEntry } from '@/src/lib/animations/use-screen-entry';
 import { useStaggeredListEntering } from '@/src/lib/animations/use-staggered-entry';
-import { hapticLight, hapticSelection } from '@/src/lib/haptics/use-haptic';
+import { hapticLight, hapticSelection } from '@/src/lib/haptics/haptics';
 import { shadows } from '@/src/lib/styles/shadows';
 import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';

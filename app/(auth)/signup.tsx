@@ -39,7 +39,7 @@ import {
   type VerifyCodeFormValues,
   verifyCodeSchema,
 } from '@/src/lib/forms/schemas';
-import { hapticMedium } from '@/src/lib/haptics/use-haptic';
+import { hapticMedium } from '@/src/lib/haptics/haptics';
 import { shadows } from '@/src/lib/styles/shadows';
 import { parseOnboardingMemberSegmentSearchParam } from '@/src/lib/utils/member-segment';
 import {
@@ -128,12 +128,12 @@ function SignupStepDots({
 }: {
   isCodeStep: boolean;
 }): React.JSX.Element {
-  const s0 = useSharedValue(1);
-  const s1 = useSharedValue(1);
-  const s2 = useSharedValue(1);
-  const s3 = useSharedValue(1);
-  const s4 = useSharedValue(1);
-  const s5 = useSharedValue(1);
+  const s0 = useSharedValue(isCodeStep ? 1 : 1.2);
+  const s1 = useSharedValue(isCodeStep ? 1 : 1.2);
+  const s2 = useSharedValue(isCodeStep ? 1 : 1.2);
+  const s3 = useSharedValue(isCodeStep ? 1.2 : 1);
+  const s4 = useSharedValue(isCodeStep ? 1.2 : 1);
+  const s5 = useSharedValue(isCodeStep ? 1.2 : 1);
   const scales = [s0, s1, s2, s3, s4, s5];
 
   useEffect(() => {

@@ -23,7 +23,7 @@ import {
   type EmailFormValues,
   type VerifyCodeFormValues,
 } from '@/src/lib/forms/schemas';
-import { hapticMedium } from '@/src/lib/haptics/use-haptic';
+import { hapticMedium } from '@/src/lib/haptics/haptics';
 import { shadows } from '@/src/lib/styles/shadows';
 import {
   ActivityIndicator,

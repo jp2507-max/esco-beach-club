@@ -19,8 +19,8 @@ import {
 } from '@/providers/DataProvider';
 import { Button, ModalHeader } from '@/src/components/ui';
 import { useScreenEntry } from '@/src/lib/animations/use-screen-entry';
-import { hapticMedium, hapticSelection } from '@/src/lib/haptics/use-haptic';
-import { Pressable, ScrollView, Text, View } from '@/src/tw';
+import { hapticMedium, hapticSelection } from '@/src/lib/haptics/haptics';
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 
 const TIME_SLOTS = [
@@ -34,7 +34,17 @@ const TIME_SLOTS = [
   { time: '21:30', available: true },
 ];
 
-function getSlotColors(isDark: boolean, available: boolean, active: boolean) {
+type SlotColors = {
+  backgroundColor: string;
+  borderColor: string;
+  color: string;
+};
+
+function getSlotColors(
+  isDark: boolean,
+  available: boolean,
+  active: boolean
+): SlotColors {
   return {
     backgroundColor: !available
       ? isDark
@@ -188,7 +198,8 @@ export default function BookingModalScreen(): React.JSX.Element {
     eventTitle?: string;
   }>();
   const { profile, userId } = useProfileData();
-  const { bookingOccasions, bookingTimeSlots } = useBookingContentData();
+  const { bookingContentLoading, bookingOccasions, bookingTimeSlots } =
+    useBookingContentData();
   const { t } = useTranslation(['booking', 'common']);
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
@@ -215,6 +226,10 @@ export default function BookingModalScreen(): React.JSX.Element {
   const { contentStyle } = useScreenEntry();
 
   const resolvedTimeSlots = useMemo<ResolvedTimeSlot[]>(() => {
+    if (bookingContentLoading) {
+      return [];
+    }
+
     if (bookingTimeSlots.length === 0) {
       return TIME_SLOTS;
     }
@@ -223,9 +238,13 @@ export default function BookingModalScreen(): React.JSX.Element {
       available: slot.available,
       time: slot.time,
     }));
-  }, [bookingTimeSlots]);
+  }, [bookingContentLoading, bookingTimeSlots]);
 
   const resolvedOccasions = useMemo<ResolvedOccasion[]>(() => {
+    if (bookingContentLoading) {
+      return [];
+    }
+
     if (bookingOccasions.length === 0) {
       return OCCASIONS.map((value) => ({
         label: t(getOccasionTranslationKey(value), {
@@ -241,7 +260,7 @@ export default function BookingModalScreen(): React.JSX.Element {
         : option.value,
       value: option.value,
     }));
-  }, [bookingOccasions, t]);
+  }, [bookingContentLoading, bookingOccasions, t]);
 
   const isSelectedTimeValid = useMemo(
     () =>
@@ -324,6 +343,29 @@ export default function BookingModalScreen(): React.JSX.Element {
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  if (bookingContentLoading) {
+    return (
+      <View
+        className="flex-1 bg-background dark:bg-dark-bg"
+        style={{ paddingTop: insets.top }}
+      >
+        <ModalHeader
+          className="border-b border-border dark:border-dark-border"
+          closeTestID="close-booking"
+          onClose={() => router.back()}
+          subtitle={eventTitle}
+          title={t('booking:reserveSpot')}
+        />
+        <View className="flex-1 items-center justify-center px-6">
+          <ActivityIndicator
+            color={isDark ? Colors.primaryBright : Colors.primary}
+            size="large"
+          />
+        </View>
+      </View>
+    );
   }
 
   return (

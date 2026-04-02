@@ -42,6 +42,13 @@ const profile = {
   memberSince: '가입일',
   nightsLeft: '남은 숙박',
   savedEventsCount: '저장한 이벤트',
+  memberCard: {
+    brandMark: 'ESCO LIFE',
+    cashbackBalance: '캐시백 잔액',
+    cashbackSuffix: '캐시백 포인트',
+    memberName: '멤버 이름',
+    lifetimeTier: '평생 등급',
+  },
   noBio: '프로필을 더 잘 보여줄 짧은 소개를 추가해 보세요.',
   welcomeGift: '웰컴 기프트',
   welcomeDiscount: '10% 할인',
@@ -296,6 +303,7 @@ const profile = {
     viewAll: '모두 보기',
     viewAllHint: '전체 추천 목록을 엽니다',
     joinedViaYourLink: '내 링크로 가입함',
+    loadingReferrals: '추천 내역을 불러오는 중…',
     noReferralsYet: '아직 추천이 없습니다. 코드를 공유해 보세요!',
     status: {
       completed: '완료',

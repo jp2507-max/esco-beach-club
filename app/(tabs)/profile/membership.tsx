@@ -30,7 +30,7 @@ import { useMemberSummary, useProfileData } from '@/providers/DataProvider';
 import { ProfileSubScreenHeader, SkeletonText } from '@/src/components/ui';
 import { motion, rmTiming } from '@/src/lib/animations/motion';
 import { useStaggeredListEntering } from '@/src/lib/animations/use-staggered-entry';
-import { hapticLight, hapticSuccess } from '@/src/lib/haptics/use-haptic';
+import { hapticLight, hapticSuccess } from '@/src/lib/haptics/haptics';
 import { db } from '@/src/lib/instant';
 import {
   getRewardTierDefinition,

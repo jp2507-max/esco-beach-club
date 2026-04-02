@@ -9,7 +9,10 @@ import React, {
 import { useColorScheme } from 'react-native';
 
 import { Colors } from '@/constants/colors';
-import { useMenuContentData } from '@/providers/DataProvider';
+import {
+  MenuContentDataProvider,
+  useMenuContentData,
+} from '@/providers/DataProvider';
 import { Badge, Card } from '@/src/components/ui';
 import { useScreenEntry } from '@/src/lib/animations/use-screen-entry';
 import {
@@ -243,7 +246,7 @@ const getTabStyles = (active: boolean, isDark: boolean) => {
   };
 };
 
-export default function MenuScreen(): React.JSX.Element {
+function MenuScreenContent(): React.JSX.Element {
   const tMenu = useMenuTranslation();
   const isDark = useColorScheme() === 'dark';
   const [activeCategory, setActiveCategory] = useState<string>('cocktails');
@@ -348,5 +351,13 @@ export default function MenuScreen(): React.JSX.Element {
         />
       </Animated.View>
     </View>
+  );
+}
+
+export default function MenuScreen(): React.JSX.Element {
+  return (
+    <MenuContentDataProvider>
+      <MenuScreenContent />
+    </MenuContentDataProvider>
   );
 }

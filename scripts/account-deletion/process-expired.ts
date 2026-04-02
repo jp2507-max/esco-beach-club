@@ -282,7 +282,7 @@ async function main(): Promise<void> {
       );
     } catch (error) {
       console.error(
-        `Failed to finalize account deletion for user ${userId}:`,
+        `Failed to finalize account deletion for user ${userId} (request ${requestId}, profile ${profileId ?? 'unknown'}):`,
         error
       );
     }

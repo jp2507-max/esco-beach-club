@@ -243,12 +243,9 @@ export async function revokeAppleAuthorizationCode(
     };
   }
 
-  const clientId = getAppleClientId();
-  const clientSecret = clientId ? createAppleClientSecret(clientId) : null;
-
-  if (!clientId || !clientSecret) {
-    return { status: 'not_configured' };
-  }
+  // Successful token exchange already validated these via the same getters (see exchangeAuthorizationCodeForRefreshToken).
+  const clientId = getAppleClientId()!;
+  const clientSecret = createAppleClientSecret(clientId)!;
 
   const body = new URLSearchParams({
     client_id: clientId,
@@ -326,6 +323,8 @@ export async function revokeAppleAuthorizationCode(
     };
   }
 
+  // Should be unreachable: loop body always returns or continues until attempt >= maxAttempts
+  // with a return on the final iteration.
   const fallbackMessage = 'apple_revocation_failed_unknown';
   reportFinalRevocationFailure({
     attempt,

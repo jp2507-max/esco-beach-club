@@ -9,8 +9,14 @@ import {
 } from './shared';
 
 export function toReferralStatus(value: unknown): Referral['status'] {
-  const str = String(value);
-  return str === 'Completed' ? 'Completed' : 'Pending';
+  const normalized = String(value).trim().toLowerCase();
+
+  if (normalized === 'accepted') return 'Accepted';
+  if (normalized === 'completed') return 'Completed';
+  if (normalized === 'pending') return 'Pending';
+  if (normalized === 'rejected') return 'Rejected';
+
+  return 'Unknown';
 }
 
 export function mapPartner(record: InstantRecord): Partner {

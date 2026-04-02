@@ -23,7 +23,7 @@ import {
 import { withRM } from '@/src/lib/animations/motion';
 import { useScreenEntry } from '@/src/lib/animations/use-screen-entry';
 import { config } from '@/src/lib/config';
-import { hapticLight, hapticSelection } from '@/src/lib/haptics/use-haptic';
+import { hapticLight, hapticSelection } from '@/src/lib/haptics/haptics';
 import { shadows } from '@/src/lib/styles/shadows';
 import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
 import { ScrollView, Text, TextInput, View } from '@/src/tw';

@@ -7,6 +7,7 @@ export { ErrorBanner } from './error-banner';
 export { HeaderGlassButton } from './header-glass-button';
 export { InfoDot } from './info-dot';
 export { MemberCard } from './member-card';
+export { MemberQrAccessCard } from './member-qr-access-card';
 export { MemberQrCode } from './member-qr-code';
 export { ModalHeader } from './modal-header';
 export { ProfileSubScreenHeader } from './profile-sub-screen-header';

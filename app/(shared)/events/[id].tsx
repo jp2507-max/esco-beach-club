@@ -40,7 +40,7 @@ import {
   SkeletonText,
 } from '@/src/components/ui';
 import { rmTiming } from '@/src/lib/animations/motion';
-import { hapticMedium } from '@/src/lib/haptics/use-haptic';
+import { hapticMedium } from '@/src/lib/haptics/haptics';
 import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
 import { Pressable, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';

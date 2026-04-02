@@ -32,16 +32,17 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { accentOnDarkBackground, Colors } from '@/constants/colors';
 import { useAuth } from '@/providers/AuthProvider';
 import {
+  MemberOffersDataProvider,
   useMemberOffersData,
   useMemberSummary,
   useProfileData,
 } from '@/providers/DataProvider';
-import { HeaderGlassButton } from '@/src/components/ui';
+import { HeaderGlassButton, MemberCard } from '@/src/components/ui';
 import { Avatar } from '@/src/components/ui/avatar';
 import { motion, rmTiming } from '@/src/lib/animations/motion';
 import { useStaggeredListEntering } from '@/src/lib/animations/use-staggered-entry';
 import { config } from '@/src/lib/config';
-import { hapticLight, hapticSuccess } from '@/src/lib/haptics/use-haptic';
+import { hapticLight, hapticSuccess } from '@/src/lib/haptics/haptics';
 import {
   getRewardTierLabelKey,
   hasRewardBenefit,
@@ -162,7 +163,7 @@ function StatCard({
   );
 }
 
-export default function ProfileScreen(): React.JSX.Element {
+function ProfileScreenContent(): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { t } = useTranslation('profile');
@@ -172,7 +173,7 @@ export default function ProfileScreen(): React.JSX.Element {
 
   const { profile, dismissVoucher } = useProfileData();
   const memberSummary = useMemberSummary();
-  const { welcomeOffer } = useMemberOffersData();
+  const { memberOffersLoading, welcomeOffer } = useMemberOffersData();
   const { signOut } = useAuth();
 
   const userName = memberSummary.fullName || t('guest');
@@ -289,22 +290,19 @@ export default function ProfileScreen(): React.JSX.Element {
     [t]
   );
 
+  const shouldRenderVoucher = showVoucher && !memberOffersLoading;
+
   useEffect(() => {
-    if (showVoucher) {
+    if (shouldRenderVoucher) {
       hapticSuccess();
-      voucherScale.set(
-        withSpring(1, {
-          damping: 14,
-          stiffness: 130,
-        })
-      );
+      voucherScale.set(withSpring(1, motion.spring.gentle));
       voucherOpacity.set(withTiming(1, rmTiming(500)));
     }
     return () => {
       cancelAnimation(voucherScale);
       cancelAnimation(voucherOpacity);
     };
-  }, [showVoucher, voucherOpacity, voucherScale]);
+  }, [shouldRenderVoucher, voucherOpacity, voucherScale]);
 
   useEffect(() => {
     if (!profile) return;
@@ -459,6 +457,24 @@ export default function ProfileScreen(): React.JSX.Element {
           </View>
         </View>
 
+        <View className="mb-4">
+          <MemberCard
+            copy={{
+              balanceLabel: t('memberCard.cashbackBalance'),
+              balanceSuffix: t('memberCard.cashbackSuffix'),
+              brandLabel: t('memberCard.brandMark'),
+              emptyQrLabel: t('guest'),
+              memberNameLabel: t('memberCard.memberName'),
+              statusLabel: t('memberCard.lifetimeTier'),
+            }}
+            cashbackPoints={memberSummary.cashbackBalancePoints}
+            memberId={memberSummary.memberId}
+            memberName={userName}
+            tierProgressPercent={memberSummary.tierProgressPercent}
+            tierLabel={tierBadge}
+          />
+        </View>
+
         <View className="mb-5 flex-row">
           <View className="mr-3 flex-1">
             <StatCard
@@ -530,7 +546,7 @@ export default function ProfileScreen(): React.JSX.Element {
           </View>
         </View>
 
-        {showVoucher && (
+        {shouldRenderVoucher && (
           <Animated.View className="mb-5" style={voucherStyle}>
             <View
               className="items-center overflow-hidden rounded-[20px] border-2 bg-white p-6 dark:bg-dark-bg-card"
@@ -698,5 +714,13 @@ export default function ProfileScreen(): React.JSX.Element {
         <View className="h-[30px]" />
       </ScrollView>
     </View>
+  );
+}
+
+export default function ProfileScreen(): React.JSX.Element {
+  return (
+    <MemberOffersDataProvider>
+      <ProfileScreenContent />
+    </MemberOffersDataProvider>
   );
 }

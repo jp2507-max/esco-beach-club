@@ -17,7 +17,7 @@ import { OnboardingHeader } from '@/src/components/onboarding/onboarding-header'
 import { InfoDot } from '@/src/components/ui';
 import { motion, withRM } from '@/src/lib/animations/motion';
 import { useButtonPress } from '@/src/lib/animations/use-button-press';
-import { hapticLight, hapticSuccess } from '@/src/lib/haptics/use-haptic';
+import { hapticLight, hapticSuccess } from '@/src/lib/haptics/haptics';
 import { ensureVenueUpsellNotificationChannel } from '@/src/lib/notifications';
 import { shadows } from '@/src/lib/styles/shadows';
 import { readSingleSearchParam } from '@/src/lib/utils/search-params';

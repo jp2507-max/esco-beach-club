@@ -11,7 +11,7 @@ import React, {
   useState,
 } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Platform, type ViewStyle } from 'react-native';
+import { Platform, type Insets, type ViewStyle } from 'react-native';
 import {
   useAnimatedStyle,
   useSharedValue,
@@ -31,7 +31,7 @@ import {
 import { motion } from '@/src/lib/animations/motion';
 import { useScreenEntry } from '@/src/lib/animations/use-screen-entry';
 import { useStaggeredListEntering } from '@/src/lib/animations/use-staggered-entry';
-import { hapticLight, hapticSelection } from '@/src/lib/haptics/use-haptic';
+import { hapticLight, hapticSelection } from '@/src/lib/haptics/haptics';
 import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
@@ -48,6 +48,13 @@ const eventCategories = [
 type WeekDayOption = WeekStripItem & {
   aliases: string[];
   isToday: boolean;
+};
+
+type PreparedEvent = {
+  dayKey: string | null;
+  event: Event;
+  normalizedCategory: string;
+  searchableContent: string;
 };
 
 const MONTH_TOKEN_TO_INDEX: Record<string, number> = {
@@ -246,6 +253,14 @@ function resolveEventDayKey(
   return matchedWeekDay?.key ?? null;
 }
 
+/** ~44pt effective target with 18px icon + p-1 without expanding layout */
+const DEFAULT_HEART_TOGGLE_HIT_SLOP: Insets = {
+  bottom: 10,
+  left: 10,
+  right: 10,
+  top: 10,
+};
+
 function EventsFilterHeader({
   children,
 }: {
@@ -261,6 +276,7 @@ type AnimatedHeartToggleProps = {
   className?: string;
   color: string;
   fill: string;
+  hitSlop?: number | Insets;
   onToggle: () => void;
   style?: ViewStyle;
   testID?: string;
@@ -272,6 +288,7 @@ function AnimatedHeartToggle({
   className,
   color,
   fill,
+  hitSlop = DEFAULT_HEART_TOGGLE_HIT_SLOP,
   onToggle,
   style,
   testID,
@@ -298,6 +315,7 @@ function AnimatedHeartToggle({
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
       className={className}
+      hitSlop={hitSlop}
       onPress={handlePress}
       style={style}
       testID={testID}
@@ -392,6 +410,7 @@ function EventListCard({
             accessibilityHint={t('openEventPriceHint')}
             accessibilityRole="button"
             className="items-end px-1 py-0.5"
+            hitSlop={10}
             onPress={() => onOpen(item.id)}
             testID={`open-event-price-${item.id}`}
           >
@@ -454,14 +473,31 @@ export default function EventsScreen(): React.JSX.Element {
     });
   }, [weekDays]);
 
+  const preparedEvents = useMemo<PreparedEvent[]>(
+    () =>
+      events.map((event) => ({
+        dayKey: resolveEventDayKey(event, weekDays, now),
+        event,
+        normalizedCategory: event.category?.toLowerCase() ?? '',
+        searchableContent: [
+          event.title,
+          event.description ?? '',
+          event.location,
+          event.badge ?? '',
+        ]
+          .join(' ')
+          .toLowerCase(),
+      })),
+    [events, now, weekDays]
+  );
+
   const daysWithEvents = useMemo(() => {
     const daySet = new Set<string>();
-    for (const event of events) {
-      const dayKey = resolveEventDayKey(event, weekDays, now);
-      if (dayKey) daySet.add(dayKey);
+    for (const preparedEvent of preparedEvents) {
+      if (preparedEvent.dayKey) daySet.add(preparedEvent.dayKey);
     }
     return daySet;
-  }, [events, now, weekDays]);
+  }, [preparedEvents]);
 
   const selectedDay = useMemo(
     () => weekDays.find((day) => day.key === selectedDayKey) ?? null,
@@ -479,38 +515,24 @@ export default function EventsScreen(): React.JSX.Element {
 
   const filteredEvents = useMemo(() => {
     const normalizedQuery = deferredSearchQuery.trim().toLowerCase();
+    const normalizedCategory = activeCategory.toLowerCase();
 
-    return events.filter((event) => {
-      const isAllCategory = activeCategory === 'All Events';
-      const isCategoryMatch =
-        isAllCategory ||
-        event.category?.toLowerCase() === activeCategory.toLowerCase();
-      const isSelectedDayMatch =
-        resolveEventDayKey(event, weekDays, now) === selectedDayKey;
+    return preparedEvents
+      .filter((preparedEvent) => {
+        const isAllCategory = activeCategory === 'All Events';
+        const isCategoryMatch =
+          isAllCategory ||
+          preparedEvent.normalizedCategory === normalizedCategory;
+        const isSelectedDayMatch = preparedEvent.dayKey === selectedDayKey;
 
-      if (!isCategoryMatch) return false;
-      if (!isSelectedDayMatch) return false;
-      if (!normalizedQuery) return true;
+        if (!isCategoryMatch) return false;
+        if (!isSelectedDayMatch) return false;
+        if (!normalizedQuery) return true;
 
-      const searchableContent = [
-        event.title,
-        event.description ?? '',
-        event.location,
-        event.badge ?? '',
-      ]
-        .join(' ')
-        .toLowerCase();
-
-      return searchableContent.includes(normalizedQuery);
-    });
-  }, [
-    activeCategory,
-    deferredSearchQuery,
-    events,
-    now,
-    selectedDayKey,
-    weekDays,
-  ]);
+        return preparedEvent.searchableContent.includes(normalizedQuery);
+      })
+      .map((preparedEvent) => preparedEvent.event);
+  }, [activeCategory, deferredSearchQuery, preparedEvents, selectedDayKey]);
 
   const listContentContainerStyle = useMemo(
     () => ({ paddingBottom: 20, paddingHorizontal: 20, paddingTop: 16 }),

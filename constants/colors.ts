@@ -41,6 +41,8 @@ export const Colors = {
   success: '#4CAF50',
   gold: '#C8A24D',
   goldBright: '#F0D896',
+  /** Star rating active state (rate-us, etc.). */
+  starActive: '#FFB300',
   primaryFixed: '#FCE4EC',
   secondaryFixed: '#B2DFDB',
   surfaceContainerLow: '#FAF8F0',

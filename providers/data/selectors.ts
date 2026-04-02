@@ -143,7 +143,7 @@ export function useReferralProgress(): { current: number; goal: number } {
 
 export function useSavedEventsCount(): number {
   const { savedEvents } = useSavedEventsData();
-  return savedEvents.length;
+  return useMemo(() => savedEvents.length, [savedEvents]);
 }
 
 export function useMemberSummary(): MemberSummary {

@@ -226,7 +226,7 @@ export type Referral = {
   referrer_id: string;
   referred_name: string;
   referred_avatar: string | null;
-  status: 'Completed' | 'Pending';
+  status: 'Accepted' | 'Completed' | 'Pending' | 'Rejected' | 'Unknown';
   created_at: string;
 };
 

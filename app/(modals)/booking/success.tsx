@@ -15,7 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
 import { rmTiming } from '@/src/lib/animations/motion';
-import { hapticSuccess } from '@/src/lib/haptics/use-haptic';
+import { hapticSuccess } from '@/src/lib/haptics/haptics';
 import { shadows } from '@/src/lib/styles/shadows';
 import { Pressable, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';

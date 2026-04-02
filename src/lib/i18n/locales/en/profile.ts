@@ -42,6 +42,13 @@ const profile = {
   memberSince: 'Member since',
   nightsLeft: 'Nights left',
   savedEventsCount: 'Saved events',
+  memberCard: {
+    brandMark: 'ESCO LIFE',
+    cashbackBalance: 'Cashback Balance',
+    cashbackSuffix: 'cashback pts',
+    memberName: 'MEMBER NAME',
+    lifetimeTier: 'Lifetime Tier',
+  },
   noBio: 'Add a short bio to personalize your profile.',
   welcomeGift: 'WELCOME GIFT',
   welcomeDiscount: '10% OFF',
@@ -302,6 +309,7 @@ const profile = {
     viewAll: 'View All',
     viewAllHint: 'Opens the full list of your referrals',
     joinedViaYourLink: 'Joined via your link',
+    loadingReferrals: 'Loading referrals…',
     noReferralsYet: 'No referrals yet. Share your code!',
     status: {
       completed: 'Completed',

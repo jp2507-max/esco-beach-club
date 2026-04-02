@@ -1,4 +1,15 @@
-export { DataProvider } from './data/provider';
+export {
+  BookingContentDataProvider,
+  DataProvider,
+  MemberOffersDataProvider,
+  MenuContentDataProvider,
+  NewsDataProvider,
+  PartnerRedemptionsDataProvider,
+  PerksDataProvider,
+  PartnersDataProvider,
+  ReferralsDataProvider,
+  StaffAccessDataProvider,
+} from './data/provider';
 export {
   useBookingContentData,
   useEventsData,

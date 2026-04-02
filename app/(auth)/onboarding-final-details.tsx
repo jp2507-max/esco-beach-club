@@ -26,7 +26,7 @@ import { OnboardingHeader } from '@/src/components/onboarding/onboarding-header'
 import { motion, withRM } from '@/src/lib/animations/motion';
 import { useButtonPress } from '@/src/lib/animations/use-button-press';
 import { config } from '@/src/lib/config';
-import { hapticLight } from '@/src/lib/haptics/use-haptic';
+import { hapticLight } from '@/src/lib/haptics/haptics';
 import { parseOnboardingMemberSegmentSearchParam } from '@/src/lib/utils/member-segment';
 import { readSingleSearchParam } from '@/src/lib/utils/search-params';
 import { Pressable, Text, View } from '@/src/tw';

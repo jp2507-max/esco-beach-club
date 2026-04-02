@@ -22,6 +22,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
 import {
+  ReferralsDataProvider,
   useProfileData,
   useReferralProgress,
   useReferralsData,
@@ -29,12 +30,14 @@ import {
 import { ProfileSubScreenHeader } from '@/src/components/ui';
 import { rmTiming } from '@/src/lib/animations/motion';
 import { useStaggeredListEntering } from '@/src/lib/animations/use-staggered-entry';
-import { hapticLight, hapticSuccess } from '@/src/lib/haptics/use-haptic';
+import { hapticLight, hapticSuccess } from '@/src/lib/haptics/haptics';
 import { shadows } from '@/src/lib/styles/shadows';
 import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
-import { Pressable, ScrollView, Text, View } from '@/src/tw';
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 import { Image } from '@/src/tw/image';
+
+const defaultAvatar = require('@/assets/images/icon.png');
 
 type Milestone = {
   icon: typeof Wine;
@@ -43,6 +46,21 @@ type Milestone = {
   label: string;
   sub: string;
   unlocked: boolean;
+};
+
+type ReferralStatusKey =
+  | 'invite.status.accepted'
+  | 'invite.status.completed'
+  | 'invite.status.pending'
+  | 'invite.status.rejected'
+  | 'invite.status.unknown';
+
+const referralStatusToKey: Record<string, ReferralStatusKey> = {
+  Accepted: 'invite.status.accepted',
+  Completed: 'invite.status.completed',
+  Pending: 'invite.status.pending',
+  Rejected: 'invite.status.rejected',
+  Unknown: 'invite.status.unknown',
 };
 
 /** Completed referrals required for the third milestone (beyond VIP goal). */
@@ -59,14 +77,14 @@ function InviteReferralRowStagger({
   return <Animated.View entering={entering}>{children}</Animated.View>;
 }
 
-export default function InviteScreen(): React.JSX.Element {
+function InviteScreenContent(): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
   const isDark = useAppIsDark();
   const { t } = useTranslation('profile');
   const { profile } = useProfileData();
-  const { referrals } = useReferralsData();
+  const { referrals, referralsLoading } = useReferralsData();
   const referralProgress = useReferralProgress();
   const referralCurrent = referralProgress.current;
   const referralGoal = referralProgress.goal;
@@ -227,13 +245,33 @@ export default function InviteScreen(): React.JSX.Element {
     ? Colors.inviteMilestoneUnlockedIconDark
     : Colors.inviteMilestoneUnlockedIconLight;
 
+  if (referralsLoading) {
+    return (
+      <View
+        className="flex-1 bg-background dark:bg-dark-bg"
+        style={{ paddingTop: insets.top }}
+      >
+        <ProfileSubScreenHeader title={t('menu.inviteEarn')} />
+        <View className="flex-1 items-center justify-center px-6">
+          <ActivityIndicator
+            color={isDark ? Colors.primaryBright : Colors.primary}
+            size="large"
+          />
+          <Text className="mt-4 text-sm font-medium text-text-secondary dark:text-text-secondary-dark">
+            {t('invite.loadingReferrals')}
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View
       className="flex-1 bg-background dark:bg-dark-bg"
       style={{ paddingTop: insets.top }}
     >
       <View
-        className="absolute left-0 right-0 top-0 h-[250px] rounded-b-[60px]"
+        className="absolute left-0 right-0 top-0 h-62.5 rounded-b-[60px]"
         style={{ backgroundColor: heroBlobColor }}
       />
 
@@ -252,7 +290,7 @@ export default function InviteScreen(): React.JSX.Element {
               {t('invite.titleHighlight')}
             </Text>
           </Text>
-          <Text className="mb-7 mt-2.5 text-center text-[15px] leading-[22px] text-text-secondary dark:text-text-secondary-dark">
+          <Text className="mb-7 mt-2.5 text-center text-[15px] leading-5.5 text-text-secondary dark:text-text-secondary-dark">
             {t('invite.subtitle')}
           </Text>
 
@@ -260,11 +298,11 @@ export default function InviteScreen(): React.JSX.Element {
             className="mb-7 rounded-[18px] border border-border bg-white p-5 dark:border-dark-border dark:bg-dark-bg-card"
             style={shadows.level2}
           >
-            <Text className="mb-[14px] text-[11px] font-bold tracking-[1.5px] text-primary dark:text-primary-bright">
+            <Text className="mb-3.5 text-[11px] font-bold tracking-[1.5px] text-primary dark:text-primary-bright">
               {t('invite.referralCode')}
             </Text>
             <View
-              className="flex-row items-center rounded-[14px] px-[14px] py-[14px]"
+              className="flex-row items-center rounded-[14px] px-3.5 py-3.5"
               style={{
                 backgroundColor: isDark
                   ? Colors.darkBgElevated
@@ -336,7 +374,7 @@ export default function InviteScreen(): React.JSX.Element {
                 style={progressFillStyle}
               />
               <Animated.View
-                className="absolute left-0 top-[-4px] size-4 rounded-full bg-white"
+                className="absolute -top-1 left-0 size-4 rounded-full bg-white"
                 style={[
                   progressThumbStyle,
                   {
@@ -365,7 +403,7 @@ export default function InviteScreen(): React.JSX.Element {
                 >
                   {m.isGoal ? (
                     <View
-                      className="absolute right-[-6px] top-[-6px] rounded-md px-1.5 py-0.5"
+                      className="absolute -right-1.5 -top-1.5 rounded-md px-1.5 py-0.5"
                       style={{
                         backgroundColor: Colors.primary,
                         borderColor: Colors.badgeLightBackground,
@@ -410,7 +448,7 @@ export default function InviteScreen(): React.JSX.Element {
           </View>
 
           <View className="mb-5">
-            <View className="mb-[14px] flex-row items-center justify-between">
+            <View className="mb-3.5 flex-row items-center justify-between">
               <Text className="text-lg font-extrabold text-text dark:text-text-primary-dark">
                 {t('invite.recentReferrals')}
               </Text>
@@ -431,21 +469,21 @@ export default function InviteScreen(): React.JSX.Element {
                 </Pressable>
               ) : null}
             </View>
-            {referrals.map((ref, refIndex) => (
+            {referrals.slice(0, 3).map((ref, refIndex) => (
               <InviteReferralRowStagger key={ref.id} index={refIndex}>
                 <View
-                  className="mb-3 flex-row items-center justify-between rounded-2xl border border-border bg-white p-[14px] dark:border-dark-border dark:bg-dark-bg-card"
+                  className="mb-3 flex-row items-center justify-between rounded-2xl border border-border bg-white p-3.5 dark:border-dark-border dark:bg-dark-bg-card"
                   style={shadows.level1}
                 >
                   <View className="flex-row items-center">
                     <View className="mr-3 size-11">
                       <Image
                         className="size-11 rounded-full"
-                        source={{
-                          uri:
-                            ref.referred_avatar ??
-                            'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face',
-                        }}
+                        source={
+                          ref.referred_avatar
+                            ? { uri: ref.referred_avatar }
+                            : defaultAvatar
+                        }
                       />
                       <View
                         className="absolute bottom-0 left-0 size-3 rounded-full"
@@ -468,10 +506,10 @@ export default function InviteScreen(): React.JSX.Element {
                     </View>
                   </View>
                   <View
-                    className="rounded-[10px] px-3 py-[5px]"
+                    className="rounded-[10px] px-3 py-1.25"
                     style={{
                       backgroundColor:
-                        ref.status === 'Pending'
+                        ref.status === 'Pending' || ref.status === 'Rejected'
                           ? referralWarningBg
                           : referralStatusBg,
                     }}
@@ -480,14 +518,15 @@ export default function InviteScreen(): React.JSX.Element {
                       className="text-xs font-bold"
                       style={{
                         color:
-                          ref.status === 'Pending'
+                          ref.status === 'Pending' || ref.status === 'Rejected'
                             ? referralWarningText
                             : referralStatusText,
                       }}
                     >
-                      {ref.status === 'Completed'
-                        ? t('invite.status.completed')
-                        : t('invite.status.pending')}
+                      {t(
+                        referralStatusToKey[ref.status] ||
+                          'invite.status.unknown'
+                      )}
                     </Text>
                   </View>
                 </View>
@@ -501,7 +540,7 @@ export default function InviteScreen(): React.JSX.Element {
           </View>
         </Animated.View>
 
-        <View className="h-[100px]" />
+        <View className="h-25" />
       </ScrollView>
 
       <View
@@ -515,7 +554,7 @@ export default function InviteScreen(): React.JSX.Element {
       >
         <Pressable
           accessibilityRole="button"
-          className="flex-row items-center justify-center rounded-[18px] bg-primary py-[17px] opacity-100 disabled:opacity-50 dark:bg-primary-bright"
+          className="flex-row items-center justify-center rounded-[18px] bg-primary py-4.25 opacity-100 disabled:opacity-50 dark:bg-primary-bright"
           disabled={!code}
           onPress={handleShare}
           testID="share-btn"
@@ -527,5 +566,13 @@ export default function InviteScreen(): React.JSX.Element {
         </Pressable>
       </View>
     </View>
+  );
+}
+
+export default function InviteScreen(): React.JSX.Element {
+  return (
+    <ReferralsDataProvider>
+      <InviteScreenContent />
+    </ReferralsDataProvider>
   );
 }

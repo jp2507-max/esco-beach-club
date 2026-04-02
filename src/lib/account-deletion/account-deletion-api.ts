@@ -1,11 +1,13 @@
 import type { AuthProviderType } from '@/lib/types';
 import {
   buildClientApiUrl,
-  type ClientApiResult,
+  type ClientApiFailure,
   readApiErrorDetails,
 } from '@/src/lib/api/client-api';
 
-export type AccountDeletionApiResult<T> = ClientApiResult<T>;
+export type AccountDeletionApiResult<T> =
+  | { ok: true; body: T | null; status: number }
+  | ClientApiFailure;
 
 async function postJson<T>(
   path: string,
@@ -41,10 +43,10 @@ async function postJson<T>(
       responseBody = null;
     }
 
-    if (response.ok && responseBody !== null) {
+    if (response.ok) {
       return {
         ok: true,
-        body: responseBody as T,
+        body: responseBody == null ? null : (responseBody as T),
         status: response.status,
       };
     }

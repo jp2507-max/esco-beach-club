@@ -42,6 +42,13 @@ const profile = {
   memberSince: 'Thành viên từ',
   nightsLeft: 'Đêm còn lại',
   savedEventsCount: 'Sự kiện đã lưu',
+  memberCard: {
+    brandMark: 'ESCO LIFE',
+    cashbackBalance: 'Số dư cashback',
+    cashbackSuffix: 'điểm cashback',
+    memberName: 'TÊN THÀNH VIÊN',
+    lifetimeTier: 'Hạng trọn đời',
+  },
   noBio: 'Thêm một đoạn giới thiệu ngắn để cá nhân hóa hồ sơ của bạn.',
   welcomeGift: 'QUÀ CHÀO MỪNG',
   welcomeDiscount: 'GIẢM 10%',
@@ -300,6 +307,7 @@ const profile = {
     viewAll: 'Xem tất cả',
     viewAllHint: 'Mở danh sách đầy đủ các lượt giới thiệu của bạn',
     joinedViaYourLink: 'Đã tham gia qua liên kết của bạn',
+    loadingReferrals: 'Đang tải lượt giới thiệu…',
     noReferralsYet: 'Chưa có lượt giới thiệu nào. Hãy chia sẻ mã của bạn!',
     status: {
       completed: 'Hoàn tất',

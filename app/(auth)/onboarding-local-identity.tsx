@@ -18,7 +18,7 @@ import {
   type OnboardingLocalIdentityFormValues,
   onboardingLocalIdentitySchema,
 } from '@/src/lib/forms/schemas';
-import { hapticLight, hapticSelection } from '@/src/lib/haptics/use-haptic';
+import { hapticLight, hapticSelection } from '@/src/lib/haptics/haptics';
 import { shadows } from '@/src/lib/styles/shadows';
 import { readSingleSearchParam } from '@/src/lib/utils/search-params';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';

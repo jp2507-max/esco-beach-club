@@ -16,17 +16,22 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
 import { claimPartnerRedemption } from '@/lib/api';
-import { usePartnerById, useUserId } from '@/providers/DataProvider';
+import {
+  PartnersDataProvider,
+  usePartnerById,
+  usePartnersData,
+  useUserId,
+} from '@/providers/DataProvider';
 import { HeaderGlassButton } from '@/src/components/ui';
 import { motion, rmTiming } from '@/src/lib/animations/motion';
-import { hapticLight, hapticSuccess } from '@/src/lib/haptics/use-haptic';
+import { hapticLight, hapticSuccess } from '@/src/lib/haptics/haptics';
 import { captureHandledError } from '@/src/lib/monitoring';
 import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
-import { Pressable, Text, View } from '@/src/tw';
+import { ActivityIndicator, Pressable, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 import { Image } from '@/src/tw/image';
 
-export default function PartnerModal(): React.JSX.Element {
+function PartnerModalContent(): React.JSX.Element {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -36,6 +41,7 @@ export default function PartnerModal(): React.JSX.Element {
   const opacity = useSharedValue(0);
 
   const partner = usePartnerById(id);
+  const { partnersLoading } = usePartnersData();
   const userId = useUserId();
   const [copied, setCopied] = useState(false);
   const copyResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -122,6 +128,23 @@ export default function PartnerModal(): React.JSX.Element {
         t('partner.redemptionFailedMessage')
       );
     }
+  }
+
+  if (partnersLoading && !partner) {
+    return (
+      <View
+        className="flex-1 items-center justify-center bg-black/70 px-6"
+        style={{ paddingTop: insets.top }}
+      >
+        <ActivityIndicator
+          color={isDark ? Colors.primaryBright : Colors.primary}
+          size="large"
+        />
+        <Text className="mt-4 text-base font-semibold text-white">
+          {t('loading')}
+        </Text>
+      </View>
+    );
   }
 
   if (!partner) {
@@ -320,5 +343,13 @@ export default function PartnerModal(): React.JSX.Element {
         </Animated.View>
       </View>
     </View>
+  );
+}
+
+export default function PartnerModal(): React.JSX.Element {
+  return (
+    <PartnersDataProvider>
+      <PartnerModalContent />
+    </PartnersDataProvider>
   );
 }

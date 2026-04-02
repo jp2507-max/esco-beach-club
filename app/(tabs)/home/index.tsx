@@ -8,21 +8,15 @@ import {
   UtensilsCrossed,
   Wine,
 } from 'lucide-react-native';
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useColorScheme } from 'react-native';
-import {
-  cancelAnimation,
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withTiming,
-} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
 import type { Event, NewsItem } from '@/lib/types';
 import {
+  NewsDataProvider,
   useEventsData,
   useHomeEvents,
   useMemberSummary,
@@ -34,16 +28,13 @@ import {
   Avatar,
   Card,
   HeaderGlassButton,
-  MemberCard,
   SectionHeader,
   Skeleton,
   SkeletonCard,
 } from '@/src/components/ui';
-import { rmTiming } from '@/src/lib/animations/motion';
 import { useScreenEntry } from '@/src/lib/animations/use-screen-entry';
 import { useStaggeredListEntering } from '@/src/lib/animations/use-staggered-entry';
-import { hapticLight } from '@/src/lib/haptics/use-haptic';
-import { getRewardTierLabelKey } from '@/src/lib/loyalty';
+import { hapticLight } from '@/src/lib/haptics/haptics';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 import { Image } from '@/src/tw/image';
@@ -215,34 +206,13 @@ function StaggeredFeedBlock({
   return <Animated.View entering={entering}>{children}</Animated.View>;
 }
 
-export default function HomeScreen(): React.JSX.Element {
+function HomeScreenContent(): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { t } = useTranslation('home');
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
-  const cardScale = useSharedValue(0.95);
-  const cardOpacity = useSharedValue(0);
   const { contentStyle: sectionStyle } = useScreenEntry({ durationMs: 500 });
-
-  useEffect(() => {
-    cardScale.set(
-      withSpring(1, {
-        damping: 15,
-        stiffness: 120,
-      })
-    );
-    cardOpacity.set(withTiming(1, rmTiming(600)));
-    return () => {
-      cancelAnimation(cardScale);
-      cancelAnimation(cardOpacity);
-    };
-  }, [cardOpacity, cardScale]);
-
-  const cardStyle = useAnimatedStyle(() => ({
-    opacity: cardOpacity.get(),
-    transform: [{ scale: cardScale.get() }],
-  }));
 
   const { eventsLoading } = useEventsData();
   const { news, newsLoading } = useNewsData();
@@ -251,9 +221,6 @@ export default function HomeScreen(): React.JSX.Element {
   const memberSummary = useMemberSummary();
 
   const userName = memberSummary.fullName || t('guest');
-  const userTier = t(
-    `tier.${getRewardTierLabelKey(memberSummary.lifetimeTierKey)}`
-  );
   const isFeedLoading = eventsLoading || newsLoading;
 
   const quickActions = useMemo<QuickAction[]>(
@@ -406,16 +373,19 @@ export default function HomeScreen(): React.JSX.Element {
         ListHeaderComponent={
           <>
             <View className="px-5">
-              <View className="flex-row items-center justify-between pb-5 pt-4">
-                <View>
-                  <Text className="text-[28px] font-extrabold text-primary dark:text-primary-bright">
+              <View className="flex-row items-center justify-between gap-3 pb-5 pt-4">
+                <View className="min-w-0 flex-1">
+                  <Text
+                    className="text-[28px] font-extrabold text-primary dark:text-primary-bright"
+                    numberOfLines={2}
+                  >
                     {t('welcomeBackName', { name: userName })}
                   </Text>
                 </View>
                 <HeaderGlassButton
                   accessibilityLabel={t('openProfile')}
                   accessibilityHint={t('openProfileHint')}
-                  className="size-12 border-white/35 dark:border-white/20"
+                  className="size-12 shrink-0 border-white/35 dark:border-white/20"
                   glassStyle="regular"
                   onPress={handleProfilePress}
                   testID="profile-avatar"
@@ -434,24 +404,6 @@ export default function HomeScreen(): React.JSX.Element {
                   />
                 </HeaderGlassButton>
               </View>
-
-              <Animated.View className="mb-4" style={cardStyle}>
-                <MemberCard
-                  copy={{
-                    balanceLabel: t('cashbackBalance'),
-                    balanceSuffix: t('cashbackSuffix'),
-                    brandLabel: t('brandMark'),
-                    emptyQrLabel: t('guest'),
-                    memberNameLabel: t('memberName'),
-                    statusLabel: t('lifetimeTier'),
-                  }}
-                  cashbackPoints={memberSummary.cashbackBalancePoints}
-                  memberId={memberSummary.memberId}
-                  memberName={userName}
-                  tierProgressPercent={memberSummary.tierProgressPercent}
-                  tierLabel={userTier}
-                />
-              </Animated.View>
 
               <AccountDeletionBanner userId={userId} />
 
@@ -505,5 +457,13 @@ export default function HomeScreen(): React.JSX.Element {
         ListFooterComponent={<View className="h-7.5" />}
       />
     </View>
+  );
+}
+
+export default function HomeScreen(): React.JSX.Element {
+  return (
+    <NewsDataProvider>
+      <HomeScreenContent />
+    </NewsDataProvider>
   );
 }

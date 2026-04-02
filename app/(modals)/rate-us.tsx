@@ -23,7 +23,7 @@ import { ProfileSubScreenHeader } from '@/src/components/ui';
 import { motion, rmTiming } from '@/src/lib/animations/motion';
 import { ControlledTextInput } from '@/src/lib/forms/controlled-text-input';
 import { type ReviewFormValues, reviewSchema } from '@/src/lib/forms/schemas';
-import { hapticLight, hapticSuccess } from '@/src/lib/haptics/use-haptic';
+import { hapticLight, hapticSuccess } from '@/src/lib/haptics/haptics';
 import { captureHandledError } from '@/src/lib/monitoring';
 import {
   KeyboardAvoidingView,
@@ -79,8 +79,8 @@ function StarButton({
     >
       <Animated.View style={style}>
         <Star
-          color={isActive ? '#FFB300' : Colors.border}
-          fill={isActive ? '#FFB300' : 'transparent'}
+          color={isActive ? Colors.starActive : Colors.border}
+          fill={isActive ? Colors.starActive : 'transparent'}
           size={42}
         />
       </Animated.View>
@@ -216,7 +216,10 @@ export default function RateUsScreen(): React.JSX.Element {
               </View>
 
               {rating > 0 ? (
-                <Text className="mb-7 mt-1.5 text-[15px] font-bold text-[#FFB300]">
+                <Text
+                  className="mb-7 mt-1.5 text-[15px] font-bold"
+                  style={{ color: Colors.starActive }}
+                >
                   {t(STAR_LABEL_KEYS[rating - 1])}
                 </Text>
               ) : null}
