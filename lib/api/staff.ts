@@ -77,7 +77,7 @@ export async function submitRewardAdjustment(params: {
         memberId,
         receiptReference,
         source: rewardTransactionSources.manualStaffEntry,
-        staffUserId: params.staffUserId,
+        staffUserId,
       }),
     });
   } catch (error) {

@@ -20,7 +20,10 @@ import { useButtonPress } from '@/src/lib/animations/use-button-press';
 import { hapticLight, hapticSuccess } from '@/src/lib/haptics/haptics';
 import { ensureVenueUpsellNotificationChannel } from '@/src/lib/notifications';
 import { shadows } from '@/src/lib/styles/shadows';
-import { readSingleSearchParam } from '@/src/lib/utils/search-params';
+import {
+  parseOnboardingPermissionStatusSearchParam,
+  readSingleSearchParam,
+} from '@/src/lib/utils/search-params';
 import { ActivityIndicator, Pressable, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 
@@ -33,22 +36,6 @@ type OnboardingPermissionsSearchParams = {
   onboardingSegment?: string | string[];
   onboardingTermsAccepted?: string | string[];
 };
-
-function parseOnboardingPermissionStatus(
-  value: string | string[] | undefined
-): OnboardingPermissionStatus {
-  const normalized = readSingleSearchParam(value)?.trim().toUpperCase();
-
-  if (normalized === onboardingPermissionStatuses.granted) {
-    return onboardingPermissionStatuses.granted;
-  }
-
-  if (normalized === onboardingPermissionStatuses.denied) {
-    return onboardingPermissionStatuses.denied;
-  }
-
-  return onboardingPermissionStatuses.undetermined;
-}
 
 function mapExpoPermissionStatus(
   status: string | null | undefined
@@ -80,15 +67,15 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
 
   const [locationStatus, setLocationStatus] =
     React.useState<OnboardingPermissionStatus>(
-      parseOnboardingPermissionStatus(
+      parseOnboardingPermissionStatusSearchParam(
         searchParams.onboardingLocationPermissionStatus
-      )
+      ) ?? onboardingPermissionStatuses.undetermined
     );
   const [pushStatus, setPushStatus] =
     React.useState<OnboardingPermissionStatus>(
-      parseOnboardingPermissionStatus(
+      parseOnboardingPermissionStatusSearchParam(
         searchParams.onboardingPushPermissionStatus
-      )
+      ) ?? onboardingPermissionStatuses.undetermined
     );
   const [isRequestingLocation, setIsRequestingLocation] =
     React.useState<boolean>(false);

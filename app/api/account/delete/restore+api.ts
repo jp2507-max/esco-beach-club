@@ -1,4 +1,8 @@
 import { accountDeletionStatuses } from '@/lib/types';
+import {
+  jsonResponse,
+  parseBearerRefreshToken,
+} from '@/src/lib/api/route-helpers';
 import { getInstantAdminDb } from '@/src/lib/referral/instant-admin-server';
 import { verifyInstantRefreshToken } from '@/src/lib/referral/instant-runtime-server';
 
@@ -7,17 +11,6 @@ type AccountDeletionRequestRecord = {
   scheduled_for_at?: string;
   status?: string;
 };
-
-function jsonResponse(body: unknown, status: number): Response {
-  return Response.json(body, { status });
-}
-
-function parseBearerRefreshToken(request: Request): string | null {
-  const header = request.headers.get('Authorization');
-  if (!header?.startsWith('Bearer ')) return null;
-  const token = header.slice('Bearer '.length).trim();
-  return token.length > 0 ? token : null;
-}
 
 function isPastScheduledDeletion(
   dateString: string | null | undefined

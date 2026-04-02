@@ -28,7 +28,10 @@ import { useButtonPress } from '@/src/lib/animations/use-button-press';
 import { config } from '@/src/lib/config';
 import { hapticLight } from '@/src/lib/haptics/haptics';
 import { parseOnboardingMemberSegmentSearchParam } from '@/src/lib/utils/member-segment';
-import { readSingleSearchParam } from '@/src/lib/utils/search-params';
+import {
+  parseOnboardingPermissionStatusSearchParam,
+  readSingleSearchParam,
+} from '@/src/lib/utils/search-params';
 import { Pressable, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 import { Image } from '@/src/tw/image';
@@ -45,25 +48,6 @@ type OnboardingLocalIdentityParams = {
   onboardingSegment?: string | string[];
   onboardingTermsAccepted?: string | string[];
 };
-
-function parsePermissionStatusSearchParam(
-  value: string | string[] | undefined
-):
-  | typeof onboardingPermissionStatuses.granted
-  | typeof onboardingPermissionStatuses.denied
-  | typeof onboardingPermissionStatuses.undetermined {
-  const normalized = readSingleSearchParam(value)?.trim().toUpperCase();
-
-  if (normalized === onboardingPermissionStatuses.granted) {
-    return onboardingPermissionStatuses.granted;
-  }
-
-  if (normalized === onboardingPermissionStatuses.denied) {
-    return onboardingPermissionStatuses.denied;
-  }
-
-  return onboardingPermissionStatuses.undetermined;
-}
 
 const ICON_DELAY = 100;
 const TITLE_DELAY = 260;
@@ -167,12 +151,14 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
     const memberSegment = parseOnboardingMemberSegmentSearchParam(
       searchParams.onboardingSegment
     );
-    const locationPermissionStatus = parsePermissionStatusSearchParam(
-      searchParams.onboardingLocationPermissionStatus
-    );
-    const pushNotificationPermissionStatus = parsePermissionStatusSearchParam(
-      searchParams.onboardingPushPermissionStatus
-    );
+    const locationPermissionStatus =
+      parseOnboardingPermissionStatusSearchParam(
+        searchParams.onboardingLocationPermissionStatus
+      ) ?? onboardingPermissionStatuses.undetermined;
+    const pushNotificationPermissionStatus =
+      parseOnboardingPermissionStatusSearchParam(
+        searchParams.onboardingPushPermissionStatus
+      ) ?? onboardingPermissionStatuses.undetermined;
 
     const resolvedLocationPermissionStatus =
       locationPermissionStatus === onboardingPermissionStatuses.undetermined &&

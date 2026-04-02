@@ -1,5 +1,10 @@
 import { id } from '@instantdb/admin';
 
+import {
+  isRecord,
+  jsonResponse,
+  parseBearerRefreshToken,
+} from '@/src/lib/api/route-helpers';
 import { getInstantAdminDb } from '@/src/lib/referral/instant-admin-server';
 import { verifyInstantRefreshToken } from '@/src/lib/referral/instant-runtime-server';
 import { normalizeReferralCode } from '@/src/lib/referral/referral-code';
@@ -14,21 +19,6 @@ type LinkedUserRecord = {
   id?: string;
   profile?: ProfileRecord | ProfileRecord[] | null;
 };
-
-function jsonResponse(body: unknown, status: number): Response {
-  return Response.json(body, { status });
-}
-
-function parseBearerRefreshToken(request: Request): string | null {
-  const header = request.headers.get('Authorization');
-  if (!header?.startsWith('Bearer ')) return null;
-  const token = header.slice('Bearer '.length).trim();
-  return token.length > 0 ? token : null;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
 
 function firstProfileRecord(value: unknown): ProfileRecord | null {
   if (Array.isArray(value)) {

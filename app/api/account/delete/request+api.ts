@@ -3,6 +3,11 @@ import {
   type AuthProviderType,
   authProviderTypes,
 } from '@/lib/types';
+import {
+  isRecord,
+  jsonResponse,
+  parseBearerRefreshToken,
+} from '@/src/lib/api/route-helpers';
 import { revokeAppleAuthorizationCode } from '@/src/lib/account-deletion/apple-revoke-server';
 import { getInstantAdminDb } from '@/src/lib/referral/instant-admin-server';
 import { verifyInstantRefreshToken } from '@/src/lib/referral/instant-runtime-server';
@@ -28,21 +33,6 @@ type ResolvedProfileContext = {
   authProvider: AuthProviderType | null;
   profileId: string | null;
 };
-
-function jsonResponse(body: unknown, status: number): Response {
-  return Response.json(body, { status });
-}
-
-function parseBearerRefreshToken(request: Request): string | null {
-  const header = request.headers.get('Authorization');
-  if (!header?.startsWith('Bearer ')) return null;
-  const token = header.slice('Bearer '.length).trim();
-  return token.length > 0 ? token : null;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
 
 function firstLinkedProfileRecord(value: unknown): LinkedProfileRecord | null {
   if (Array.isArray(value)) {

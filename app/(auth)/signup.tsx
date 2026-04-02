@@ -24,10 +24,6 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
-import {
-  type OnboardingPermissionStatus,
-  onboardingPermissionStatuses,
-} from '@/lib/types';
 import { type SignupOnboardingData, useAuth } from '@/providers/AuthProvider';
 import { ErrorBanner, SocialAuthButtons } from '@/src/components/ui';
 import { motion, withRM } from '@/src/lib/animations/motion';
@@ -43,6 +39,11 @@ import { hapticMedium } from '@/src/lib/haptics/haptics';
 import { shadows } from '@/src/lib/styles/shadows';
 import { parseOnboardingMemberSegmentSearchParam } from '@/src/lib/utils/member-segment';
 import {
+  parseBooleanSearchParam,
+  parseOnboardingPermissionStatusSearchParam,
+  readTrimmedSearchParam,
+} from '@/src/lib/utils/search-params';
+import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Pressable,
@@ -51,63 +52,6 @@ import {
   View,
 } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
-
-function parseBooleanSearchParam(
-  value: string | string[] | undefined
-): boolean | undefined {
-  if (Array.isArray(value)) {
-    return parseBooleanSearchParam(value[0]);
-  }
-
-  if (value === '1' || value === 'true') {
-    return true;
-  }
-
-  if (value === '0' || value === 'false') {
-    return false;
-  }
-
-  return undefined;
-}
-
-function parseOptionalSearchParam(
-  value: string | string[] | undefined
-): string | undefined {
-  if (Array.isArray(value)) {
-    return parseOptionalSearchParam(value[0]);
-  }
-
-  if (!value) return undefined;
-
-  const normalized = value.trim();
-  return normalized.length > 0 ? normalized : undefined;
-}
-
-function parsePermissionStatusSearchParam(
-  value: string | string[] | undefined
-): OnboardingPermissionStatus | undefined {
-  if (Array.isArray(value)) {
-    return parsePermissionStatusSearchParam(value[0]);
-  }
-
-  if (!value) return undefined;
-
-  const normalized = value.trim().toUpperCase();
-
-  if (normalized === onboardingPermissionStatuses.granted) {
-    return onboardingPermissionStatuses.granted;
-  }
-
-  if (normalized === onboardingPermissionStatuses.denied) {
-    return onboardingPermissionStatuses.denied;
-  }
-
-  if (normalized === onboardingPermissionStatuses.undetermined) {
-    return onboardingPermissionStatuses.undetermined;
-  }
-
-  return undefined;
-}
 
 function SignupStepDot({
   scaleSV,
@@ -205,12 +149,13 @@ export default function SignupScreen(): React.JSX.Element {
       hasAcceptedTerms:
         parseBooleanSearchParam(searchParams.onboardingTermsAccepted) === true,
       memberSegment,
-      locationPermissionStatus: parsePermissionStatusSearchParam(
+      locationPermissionStatus: parseOnboardingPermissionStatusSearchParam(
         searchParams.onboardingLocationPermissionStatus
       ),
-      pushNotificationPermissionStatus: parsePermissionStatusSearchParam(
-        searchParams.onboardingPushPermissionStatus
-      ),
+      pushNotificationPermissionStatus:
+        parseOnboardingPermissionStatusSearchParam(
+          searchParams.onboardingPushPermissionStatus
+        ),
     };
   }, [
     searchParams.onboardingCompletedSetup,
@@ -222,12 +167,12 @@ export default function SignupScreen(): React.JSX.Element {
   ]);
 
   const prefilledDateOfBirth = React.useMemo(
-    () => parseOptionalSearchParam(searchParams.onboardingDateOfBirth) ?? '',
+    () => readTrimmedSearchParam(searchParams.onboardingDateOfBirth) ?? '',
     [searchParams.onboardingDateOfBirth]
   );
 
   const prefilledDisplayName = React.useMemo(
-    () => parseOptionalSearchParam(searchParams.onboardingDisplayName) ?? '',
+    () => readTrimmedSearchParam(searchParams.onboardingDisplayName) ?? '',
     [searchParams.onboardingDisplayName]
   );
 

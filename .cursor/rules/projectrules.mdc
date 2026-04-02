@@ -82,8 +82,8 @@ Ensure to review `src/lib/forms/schemas.ts` and controlled components (`src/lib/
 
 ```bash
 npx instant-cli@latest login          # Authenticate with Instant account
-npx instant-cli@ push schema    # Push instant.schema.ts to production
-npx instant-cli@ push perms     # Push instant.perms.ts to production
+npx instant-cli@latest push schema    # Push instant.schema.ts to production
+npx instant-cli@latest push perms     # Push instant.perms.ts to production
 npx instant-cli@latest pull           # Pull latest schema + perms from production
 npx instant-cli@latest init           # Scaffold instant.schema.ts + instant.perms.ts
 ```
