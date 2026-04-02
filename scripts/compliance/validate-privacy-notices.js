@@ -69,11 +69,7 @@ function validateAasaStructure(data) {
   }
 
   const applinks = data.applinks;
-  if (
-    !applinks ||
-    typeof applinks !== 'object' ||
-    Array.isArray(applinks)
-  ) {
+  if (!applinks || typeof applinks !== 'object' || Array.isArray(applinks)) {
     return {
       valid: false,
       message: 'invalid_aasa_structure',
@@ -137,8 +133,6 @@ async function fetchUrlStatus(url, options = {}) {
       redirect: 'follow',
       signal: controller.signal,
     });
-
-    clearTimeout(timeoutId);
 
     if (!response.ok) {
       return {
@@ -204,8 +198,6 @@ async function fetchUrlStatus(url, options = {}) {
       url,
     };
   } catch (error) {
-    clearTimeout(timeoutId);
-
     const isAborted =
       error instanceof DOMException && error.name === 'AbortError';
     const message = isAborted
@@ -220,6 +212,8 @@ async function fetchUrlStatus(url, options = {}) {
       url,
       message,
     };
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 
@@ -336,7 +330,9 @@ async function main() {
               result.detail != null ? `: ${result.detail}` : ''
             })`
           : '';
-      errors.push(`Associated domain verification failed: ${result.url}${reason}`);
+      errors.push(
+        `Associated domain verification failed: ${result.url}${reason}`
+      );
     }
   }
 

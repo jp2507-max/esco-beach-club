@@ -31,7 +31,7 @@ import { getEscoNavigationTheme } from '@/src/lib/navigation/app-navigation-them
 import { createNativeHeaderOptions } from '@/src/lib/navigation/stack-header-options';
 import {
   extractInviteCodeFromUrl,
-  setPendingReferralCode,
+  updatePendingReferralCode,
 } from '@/src/lib/referral/pending-referral';
 import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
 import { usePendingReferralSignal } from '@/src/stores/pending-referral-signal-store';
@@ -236,8 +236,8 @@ function ReferralDeepLinkCapture(): null {
     function handleUrl(url: string | null): void {
       if (!url) return;
       const code = extractInviteCodeFromUrl(url);
-      if (code && setPendingReferralCode(code)) {
-        bumpReferralSignal();
+      if (code) {
+        updatePendingReferralCode(code, bumpReferralSignal);
       }
     }
 

@@ -97,7 +97,7 @@ export function useFeaturedEvents(): Event[] {
 
 export function useHomeEvents(): Event[] {
   const { events } = useEventsData();
-  return useMemo(() => events.slice(0, 3), [events]);
+  return useMemo(() => events.slice(0, HOME_EVENTS_LIMIT), [events]);
 }
 
 export function useEventById(id: string | undefined): Event | null {
@@ -127,6 +127,7 @@ export function useFilteredPartners(category: string): Partner[] {
   );
 }
 
+const HOME_EVENTS_LIMIT = 3;
 const REFERRAL_GOAL = 3;
 
 export function useReferralProgress(): { current: number; goal: number } {

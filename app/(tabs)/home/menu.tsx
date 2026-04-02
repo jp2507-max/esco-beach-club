@@ -236,7 +236,7 @@ const getTabStyles = (active: boolean, isDark: boolean) => {
     return {
       backgroundColor: isDark ? Colors.textPrimaryDark : Colors.text,
       borderColor: isDark ? Colors.textPrimaryDark : Colors.text,
-      color: isDark ? Colors.darkBg : '#fff',
+      color: isDark ? Colors.darkBg : Colors.white,
     };
   }
   return {

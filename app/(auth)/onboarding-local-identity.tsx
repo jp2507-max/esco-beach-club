@@ -488,7 +488,7 @@ export default function OnboardingLocalIdentityScreen(): React.JSX.Element {
                   <Text className="text-[17px] font-bold text-white">
                     {t('onboardingLocalIdentityContinue')}
                   </Text>
-                  <ArrowRight color="#ffffff" size={22} />
+                  <ArrowRight color={Colors.white} size={22} />
                 </View>
               </LinearGradient>
             </Pressable>

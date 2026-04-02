@@ -40,7 +40,9 @@ type PendingDeletionRecord = {
   updated_at?: string | Date | null;
 };
 
-function toComparableIso(value: string | Date | null | undefined): string | null {
+function toComparableIso(
+  value: string | Date | null | undefined
+): string | null {
   if (value == null) return null;
   const d = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(d.getTime())) return null;
@@ -53,7 +55,9 @@ function isDue(record: PendingDeletionRecord, now: Date): boolean {
   }
 
   const scheduled = new Date(record.scheduled_for_at);
-  return !Number.isNaN(scheduled.getTime()) && scheduled.getTime() <= now.getTime();
+  return (
+    !Number.isNaN(scheduled.getTime()) && scheduled.getTime() <= now.getTime()
+  );
 }
 
 function isRecordNotFound(error: unknown): boolean {
@@ -73,7 +77,9 @@ async function fetchDeletionRequestById(
       $: { where: { id: requestId } },
     },
   });
-  const row = result.account_deletion_requests?.[0] as PendingDeletionRecord | undefined;
+  const row = result.account_deletion_requests?.[0] as
+    | PendingDeletionRecord
+    | undefined;
   return row ?? null;
 }
 
@@ -131,18 +137,107 @@ async function tryClaimDeletionRequest(params: {
     after?.status !== accountDeletionStatuses.processing ||
     after.processing_lock_id !== lockId
   ) {
-    console.log(`Skipping ${params.requestId}: claim verification failed (another runner won).`);
+    console.log(
+      `Skipping ${params.requestId}: claim verification failed (another runner won).`
+    );
     return null;
   }
 
   return { lockId };
 }
 
-async function verifyDeletionLockHeld(requestId: string, lockId: string): Promise<boolean> {
+async function verifyDeletionLockHeld(
+  requestId: string,
+  lockId: string
+): Promise<boolean> {
   const row = await fetchDeletionRequestById(requestId);
   return (
-    row?.status === accountDeletionStatuses.processing && row.processing_lock_id === lockId
+    row?.status === accountDeletionStatuses.processing &&
+    row.processing_lock_id === lockId
   );
+}
+
+/**
+ * After a failure post-claim, avoid leaving the row stuck in `processing` with our lock.
+ * If we still hold the lock: either reset to pending (retry) or mark completed when the auth
+ * user is already gone (deleteUser succeeded but the final transact failed).
+ */
+async function recoverAccountDeletionRequestAfterError(params: {
+  lockId: string;
+  requestId: string;
+  userId: string;
+}): Promise<void> {
+  const row = await fetchDeletionRequestById(params.requestId);
+  if (!row || row.processing_lock_id !== params.lockId) {
+    return;
+  }
+
+  const nowIso = new Date().toISOString();
+
+  if (row.status !== accountDeletionStatuses.processing) {
+    try {
+      await db.transact(
+        db.tx.account_deletion_requests[params.requestId].update(
+          { processing_lock_id: null, updated_at: nowIso },
+          { upsert: false }
+        )
+      );
+    } catch (updateError) {
+      console.error(
+        `Failed to clear processing lock on account_deletion_requests ${params.requestId}:`,
+        updateError
+      );
+    }
+    return;
+  }
+
+  let updatePayload: {
+    completed_at?: string;
+    processing_lock_id: null;
+    status: string;
+    updated_at: string;
+  };
+
+  try {
+    await db.auth.getUser({ id: params.userId });
+    updatePayload = {
+      processing_lock_id: null,
+      status: accountDeletionStatuses.pending,
+      updated_at: nowIso,
+    };
+  } catch (authError: unknown) {
+    if (isRecordNotFound(authError)) {
+      updatePayload = {
+        completed_at: nowIso,
+        processing_lock_id: null,
+        status: accountDeletionStatuses.completed,
+        updated_at: nowIso,
+      };
+    } else {
+      console.error(
+        `Could not verify auth user ${params.userId} after deletion failure; resetting request ${params.requestId} to pending.`,
+        authError
+      );
+      updatePayload = {
+        processing_lock_id: null,
+        status: accountDeletionStatuses.pending,
+        updated_at: nowIso,
+      };
+    }
+  }
+
+  try {
+    await db.transact(
+      db.tx.account_deletion_requests[params.requestId].update(updatePayload, {
+        upsert: false,
+      })
+    );
+  } catch (updateError) {
+    console.error(
+      `Failed to update account_deletion_requests ${params.requestId} after error recovery:`,
+      updateError
+    );
+  }
 }
 
 async function resolveProfileIdForUser(userId: string): Promise<string | null> {
@@ -151,7 +246,9 @@ async function resolveProfileIdForUser(userId: string): Promise<string | null> {
       $: { where: { 'user.id': userId } },
     },
   });
-  const directProfile = directResult.profiles?.[0] as { id?: string } | undefined;
+  const directProfile = directResult.profiles?.[0] as
+    | { id?: string }
+    | undefined;
   if (directProfile?.id) {
     return directProfile.id;
   }
@@ -174,27 +271,32 @@ async function resolveProfileIdForUser(userId: string): Promise<string | null> {
   return linkedProfile?.id ?? null;
 }
 
-async function cleanupProfileLinkedData(profileId: string | null): Promise<void> {
+async function cleanupProfileLinkedData(
+  profileId: string | null
+): Promise<void> {
   if (!profileId) return;
 
-  const [rewardTransactionsResult, referralsByReferrerResult, referralsByRefereeResult] =
-    await Promise.all([
-      db.query({
-        reward_transactions: {
-          $: { where: { 'member.id': profileId } },
-        },
-      }),
-      db.query({
-        referrals: {
-          $: { where: { 'referrer.id': profileId } },
-        },
-      }),
-      db.query({
-        referrals: {
-          $: { where: { referee_profile_id: profileId } },
-        },
-      }),
-    ]);
+  const [
+    rewardTransactionsResult,
+    referralsByReferrerResult,
+    referralsByRefereeResult,
+  ] = await Promise.all([
+    db.query({
+      reward_transactions: {
+        $: { where: { 'member.id': profileId } },
+      },
+    }),
+    db.query({
+      referrals: {
+        $: { where: { 'referrer.id': profileId } },
+      },
+    }),
+    db.query({
+      referrals: {
+        $: { where: { referee_profile_id: profileId } },
+      },
+    }),
+  ]);
 
   const tx = [
     ...(rewardTransactionsResult.reward_transactions ?? []).map((record) =>
@@ -223,8 +325,8 @@ async function main(): Promise<void> {
     },
   });
 
-  const dueRequests = (result.account_deletion_requests ?? []).filter((record) =>
-    isDue(record as PendingDeletionRecord, now)
+  const dueRequests = (result.account_deletion_requests ?? []).filter(
+    (record) => isDue(record as PendingDeletionRecord, now)
   ) as PendingDeletionRecord[];
 
   if (dueRequests.length === 0) {
@@ -249,13 +351,16 @@ async function main(): Promise<void> {
       continue;
     }
 
-    const profileId = record.profile_id || (await resolveProfileIdForUser(userId));
+    const profileId =
+      record.profile_id || (await resolveProfileIdForUser(userId));
 
     console.log(`Processing account deletion for user ${userId}`);
 
     try {
       if (!(await verifyDeletionLockHeld(requestId, claimed.lockId))) {
-        console.log(`Skipping ${requestId}: lock not held before profile cleanup.`);
+        console.log(
+          `Skipping ${requestId}: lock not held before profile cleanup.`
+        );
         continue;
       }
 
@@ -285,6 +390,11 @@ async function main(): Promise<void> {
         `Failed to finalize account deletion for user ${userId} (request ${requestId}, profile ${profileId ?? 'unknown'}):`,
         error
       );
+      await recoverAccountDeletionRequestAfterError({
+        lockId: claimed.lockId,
+        requestId,
+        userId,
+      });
     }
   }
 }

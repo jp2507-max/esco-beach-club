@@ -32,7 +32,8 @@
     "start-web-dev": "bunx expo start --web --clear",
     "check:expo": "expo install --check",
     "doctor": "expo install --check && expo-doctor",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "prepare": "husky"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
@@ -104,6 +105,8 @@
     "@babel/core": "^7.25.2",
     "@babel/plugin-proposal-export-namespace-from": "^7.18.9",
     "@expo/ngrok": "^4.1.0",
+    "@commitlint/cli": "^20.4.4",
+    "@commitlint/config-conventional": "^20.4.4",
     "@types/react": "~19.2.10",
     "babel-plugin-react-compiler": "^19.1.0-rc.2",
     "eslint": "^9.31.0",
@@ -115,10 +118,18 @@
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "eslint-plugin-testing-library": "^7.16.0",
     "eslint-plugin-unused-imports": "^4.4.1",
+    "husky": "^9.1.7",
     "instant-cli": "0.22.160",
+    "lint-staged": "^16.4.0",
+    "prettier": "^3.8.1",
     "tailwindcss": "^4.2.1",
     "typescript": "~5.9.2",
     "typescript-eslint": "^8.57.0"
   },
-  "private": true
+  "private": true,
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,mjs,cjs,json,md,mdx,yml,yaml,css}": [
+      "prettier --write"
+    ]
+  }
 }

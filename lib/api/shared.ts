@@ -202,10 +202,16 @@ export function parseRewardServiceResponse(
     parsed.data;
 
   const createdAt = normalizeRequiredIsoDateTime(transaction.created_at);
+  const memberSince = normalizeMemberSince(member.member_since);
   const occurredAt = normalizeRequiredIsoDateTime(transaction.occurred_at);
   const updatedAt = normalizeRequiredIsoDateTime(transaction.updated_at);
 
-  if (!createdAt || !occurredAt || !updatedAt) {
+  if (
+    !createdAt ||
+    !occurredAt ||
+    !updatedAt ||
+    typeof memberSince !== 'string'
+  ) {
     return null;
   }
 
@@ -218,8 +224,7 @@ export function parseRewardServiceResponse(
       member_segment: member.member_segment
         ? (normalizeMemberSegment(member.member_segment) ?? null)
         : null,
-      member_since:
-        normalizeMemberSince(member.member_since) ?? member.member_since,
+      member_since: memberSince,
       onboarding_completed_at: normalizeNullableIsoDateTime(
         member.onboarding_completed_at
       ),
@@ -292,7 +297,7 @@ export function getDefaultProfileValues(options: {
   const { userId, email, displayName, dateOfBirth, referralCode } = options;
   const createdAt = nowIso();
   const normalizedDisplayName = displayName?.trim() ?? '';
-  const emailPrefix = email?.split('@')[0]?.trim() ?? '';
+  const emailPrefix = email?.split('@')[0]?.split('+')[0]?.trim() ?? '';
   const fallbackDisplayName = emailPrefix
     ? emailPrefix
         .replace(/[._-]+/g, ' ')
@@ -319,7 +324,7 @@ export function getDefaultProfileValues(options: {
     onboarding_completed_at: null,
     push_notification_permission_status:
       onboardingPermissionStatuses.undetermined,
-    referral_code: referralCode ?? buildReferralCode(userId),
+    referral_code: referralCode?.trim() || buildReferralCode(userId),
     saved: 0,
     tier_progress_expires_at: null,
     tier_progress_points: 0,

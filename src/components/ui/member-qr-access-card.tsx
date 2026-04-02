@@ -1,5 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { type ReactNode } from 'react';
+import React, { type ReactNode, useMemo } from 'react';
+import { useColorScheme } from 'react-native';
 
 import { Colors } from '@/constants/colors';
 import { cn } from '@/src/lib/utils';
@@ -18,17 +19,11 @@ export type MemberQrAccessCardProps = {
   tierLabel?: string;
 };
 
-const CARD_GRADIENT: readonly [string, string, string] = [
-  '#0C0810',
-  '#171020',
-  '#140E14',
-];
-
 const CORNER_MARK_COLOR = `${Colors.gold}25`;
 const CORNER_MARK_LENGTH = 18;
 const CORNER_INSET = 20;
 
-/** Premium dark access card with gold accents, QR code, and member identity. */
+/** Premium access card with gold accents, QR code, and member identity. */
 export function MemberQrAccessCard({
   brandLabel,
   children,
@@ -39,6 +34,18 @@ export function MemberQrAccessCard({
   qrSize,
   tierLabel,
 }: MemberQrAccessCardProps): React.JSX.Element {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+
+  const cardGradient = useMemo((): readonly [string, string, string] => {
+    if (isDark) return ['#0C0810', '#171020', '#140E14'];
+    return [
+      Colors.cardGradientStart,
+      Colors.cardGradientMiddle,
+      Colors.cardGradientEnd,
+    ];
+  }, [isDark]);
+
   return (
     <View
       style={{
@@ -49,7 +56,7 @@ export function MemberQrAccessCard({
       }}
     >
       <LinearGradient
-        colors={CARD_GRADIENT}
+        colors={cardGradient}
         end={{ x: 1, y: 1.1 }}
         start={{ x: 0, y: 0 }}
       >

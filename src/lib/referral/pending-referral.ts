@@ -15,6 +15,24 @@ export function setPendingReferralCode(raw: string): boolean {
   return true;
 }
 
+/**
+ * Persists a pending invite code and notifies listeners only when the normalized
+ * value differs from what is already stored. Use this (with `bump` from the
+ * pending-referral signal store) instead of `setPendingReferralCode` + manual
+ * bumps so duplicate links do not re-trigger claim effect bookkeeping.
+ */
+export function updatePendingReferralCode(
+  raw: string,
+  onChanged: () => void
+): boolean {
+  const normalized = normalizeReferralCode(raw);
+  if (!normalized) return false;
+  if (getPendingReferralCode() === normalized) return false;
+  storage.set(PENDING_CODE_KEY, normalized);
+  onChanged();
+  return true;
+}
+
 export function getPendingReferralCode(): string | null {
   const value = storage.getString(PENDING_CODE_KEY);
   return value && value.length > 0 ? value : null;

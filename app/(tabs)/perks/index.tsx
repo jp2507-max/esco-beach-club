@@ -4,7 +4,6 @@ import { useRouter } from 'expo-router';
 import { Compass, ExternalLink } from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { StyleProp, ViewStyle } from 'react-native';
 import { Alert, Linking, useWindowDimensions } from 'react-native';
 
 import { accentOnDarkBackground, Colors } from '@/constants/colors';
@@ -52,7 +51,6 @@ function DanangCtaCard({
     0.985,
     'gentle'
   );
-  const pressStyle = animatedStyle as unknown as StyleProp<ViewStyle>;
 
   return (
     <Animated.Pressable
@@ -63,7 +61,7 @@ function DanangCtaCard({
       onPress={onPress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
-      style={[shadows.level2, pressStyle]}
+      style={[shadows.level2, animatedStyle]}
       testID="danang-365-cta"
     >
       <LinearGradient

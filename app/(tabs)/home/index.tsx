@@ -151,7 +151,7 @@ function HomeEventCard({
         </View>
       </View>
       <View className="absolute bottom-5 right-4.5 size-10.5 items-center justify-center rounded-full bg-primary">
-        <ArrowRight size={18} color="#fff" />
+        <ArrowRight size={18} color={Colors.white} />
       </View>
     </Pressable>
   );
@@ -397,7 +397,7 @@ function HomeScreenContent(): React.JSX.Element {
                   <View
                     className="absolute -bottom-px -right-px size-3.5 rounded-full"
                     style={{
-                      backgroundColor: '#4CAF50',
+                      backgroundColor: Colors.success,
                       borderColor: Colors.background,
                       borderWidth: 2.5,
                     }}

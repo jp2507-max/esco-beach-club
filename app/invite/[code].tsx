@@ -3,10 +3,12 @@ import type React from 'react';
 import { useEffect } from 'react';
 
 import { useAuth } from '@/providers/AuthProvider';
-import { setPendingReferralCode } from '@/src/lib/referral/pending-referral';
+import { updatePendingReferralCode } from '@/src/lib/referral/pending-referral';
+import { usePendingReferralSignal } from '@/src/stores/pending-referral-signal-store';
 
 export default function InviteDeepLinkScreen(): React.JSX.Element | null {
   const router = useRouter();
+  const bumpReferralSignal = usePendingReferralSignal((s) => s.bump);
   const { isAuthenticated, isLoading } = useAuth();
   const params = useLocalSearchParams<{ code?: string | string[] }>();
   const raw = params.code;
@@ -20,9 +22,9 @@ export default function InviteDeepLinkScreen(): React.JSX.Element | null {
       return;
     }
 
-    setPendingReferralCode(code);
+    updatePendingReferralCode(code, bumpReferralSignal);
     router.replace(isAuthenticated ? '/(tabs)' : '/(auth)/login');
-  }, [code, isAuthenticated, isLoading, router]);
+  }, [bumpReferralSignal, code, isAuthenticated, isLoading, router]);
 
   return null;
 }

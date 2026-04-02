@@ -354,11 +354,11 @@ export default function PerkHistoryScreen(): React.JSX.Element {
         }
         ListFooterComponent={
           <View className="mb-6 mt-6 flex-row items-center justify-center">
-            <Text className="text-base font-bold text-secondary dark:text-secondary-bright">
+            <Text className="text-base font-bold text-text-secondary dark:text-text-secondary-dark">
               {t('history.fullArchive')}
             </Text>
             <History
-              color={isDark ? Colors.secondaryBright : Colors.secondary}
+              color={isDark ? Colors.textSecondaryDark : Colors.textSecondary}
               size={14}
               style={{ marginLeft: 8 }}
             />

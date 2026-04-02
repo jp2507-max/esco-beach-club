@@ -626,8 +626,8 @@ export default function SignupScreen(): React.JSX.Element {
                 disabled={isAuthBusy}
                 onPress={(e) => {
                   hapticMedium();
-                  if (isCodeStep) onCodeSubmit(e);
-                  else onEmailSubmit(e);
+                  if (isCodeStep) void onCodeSubmit(e);
+                  else void onEmailSubmit(e);
                 }}
                 onPressIn={handlePressIn}
                 onPressOut={handlePressOut}
