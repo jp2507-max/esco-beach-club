@@ -116,7 +116,7 @@ const common = {
     title: 'Màn hình này không tồn tại.',
     cta: 'Đi đến trang chủ',
   },
-  Member: 'Thành viên',
+  member: 'Thành viên',
 } as const;
 
 export default common;

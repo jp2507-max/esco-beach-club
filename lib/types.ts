@@ -65,6 +65,7 @@ export type AuthProviderType =
 export const accountDeletionStatuses = {
   completed: 'completed',
   pending: 'pending',
+  processing: 'processing',
   restored: 'restored',
 } as const;
 

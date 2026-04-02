@@ -115,6 +115,7 @@ const profile = {
     gracePeriodTitle: 'Thời gian chờ 30 ngày',
     gracePeriodDescription:
       'Bạn sẽ có 30 ngày để đăng nhập lại và khôi phục tài khoản trước khi việc xóa được hoàn tất.',
+    defaultGracePeriod: '30 ngày',
     whatWillBeDeletedTitle: 'Những gì sẽ bị xóa',
     whatWillBeDeletedItems: {
       profileData: 'Thông tin hồ sơ và tài khoản',
@@ -153,10 +154,16 @@ const profile = {
     errors: {
       appleVerificationCanceled:
         'Đã hủy xác minh Apple nên việc xóa chưa được lên lịch.',
-      restoreFailed:
-        'Không thể khôi phục tài khoản của bạn. Vui lòng thử lại.',
-      scheduleFailed:
-        'Không thể lên lịch xóa tài khoản. Vui lòng thử lại.',
+      apiUnavailable:
+        'Tính năng xóa tài khoản chưa được cấu hình cho bản dựng này. Hãy khởi động Expo dev server có API routes hoặc đặt EXPO_PUBLIC_ACCOUNT_API_BASE_URL.',
+      instantAuthUnavailable:
+        'Tính năng xóa tài khoản tạm thời không khả dụng vì API cục bộ không thể kết nối tới InstantDB. Hãy kiểm tra DNS hoặc kết nối internet của máy này rồi thử lại.',
+      networkUnavailable:
+        'Không thể kết nối tới dịch vụ xóa tài khoản. Hãy kiểm tra kết nối rồi thử lại.',
+      restoreFailed: 'Không thể khôi phục tài khoản của bạn. Vui lòng thử lại.',
+      scheduleFailed: 'Không thể lên lịch xóa tài khoản. Vui lòng thử lại.',
+      serverMisconfigured:
+        'Tính năng xóa tài khoản hiện tạm thời không khả dụng vì máy chủ thiếu thông tin xác thực Instant admin.',
       sessionExpired:
         'Phiên bảo mật của bạn đã hết hạn. Hãy đăng nhập lại rồi thử lại.',
     },
@@ -308,7 +315,8 @@ const profile = {
       freeCocktail: 'Cocktail miễn phí',
       vipBadge: 'Huy hiệu VIP',
       priorityEntry: 'Ưu tiên vào cửa',
-      priorityProgress: 'Cần thêm {{count}} lượt giới thiệu hoàn tất',
+      priorityProgress_one: 'Cần thêm {{count}} lượt giới thiệu hoàn tất',
+      priorityProgress_other: 'Cần thêm {{count}} lượt giới thiệu hoàn tất',
       unlocked: 'Đã mở khóa',
       twoMoreInvites: 'Thêm {{count}} lời mời nữa',
       locked: 'Đã khóa',

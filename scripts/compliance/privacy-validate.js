@@ -18,7 +18,11 @@ const manifestSourcePath = path.join(
   'apple',
   'privacy-manifest.json'
 );
-const pluginPath = path.join(rootDir, 'plugins', 'with-apple-privacy-manifest.js');
+const pluginPath = path.join(
+  rootDir,
+  'plugins',
+  'with-apple-privacy-manifest.js'
+);
 const checklistPath = path.join(
   rootDir,
   'config',
@@ -26,8 +30,16 @@ const checklistPath = path.join(
   'privacy-checklist.json'
 );
 
-function readJson(filePath) {
-  return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+function readJson(filePath, errors) {
+  try {
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  } catch (err) {
+    const filename = path.relative(rootDir, filePath);
+    errors.push(
+      `Failed to parse ${filename}: ${err instanceof SyntaxError ? err.message : String(err)}`
+    );
+    return null;
+  }
 }
 
 function main() {
@@ -54,56 +66,71 @@ function main() {
   let manifestSource = null;
 
   if (fs.existsSync(appJsonPath)) {
-    appJson = readJson(appJsonPath);
-    const plugins = appJson?.expo?.plugins ?? [];
-    const hasPlugin = plugins.some(
-      (plugin) =>
-        plugin === './plugins/with-apple-privacy-manifest' ||
-        (Array.isArray(plugin) &&
-          plugin[0] === './plugins/with-apple-privacy-manifest')
-    );
+    appJson = readJson(appJsonPath, errors);
+    if (appJson === null) {
+      // Parse error already added to errors array; skip structural checks
+    } else {
+      const plugins = appJson?.expo?.plugins ?? [];
+      const hasPlugin = plugins.some(
+        (plugin) =>
+          plugin === './plugins/with-apple-privacy-manifest' ||
+          (Array.isArray(plugin) &&
+            plugin[0] === './plugins/with-apple-privacy-manifest')
+      );
 
-    if (!hasPlugin) {
-      errors.push('app.json does not register ./plugins/with-apple-privacy-manifest');
-    }
+      if (!hasPlugin) {
+        errors.push(
+          'app.json does not register ./plugins/with-apple-privacy-manifest'
+        );
+      }
 
-    const publicName = appJson?.expo?.name;
-    if (typeof publicName !== 'string' || publicName.includes('MVP')) {
-      errors.push('app.json name must be production-ready and must not contain MVP');
+      const publicName = appJson?.expo?.name;
+      if (typeof publicName !== 'string' || publicName.includes('MVP')) {
+        errors.push(
+          'app.json name must be production-ready and must not contain MVP'
+        );
+      }
     }
   }
 
   if (fs.existsSync(manifestSourcePath)) {
-    manifestSource = readJson(manifestSourcePath);
-    const requiredKeys = [
-      'NSPrivacyTracking',
-      'NSPrivacyTrackingDomains',
-      'NSPrivacyCollectedDataTypes',
-      'NSPrivacyAccessedAPITypes',
-    ];
+    manifestSource = readJson(manifestSourcePath, errors);
+    if (manifestSource === null) {
+      // Parse error already added to errors array; skip structural checks
+    } else {
+      const requiredKeys = [
+        'NSPrivacyTracking',
+        'NSPrivacyTrackingDomains',
+        'NSPrivacyCollectedDataTypes',
+        'NSPrivacyAccessedAPITypes',
+      ];
 
-    for (const key of requiredKeys) {
-      if (!(key in manifestSource)) {
-        errors.push(`privacy manifest source is missing ${key}`);
+      for (const key of requiredKeys) {
+        if (!(key in manifestSource)) {
+          errors.push(`privacy manifest source is missing ${key}`);
+        }
       }
-    }
 
-    if (!Array.isArray(manifestSource.NSPrivacyTrackingDomains)) {
-      errors.push('NSPrivacyTrackingDomains must be an array');
-    }
+      if (!Array.isArray(manifestSource.NSPrivacyTrackingDomains)) {
+        errors.push('NSPrivacyTrackingDomains must be an array');
+      }
 
-    if (!Array.isArray(manifestSource.NSPrivacyCollectedDataTypes)) {
-      errors.push('NSPrivacyCollectedDataTypes must be an array');
-    }
+      if (!Array.isArray(manifestSource.NSPrivacyCollectedDataTypes)) {
+        errors.push('NSPrivacyCollectedDataTypes must be an array');
+      }
 
-    if (!Array.isArray(manifestSource.NSPrivacyAccessedAPITypes)) {
-      errors.push('NSPrivacyAccessedAPITypes must be an array');
-    }
+      if (!Array.isArray(manifestSource.NSPrivacyAccessedAPITypes)) {
+        errors.push('NSPrivacyAccessedAPITypes must be an array');
+      }
 
-    if (manifestSource.NSPrivacyCollectedDataTypes.length === 0) {
-      warnings.push(
-        'NSPrivacyCollectedDataTypes is empty. Confirm App Store Connect privacy answers are covered separately.'
-      );
+      if (
+        Array.isArray(manifestSource.NSPrivacyCollectedDataTypes) &&
+        manifestSource.NSPrivacyCollectedDataTypes.length === 0
+      ) {
+        warnings.push(
+          'NSPrivacyCollectedDataTypes is empty. Confirm App Store Connect privacy answers are covered separately.'
+        );
+      }
     }
   }
 

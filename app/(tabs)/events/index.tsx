@@ -1,6 +1,7 @@
 import { FlashList, type ListRenderItemInfo } from '@shopify/flash-list';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useRouter } from 'expo-router';
+import type { TFunction } from 'i18next';
 import { Calendar, Heart, PartyPopper } from 'lucide-react-native';
 import React, {
   useCallback,
@@ -10,18 +11,30 @@ import React, {
   useState,
 } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Platform } from 'react-native';
+import { Platform, type ViewStyle } from 'react-native';
+import {
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withSpring,
+} from 'react-native-reanimated';
 
 import { Colors } from '@/constants/colors';
 import type { Event } from '@/lib/types';
 import { useEventsData, useSavedEventsData } from '@/providers/DataProvider';
 import {
   CategoryChip,
+  SkeletonCard,
   WeekStrip,
   type WeekStripItem,
 } from '@/src/components/ui';
+import { motion } from '@/src/lib/animations/motion';
+import { useScreenEntry } from '@/src/lib/animations/use-screen-entry';
+import { useStaggeredListEntering } from '@/src/lib/animations/use-staggered-entry';
+import { hapticLight, hapticSelection } from '@/src/lib/haptics/use-haptic';
 import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from '@/src/tw';
+import { Pressable, ScrollView, Text, View } from '@/src/tw';
+import { Animated } from '@/src/tw/animated';
 import { Image } from '@/src/tw/image';
 
 const eventCategories = [
@@ -233,6 +246,165 @@ function resolveEventDayKey(
   return matchedWeekDay?.key ?? null;
 }
 
+function EventsFilterHeader({
+  children,
+}: {
+  children: React.ReactNode;
+}): React.JSX.Element {
+  const { contentStyle } = useScreenEntry({ durationMs: 380 });
+  return <Animated.View style={contentStyle}>{children}</Animated.View>;
+}
+
+type AnimatedHeartToggleProps = {
+  accessibilityHint?: string;
+  accessibilityLabel: string;
+  className?: string;
+  color: string;
+  fill: string;
+  onToggle: () => void;
+  style?: ViewStyle;
+  testID?: string;
+};
+
+function AnimatedHeartToggle({
+  accessibilityHint,
+  accessibilityLabel,
+  className,
+  color,
+  fill,
+  onToggle,
+  style,
+  testID,
+}: AnimatedHeartToggleProps): React.JSX.Element {
+  const scale = useSharedValue(1);
+  const heartStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.get() }],
+  }));
+
+  const handlePress = useCallback((): void => {
+    hapticLight();
+    scale.set(
+      withSequence(
+        withSpring(1.18, motion.spring.snappy),
+        withSpring(1, motion.spring.gentle)
+      )
+    );
+    onToggle();
+  }, [onToggle, scale]);
+
+  return (
+    <Pressable
+      accessibilityHint={accessibilityHint}
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole="button"
+      className={className}
+      onPress={handlePress}
+      style={style}
+      testID={testID}
+    >
+      <Animated.View style={heartStyle}>
+        <Heart size={18} color={color} fill={fill} />
+      </Animated.View>
+    </Pressable>
+  );
+}
+
+type EventListCardProps = {
+  index: number;
+  isEventSaved: (id: string) => boolean;
+  item: Event;
+  onOpen: (id: string) => void;
+  t: TFunction<'events'>;
+  toggleSavedEvent: (id: string) => Promise<void> | void;
+};
+
+function EventListCard({
+  index,
+  isEventSaved: isSaved,
+  item,
+  onOpen,
+  t,
+  toggleSavedEvent,
+}: EventListCardProps): React.JSX.Element {
+  const entering = useStaggeredListEntering(index);
+  const saved = isSaved(item.id);
+
+  return (
+    <Animated.View className="mb-3" entering={entering}>
+      <View className="flex-row items-center rounded-2xl border border-border bg-card p-3 dark:border-dark-border dark:bg-dark-bg-card">
+        <Pressable
+          accessibilityRole="button"
+          className="flex-1 flex-row items-center"
+          onPress={() => onOpen(item.id)}
+          testID={`event-${item.id}`}
+        >
+          <Image
+            className="size-20 rounded-xl"
+            source={{ uri: item.image }}
+            cachePolicy="memory-disk"
+            contentFit="cover"
+            recyclingKey={`event-list-${item.id}`}
+            transition={180}
+          />
+          <View className="ml-3.5 flex-1">
+            <Text className="mb-1 text-base font-bold text-text dark:text-text-primary-dark">
+              {item.title}
+            </Text>
+            <View className="mb-2 flex-row items-center gap-1.25">
+              <Calendar size={12} color={Colors.textSecondary} />
+              <Text className="text-xs font-medium text-text-secondary dark:text-text-secondary-dark">
+                {item.date} • {item.time}
+              </Text>
+            </View>
+            {item.badge ? (
+              <View
+                className="self-start rounded-md px-2.5 py-1"
+                style={{
+                  backgroundColor: `${item.badge_color ?? Colors.secondary}18`,
+                }}
+              >
+                <Text
+                  className="text-[10px] font-extrabold tracking-[0.3px]"
+                  style={{ color: item.badge_color ?? Colors.secondary }}
+                >
+                  {item.badge}
+                </Text>
+              </View>
+            ) : null}
+          </View>
+        </Pressable>
+        <View className="ml-3 h-20 items-end justify-between py-1">
+          <AnimatedHeartToggle
+            accessibilityHint={
+              saved ? t('unlikeEventHint') : t('likeEventHint')
+            }
+            accessibilityLabel={saved ? t('removeSavedEvent') : t('saveEvent')}
+            className="p-1"
+            color={saved ? Colors.primary : Colors.textLight}
+            fill={saved ? Colors.primary : 'transparent'}
+            onToggle={() => {
+              void toggleSavedEvent(item.id);
+            }}
+            testID={`save-event-${item.id}`}
+          />
+          <Pressable
+            accessibilityLabel={t('openEventPrice', { title: item.title })}
+            accessibilityHint={t('openEventPriceHint')}
+            accessibilityRole="button"
+            className="items-end px-1 py-0.5"
+            onPress={() => onOpen(item.id)}
+            testID={`open-event-price-${item.id}`}
+          >
+            <Text className="text-lg font-bold text-text dark:text-text-primary-dark">
+              {item.price}
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+    </Animated.View>
+  );
+}
+
 export default function EventsScreen(): React.JSX.Element {
   const [activeCategory, setActiveCategory] = useState<string>('All Events');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -363,84 +535,15 @@ export default function EventsScreen(): React.JSX.Element {
   );
 
   const renderItem = useCallback(
-    ({ item }: ListRenderItemInfo<Event>): React.JSX.Element => (
-      <View className="mb-3 flex-row items-center rounded-2xl border border-border bg-card p-3 dark:border-dark-border dark:bg-dark-bg-card">
-        <Pressable
-          accessibilityRole="button"
-          className="flex-1 flex-row items-center"
-          onPress={() => openEvent(item.id)}
-          testID={`event-${item.id}`}
-        >
-          <Image
-            className="size-20 rounded-xl"
-            source={{ uri: item.image }}
-            cachePolicy="memory-disk"
-            contentFit="cover"
-            recyclingKey={`event-list-${item.id}`}
-            transition={180}
-          />
-          <View className="ml-3.5 flex-1">
-            <Text className="mb-1 text-base font-bold text-text dark:text-text-primary-dark">
-              {item.title}
-            </Text>
-            <View className="mb-2 flex-row items-center gap-1.25">
-              <Calendar size={12} color={Colors.textSecondary} />
-              <Text className="text-xs font-medium text-text-secondary dark:text-text-secondary-dark">
-                {item.date} • {item.time}
-              </Text>
-            </View>
-            {item.badge ? (
-              <View
-                className="self-start rounded-md px-2.5 py-1"
-                style={{
-                  backgroundColor: `${item.badge_color ?? Colors.secondary}18`,
-                }}
-              >
-                <Text
-                  className="text-[10px] font-extrabold tracking-[0.3px]"
-                  style={{ color: item.badge_color ?? Colors.secondary }}
-                >
-                  {item.badge}
-                </Text>
-              </View>
-            ) : null}
-          </View>
-        </Pressable>
-        <View className="ml-3 h-20 items-end justify-between py-1">
-          <Pressable
-            accessibilityLabel={
-              isEventSaved(item.id) ? t('removeSavedEvent') : t('saveEvent')
-            }
-            accessibilityHint={
-              isEventSaved(item.id) ? t('unlikeEventHint') : t('likeEventHint')
-            }
-            accessibilityRole="button"
-            className="p-1"
-            onPress={() => {
-              void toggleSavedEvent(item.id);
-            }}
-            testID={`save-event-${item.id}`}
-          >
-            <Heart
-              size={18}
-              color={isEventSaved(item.id) ? Colors.primary : Colors.textLight}
-              fill={isEventSaved(item.id) ? Colors.primary : 'transparent'}
-            />
-          </Pressable>
-          <Pressable
-            accessibilityLabel={t('openEventPrice', { title: item.title })}
-            accessibilityHint={t('openEventPriceHint')}
-            accessibilityRole="button"
-            className="items-end px-1 py-0.5"
-            onPress={() => openEvent(item.id)}
-            testID={`open-event-price-${item.id}`}
-          >
-            <Text className="text-lg font-bold text-text dark:text-text-primary-dark">
-              {item.price}
-            </Text>
-          </Pressable>
-        </View>
-      </View>
+    ({ index, item }: ListRenderItemInfo<Event>): React.JSX.Element => (
+      <EventListCard
+        index={index}
+        isEventSaved={isEventSaved}
+        item={item}
+        onOpen={openEvent}
+        t={t}
+        toggleSavedEvent={toggleSavedEvent}
+      />
     ),
     [isEventSaved, openEvent, t, toggleSavedEvent]
   );
@@ -484,7 +587,7 @@ export default function EventsScreen(): React.JSX.Element {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={listContentContainerStyle}
         ListHeaderComponent={
-          <>
+          <EventsFilterHeader>
             <View className="mb-3 flex-row items-center justify-between">
               <Text className="text-sm font-bold uppercase tracking-[1px] text-text-muted dark:text-text-muted-dark">
                 {t('weekStrip.title')}
@@ -502,7 +605,10 @@ export default function EventsScreen(): React.JSX.Element {
                 })
               }
               items={weekStripItems}
-              onSelect={setSelectedDayKey}
+              onSelect={(key) => {
+                hapticSelection();
+                setSelectedDayKey(key);
+              }}
               selectedKey={selectedDayKey}
             />
 
@@ -519,7 +625,10 @@ export default function EventsScreen(): React.JSX.Element {
                     key={category.value}
                     isActive={isActive}
                     label={t(category.labelKey)}
-                    onPress={() => setActiveCategory(category.value)}
+                    onPress={() => {
+                      hapticSelection();
+                      setActiveCategory(category.value);
+                    }}
                     testID={`cat-${category.value}`}
                     labelClassName="text-[13px]"
                   />
@@ -592,54 +701,45 @@ export default function EventsScreen(): React.JSX.Element {
                     </Text>
                   </View>
                 </Pressable>
-                <Pressable
-                  accessibilityLabel={
-                    isEventSaved(featuredEvent.id)
-                      ? t('removeSavedEvent')
-                      : t('saveEvent')
-                  }
+                <AnimatedHeartToggle
                   accessibilityHint={
                     isEventSaved(featuredEvent.id)
                       ? t('unlikeEventHint')
                       : t('likeEventHint')
                   }
-                  accessibilityRole="button"
+                  accessibilityLabel={
+                    isEventSaved(featuredEvent.id)
+                      ? t('removeSavedEvent')
+                      : t('saveEvent')
+                  }
                   className="absolute left-3.5 top-3.5 size-10 items-center justify-center rounded-full"
-                  onPress={() => {
+                  color={
+                    isEventSaved(featuredEvent.id)
+                      ? Colors.primary
+                      : Colors.white
+                  }
+                  fill={
+                    isEventSaved(featuredEvent.id)
+                      ? Colors.primary
+                      : 'transparent'
+                  }
+                  onToggle={() => {
                     void toggleSavedEvent(featuredEvent.id);
                   }}
                   style={{ backgroundColor: 'rgba(0,0,0,0.28)' }}
                   testID="featured-save-event"
-                >
-                  <Heart
-                    size={18}
-                    color={
-                      isEventSaved(featuredEvent.id)
-                        ? Colors.primary
-                        : Colors.white
-                    }
-                    fill={
-                      isEventSaved(featuredEvent.id)
-                        ? Colors.primary
-                        : 'transparent'
-                    }
-                  />
-                </Pressable>
+                />
               </View>
             ) : null}
-          </>
+          </EventsFilterHeader>
         }
         ListFooterComponent={
           <>
             {eventsLoading ? (
-              <View className="mb-3 items-center rounded-2xl border border-border bg-card p-6 dark:border-dark-border dark:bg-dark-bg-card">
-                <ActivityIndicator
-                  color={isDark ? Colors.primaryBright : Colors.primary}
-                  size="large"
-                />
-                <Text className="mt-3 text-sm font-medium text-text-secondary dark:text-text-secondary-dark">
-                  {t('loading')}
-                </Text>
+              <View className="mb-3 gap-3">
+                <SkeletonCard height={100} />
+                <SkeletonCard height={100} />
+                <SkeletonCard height={100} />
               </View>
             ) : filteredEvents.length === 0 ? (
               <View className="mb-3 rounded-2xl border border-border bg-card p-4 dark:border-dark-border dark:bg-dark-bg-card">

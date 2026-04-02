@@ -35,8 +35,7 @@ import {
   useStaffAccessData,
 } from './context';
 
-export type UseDataReturn =
-  BookingContentData &
+export type UseDataReturn = BookingContentData &
   ProfileData &
   EventsData &
   MemberOffersData &
@@ -132,12 +131,14 @@ const REFERRAL_GOAL = 3;
 
 export function useReferralProgress(): { current: number; goal: number } {
   const { referrals } = useReferralsData();
-  const completed = useMemo(
-    () =>
-      referrals.filter((referral) => referral.status === 'Completed').length,
+  return useMemo(
+    () => ({
+      current: referrals.filter((referral) => referral.status === 'Completed')
+        .length,
+      goal: REFERRAL_GOAL,
+    }),
     [referrals]
   );
-  return { current: completed, goal: REFERRAL_GOAL };
 }
 
 export function useSavedEventsCount(): number {

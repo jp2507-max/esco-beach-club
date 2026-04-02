@@ -18,6 +18,9 @@ import { useTranslation } from 'react-i18next';
 import { Share } from 'react-native';
 import {
   cancelAnimation,
+  Extrapolation,
+  interpolate,
+  useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -25,11 +28,21 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { accentOnDarkBackground, Colors } from '@/constants/colors';
-import { useEventById, useSavedEventsData } from '@/providers/DataProvider';
-import { HeaderGlassButton } from '@/src/components/ui';
+import {
+  useEventById,
+  useEventsData,
+  useSavedEventsData,
+} from '@/providers/DataProvider';
+import {
+  HeaderGlassButton,
+  Skeleton,
+  SkeletonCard,
+  SkeletonText,
+} from '@/src/components/ui';
 import { rmTiming } from '@/src/lib/animations/motion';
+import { hapticMedium } from '@/src/lib/haptics/use-haptic';
 import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
-import { Pressable, ScrollView, Text, View } from '@/src/tw';
+import { Pressable, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 import { Image } from '@/src/tw/image';
 
@@ -62,11 +75,19 @@ export default function EventDetailsScreen(): React.JSX.Element {
   const fade = useSharedValue(0);
   const slide = useSharedValue(40);
   const headerOpacity = useSharedValue(0);
+  const scrollY = useSharedValue(0);
 
   const { t } = useTranslation('events');
   const isDark = useAppIsDark();
+  const { eventsLoading } = useEventsData();
   const foundEvent = useEventById(id);
   const { isEventSaved, toggleSavedEvent } = useSavedEventsData();
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.set(event.contentOffset.y);
+    },
+  });
 
   useEffect(() => {
     headerOpacity.set(withTiming(1, rmTiming(400)));
@@ -87,6 +108,75 @@ export default function EventDetailsScreen(): React.JSX.Element {
     opacity: fade.get(),
     transform: [{ translateY: slide.get() }],
   }));
+
+  const imageParallaxStyle = useAnimatedStyle(() => {
+    const y = scrollY.get();
+    const translateY = interpolate(y, [0, 280], [0, -72], Extrapolation.CLAMP);
+    return {
+      transform: [{ translateY }],
+    };
+  });
+
+  const hasValidId = Boolean(id);
+
+  if (!hasValidId) {
+    return (
+      <View className="flex-1 items-center justify-center bg-background dark:bg-dark-bg">
+        <Text className="mb-4 text-base font-semibold text-text dark:text-text-primary-dark">
+          {t('eventNotFound')}
+        </Text>
+        <Pressable
+          accessibilityRole="button"
+          className="rounded-xl bg-primary px-5 py-3"
+          onPress={() => router.back()}
+        >
+          <Text className="text-white">{t('goBack')}</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  if (eventsLoading && !foundEvent) {
+    return (
+      <View className="flex-1 bg-background dark:bg-dark-bg">
+        <View className="relative h-80 overflow-hidden">
+          <SkeletonCard
+            className="absolute inset-0 rounded-none"
+            height={320}
+          />
+          <View
+            className="absolute left-4 right-4 z-10 flex-row items-center justify-between"
+            style={{ top: insets.top + 8 }}
+          >
+            <HeaderGlassButton
+              accessibilityLabel={t('goBack')}
+              accessibilityHint={t('goBack')}
+              onPress={() => router.back()}
+              testID="back-btn-skeleton"
+              variant="overlay"
+            >
+              <ArrowLeft size={20} color="#fff" />
+            </HeaderGlassButton>
+          </View>
+          <View className="absolute bottom-0 left-0 right-0 p-5">
+            <SkeletonText className="mb-3 h-8 w-4/5" lines={1} />
+            <View className="flex-row gap-2">
+              <Skeleton className="h-4 w-28 rounded-md" />
+              <Skeleton className="h-4 w-24 rounded-md" />
+            </View>
+          </View>
+        </View>
+        <View className="flex-1 rounded-t-[20px] bg-background px-5 pt-6 dark:bg-dark-bg">
+          <SkeletonText className="mb-6" lines={3} />
+          <SkeletonText className="mb-2 h-6 w-48" lines={1} />
+          <SkeletonText className="mb-4" lines={2} />
+          <SkeletonCard className="mb-3" height={100} />
+          <SkeletonCard className="mb-3" height={100} />
+          <SkeletonCard height={100} />
+        </View>
+      </View>
+    );
+  }
 
   if (!foundEvent) {
     return (
@@ -137,6 +227,7 @@ export default function EventDetailsScreen(): React.JSX.Element {
   ];
 
   function handleBook(): void {
+    hapticMedium();
     router.push({
       pathname: '/booking' as never,
       params: { eventId: event.id, eventTitle: event.title },
@@ -164,14 +255,19 @@ export default function EventDetailsScreen(): React.JSX.Element {
 
   return (
     <View className="flex-1 bg-background dark:bg-dark-bg">
-      <Animated.View className="relative h-80" style={heroStyle}>
-        <Image
-          className="h-full w-full"
-          source={{ uri: event.image }}
-          cachePolicy="memory-disk"
-          contentFit="cover"
-          transition={180}
-        />
+      <Animated.View
+        className="relative h-80 overflow-hidden"
+        style={heroStyle}
+      >
+        <Animated.View className="absolute inset-0" style={imageParallaxStyle}>
+          <Image
+            className="h-full w-full"
+            source={{ uri: event.image }}
+            cachePolicy="memory-disk"
+            contentFit="cover"
+            transition={180}
+          />
+        </Animated.View>
         <LinearGradient
           colors={['rgba(0,0,0,0.3)', 'transparent', 'rgba(0,0,0,0.7)']}
           locations={[0, 0.4, 1]}
@@ -256,10 +352,12 @@ export default function EventDetailsScreen(): React.JSX.Element {
         </View>
       </Animated.View>
 
-      <ScrollView
+      <Animated.ScrollView
         contentInsetAdjustmentBehavior="automatic"
         className="flex-1 rounded-t-[20px] bg-background dark:bg-dark-bg"
         contentContainerClassName="px-5 pt-6"
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
         style={{ marginTop: -16 }}
       >
@@ -445,7 +543,7 @@ export default function EventDetailsScreen(): React.JSX.Element {
 
           <View className="h-[120px]" />
         </Animated.View>
-      </ScrollView>
+      </Animated.ScrollView>
 
       <View
         className="absolute bottom-0 left-0 right-0 flex-row items-center justify-between border-t border-border bg-white px-5 pt-3.5 dark:border-dark-border dark:bg-dark-bg-card"

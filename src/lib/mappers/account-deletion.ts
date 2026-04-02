@@ -3,10 +3,7 @@ import type {
   AccountDeletionStatus,
   AuthProviderType,
 } from '@/lib/types';
-import {
-  accountDeletionStatuses,
-  authProviderTypes,
-} from '@/lib/types';
+import { accountDeletionStatuses, authProviderTypes } from '@/lib/types';
 
 import {
   type InstantRecord,
@@ -22,6 +19,10 @@ function toAccountDeletionStatus(value: unknown): AccountDeletionStatus {
 
   if (normalized === accountDeletionStatuses.completed) {
     return accountDeletionStatuses.completed;
+  }
+
+  if (normalized === accountDeletionStatuses.processing) {
+    return accountDeletionStatuses.processing;
   }
 
   if (normalized === accountDeletionStatuses.restored) {

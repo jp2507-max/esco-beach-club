@@ -1,5 +1,9 @@
+import {
+  accountDeletionStatuses,
+  type AuthProviderType,
+  authProviderTypes,
+} from '@/lib/types';
 import { revokeAppleAuthorizationCode } from '@/src/lib/account-deletion/apple-revoke-server';
-import { accountDeletionStatuses, authProviderTypes } from '@/lib/types';
 import { getInstantAdminDb } from '@/src/lib/referral/instant-admin-server';
 import { verifyInstantRefreshToken } from '@/src/lib/referral/instant-runtime-server';
 
@@ -11,12 +15,18 @@ type AccountDeletionRequestRecord = {
 };
 
 type LinkedProfileRecord = {
+  auth_provider?: unknown;
   id?: string;
 };
 
 type LinkedUserRecord = {
   id?: string;
   profile?: LinkedProfileRecord | LinkedProfileRecord[] | null;
+};
+
+type ResolvedProfileContext = {
+  authProvider: AuthProviderType | null;
+  profileId: string | null;
 };
 
 function jsonResponse(body: unknown, status: number): Response {
@@ -52,21 +62,46 @@ function firstLinkedUserRecord(value: unknown): LinkedUserRecord | null {
   return isRecord(value) ? (value as LinkedUserRecord) : null;
 }
 
-async function resolveProfileIdForUser(
+function toAuthProvider(value: unknown): AuthProviderType | null {
+  const normalized =
+    typeof value === 'string' ? value.trim().toLowerCase() : '';
+
+  if (normalized === authProviderTypes.apple) {
+    return authProviderTypes.apple;
+  }
+
+  if (normalized === authProviderTypes.google) {
+    return authProviderTypes.google;
+  }
+
+  if (normalized === authProviderTypes.magicCode) {
+    return authProviderTypes.magicCode;
+  }
+
+  return null;
+}
+
+async function resolveProfileContextForUser(
   adminDb: NonNullable<ReturnType<typeof getInstantAdminDb>>,
   userId: string
-): Promise<string | null> {
+): Promise<ResolvedProfileContext> {
   const directResult = await adminDb.query({
     profiles: {
       $: { where: { 'user.id': userId } },
     },
   });
   const directProfile = directResult.profiles?.[0] as
-    | { id?: string }
+    | LinkedProfileRecord
     | undefined;
 
-  if (typeof directProfile?.id === 'string' && directProfile.id) {
-    return directProfile.id;
+  if (directProfile) {
+    return {
+      authProvider: toAuthProvider(directProfile.auth_provider),
+      profileId:
+        typeof directProfile.id === 'string' && directProfile.id
+          ? directProfile.id
+          : null,
+    };
   }
 
   const linkedResult = await adminDb.query({
@@ -78,7 +113,13 @@ async function resolveProfileIdForUser(
   const linkedUser = firstLinkedUserRecord(linkedResult.$users);
   const linkedProfile = firstLinkedProfileRecord(linkedUser?.profile ?? null);
 
-  return typeof linkedProfile?.id === 'string' ? linkedProfile.id : null;
+  return {
+    authProvider: toAuthProvider(linkedProfile?.auth_provider),
+    profileId:
+      typeof linkedProfile?.id === 'string' && linkedProfile.id
+        ? linkedProfile.id
+        : null,
+  };
 }
 
 function addGracePeriodDays(from: Date, days: number): string {
@@ -86,7 +127,10 @@ function addGracePeriodDays(from: Date, days: number): string {
 }
 
 function getAppleRevocationFailureStatus(
-  revocation: Exclude<Awaited<ReturnType<typeof revokeAppleAuthorizationCode>>, { status: 'not_required' | 'revoked' }>
+  revocation: Exclude<
+    Awaited<ReturnType<typeof revokeAppleAuthorizationCode>>,
+    { status: 'not_required' | 'revoked' }
+  >
 ): number {
   if (revocation.status === 'missing_authorization_code') {
     return 400;
@@ -114,7 +158,24 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const authUser = await verifyInstantRefreshToken(refreshToken);
-  if (!authUser) {
+  if (!authUser.ok) {
+    if (authUser.code === 'instant_auth_unreachable') {
+      return jsonResponse(
+        {
+          error: authUser.code,
+          message: authUser.message ?? 'Could not reach Instant auth service',
+        },
+        503
+      );
+    }
+
+    if (authUser.code === 'missing_app_id') {
+      return jsonResponse(
+        { error: 'server_misconfigured', message: 'Missing admin or app id' },
+        503
+      );
+    }
+
     return jsonResponse({ error: 'unauthorized' }, 401);
   }
 
@@ -129,8 +190,6 @@ export async function POST(request: Request): Promise<Response> {
     return jsonResponse({ error: 'invalid_body' }, 400);
   }
 
-  const authProvider =
-    typeof parsed.authProvider === 'string' ? parsed.authProvider.trim() : '';
   const appleAuthorizationCode =
     typeof parsed.appleAuthorizationCode === 'string'
       ? parsed.appleAuthorizationCode.trim()
@@ -163,37 +222,43 @@ export async function POST(request: Request): Promise<Response> {
 
   const nowIso = new Date().toISOString();
   const scheduledForAt = addGracePeriodDays(new Date(), 30);
-  const profileId = await resolveProfileIdForUser(adminDb, authUser.userId);
+  const { authProvider: trustedAuthProvider, profileId } =
+    await resolveProfileContextForUser(adminDb, authUser.userId);
 
-  const revocation =
-    authProvider === authProviderTypes.apple
-      ? await revokeAppleAuthorizationCode(appleAuthorizationCode)
-      : { status: 'not_required' as const };
+  const requiresAppleRevocation =
+    trustedAuthProvider === authProviderTypes.apple;
 
-  if (
-    authProvider === authProviderTypes.apple &&
-    revocation.status !== 'revoked'
-  ) {
+  const revocation = requiresAppleRevocation
+    ? await revokeAppleAuthorizationCode(appleAuthorizationCode)
+    : { status: 'not_required' as const };
+
+  if (requiresAppleRevocation && revocation.status !== 'revoked') {
+    if (revocation.status === 'not_required') {
+      return jsonResponse(
+        {
+          error: 'apple_revocation_failed',
+          message: revocation.status,
+        },
+        502
+      );
+    }
+
     return jsonResponse(
       {
         error: 'apple_revocation_failed',
         message:
-          'message' in revocation
-            ? revocation.message
-            : revocation.status,
+          'message' in revocation ? revocation.message : revocation.status,
       },
       getAppleRevocationFailureStatus(revocation)
     );
   }
 
   const payload = {
-    ...(revocation.status === 'failed' && revocation.message
-      ? { apple_revocation_error: revocation.message }
-      : {}),
-    ...(revocation.status !== 'not_required'
+    ...(trustedAuthProvider === authProviderTypes.apple &&
+    revocation.status !== 'not_required'
       ? { apple_revocation_status: revocation.status }
       : {}),
-    ...(authProvider ? { auth_provider: authProvider } : {}),
+    ...(trustedAuthProvider ? { auth_provider: trustedAuthProvider } : {}),
     auth_user_id: authUser.userId,
     ...(typeof parsed.email === 'string' && parsed.email.trim().length > 0
       ? { email: parsed.email.trim() }
@@ -207,18 +272,19 @@ export async function POST(request: Request): Promise<Response> {
 
   await adminDb.transact(
     existingRequest?.id
-      ? adminDb.tx.account_deletion_requests[existingRequest.id].update(payload, {
-          upsert: false,
-        })
+      ? adminDb.tx.account_deletion_requests[existingRequest.id].update(
+          payload,
+          {
+            upsert: false,
+          }
+        )
       : adminDb.tx.account_deletion_requests[recordId].create({
           created_at: nowIso,
           ...payload,
         })
   );
 
-  if (
-    typeof adminDb.auth?.signOut === 'function'
-  ) {
+  if (typeof adminDb.auth?.signOut === 'function') {
     try {
       await adminDb.auth.signOut({ refresh_token: refreshToken });
     } catch (error) {

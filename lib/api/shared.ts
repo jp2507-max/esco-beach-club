@@ -1,5 +1,3 @@
-import { id } from '@instantdb/react-native';
-
 import type {
   OnboardingPermissionStatus,
   Profile,
@@ -118,8 +116,9 @@ export function buildMemberId(userId: string): string {
   return `ESCO-${userId.replace(/-/g, '').slice(0, 16).toUpperCase()}`;
 }
 
-export function buildReferralCode(): string {
-  return `ESCO-${id().replace(/-/g, '').slice(0, 8).toUpperCase()}`;
+export function buildReferralCode(userId: string): string {
+  // Use different slice range than buildMemberId to avoid prefix collision
+  return `ESCO-${userId.replace(/-/g, '').slice(16, 24).toUpperCase()}`;
 }
 
 export function isMemberIdConflict(error: Error): boolean {
@@ -191,7 +190,13 @@ export function parseRewardServiceResponse(
   value: unknown
 ): RewardServiceApiResponse | null {
   const parsed = rewardServiceResponseSchema.safeParse(value);
-  if (!parsed.success) return null;
+  if (!parsed.success) {
+    console.warn(
+      'Failed to parse reward service response:',
+      parsed.error.issues
+    );
+    return null;
+  }
 
   const { cashbackPointsDelta, member, tierProgressPointsDelta, transaction } =
     parsed.data;
@@ -200,6 +205,7 @@ export function parseRewardServiceResponse(
     cashbackPointsDelta,
     member: {
       ...member,
+      auth_provider: null,
       date_of_birth: normalizeDateOfBirth(member.date_of_birth) ?? null,
       member_segment: member.member_segment
         ? (normalizeMemberSegment(member.member_segment) ?? null)
@@ -242,12 +248,7 @@ export function withoutUndefined<T extends Record<string, unknown>>(
   return Object.fromEntries(entries) as Partial<T>;
 }
 
-export function getDefaultProfileValues(options: {
-  userId: string;
-  email?: string;
-  displayName?: string;
-  dateOfBirth?: string;
-}): {
+export type DefaultProfileValues = {
   bio: string;
   cashback_points_balance: number;
   cashback_points_lifetime_earned: number;
@@ -271,8 +272,16 @@ export function getDefaultProfileValues(options: {
   tier_progress_started_at: string | null;
   tier_progress_target_points: number;
   updated_at: string;
-} {
-  const { userId, email, displayName, dateOfBirth } = options;
+};
+
+export function getDefaultProfileValues(options: {
+  userId: string;
+  email?: string;
+  displayName?: string;
+  dateOfBirth?: string;
+  referralCode?: string;
+}): DefaultProfileValues {
+  const { userId, email, displayName, dateOfBirth, referralCode } = options;
   const createdAt = nowIso();
   const normalizedDisplayName = displayName?.trim() ?? '';
   const emailPrefix = email?.split('@')[0]?.trim() ?? '';
@@ -302,7 +311,7 @@ export function getDefaultProfileValues(options: {
     onboarding_completed_at: null,
     push_notification_permission_status:
       onboardingPermissionStatuses.undetermined,
-    referral_code: buildReferralCode(),
+    referral_code: referralCode ?? buildReferralCode(userId),
     saved: 0,
     tier_progress_expires_at: null,
     tier_progress_points: 0,

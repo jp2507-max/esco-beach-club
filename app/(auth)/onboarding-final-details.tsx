@@ -26,6 +26,7 @@ import { OnboardingHeader } from '@/src/components/onboarding/onboarding-header'
 import { motion, withRM } from '@/src/lib/animations/motion';
 import { useButtonPress } from '@/src/lib/animations/use-button-press';
 import { config } from '@/src/lib/config';
+import { hapticLight } from '@/src/lib/haptics/use-haptic';
 import { parseOnboardingMemberSegmentSearchParam } from '@/src/lib/utils/member-segment';
 import { readSingleSearchParam } from '@/src/lib/utils/search-params';
 import { Pressable, Text, View } from '@/src/tw';
@@ -472,7 +473,10 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
             <Pressable
               accessibilityRole="button"
               className="mt-8 overflow-hidden rounded-full"
-              onPress={handleCompleteSetup}
+              onPress={() => {
+                hapticLight();
+                handleCompleteSetup();
+              }}
               onPressIn={ctaButton.handlePressIn}
               onPressOut={ctaButton.handlePressOut}
               testID="onboarding-final-details-complete"
@@ -507,7 +511,10 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
           <Pressable
             accessibilityRole="button"
             className="mt-5 items-center"
-            onPress={handleDoThisLater}
+            onPress={() => {
+              hapticLight();
+              handleDoThisLater();
+            }}
             testID="onboarding-final-details-later"
           >
             <Text className="text-[16px] font-bold text-secondary dark:text-secondary-fixed">

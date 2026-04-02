@@ -45,7 +45,8 @@ export function useAccountDeletionRequest(
     () => ({
       accountDeletionRequest,
       isDeletionPending:
-        accountDeletionRequest?.status === accountDeletionStatuses.pending,
+        accountDeletionRequest?.status === accountDeletionStatuses.pending ||
+        accountDeletionRequest?.status === accountDeletionStatuses.processing,
       isLoading: Boolean(userId) && query.isLoading,
     }),
     [accountDeletionRequest, query.isLoading, userId]

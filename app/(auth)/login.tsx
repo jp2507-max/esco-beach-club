@@ -5,6 +5,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform } from 'react-native';
 import {
+  FadeInUp,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
@@ -14,7 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/providers/AuthProvider';
 import { ErrorBanner, SocialAuthButtons } from '@/src/components/ui';
-import { motion } from '@/src/lib/animations/motion';
+import { motion, withRM } from '@/src/lib/animations/motion';
 import { useEmailCodeAuthFlow } from '@/src/lib/auth/use-email-code-auth-flow';
 import { isAuthErrorKey } from '@/src/lib/auth-errors';
 import { ControlledTextInput } from '@/src/lib/forms/controlled-text-input';
@@ -22,6 +23,7 @@ import {
   type EmailFormValues,
   type VerifyCodeFormValues,
 } from '@/src/lib/forms/schemas';
+import { hapticMedium } from '@/src/lib/haptics/use-haptic';
 import { shadows } from '@/src/lib/styles/shadows';
 import {
   ActivityIndicator,
@@ -157,7 +159,10 @@ export default function LoginScreen(): React.JSX.Element {
           showsVerticalScrollIndicator={false}
           style={{ paddingTop: insets.top }}
         >
-          <View className="mb-8 items-center">
+          <Animated.View
+            className="mb-8 items-center"
+            entering={withRM(FadeInUp.delay(40).duration(motion.dur.md))}
+          >
             <View
               className="mb-4 size-18 items-center justify-center rounded-full bg-white"
               style={shadows.level4}
@@ -170,66 +175,92 @@ export default function LoginScreen(): React.JSX.Element {
             <Text className="mt-1 text-sm font-medium text-white/75">
               {t('loginTagline')}
             </Text>
-          </View>
+          </Animated.View>
 
-          <View
+          <Animated.View
             className="rounded-3xl bg-white p-7 dark:bg-dark-bg-elevated"
+            entering={withRM(FadeInUp.delay(120).duration(motion.dur.md))}
             style={shadows.level5}
           >
-            <Text className="mb-1 text-2xl font-bold text-text dark:text-text-primary-dark">
-              {isCodeStep ? t('loginVerifyTitle') : t('loginTitle')}
-            </Text>
-            <Text className="mb-6 text-sm text-text-secondary dark:text-text-secondary-dark">
-              {isCodeStep
-                ? t('loginVerifySubtitle', { email: sentEmail })
-                : t('loginSubtitle')}
-            </Text>
+            <Animated.View
+              entering={withRM(FadeInUp.delay(0).duration(motion.dur.sm))}
+            >
+              <Text className="mb-1 text-2xl font-bold text-text dark:text-text-primary-dark">
+                {isCodeStep ? t('loginVerifyTitle') : t('loginTitle')}
+              </Text>
+              <Text className="mb-6 text-sm text-text-secondary dark:text-text-secondary-dark">
+                {isCodeStep
+                  ? t('loginVerifySubtitle', { email: sentEmail })
+                  : t('loginSubtitle')}
+              </Text>
+            </Animated.View>
 
-            <ErrorBanner className="mb-4" message={resolvedErrorMessage} />
+            <Animated.View
+              entering={withRM(FadeInUp.delay(40).duration(motion.dur.sm))}
+            >
+              <ErrorBanner className="mb-4" message={resolvedErrorMessage} />
+            </Animated.View>
 
             {isCodeStep ? (
-              <ControlledTextInput<VerifyCodeFormValues>
-                key="login-code-input"
-                autoFocus
-                autoCapitalize="none"
-                autoComplete={
-                  Platform.OS === 'android' ? 'sms-otp' : 'one-time-code'
-                }
-                autoCorrect={false}
-                control={codeControl}
-                icon={({ color, size }) => (
-                  <ShieldCheck color={color} size={size} />
-                )}
-                keyboardType={Platform.OS === 'ios' ? 'number-pad' : 'numeric'}
-                maxLength={6}
-                name="code"
-                placeholder={t('codePlaceholder')}
-                returnKeyType="done"
-                testID="login-code"
-                textContentType={
-                  Platform.OS === 'ios' ? 'oneTimeCode' : undefined
-                }
-              />
+              <Animated.View
+                entering={withRM(FadeInUp.delay(80).duration(motion.dur.md))}
+              >
+                <ControlledTextInput<VerifyCodeFormValues>
+                  key="login-code-input"
+                  autoFocus
+                  autoCapitalize="none"
+                  autoComplete={
+                    Platform.OS === 'android' ? 'sms-otp' : 'one-time-code'
+                  }
+                  autoCorrect={false}
+                  control={codeControl}
+                  icon={({ color, size }) => (
+                    <ShieldCheck color={color} size={size} />
+                  )}
+                  keyboardType={
+                    Platform.OS === 'ios' ? 'number-pad' : 'numeric'
+                  }
+                  maxLength={6}
+                  name="code"
+                  placeholder={t('codePlaceholder')}
+                  returnKeyType="done"
+                  testID="login-code"
+                  textContentType={
+                    Platform.OS === 'ios' ? 'oneTimeCode' : undefined
+                  }
+                />
+              </Animated.View>
             ) : (
-              <ControlledTextInput<EmailFormValues>
-                key="login-email-input"
-                autoCapitalize="none"
-                autoComplete="email"
-                control={control}
-                icon={({ color, size }) => <Mail color={color} size={size} />}
-                keyboardType="email-address"
-                name="email"
-                placeholder={t('emailPlaceholder')}
-                testID="login-email"
-              />
+              <Animated.View
+                entering={withRM(FadeInUp.delay(80).duration(motion.dur.md))}
+              >
+                <ControlledTextInput<EmailFormValues>
+                  key="login-email-input"
+                  autoCapitalize="none"
+                  autoComplete="email"
+                  control={control}
+                  icon={({ color, size }) => <Mail color={color} size={size} />}
+                  keyboardType="email-address"
+                  name="email"
+                  placeholder={t('emailPlaceholder')}
+                  testID="login-email"
+                />
+              </Animated.View>
             )}
 
-            <Animated.View style={buttonStyle}>
+            <Animated.View
+              entering={withRM(FadeInUp.delay(140).duration(motion.dur.sm))}
+              style={buttonStyle}
+            >
               <Pressable
                 accessibilityRole="button"
                 className="mt-1 overflow-hidden rounded-2xl"
                 disabled={isAuthBusy}
-                onPress={isCodeStep ? onCodeSubmit : onEmailSubmit}
+                onPress={() => {
+                  hapticMedium();
+                  if (isCodeStep) void onCodeSubmit();
+                  else void onEmailSubmit();
+                }}
                 onPressIn={handlePressIn}
                 onPressOut={handlePressOut}
                 testID="login-submit"
@@ -305,7 +336,7 @@ export default function LoginScreen(): React.JSX.Element {
                 </Text>
               </Text>
             </Pressable>
-          </View>
+          </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>

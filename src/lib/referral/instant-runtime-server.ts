@@ -15,11 +15,29 @@ type VerifyRefreshJson = {
   user?: { id?: string };
 };
 
+export type VerifyInstantRefreshTokenResult =
+  | { ok: true; userId: string }
+  | {
+      ok: false;
+      code: 'instant_auth_unreachable' | 'missing_app_id' | 'unauthorized';
+      message?: string;
+    };
+
 export async function verifyInstantRefreshToken(
   refreshToken: string
-): Promise<{ userId: string } | null> {
+): Promise<VerifyInstantRefreshTokenResult> {
   const appId = getInstantAppIdForServer();
-  if (!appId || !refreshToken) return null;
+  if (!appId) {
+    return {
+      ok: false,
+      code: 'missing_app_id',
+      message: 'Missing Instant app id',
+    };
+  }
+
+  if (!refreshToken) {
+    return { ok: false, code: 'unauthorized' };
+  }
 
   const apiURI = getInstantApiUriForServer();
 
@@ -35,17 +53,24 @@ export async function verifyInstantRefreshToken(
     });
   } catch (err) {
     console.error('verify_refresh_token network error:', err);
-    return null;
+    return {
+      ok: false,
+      code: 'instant_auth_unreachable',
+      message:
+        err instanceof Error ? err.message : 'Could not reach Instant auth',
+    };
   }
 
-  if (!response.ok) return null;
+  if (!response.ok) return { ok: false, code: 'unauthorized' };
 
   try {
     const data = (await response.json()) as VerifyRefreshJson;
     const userId = data.user?.id;
-    if (typeof userId !== 'string' || !userId) return null;
-    return { userId };
+    if (typeof userId !== 'string' || !userId) {
+      return { ok: false, code: 'unauthorized' };
+    }
+    return { ok: true, userId };
   } catch {
-    return null;
+    return { ok: false, code: 'unauthorized' };
   }
 }

@@ -16,21 +16,28 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/colors';
 import { type AuthProviderType, authProviderTypes } from '@/lib/types';
 import { useAuth } from '@/providers/AuthProvider';
+import { useProfileData } from '@/providers/DataProvider';
 import {
   Button,
   ProfileSubScreenHeader,
   SurfaceCard,
 } from '@/src/components/ui';
-import { postRestoreAccountDeletion, postScheduleAccountDeletion } from '@/src/lib/account-deletion/account-deletion-api';
+import {
+  postRestoreAccountDeletion,
+  postScheduleAccountDeletion,
+} from '@/src/lib/account-deletion/account-deletion-api';
+import { getAccountDeletionErrorMessage } from '@/src/lib/account-deletion/account-deletion-error-message';
 import { useAccountDeletionRequest } from '@/src/lib/account-deletion/use-account-deletion-request';
+import { useScreenEntry } from '@/src/lib/animations/use-screen-entry';
 import { getAppleAuthorizationCode } from '@/src/lib/auth/social-auth';
 import { ControlledTextInput } from '@/src/lib/forms/controlled-text-input';
 import {
-  accountDeletionConfirmSchema,
   type AccountDeletionConfirmFormValues,
+  accountDeletionConfirmSchema,
 } from '@/src/lib/forms/schemas';
-import { useProfileData } from '@/providers/DataProvider';
+import { hapticError } from '@/src/lib/haptics/use-haptic';
 import { ScrollView, Text, View } from '@/src/tw';
+import { Animated } from '@/src/tw/animated';
 
 function formatDeletionDate(
   value: string | null | undefined,
@@ -71,6 +78,7 @@ export default function DeleteAccountScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { i18n, t } = useTranslation('profile');
+  const { contentStyle } = useScreenEntry({ durationMs: 400 });
   const { user, signOut } = useAuth();
   const { profile } = useProfileData();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -88,15 +96,14 @@ export default function DeleteAccountScreen(): React.JSX.Element {
     [accountDeletionRequest?.scheduled_for_at, i18n.language]
   );
 
-  const {
-    control,
-    handleSubmit,
-    reset,
-  } = useForm<AccountDeletionConfirmFormValues>({
-    defaultValues: { confirmation: '' as AccountDeletionConfirmFormValues['confirmation'] },
-    mode: 'onBlur',
-    resolver: zodResolver(accountDeletionConfirmSchema),
-  });
+  const { control, handleSubmit, reset } =
+    useForm<AccountDeletionConfirmFormValues>({
+      defaultValues: {
+        confirmation: '' as AccountDeletionConfirmFormValues['confirmation'],
+      },
+      mode: 'onBlur',
+      resolver: zodResolver(accountDeletionConfirmSchema),
+    });
 
   async function handleRestore(): Promise<void> {
     if (!user?.refresh_token || isRestoring) return;
@@ -108,7 +115,11 @@ export default function DeleteAccountScreen(): React.JSX.Element {
       });
 
       if (!result.ok) {
-        Alert.alert(t('deleteAccount.errors.restoreFailed'));
+        Alert.alert(
+          getAccountDeletionErrorMessage(result, t, {
+            fallbackKey: 'restoreFailed',
+          })
+        );
         return;
       }
 
@@ -127,15 +138,15 @@ export default function DeleteAccountScreen(): React.JSX.Element {
       return;
     }
 
+    hapticError();
     setIsSubmitting(true);
     try {
-      const authProvider = resolveAuthProviderForDeletion(profile?.auth_provider);
+      const authProvider = resolveAuthProviderForDeletion(
+        profile?.auth_provider
+      );
       let appleAuthorizationCode: string | undefined;
 
-      if (
-        authProvider === authProviderTypes.apple &&
-        Platform.OS === 'ios'
-      ) {
+      if (authProvider === authProviderTypes.apple && Platform.OS === 'ios') {
         appleAuthorizationCode = await getAppleAuthorizationCode();
       }
 
@@ -146,7 +157,7 @@ export default function DeleteAccountScreen(): React.JSX.Element {
       });
 
       if (!result.ok) {
-        Alert.alert(t('deleteAccount.errors.scheduleFailed'));
+        Alert.alert(getAccountDeletionErrorMessage(result, t));
         return;
       }
 
@@ -158,7 +169,15 @@ export default function DeleteAccountScreen(): React.JSX.Element {
         t('deleteAccount.scheduleSuccessTitle'),
         t('deleteAccount.scheduleSuccessMessage')
       );
-      await signOut();
+      try {
+        await signOut();
+      } catch (error) {
+        console.error(
+          '[DeleteAccount] Sign out after successful schedule failed',
+          error
+        );
+        Alert.alert(t('errors.signOutFailed'));
+      }
     } catch (error) {
       console.error('[DeleteAccount] Schedule failed', error);
       const message =
@@ -184,154 +203,162 @@ export default function DeleteAccountScreen(): React.JSX.Element {
         contentContainerClassName="px-5 pb-10 pt-1"
         showsVerticalScrollIndicator={false}
       >
-        <SurfaceCard className="mb-5 overflow-hidden border-danger/20 bg-danger/5 p-5 dark:border-danger/30 dark:bg-danger/10">
-          <View className="flex-row items-start">
-            <View className="mr-4 size-12 items-center justify-center rounded-full bg-danger/15">
-              <ShieldAlert color={Colors.danger} size={22} />
-            </View>
-            <View className="flex-1">
-              <Text className="text-xl font-extrabold text-text dark:text-text-primary-dark">
-                {t('deleteAccount.heroTitle')}
-              </Text>
-              <Text className="mt-2 text-sm leading-6 text-text-secondary dark:text-text-secondary-dark">
-                {t('deleteAccount.heroDescription')}
-              </Text>
-            </View>
-          </View>
-        </SurfaceCard>
-
-        {isDeletionPending ? (
-          <SurfaceCard className="mb-5 p-5">
-            <View className="flex-row items-center">
-              <Clock3 color={Colors.warning} size={18} />
-              <Text className="ml-2 text-xs font-bold uppercase tracking-[1px] text-text dark:text-text-primary-dark">
-                {t('deleteAccount.pendingEyebrow')}
-              </Text>
-            </View>
-            <Text className="mt-3 text-2xl font-extrabold text-text dark:text-text-primary-dark">
-              {t('deleteAccount.pendingTitle')}
-            </Text>
-            <Text className="mt-2 text-sm leading-6 text-text-secondary dark:text-text-secondary-dark">
-              {t('deleteAccount.pendingDescription', {
-                date: scheduledForLabel,
-              })}
-            </Text>
-            <Text className="mt-4 text-sm font-semibold text-primary dark:text-primary-bright">
-              {t('deleteAccount.pendingRestoreHint')}
-            </Text>
-
-            <View className="mt-5 flex-row gap-3">
-              <Button
-                className="flex-1"
-                isLoading={isRestoring}
-                leftIcon={<RotateCcw color={Colors.white} size={16} />}
-                onPress={() => {
-                  void handleRestore();
-                }}
-                testID="restore-account-button"
-              >
-                {t('deleteAccount.restoreAction')}
-              </Button>
-              <Button
-                className="flex-1"
-                onPress={() => router.replace('/home' as never)}
-                variant="outline"
-              >
-                {t('deleteAccount.backToApp')}
-              </Button>
+        <Animated.View style={contentStyle}>
+          <SurfaceCard className="mb-5 overflow-hidden border-danger/20 bg-danger/5 p-5 dark:border-danger/30 dark:bg-danger/10">
+            <View className="flex-row items-start">
+              <View className="mr-4 size-12 items-center justify-center rounded-full bg-danger/15">
+                <ShieldAlert color={Colors.danger} size={22} />
+              </View>
+              <View className="flex-1">
+                <Text className="text-xl font-extrabold text-text dark:text-text-primary-dark">
+                  {t('deleteAccount.heroTitle')}
+                </Text>
+                <Text className="mt-2 text-sm leading-6 text-text-secondary dark:text-text-secondary-dark">
+                  {t('deleteAccount.heroDescription')}
+                </Text>
+              </View>
             </View>
           </SurfaceCard>
-        ) : (
-          <>
-            <SurfaceCard className="mb-4 p-5">
-              <Text className="text-lg font-extrabold text-text dark:text-text-primary-dark">
-                {t('deleteAccount.permanentDataLossTitle')}
-              </Text>
-              <Text className="mt-2 text-sm leading-6 text-text-secondary dark:text-text-secondary-dark">
-                {t('deleteAccount.permanentDataLossDescription')}
-              </Text>
-            </SurfaceCard>
 
-            <SurfaceCard className="mb-4 p-5">
-              <Text className="text-lg font-extrabold text-text dark:text-text-primary-dark">
-                {t('deleteAccount.gracePeriodTitle')}
-              </Text>
-              <Text className="mt-2 text-sm leading-6 text-text-secondary dark:text-text-secondary-dark">
-                {t('deleteAccount.gracePeriodDescription')}
-              </Text>
-            </SurfaceCard>
-
+          {isLoading ? (
             <SurfaceCard className="mb-5 p-5">
-              <Text className="text-lg font-extrabold text-text dark:text-text-primary-dark">
-                {t('deleteAccount.whatWillBeDeletedTitle')}
+              <Text className="text-sm leading-6 text-text-secondary dark:text-text-secondary-dark">
+                {t('deleteAccount.loadingState')}
               </Text>
-              <View className="mt-4 gap-3">
-                {(
-                  [
-                    'profileData',
-                    'savedEvents',
-                    'bookings',
-                    'memberBenefits',
-                  ] as const
-                ).map((key) => (
-                  <View className="flex-row items-start" key={key}>
-                    <Trash2
-                      color={Colors.danger}
-                      size={16}
-                      style={{ marginTop: 2 }}
-                    />
-                    <Text className="ml-3 flex-1 text-sm leading-6 text-text-secondary dark:text-text-secondary-dark">
-                      {t(`deleteAccount.whatWillBeDeletedItems.${key}`)}
-                    </Text>
-                  </View>
-                ))}
+            </SurfaceCard>
+          ) : isDeletionPending ? (
+            <SurfaceCard className="mb-5 p-5">
+              <View className="flex-row items-center">
+                <Clock3 color={Colors.warning} size={18} />
+                <Text className="ml-2 text-xs font-bold uppercase tracking-[1px] text-text dark:text-text-primary-dark">
+                  {t('deleteAccount.pendingEyebrow')}
+                </Text>
+              </View>
+              <Text className="mt-3 text-2xl font-extrabold text-text dark:text-text-primary-dark">
+                {t('deleteAccount.pendingTitle')}
+              </Text>
+              <Text className="mt-2 text-sm leading-6 text-text-secondary dark:text-text-secondary-dark">
+                {t('deleteAccount.pendingDescription', {
+                  date: scheduledForLabel,
+                })}
+              </Text>
+              <Text className="mt-4 text-sm font-semibold text-primary dark:text-primary-bright">
+                {t('deleteAccount.pendingRestoreHint')}
+              </Text>
+
+              <View className="mt-5 flex-row gap-3">
+                <Button
+                  className="flex-1"
+                  isLoading={isRestoring}
+                  leftIcon={<RotateCcw color={Colors.white} size={16} />}
+                  onPress={() => {
+                    void handleRestore();
+                  }}
+                  testID="restore-account-button"
+                >
+                  {t('deleteAccount.restoreAction')}
+                </Button>
+                <Button
+                  className="flex-1"
+                  onPress={() => router.replace('/home' as never)}
+                  variant="outline"
+                >
+                  {t('deleteAccount.backToApp')}
+                </Button>
               </View>
             </SurfaceCard>
+          ) : (
+            <>
+              <SurfaceCard className="mb-4 p-5">
+                <Text className="text-lg font-extrabold text-text dark:text-text-primary-dark">
+                  {t('deleteAccount.permanentDataLossTitle')}
+                </Text>
+                <Text className="mt-2 text-sm leading-6 text-text-secondary dark:text-text-secondary-dark">
+                  {t('deleteAccount.permanentDataLossDescription')}
+                </Text>
+              </SurfaceCard>
 
-            <SurfaceCard className="mb-5 p-5">
-              <Text className="text-sm font-semibold uppercase tracking-[1px] text-text-muted dark:text-text-muted-dark">
-                {t('deleteAccount.confirmLabel')}
-              </Text>
-              <Text className="mt-2 text-sm leading-6 text-text-secondary dark:text-text-secondary-dark">
-                {t('deleteAccount.confirmHint')}
-              </Text>
+              <SurfaceCard className="mb-4 p-5">
+                <Text className="text-lg font-extrabold text-text dark:text-text-primary-dark">
+                  {t('deleteAccount.gracePeriodTitle')}
+                </Text>
+                <Text className="mt-2 text-sm leading-6 text-text-secondary dark:text-text-secondary-dark">
+                  {t('deleteAccount.gracePeriodDescription')}
+                </Text>
+              </SurfaceCard>
 
-              <ControlledTextInput<AccountDeletionConfirmFormValues>
-                autoCapitalize="characters"
-                autoCorrect={false}
-                className="mt-4"
-                control={control}
-                icon={({ color, size }) => (
-                  <AlertTriangle color={color} size={size} />
-                )}
-                name="confirmation"
-                placeholder={t('deleteAccount.confirmPlaceholder')}
-                testID="delete-account-confirmation-input"
-              />
+              <SurfaceCard className="mb-5 p-5">
+                <Text className="text-lg font-extrabold text-text dark:text-text-primary-dark">
+                  {t('deleteAccount.whatWillBeDeletedTitle')}
+                </Text>
+                <View className="mt-4 gap-3">
+                  {(
+                    [
+                      'profileData',
+                      'savedEvents',
+                      'bookings',
+                      'memberBenefits',
+                    ] as const
+                  ).map((key) => (
+                    <View className="flex-row items-start" key={key}>
+                      <Trash2
+                        color={Colors.danger}
+                        size={16}
+                        style={{ marginTop: 2 }}
+                      />
+                      <Text className="ml-3 flex-1 text-sm leading-6 text-text-secondary dark:text-text-secondary-dark">
+                        {t(`deleteAccount.whatWillBeDeletedItems.${key}`)}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              </SurfaceCard>
 
-              <Text className="mt-3 text-xs font-semibold uppercase tracking-[1px] text-danger">
-                {t('deleteAccount.finalNotice')}
-              </Text>
-            </SurfaceCard>
+              <SurfaceCard className="mb-5 p-5">
+                <Text className="text-sm font-semibold uppercase tracking-[1px] text-text-muted dark:text-text-muted-dark">
+                  {t('deleteAccount.confirmLabel')}
+                </Text>
+                <Text className="mt-2 text-sm leading-6 text-text-secondary dark:text-text-secondary-dark">
+                  {t('deleteAccount.confirmHint')}
+                </Text>
 
-            <Button
-              isLoading={isSubmitting}
-              onPress={() => {
-                void handleScheduleDeletion();
-              }}
-              testID="confirm-delete-button"
-              variant="danger"
-            >
-              {t('deleteAccount.confirmAction')}
-            </Button>
-          </>
-        )}
+                <ControlledTextInput<AccountDeletionConfirmFormValues>
+                  autoCapitalize="characters"
+                  autoCorrect={false}
+                  className="mt-4"
+                  control={control}
+                  icon={({ color, size }) => (
+                    <AlertTriangle color={color} size={size} />
+                  )}
+                  name="confirmation"
+                  placeholder={t('deleteAccount.confirmPlaceholder')}
+                  testID="delete-account-confirmation-input"
+                />
 
-        <Text className="mt-5 text-center text-xs leading-5 text-text-muted dark:text-text-muted-dark">
-          {isLoading
-            ? t('deleteAccount.loadingState')
-            : t('deleteAccount.footerNote')}
-        </Text>
+                <Text className="mt-3 text-xs font-semibold uppercase tracking-[1px] text-danger">
+                  {t('deleteAccount.finalNotice')}
+                </Text>
+              </SurfaceCard>
+
+              <Button
+                isLoading={isSubmitting}
+                onPress={() => {
+                  void handleScheduleDeletion();
+                }}
+                testID="confirm-delete-button"
+                variant="danger"
+              >
+                {t('deleteAccount.confirmAction')}
+              </Button>
+            </>
+          )}
+
+          {!isLoading ? (
+            <Text className="mt-5 text-center text-xs leading-5 text-text-muted dark:text-text-muted-dark">
+              {t('deleteAccount.footerNote')}
+            </Text>
+          ) : null}
+        </Animated.View>
       </ScrollView>
     </View>
   );

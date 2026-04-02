@@ -41,6 +41,7 @@ const _schema = i.schema({
       completed_at: i.date().indexed().optional(),
       created_at: i.date().indexed().optional(),
       email: i.string().indexed().optional(),
+      processing_lock_id: i.string().optional(),
       profile_id: i.string().indexed().optional(),
       requested_at: i.date().indexed(),
       restored_at: i.date().indexed().optional(),

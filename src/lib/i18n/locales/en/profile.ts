@@ -114,12 +114,14 @@ const profile = {
     gracePeriodTitle: '30-day grace period',
     gracePeriodDescription:
       'You will have 30 days to sign back in and restore your account before the deletion is finalized.',
+    defaultGracePeriod: '30 days',
     whatWillBeDeletedTitle: 'What will be deleted',
     whatWillBeDeletedItems: {
       profileData: 'Profile and account information',
       savedEvents: 'Saved events and referral progress',
       bookings: 'Reservation and private-event request history',
-      memberBenefits: 'Member-specific access and benefits attached to your account',
+      memberBenefits:
+        'Member-specific access and benefits attached to your account',
     },
     confirmLabel: 'Final confirmation',
     confirmHint:
@@ -152,9 +154,16 @@ const profile = {
     errors: {
       appleVerificationCanceled:
         'Apple verification was canceled, so deletion was not scheduled.',
+      apiUnavailable:
+        'Account deletion is not configured for this build yet. Start the Expo dev server with API routes or set EXPO_PUBLIC_ACCOUNT_API_BASE_URL.',
+      instantAuthUnavailable:
+        'Account deletion is temporarily unavailable because the local API server cannot reach InstantDB. Check this machine’s DNS or internet connection and try again.',
+      networkUnavailable:
+        'Could not reach the account deletion service. Check your connection and try again.',
       restoreFailed: 'Could not restore your account. Please try again.',
-      scheduleFailed:
-        'Could not schedule account deletion. Please try again.',
+      scheduleFailed: 'Could not schedule account deletion. Please try again.',
+      serverMisconfigured:
+        'Account deletion is temporarily unavailable because the server is missing Instant admin credentials.',
       sessionExpired:
         'Your secure session expired. Please sign in again and retry.',
     },
@@ -308,7 +317,8 @@ const profile = {
       freeCocktail: 'Free Cocktail',
       vipBadge: 'VIP Badge',
       priorityEntry: 'Priority Entry',
-      priorityProgress: '{{count}} more completed invites',
+      priorityProgress_one: '{{count}} more completed invite',
+      priorityProgress_other: '{{count}} more completed invites',
       unlocked: 'Unlocked',
       twoMoreInvites: '{{count}} more invites',
       locked: 'Locked',

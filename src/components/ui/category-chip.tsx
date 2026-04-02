@@ -1,7 +1,6 @@
 import type { ComponentProps } from 'react';
 import React, { useEffect } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
-import { useColorScheme } from 'react-native';
 import {
   cancelAnimation,
   interpolateColor,
@@ -13,6 +12,7 @@ import {
 import { Colors } from '@/constants/colors';
 import { motion, rmTiming } from '@/src/lib/animations/motion';
 import { useButtonPress } from '@/src/lib/animations/use-button-press';
+import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
 import { cn } from '@/src/lib/utils';
 import { type Pressable } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
@@ -39,7 +39,7 @@ export function CategoryChip({
   accessibilityState: accessibilityStateProp,
   ...props
 }: CategoryChipProps): React.JSX.Element {
-  const isDark = useColorScheme() === 'dark';
+  const isDark = useAppIsDark();
   const progress = useSharedValue(isActive ? 1 : 0);
   const { animatedStyle, handlePressIn, handlePressOut } = useButtonPress(
     0.98,
@@ -108,10 +108,15 @@ export function CategoryChip({
     [animatedContainerStyle, animatedPressStyle, style]
   );
 
+  const accessibilityState = React.useMemo(
+    () => ({ ...accessibilityStateProp, selected: !!isActive }),
+    [accessibilityStateProp, isActive]
+  );
+
   return (
     <Animated.Pressable
       accessibilityRole="button"
-      accessibilityState={{ ...accessibilityStateProp, selected: !!isActive }}
+      accessibilityState={accessibilityState}
       className={cn('rounded-full border px-5 py-2.5', className)}
       onPress={onPress}
       onPressIn={handlePressInCombined}

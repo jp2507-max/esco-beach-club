@@ -6,7 +6,7 @@ import { useColorScheme } from 'react-native';
 import { Colors } from '@/constants/colors';
 import { useButtonPress } from '@/src/lib/animations/use-button-press';
 import { cn } from '@/src/lib/utils';
-import { ActivityIndicator, Pressable, Text, View } from '@/src/tw';
+import { ActivityIndicator, type Pressable, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 
 const BUTTON_VARIANTS = {
@@ -42,6 +42,18 @@ const BUTTON_SIZES = {
 export type ButtonVariant = keyof typeof BUTTON_VARIANTS;
 export type ButtonSize = keyof typeof BUTTON_SIZES;
 
+function getSpinnerColor(variant: ButtonVariant, isDark: boolean): string {
+  if (variant === 'ghost' || variant === 'outline') {
+    return isDark ? Colors.primaryBright : Colors.primary;
+  }
+
+  if (variant === 'secondary' && isDark) {
+    return Colors.secondaryDeeper;
+  }
+
+  return '#fff';
+}
+
 export type ButtonProps = Omit<ComponentProps<typeof Pressable>, 'children'> & {
   children: ReactNode;
   className?: string;
@@ -75,14 +87,7 @@ export function Button({
   const isDisabled = disabled || isLoading;
   const variantStyles = BUTTON_VARIANTS[variant];
   const isDark = useColorScheme() === 'dark';
-  const spinnerColor =
-    variant === 'ghost' || variant === 'outline'
-      ? isDark
-        ? Colors.primaryBright
-        : Colors.primary
-      : variant === 'secondary' && isDark
-        ? Colors.secondaryDeeper
-        : '#fff';
+  const spinnerColor = getSpinnerColor(variant, isDark);
   const { animatedStyle, handlePressIn, handlePressOut } = useButtonPress();
 
   const handlePressInCombined = React.useCallback<

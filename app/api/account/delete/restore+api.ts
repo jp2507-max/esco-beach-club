@@ -19,7 +19,9 @@ function parseBearerRefreshToken(request: Request): string | null {
   return token.length > 0 ? token : null;
 }
 
-function isPastScheduledDeletion(dateString: string | null | undefined): boolean {
+function isPastScheduledDeletion(
+  dateString: string | null | undefined
+): boolean {
   if (!dateString) return false;
 
   const scheduledAt = new Date(dateString);
@@ -43,7 +45,24 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const authUser = await verifyInstantRefreshToken(refreshToken);
-  if (!authUser) {
+  if (!authUser.ok) {
+    if (authUser.code === 'instant_auth_unreachable') {
+      return jsonResponse(
+        {
+          error: authUser.code,
+          message: authUser.message ?? 'Could not reach Instant auth service',
+        },
+        503
+      );
+    }
+
+    if (authUser.code === 'missing_app_id') {
+      return jsonResponse(
+        { error: 'server_misconfigured', message: 'Missing admin or app id' },
+        503
+      );
+    }
+
     return jsonResponse({ error: 'unauthorized' }, 401);
   }
 

@@ -1,39 +1,21 @@
-import Constants from 'expo-constants';
+import {
+  buildClientApiUrl,
+  type ClientApiResult,
+  readApiErrorDetails,
+} from '@/src/lib/api/client-api';
 
-function getReferralApiBaseUrl(): string | null {
-  const fromEnv = process.env.EXPO_PUBLIC_REFERRAL_API_BASE_URL?.trim();
-  if (fromEnv) return fromEnv.replace(/\/+$/, '');
-
-  const hostUri = Constants.expoConfig?.hostUri;
-  if (__DEV__ && hostUri) {
-    const host = hostUri.split(':')[0];
-    if (host) {
-      return `http://${host}:8081`;
-    }
-  }
-
-  return null;
-}
-
-export type ClaimReferralResult =
-  | { ok: true; status: number; body: unknown }
-  | {
-      ok: false;
-      reason: 'no_endpoint' | 'network';
-      status?: number;
-      message?: string;
-    };
+export type ClaimReferralResult = ClientApiResult<unknown>;
 
 export async function postClaimReferral(params: {
   refreshToken: string;
   referralCode: string;
 }): Promise<ClaimReferralResult> {
-  const base = getReferralApiBaseUrl();
-  if (!base) {
+  const url = buildClientApiUrl('/api/referrals/claim', {
+    explicitBaseUrl: process.env.EXPO_PUBLIC_REFERRAL_API_BASE_URL,
+  });
+  if (!url) {
     return { ok: false, reason: 'no_endpoint' };
   }
-
-  const url = `${base}/api/referrals/claim`;
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 15000);
@@ -64,9 +46,9 @@ export async function postClaimReferral(params: {
 
     return {
       ok: false,
-      reason: 'network',
+      reason: 'http_error',
       status: response.status,
-      message: `HTTP ${response.status}`,
+      ...readApiErrorDetails(body, response.status),
     };
   } catch (e) {
     if (e instanceof Error && e.name === 'AbortError') {
@@ -84,18 +66,24 @@ export async function postClaimReferral(params: {
 
 export type CompleteReferralResult =
   | { ok: true; status: number; body: unknown }
-  | { ok: false; reason: 'no_endpoint' | 'network'; message?: string };
+  | {
+      ok: false;
+      code?: string;
+      message?: string;
+      reason: 'http_error' | 'network' | 'no_endpoint';
+      status?: number;
+    };
 
 export async function postCompleteReferral(params: {
   refreshToken: string;
   referralId: string;
 }): Promise<CompleteReferralResult> {
-  const base = getReferralApiBaseUrl();
-  if (!base) {
+  const url = buildClientApiUrl('/api/referrals/complete', {
+    explicitBaseUrl: process.env.EXPO_PUBLIC_REFERRAL_API_BASE_URL,
+  });
+  if (!url) {
     return { ok: false, reason: 'no_endpoint' };
   }
-
-  const url = `${base}/api/referrals/complete`;
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 15000);
@@ -124,8 +112,9 @@ export async function postCompleteReferral(params: {
 
     return {
       ok: false,
-      reason: 'network',
-      message: `HTTP ${response.status}`,
+      reason: 'http_error',
+      status: response.status,
+      ...readApiErrorDetails(body, response.status),
     };
   } catch (e) {
     if (e instanceof Error && e.name === 'AbortError') {

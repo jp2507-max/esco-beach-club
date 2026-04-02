@@ -204,5 +204,5 @@ export function resolveDisplayNameForCreate(params: {
   const fromEmail = deriveDisplayNameFromEmail(params.email);
   if (fromEmail.length >= 2) return fromEmail;
 
-  return params.t ? params.t('common:Member') : null;
+  return params.t ? params.t('common:member') : null;
 }

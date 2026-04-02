@@ -114,6 +114,7 @@ const profile = {
     gracePeriodTitle: '30일 유예 기간',
     gracePeriodDescription:
       '삭제가 확정되기 전까지 30일 동안 다시 로그인하여 계정을 복원할 수 있습니다.',
+    defaultGracePeriod: '30일',
     whatWillBeDeletedTitle: '삭제되는 항목',
     whatWillBeDeletedItems: {
       profileData: '프로필 및 계정 정보',
@@ -122,8 +123,7 @@ const profile = {
       memberBenefits: '계정에 연결된 회원 혜택 및 접근 권한',
     },
     confirmLabel: '최종 확인',
-    confirmHint:
-      '계정 삭제를 예약하려면 아래에 DELETE를 입력해 주세요.',
+    confirmHint: '계정 삭제를 예약하려면 아래에 DELETE를 입력해 주세요.',
     confirmPlaceholder: 'DELETE 입력',
     finalNotice: '이 작업은 30일 후 최종 확정됩니다.',
     confirmAction: '계정 삭제 예약',
@@ -137,8 +137,7 @@ const profile = {
     reviewAction: '세부 정보 보기',
     backToApp: '앱으로 돌아가기',
     bannerTitle: '계정 삭제가 예약되었습니다',
-    bannerDescription:
-      '복원하지 않으면 {{date}}에 계정이 삭제됩니다.',
+    bannerDescription: '복원하지 않으면 {{date}}에 계정이 삭제됩니다.',
     bannerCountdown: '복원 가능 기간 30일',
     bannerRestoreHint:
       '계정 복원을 누르면 삭제 요청이 취소되고 멤버 접근 권한이 유지됩니다.',
@@ -152,10 +151,16 @@ const profile = {
     errors: {
       appleVerificationCanceled:
         'Apple 확인이 취소되어 삭제가 예약되지 않았습니다.',
-      restoreFailed:
-        '계정을 복원할 수 없습니다. 다시 시도해 주세요.',
-      scheduleFailed:
-        '계정 삭제를 예약할 수 없습니다. 다시 시도해 주세요.',
+      apiUnavailable:
+        '이 빌드에서는 계정 삭제가 아직 구성되지 않았습니다. API routes가 포함된 Expo dev server를 시작하거나 EXPO_PUBLIC_ACCOUNT_API_BASE_URL을 설정해 주세요.',
+      instantAuthUnavailable:
+        '로컬 API 서버가 InstantDB에 연결할 수 없어 계정 삭제를 일시적으로 사용할 수 없습니다. 이 기기의 DNS 또는 인터넷 연결을 확인한 뒤 다시 시도해 주세요.',
+      networkUnavailable:
+        '계정 삭제 서비스에 연결할 수 없습니다. 네트워크를 확인한 뒤 다시 시도해 주세요.',
+      restoreFailed: '계정을 복원할 수 없습니다. 다시 시도해 주세요.',
+      scheduleFailed: '계정 삭제를 예약할 수 없습니다. 다시 시도해 주세요.',
+      serverMisconfigured:
+        '서버에 Instant 관리자 자격 증명이 없어 계정 삭제를 일시적으로 사용할 수 없습니다.',
       sessionExpired:
         '보안 세션이 만료되었습니다. 다시 로그인한 뒤 재시도해 주세요.',
     },
@@ -306,7 +311,8 @@ const profile = {
       freeCocktail: '무료 칵테일',
       vipBadge: 'VIP 배지',
       priorityEntry: '우선 입장',
-      priorityProgress: '완료된 초대 {{count}}명 더 필요',
+      priorityProgress_one: '완료된 초대 {{count}}명 더 필요',
+      priorityProgress_other: '완료된 초대 {{count}}명 더 필요',
       unlocked: '해제됨',
       twoMoreInvites: '초대 {{count}}명 더 필요',
       locked: '잠김',

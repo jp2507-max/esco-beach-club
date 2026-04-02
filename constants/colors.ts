@@ -84,6 +84,20 @@ export const Colors = {
   profileOrbSmall: '#F3E5F520',
   profileOrbSmallDark: '#FF6B9D18',
   voucherNotchBg: '#E8F0F8',
+  inviteHeroBlobLight: 'rgba(252, 228, 236, 0.25)',
+  inviteHeroBlobDark: 'rgba(255, 107, 157, 0.08)',
+  inviteProgressTrackLight: '#FCE4EC',
+  inviteProgressTrackDark: 'rgba(255, 107, 157, 0.16)',
+  inviteReferralStatusBgLight: '#E8F5E9',
+  inviteReferralStatusBgDark: 'rgba(34, 197, 94, 0.22)',
+  inviteReferralStatusTextLight: '#4CAF50',
+  inviteReferralStatusTextDark: '#86EFAC',
+  inviteMilestoneUnlockedBgLight: '#E8F5E9',
+  inviteMilestoneUnlockedBgDark: 'rgba(34, 197, 94, 0.2)',
+  inviteMilestoneLockedBgLight: '#F0F0F0',
+  inviteMilestoneUnlockedIconLight: '#4CAF50',
+  inviteMilestoneUnlockedIconDark: '#86EFAC',
+  inviteReferralCodeBgLight: '#F9F5F0',
 } as const;
 
 /** Icon / accent color on dark surfaces (cards, nav). Light mode returns `accent` unchanged. */

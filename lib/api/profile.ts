@@ -136,10 +136,6 @@ export async function ensureProfile(params: {
       }
 
       if (isReferralCodeConflict(error)) {
-        if (attempt < maxRetries) {
-          continue;
-        }
-
         const existingProfile = await fetchProfile(params.userId);
         if (existingProfile) {
           return existingProfile;
@@ -185,7 +181,6 @@ export async function updateProfile(
     onboarding_completed_at: normalizeOnboardingCompletedAt(
       updates.onboarding_completed_at
     ),
-    auth_provider: updates.auth_provider,
     push_notification_permission_status: normalizePermissionStatus(
       updates.push_notification_permission_status
     ),
@@ -200,7 +195,6 @@ export async function updateProfile(
     member_segment?: MemberSegment | null;
     nights_left?: Profile['nights_left'];
     onboarding_completed_at?: string | null;
-    auth_provider?: AuthProviderType | null;
     push_notification_permission_status?: OnboardingPermissionStatus;
   };
 

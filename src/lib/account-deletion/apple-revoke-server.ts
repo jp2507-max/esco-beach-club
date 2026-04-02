@@ -1,5 +1,7 @@
 import { createPrivateKey, createSign } from 'node:crypto';
 
+import { captureHandledError } from '@/src/lib/monitoring';
+
 const APPLE_AUTH_BASE_URL = 'https://appleid.apple.com';
 
 function base64UrlEncode(input: string | Buffer): string {
@@ -20,7 +22,9 @@ function normalizePrivateKey(raw: string): string {
 }
 
 function getAppleClientId(): string | null {
-  return getRequiredEnv('APPLE_CLIENT_ID') || getRequiredEnv('APPLE_SERVICES_ID');
+  return (
+    getRequiredEnv('APPLE_CLIENT_ID') || getRequiredEnv('APPLE_SERVICES_ID')
+  );
 }
 
 function createAppleClientSecret(clientId: string): string | null {
@@ -92,6 +96,65 @@ async function readAppleErrorMessage(response: Response): Promise<string> {
   }
 
   return `HTTP ${response.status}`;
+}
+
+function maskToken(token: string): string {
+  const visiblePrefix = token.slice(0, 6);
+  const visibleSuffix = token.slice(-4);
+  return `${visiblePrefix}...${visibleSuffix}`;
+}
+
+function isTransientRevocationStatus(status: number): boolean {
+  return status === 429 || status >= 500;
+}
+
+function createRevocationFinalFailureMessage(params: {
+  attempt: number;
+  maxAttempts: number;
+  responseStatus?: number;
+  responseMessage?: string;
+  thrownError?: unknown;
+}): string {
+  if (params.thrownError) {
+    return params.thrownError instanceof Error
+      ? params.thrownError.message
+      : 'network_error';
+  }
+
+  if (params.responseMessage) {
+    return params.responseMessage;
+  }
+
+  if (typeof params.responseStatus === 'number') {
+    return `HTTP ${params.responseStatus}`;
+  }
+
+  return `revocation_failed_after_${params.attempt}_of_${params.maxAttempts}_attempts`;
+}
+
+function reportFinalRevocationFailure(params: {
+  attempt: number;
+  clientId: string;
+  maxAttempts: number;
+  message: string;
+  refreshToken: string;
+  status?: number;
+}): void {
+  captureHandledError(new Error('apple_token_revocation_failed'), {
+    extras: {
+      attempt: params.attempt,
+      clientId: params.clientId,
+      finalMessage: params.message,
+      maxAttempts: params.maxAttempts,
+      refreshTokenMasked: maskToken(params.refreshToken),
+      status: params.status,
+    },
+    tags: {
+      area: 'account_deletion',
+      provider: 'apple',
+      stage: 'revoke',
+    },
+  });
 }
 
 async function exchangeAuthorizationCodeForRefreshToken(
@@ -193,29 +256,86 @@ export async function revokeAppleAuthorizationCode(
     token: exchangeResult.refreshToken,
     token_type_hint: 'refresh_token',
   });
+  const maxAttempts = 3;
+  let attempt = 0;
 
-  let response: Response;
-  try {
-    response = await fetch(`${APPLE_AUTH_BASE_URL}/auth/revoke`, {
-      body,
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      method: 'POST',
+  while (attempt < maxAttempts) {
+    attempt += 1;
+    let response: Response | null = null;
+
+    try {
+      response = await fetch(`${APPLE_AUTH_BASE_URL}/auth/revoke`, {
+        body,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        method: 'POST',
+      });
+    } catch (error) {
+      const shouldRetry = attempt < maxAttempts;
+      if (shouldRetry) {
+        await new Promise((resolve) => setTimeout(resolve, attempt * 250));
+        continue;
+      }
+
+      const message = createRevocationFinalFailureMessage({
+        attempt,
+        maxAttempts,
+        thrownError: error,
+      });
+
+      reportFinalRevocationFailure({
+        attempt,
+        clientId,
+        maxAttempts,
+        message,
+        refreshToken: exchangeResult.refreshToken,
+      });
+
+      return {
+        status: 'failed',
+        message,
+      };
+    }
+
+    if (response.ok) {
+      return { status: 'revoked' };
+    }
+
+    const message = await readAppleErrorMessage(response);
+    const shouldRetry =
+      attempt < maxAttempts && isTransientRevocationStatus(response.status);
+
+    if (shouldRetry) {
+      await new Promise((resolve) => setTimeout(resolve, attempt * 250));
+      continue;
+    }
+
+    reportFinalRevocationFailure({
+      attempt,
+      clientId,
+      maxAttempts,
+      message,
+      refreshToken: exchangeResult.refreshToken,
+      status: response.status,
     });
-  } catch (error) {
+
     return {
       status: 'failed',
-      message: error instanceof Error ? error.message : 'network_error',
+      message,
     };
   }
 
-  if (response.ok) {
-    return { status: 'revoked' };
-  }
-
+  const fallbackMessage = 'apple_revocation_failed_unknown';
+  reportFinalRevocationFailure({
+    attempt,
+    clientId,
+    maxAttempts,
+    message: fallbackMessage,
+    refreshToken: exchangeResult.refreshToken,
+  });
   return {
     status: 'failed',
-    message: await readAppleErrorMessage(response),
+    message: fallbackMessage,
   };
 }

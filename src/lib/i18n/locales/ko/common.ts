@@ -114,7 +114,7 @@ const common = {
     title: '이 화면은 존재하지 않습니다.',
     cta: '홈 화면으로 이동',
   },
-  Member: '회원',
+  member: '회원',
 } as const;
 
 export default common;

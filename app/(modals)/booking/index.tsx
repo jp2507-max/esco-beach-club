@@ -19,6 +19,7 @@ import {
 } from '@/providers/DataProvider';
 import { Button, ModalHeader } from '@/src/components/ui';
 import { useScreenEntry } from '@/src/lib/animations/use-screen-entry';
+import { hapticMedium, hapticSelection } from '@/src/lib/haptics/use-haptic';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 
@@ -288,6 +289,7 @@ export default function BookingModalScreen(): React.JSX.Element {
       return;
     }
 
+    hapticMedium();
     setIsSubmitting(true);
 
     try {
@@ -369,7 +371,11 @@ export default function BookingModalScreen(): React.JSX.Element {
                         ? 'h-20 w-17 items-center justify-center rounded-2xl bg-primary'
                         : 'h-20 w-17 items-center justify-center rounded-2xl border-[1.5px] border-border bg-white dark:border-dark-border dark:bg-dark-bg-card'
                     }
-                    onPress={() => !isSubmitting && setSelectedDate(i)}
+                    onPress={() => {
+                      if (isSubmitting) return;
+                      hapticSelection();
+                      setSelectedDate(i);
+                    }}
                     disabled={isSubmitting}
                     style={isSubmitting ? { opacity: 0.7 } : undefined}
                     testID={`date-${i}`}
@@ -416,11 +422,11 @@ export default function BookingModalScreen(): React.JSX.Element {
                     accessibilityRole="button"
                     key={slot.time}
                     className="mb-2.5 items-center rounded-[14px] py-3.5"
-                    onPress={() =>
-                      slot.available &&
-                      !isSubmitting &&
-                      setSelectedTime(slot.time)
-                    }
+                    onPress={() => {
+                      if (!slot.available || isSubmitting) return;
+                      hapticSelection();
+                      setSelectedTime(slot.time);
+                    }}
                     disabled={!slot.available || isSubmitting}
                     style={{
                       backgroundColor: getSlotColors(
@@ -471,7 +477,11 @@ export default function BookingModalScreen(): React.JSX.Element {
               <Pressable
                 accessibilityRole="button"
                 className="size-12 items-center justify-center rounded-full bg-sand dark:bg-dark-bg"
-                onPress={() => !isSubmitting && setPax(Math.max(1, pax - 1))}
+                onPress={() => {
+                  if (isSubmitting) return;
+                  hapticSelection();
+                  setPax(Math.max(1, pax - 1));
+                }}
                 disabled={pax <= 1 || isSubmitting}
                 style={pax <= 1 || isSubmitting ? { opacity: 0.4 } : undefined}
                 testID="pax-minus"
@@ -500,7 +510,11 @@ export default function BookingModalScreen(): React.JSX.Element {
               <Pressable
                 accessibilityRole="button"
                 className="size-12 items-center justify-center rounded-full bg-sand dark:bg-dark-bg"
-                onPress={() => !isSubmitting && setPax(Math.min(20, pax + 1))}
+                onPress={() => {
+                  if (isSubmitting) return;
+                  hapticSelection();
+                  setPax(Math.min(20, pax + 1));
+                }}
                 disabled={pax >= 20 || isSubmitting}
                 style={pax >= 20 || isSubmitting ? { opacity: 0.4 } : undefined}
                 testID="pax-plus"
@@ -533,7 +547,11 @@ export default function BookingModalScreen(): React.JSX.Element {
                     accessibilityRole="button"
                     key={option.value}
                     className="mb-2.5 mr-2.5 rounded-full px-4.5 py-3"
-                    onPress={() => !isSubmitting && setOccasion(option.value)}
+                    onPress={() => {
+                      if (isSubmitting) return;
+                      hapticSelection();
+                      setOccasion(option.value);
+                    }}
                     disabled={isSubmitting}
                     style={{
                       backgroundColor: active

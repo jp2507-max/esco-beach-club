@@ -23,6 +23,7 @@ import { ProfileSubScreenHeader } from '@/src/components/ui';
 import { motion, rmTiming } from '@/src/lib/animations/motion';
 import { ControlledTextInput } from '@/src/lib/forms/controlled-text-input';
 import { type ReviewFormValues, reviewSchema } from '@/src/lib/forms/schemas';
+import { hapticLight, hapticSuccess } from '@/src/lib/haptics/use-haptic';
 import { captureHandledError } from '@/src/lib/monitoring';
 import {
   KeyboardAvoidingView,
@@ -117,6 +118,7 @@ export default function RateUsScreen(): React.JSX.Element {
     mutationFn: (values: ReviewFormValues) =>
       submitReview(userId, values.rating, values.comment?.trim() || null),
     onSuccess: () => {
+      hapticSuccess();
       setSubmitted(true);
       successScale.set(withSpring(1, motion.spring.bouncy));
     },
@@ -135,6 +137,7 @@ export default function RateUsScreen(): React.JSX.Element {
   });
 
   function handleStarPress(star: number): void {
+    hapticLight();
     setValue('rating', star, {
       shouldDirty: true,
       shouldTouch: true,

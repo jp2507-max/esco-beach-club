@@ -17,6 +17,7 @@ import { OnboardingHeader } from '@/src/components/onboarding/onboarding-header'
 import { InfoDot } from '@/src/components/ui';
 import { motion, withRM } from '@/src/lib/animations/motion';
 import { useButtonPress } from '@/src/lib/animations/use-button-press';
+import { hapticLight, hapticSuccess } from '@/src/lib/haptics/use-haptic';
 import { ensureVenueUpsellNotificationChannel } from '@/src/lib/notifications';
 import { shadows } from '@/src/lib/styles/shadows';
 import { readSingleSearchParam } from '@/src/lib/utils/search-params';
@@ -215,6 +216,10 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
 
       setLocationStatus(nextLocationStatus);
 
+      if (nextLocationStatus === onboardingPermissionStatuses.granted) {
+        hapticSuccess();
+      }
+
       if (nextLocationStatus !== onboardingPermissionStatuses.granted) {
         return;
       }
@@ -256,6 +261,7 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
 
       if (currentPermission.status === 'granted') {
         setPushStatus(onboardingPermissionStatuses.granted);
+        hapticSuccess();
         return;
       }
 
@@ -267,7 +273,11 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
         },
       });
 
-      setPushStatus(mapExpoPermissionStatus(requestedPermission.status));
+      const mappedPush = mapExpoPermissionStatus(requestedPermission.status);
+      setPushStatus(mappedPush);
+      if (mappedPush === onboardingPermissionStatuses.granted) {
+        hapticSuccess();
+      }
     } catch {
       Alert.alert(
         t('onboardingPermissionsErrorTitle'),
@@ -293,6 +303,7 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
   }
 
   function handleNavigateNext(): void {
+    hapticLight();
     const effectiveLocationStatus = resolveEffectiveLocationStatus();
 
     continueToFinalDetails({

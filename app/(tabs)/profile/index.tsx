@@ -38,8 +38,10 @@ import {
 } from '@/providers/DataProvider';
 import { HeaderGlassButton } from '@/src/components/ui';
 import { Avatar } from '@/src/components/ui/avatar';
-import { rmTiming } from '@/src/lib/animations/motion';
+import { motion, rmTiming } from '@/src/lib/animations/motion';
+import { useStaggeredListEntering } from '@/src/lib/animations/use-staggered-entry';
 import { config } from '@/src/lib/config';
+import { hapticLight, hapticSuccess } from '@/src/lib/haptics/use-haptic';
 import {
   getRewardTierLabelKey,
   hasRewardBenefit,
@@ -87,6 +89,42 @@ function resolveWelcomeOfferVoucherKey(
     return key as WelcomeOfferVoucherKey;
   }
   return fallback;
+}
+
+function ProfileAvatarIntro({
+  children,
+}: {
+  children: React.ReactNode;
+}): React.JSX.Element {
+  const scale = useSharedValue(0.94);
+  const opacity = useSharedValue(0);
+
+  useEffect(() => {
+    scale.set(withSpring(1, motion.spring.gentle));
+    opacity.set(withTiming(1, rmTiming(motion.dur.md)));
+    return () => {
+      cancelAnimation(scale);
+      cancelAnimation(opacity);
+    };
+  }, [opacity, scale]);
+
+  const style = useAnimatedStyle(() => ({
+    opacity: opacity.get(),
+    transform: [{ scale: scale.get() }],
+  }));
+
+  return <Animated.View style={style}>{children}</Animated.View>;
+}
+
+function ProfileMenuRowStagger({
+  children,
+  index,
+}: {
+  children: React.ReactNode;
+  index: number;
+}): React.JSX.Element {
+  const entering = useStaggeredListEntering(index);
+  return <Animated.View entering={entering}>{children}</Animated.View>;
 }
 
 function StatCard({
@@ -253,6 +291,7 @@ export default function ProfileScreen(): React.JSX.Element {
 
   useEffect(() => {
     if (showVoucher) {
+      hapticSuccess();
       voucherScale.set(
         withSpring(1, {
           damping: 14,
@@ -304,6 +343,7 @@ export default function ProfileScreen(): React.JSX.Element {
 
   async function handleMenuPress(item: MenuItem): Promise<void> {
     if (item.disabled) return;
+    hapticLight();
     if (item.id === 'log-out') {
       try {
         await signOut();
@@ -374,22 +414,27 @@ export default function ProfileScreen(): React.JSX.Element {
         showsVerticalScrollIndicator={false}
       >
         <View className="flex-row items-center justify-between pb-4 pt-3">
-          <View className="flex-row items-center">
-            <View
-              className="mr-3 size-12 overflow-hidden rounded-full border-[2.5px]"
-              style={{ borderColor: `${Colors.primary}40` }}
-            >
-              <Avatar className="h-full w-full" uri={memberSummary.avatarUrl} />
+          <ProfileAvatarIntro>
+            <View className="flex-row items-center">
+              <View
+                className="mr-3 size-12 overflow-hidden rounded-full border-[2.5px]"
+                style={{ borderColor: `${Colors.primary}40` }}
+              >
+                <Avatar
+                  className="h-full w-full"
+                  uri={memberSummary.avatarUrl}
+                />
+              </View>
+              <View>
+                <Text className="text-[13px] font-medium text-text-secondary dark:text-text-secondary-dark">
+                  {t('welcomeBack')}
+                </Text>
+                <Text className="text-xl font-extrabold text-primary dark:text-primary-bright">
+                  {userName}
+                </Text>
+              </View>
             </View>
-            <View>
-              <Text className="text-[13px] font-medium text-text-secondary dark:text-text-secondary-dark">
-                {t('welcomeBack')}
-              </Text>
-              <Text className="text-xl font-extrabold text-primary dark:text-primary-bright">
-                {userName}
-              </Text>
-            </View>
-          </View>
+          </ProfileAvatarIntro>
           <HeaderGlassButton
             accessibilityLabel={t('menu.comingSoon')}
             accessibilityHint={t('notifications.hint')}
@@ -582,9 +627,44 @@ export default function ProfileScreen(): React.JSX.Element {
                 : 'flex-row items-center px-4 py-[15px]';
             if (item.disabled) {
               return (
-                <View
-                  key={item.id}
+                <ProfileMenuRowStagger key={item.id} index={index}>
+                  <View
+                    className={rowClassName}
+                    testID={
+                      item.id === 'delete-account'
+                        ? 'delete-account-option'
+                        : `menu-${item.id}`
+                    }
+                  >
+                    <View
+                      className="mr-3.5 size-[38px] items-center justify-center rounded-[10px] opacity-60"
+                      style={{
+                        backgroundColor: `${accentOnDarkBackground(item.color, isDark)}15`,
+                      }}
+                    >
+                      <item.icon
+                        size={20}
+                        color={accentOnDarkBackground(item.color, isDark)}
+                      />
+                    </View>
+                    <Text className="flex-1 text-[15px] font-semibold text-text-muted dark:text-text-muted-dark">
+                      {item.label}
+                    </Text>
+                    <Text className="text-xs font-medium text-text-muted dark:text-text-muted-dark">
+                      {t('menu.comingSoon')}
+                    </Text>
+                  </View>
+                </ProfileMenuRowStagger>
+              );
+            }
+            return (
+              <ProfileMenuRowStagger key={item.id} index={index}>
+                <Pressable
+                  accessibilityRole="button"
                   className={rowClassName}
+                  onPress={() => {
+                    void handleMenuPress(item);
+                  }}
                   testID={
                     item.id === 'delete-account'
                       ? 'delete-account-option'
@@ -592,7 +672,7 @@ export default function ProfileScreen(): React.JSX.Element {
                   }
                 >
                   <View
-                    className="mr-3.5 size-[38px] items-center justify-center rounded-[10px] opacity-60"
+                    className="mr-3.5 size-[38px] items-center justify-center rounded-[10px]"
                     style={{
                       backgroundColor: `${accentOnDarkBackground(item.color, isDark)}15`,
                     }}
@@ -602,48 +682,15 @@ export default function ProfileScreen(): React.JSX.Element {
                       color={accentOnDarkBackground(item.color, isDark)}
                     />
                   </View>
-                  <Text className="flex-1 text-[15px] font-semibold text-text-muted dark:text-text-muted-dark">
+                  <Text className="flex-1 text-[15px] font-semibold text-text dark:text-text-primary-dark">
                     {item.label}
                   </Text>
-                  <Text className="text-xs font-medium text-text-muted dark:text-text-muted-dark">
-                    {t('menu.comingSoon')}
-                  </Text>
-                </View>
-              );
-            }
-            return (
-              <Pressable
-                accessibilityRole="button"
-                key={item.id}
-                className={rowClassName}
-                onPress={() => {
-                  void handleMenuPress(item);
-                }}
-                testID={
-                  item.id === 'delete-account'
-                    ? 'delete-account-option'
-                    : `menu-${item.id}`
-                }
-              >
-                <View
-                  className="mr-3.5 size-[38px] items-center justify-center rounded-[10px]"
-                  style={{
-                    backgroundColor: `${accentOnDarkBackground(item.color, isDark)}15`,
-                  }}
-                >
-                  <item.icon
-                    size={20}
-                    color={accentOnDarkBackground(item.color, isDark)}
+                  <ChevronRight
+                    size={18}
+                    color={isDark ? Colors.textMutedDark : Colors.textLight}
                   />
-                </View>
-                <Text className="flex-1 text-[15px] font-semibold text-text dark:text-text-primary-dark">
-                  {item.label}
-                </Text>
-                <ChevronRight
-                  size={18}
-                  color={isDark ? Colors.textMutedDark : Colors.textLight}
-                />
-              </Pressable>
+                </Pressable>
+              </ProfileMenuRowStagger>
             );
           })}
         </View>

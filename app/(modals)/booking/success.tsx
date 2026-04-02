@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
 import { rmTiming } from '@/src/lib/animations/motion';
+import { hapticSuccess } from '@/src/lib/haptics/use-haptic';
 import { shadows } from '@/src/lib/styles/shadows';
 import { Pressable, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
@@ -33,6 +34,7 @@ export default function SuccessScreen(): React.JSX.Element {
   const confettiY = useSharedValue(-20);
 
   useEffect(() => {
+    hapticSuccess();
     scale.set(
       withSequence(
         withSpring(1.05, {

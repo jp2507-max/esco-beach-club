@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { setProfileAuthProvider } from '@/lib/api';
-import { authProviderTypes } from '@/lib/types';
+import { type AuthProviderType, authProviderTypes } from '@/lib/types';
 import {
   getIdTokenAudienceClaim,
   getIdTokenNonceClaim,
@@ -75,6 +75,23 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     setVerifyCodeError(null);
   }
 
+  async function setProfileAuthProviderSafely(params: {
+    userId: string;
+    providerType: AuthProviderType;
+  }): Promise<void> {
+    try {
+      await setProfileAuthProvider(params.userId, params.providerType);
+    } catch (profileError: unknown) {
+      captureHandledError(toError(profileError, 'unableToSetProfileAuthProvider'), {
+        tags: {
+          area: 'auth',
+          operation: 'set_profile_auth_provider',
+          provider: params.providerType,
+        },
+      });
+    }
+  }
+
   async function signInWithApple(params?: SignInProviderParams): Promise<void> {
     setAppleSignInLoading(true);
     setAppleSignInError(null);
@@ -117,7 +134,10 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
 
       const signInUser = extractSignInUser(signInResult);
       if (signInUser.id) {
-        await setProfileAuthProvider(signInUser.id, authProviderTypes.apple);
+        await setProfileAuthProviderSafely({
+          userId: signInUser.id,
+          providerType: authProviderTypes.apple,
+        });
       }
     } catch (error: unknown) {
       const nextError = toError(error, 'unableToSignInWithApple');
@@ -239,10 +259,10 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
 
             const fallbackSignInUser = extractSignInUser(signInResult);
             if (fallbackSignInUser.id) {
-              await setProfileAuthProvider(
-                fallbackSignInUser.id,
-                authProviderTypes.google
-              );
+              await setProfileAuthProviderSafely({
+                userId: fallbackSignInUser.id,
+                providerType: authProviderTypes.google,
+              });
             }
 
             return;
@@ -266,7 +286,10 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
 
       const signInUser = extractSignInUser(signInResult);
       if (signInUser.id) {
-        await setProfileAuthProvider(signInUser.id, authProviderTypes.google);
+        await setProfileAuthProviderSafely({
+          userId: signInUser.id,
+          providerType: authProviderTypes.google,
+        });
       }
     } catch (error: unknown) {
       if (__DEV__) {
@@ -361,10 +384,10 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
 
       const signInUser = extractSignInUser(signInResult);
       if (signInUser.id) {
-        await setProfileAuthProvider(
-          signInUser.id,
-          authProviderTypes.magicCode
-        );
+        await setProfileAuthProviderSafely({
+          userId: signInUser.id,
+          providerType: authProviderTypes.magicCode,
+        });
       }
     } catch (error: unknown) {
       const nextError = toError(error, 'unableToVerifyCode');

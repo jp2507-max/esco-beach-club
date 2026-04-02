@@ -1,11 +1,15 @@
 #!/usr/bin/env bun
 /**
  * Finalize expired account deletion requests.
+ *
+ * Requires `processing_lock_id` on `account_deletion_requests` in instant.schema.ts
+ * to be pushed (`npx instant-cli@latest push schema`) before running in production.
  */
 
 import { init } from '@instantdb/admin';
 
 import schema from '@/instant.schema';
+import { accountDeletionStatuses } from '@/lib/types';
 
 const appId =
   process.env.INSTANT_APP_ID?.trim() ||
@@ -29,10 +33,19 @@ const db = init({
 type PendingDeletionRecord = {
   auth_user_id?: string;
   id: string;
+  processing_lock_id?: string | null;
   profile_id?: string | null;
   scheduled_for_at?: string | Date | null;
   status?: string;
+  updated_at?: string | Date | null;
 };
+
+function toComparableIso(value: string | Date | null | undefined): string | null {
+  if (value == null) return null;
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toISOString();
+}
 
 function isDue(record: PendingDeletionRecord, now: Date): boolean {
   if (!record || record.status !== 'pending' || !record.scheduled_for_at) {
@@ -41,6 +54,95 @@ function isDue(record: PendingDeletionRecord, now: Date): boolean {
 
   const scheduled = new Date(record.scheduled_for_at);
   return !Number.isNaN(scheduled.getTime()) && scheduled.getTime() <= now.getTime();
+}
+
+function isRecordNotFound(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'body' in error &&
+    (error as { body?: { type?: string } }).body?.type === 'record-not-found'
+  );
+}
+
+async function fetchDeletionRequestById(
+  requestId: string
+): Promise<PendingDeletionRecord | null> {
+  const result = await db.query({
+    account_deletion_requests: {
+      $: { where: { id: requestId } },
+    },
+  });
+  const row = result.account_deletion_requests?.[0] as PendingDeletionRecord | undefined;
+  return row ?? null;
+}
+
+/**
+ * Claims a pending due request for this runner. InstantDB has no conditional update in the
+ * client; we combine list-snapshot updated_at matching, status=processing, and a unique
+ * processing_lock_id, then re-read to detect losing races.
+ */
+async function tryClaimDeletionRequest(params: {
+  listSnapshotUpdatedAt: string | Date | null | undefined;
+  now: Date;
+  requestId: string;
+}): Promise<{ lockId: string } | null> {
+  const fresh = await fetchDeletionRequestById(params.requestId);
+  if (!fresh) {
+    return null;
+  }
+
+  const snapshotIso = toComparableIso(params.listSnapshotUpdatedAt);
+  const liveIso = toComparableIso(fresh.updated_at);
+  if (snapshotIso !== liveIso) {
+    console.log(
+      `Skipping ${params.requestId}: updated_at no longer matches listing snapshot (concurrent update).`
+    );
+    return null;
+  }
+
+  if (!isDue(fresh, params.now)) {
+    return null;
+  }
+
+  const lockId = crypto.randomUUID();
+  const claimAt = params.now.toISOString();
+
+  try {
+    await db.transact(
+      db.tx.account_deletion_requests[params.requestId].update(
+        {
+          processing_lock_id: lockId,
+          status: accountDeletionStatuses.processing,
+          updated_at: claimAt,
+        },
+        { upsert: false }
+      )
+    );
+  } catch (error) {
+    if (isRecordNotFound(error)) {
+      return null;
+    }
+    throw error;
+  }
+
+  const after = await fetchDeletionRequestById(params.requestId);
+  if (
+    after?.status !== accountDeletionStatuses.processing ||
+    after.processing_lock_id !== lockId
+  ) {
+    console.log(`Skipping ${params.requestId}: claim verification failed (another runner won).`);
+    return null;
+  }
+
+  return { lockId };
+}
+
+async function verifyDeletionLockHeld(requestId: string, lockId: string): Promise<boolean> {
+  const row = await fetchDeletionRequestById(requestId);
+  return (
+    row?.status === accountDeletionStatuses.processing && row.processing_lock_id === lockId
+  );
 }
 
 async function resolveProfileIdForUser(userId: string): Promise<string | null> {
@@ -138,19 +240,42 @@ async function main(): Promise<void> {
       continue;
     }
 
+    const claimed = await tryClaimDeletionRequest({
+      listSnapshotUpdatedAt: record.updated_at,
+      now,
+      requestId,
+    });
+    if (!claimed) {
+      continue;
+    }
+
     const profileId = record.profile_id || (await resolveProfileIdForUser(userId));
 
     console.log(`Processing account deletion for user ${userId}`);
 
     try {
+      if (!(await verifyDeletionLockHeld(requestId, claimed.lockId))) {
+        console.log(`Skipping ${requestId}: lock not held before profile cleanup.`);
+        continue;
+      }
+
       await cleanupProfileLinkedData(profileId ?? null);
+
+      if (!(await verifyDeletionLockHeld(requestId, claimed.lockId))) {
+        console.log(`Skipping ${requestId}: lock not held before auth delete.`);
+        continue;
+      }
+
       await db.auth.deleteUser({ id: userId });
+
+      const doneAt = new Date().toISOString();
       await db.transact(
         db.tx.account_deletion_requests[requestId].update(
           {
-            completed_at: now.toISOString(),
-            status: 'completed',
-            updated_at: now.toISOString(),
+            completed_at: doneAt,
+            processing_lock_id: null,
+            status: accountDeletionStatuses.completed,
+            updated_at: doneAt,
           },
           { upsert: false }
         )

@@ -1,12 +1,22 @@
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import {
+  cancelAnimation,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useMemberSummary } from '@/providers/DataProvider';
 import { MemberCard } from '@/src/components/ui';
+import { motion, rmTiming } from '@/src/lib/animations/motion';
+import { hapticMedium, hapticSuccess } from '@/src/lib/haptics/use-haptic';
 import { getRewardTierLabelKey } from '@/src/lib/loyalty';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
+import { Animated } from '@/src/tw/animated';
 
 export default function QrTabScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
@@ -14,6 +24,29 @@ export default function QrTabScreen(): React.JSX.Element {
   const { t } = useTranslation('profile');
   const { t: tHome } = useTranslation('home');
   const memberSummary = useMemberSummary();
+  const didPlayRevealHaptic = useRef(false);
+  const cardScale = useSharedValue(0.92);
+  const cardOpacity = useSharedValue(0);
+
+  useEffect(() => {
+    cardScale.set(withSpring(1, motion.spring.gentle));
+    cardOpacity.set(withTiming(1, rmTiming(motion.dur.lg)));
+    return () => {
+      cancelAnimation(cardScale);
+      cancelAnimation(cardOpacity);
+    };
+  }, [cardOpacity, cardScale]);
+
+  useEffect(() => {
+    if (didPlayRevealHaptic.current) return;
+    didPlayRevealHaptic.current = true;
+    hapticSuccess();
+  }, []);
+
+  const cardRevealStyle = useAnimatedStyle(() => ({
+    opacity: cardOpacity.get(),
+    transform: [{ scale: cardScale.get() }],
+  }));
   const memberId = memberSummary.memberId;
   const memberName = memberSummary.fullName || t('guest');
   const tierLabel = t(
@@ -45,7 +78,10 @@ export default function QrTabScreen(): React.JSX.Element {
           </Text>
         </View>
 
-        <View className="rounded-3xl border border-border bg-white p-6 dark:border-dark-border dark:bg-dark-bg-card">
+        <Animated.View
+          className="rounded-3xl border border-border bg-white p-6 dark:border-dark-border dark:bg-dark-bg-card"
+          style={cardRevealStyle}
+        >
           <MemberCard
             className="min-h-[300px]"
             copy={{
@@ -69,14 +105,17 @@ export default function QrTabScreen(): React.JSX.Element {
           <Pressable
             accessibilityRole="button"
             className="items-center"
-            onLongPress={handleOpenStaffRoute}
+            onLongPress={() => {
+              hapticMedium();
+              handleOpenStaffRoute();
+            }}
             testID="member-qr-hidden-staff-entry"
           >
             <Text className="text-[13px] font-medium text-text-secondary dark:text-text-secondary-dark">
               {t('refPrefix', { memberId })}
             </Text>
           </Pressable>
-        </View>
+        </Animated.View>
       </ScrollView>
     </View>
   );

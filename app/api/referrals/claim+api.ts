@@ -112,7 +112,24 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const authUser = await verifyInstantRefreshToken(refreshToken);
-  if (!authUser) {
+  if (!authUser.ok) {
+    if (authUser.code === 'instant_auth_unreachable') {
+      return jsonResponse(
+        {
+          error: authUser.code,
+          message: authUser.message ?? 'Could not reach Instant auth service',
+        },
+        503
+      );
+    }
+
+    if (authUser.code === 'missing_app_id') {
+      return jsonResponse(
+        { error: 'server_misconfigured', message: 'Missing admin or app id' },
+        503
+      );
+    }
+
     return jsonResponse({ error: 'unauthorized' }, 401);
   }
 

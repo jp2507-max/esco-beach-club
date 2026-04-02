@@ -36,11 +36,15 @@ import {
   HeaderGlassButton,
   MemberCard,
   SectionHeader,
+  Skeleton,
+  SkeletonCard,
 } from '@/src/components/ui';
 import { rmTiming } from '@/src/lib/animations/motion';
 import { useScreenEntry } from '@/src/lib/animations/use-screen-entry';
+import { useStaggeredListEntering } from '@/src/lib/animations/use-staggered-entry';
+import { hapticLight } from '@/src/lib/haptics/use-haptic';
 import { getRewardTierLabelKey } from '@/src/lib/loyalty';
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from '@/src/tw';
+import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 import { Image } from '@/src/tw/image';
 
@@ -85,7 +89,10 @@ function QuickActionChip({
     <Pressable
       accessibilityRole="button"
       className="flex-row items-center rounded-full border border-border bg-white px-5 py-3.5 dark:border-dark-border dark:bg-dark-bg-card"
-      onPress={() => onPress(action.route)}
+      onPress={() => {
+        hapticLight();
+        onPress(action.route);
+      }}
       testID={`action-${action.id}`}
     >
       <action.icon size={18} color={action.color} />
@@ -196,6 +203,17 @@ function HomeNewsRow({ item }: { item: NewsItem }): React.JSX.Element {
 }
 
 const MemoizedHomeNewsRow = React.memo(HomeNewsRow);
+
+function StaggeredFeedBlock({
+  children,
+  index,
+}: {
+  children: React.ReactNode;
+  index: number;
+}): React.JSX.Element {
+  const entering = useStaggeredListEntering(index);
+  return <Animated.View entering={entering}>{children}</Animated.View>;
+}
 
 export default function HomeScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
@@ -308,7 +326,7 @@ export default function HomeScreen(): React.JSX.Element {
   }, [router]);
 
   const renderFeedItem = useCallback(
-    ({ item }: ListRenderItemInfo<HomeFeedRow>): React.JSX.Element => {
+    ({ index, item }: ListRenderItemInfo<HomeFeedRow>): React.JSX.Element => {
       if (item.type === 'section')
         return (
           <SectionHeader
@@ -324,12 +342,18 @@ export default function HomeScreen(): React.JSX.Element {
         );
       if (item.type === 'event')
         return (
-          <MemoizedHomeEventCard
-            event={item.event}
-            onPress={handleEventPress}
-          />
+          <StaggeredFeedBlock index={index}>
+            <MemoizedHomeEventCard
+              event={item.event}
+              onPress={handleEventPress}
+            />
+          </StaggeredFeedBlock>
         );
-      return <MemoizedHomeNewsRow item={item.item} />;
+      return (
+        <StaggeredFeedBlock index={index}>
+          <MemoizedHomeNewsRow item={item.item} />
+        </StaggeredFeedBlock>
+      );
     },
     [handleEventPress, handleSeeAllEvents, t]
   );
@@ -458,11 +482,14 @@ export default function HomeScreen(): React.JSX.Element {
         }
         ListEmptyComponent={
           isFeedLoading ? (
-            <View className="items-center px-5 py-12">
-              <ActivityIndicator color={Colors.primary} size="large" />
-              <Text className="mt-4 text-sm font-medium text-text-secondary dark:text-text-secondary-dark">
-                {t('loading')}
-              </Text>
+            <View className="px-5 py-10">
+              <SkeletonCard className="mb-5" height={200} />
+              <View className="mb-6 flex-row gap-2.5">
+                <Skeleton className="h-12 flex-1 rounded-full" />
+                <Skeleton className="h-12 flex-1 rounded-full" />
+              </View>
+              <SkeletonCard className="mb-4" height={200} />
+              <SkeletonCard height={88} />
             </View>
           ) : (
             <View className="px-5 py-12">

@@ -16,6 +16,7 @@ import { OnboardingHeader } from '@/src/components/onboarding/onboarding-header'
 import { motion, withRM } from '@/src/lib/animations/motion';
 import { useButtonPress } from '@/src/lib/animations/use-button-press';
 import { config } from '@/src/lib/config';
+import { hapticLight } from '@/src/lib/haptics/use-haptic';
 import { shadows } from '@/src/lib/styles/shadows';
 import { Pressable, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
@@ -187,7 +188,10 @@ export default function OnboardingWelcomeScreen(): React.JSX.Element {
             <Pressable
               accessibilityRole="button"
               className="overflow-hidden rounded-full"
-              onPress={() => router.push('/onboarding-profile-basics')}
+              onPress={() => {
+                hapticLight();
+                router.push('/onboarding-profile-basics');
+              }}
               onPressIn={ctaButton.handlePressIn}
               onPressOut={ctaButton.handlePressOut}
               testID="onboarding-get-started"

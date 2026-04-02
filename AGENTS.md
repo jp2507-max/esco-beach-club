@@ -15,7 +15,6 @@ These rules should be considered required repository context before making code 
 
 Additional repo-specific expectations:
 
-- In human-facing chat replies, start each new conversation/task with “hi” and one short motivating line.
 - Reply concisely; no filler.
 - Be strictly honest; only claim checks you actually performed.
 - During edits, match existing style and reuse existing utils/components if you can

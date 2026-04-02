@@ -54,6 +54,17 @@ export function ReferralClaimEffect(): null {
         }
 
         if (result.reason === 'no_endpoint') {
+          console.warn(
+            '[ReferralClaimEffect] Referral API unavailable. Start the Expo dev server with API routes or set EXPO_PUBLIC_REFERRAL_API_BASE_URL.'
+          );
+          attemptedForUserRef.current = null;
+          return;
+        }
+
+        if (result.status === 503 && result.code === 'server_misconfigured') {
+          console.warn(
+            '[ReferralClaimEffect] Referral API server is missing Instant admin credentials.'
+          );
           attemptedForUserRef.current = null;
           return;
         }
@@ -75,7 +86,13 @@ export function ReferralClaimEffect(): null {
         attemptedForUserRef.current = null;
       }
     })();
-  }, [isLoading, profile?.id, user?.id, user?.refresh_token, referralSignalVersion]);
+  }, [
+    isLoading,
+    profile?.id,
+    user?.id,
+    user?.refresh_token,
+    referralSignalVersion,
+  ]);
 
   return null;
 }

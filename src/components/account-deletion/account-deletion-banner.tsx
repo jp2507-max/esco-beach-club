@@ -1,14 +1,15 @@
-import { AlertTriangle, RotateCcw, ShieldAlert } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
+import { AlertTriangle, RotateCcw, ShieldAlert } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert } from 'react-native';
 
 import { Colors } from '@/constants/colors';
+import { useAuth } from '@/providers/AuthProvider';
 import { Button, SurfaceCard } from '@/src/components/ui';
 import { postRestoreAccountDeletion } from '@/src/lib/account-deletion/account-deletion-api';
+import { getAccountDeletionErrorMessage } from '@/src/lib/account-deletion/account-deletion-error-message';
 import { useAccountDeletionRequest } from '@/src/lib/account-deletion/use-account-deletion-request';
-import { useAuth } from '@/providers/AuthProvider';
 import { Text, View } from '@/src/tw';
 
 type AccountDeletionBannerProps = {
@@ -49,7 +50,11 @@ export function AccountDeletionBanner({
       });
 
       if (!result.ok) {
-        Alert.alert(t('deleteAccount.errors.restoreFailed'));
+        Alert.alert(
+          getAccountDeletionErrorMessage(result, t, {
+            fallbackKey: 'restoreFailed',
+          })
+        );
         return;
       }
 
@@ -81,7 +86,7 @@ export function AccountDeletionBanner({
           </Text>
           <Text className="mt-1 text-sm leading-5 text-text-secondary dark:text-text-secondary-dark">
             {t('deleteAccount.bannerDescription', {
-              date: scheduledLabel ?? '30 days',
+              date: scheduledLabel ?? t('deleteAccount.defaultGracePeriod'),
             })}
           </Text>
         </View>

@@ -13,6 +13,7 @@ import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Alert, Platform, useColorScheme } from 'react-native';
 import {
+  LinearTransition,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
@@ -23,13 +24,14 @@ import { Colors } from '@/constants/colors';
 import { submitPrivateEventInquiry } from '@/lib/api';
 import { useBookingContentData, useUserId } from '@/providers/DataProvider';
 import { Button, ModalHeader } from '@/src/components/ui';
-import { motion } from '@/src/lib/animations/motion';
+import { motion, withRM } from '@/src/lib/animations/motion';
 import { ControlledTextInput } from '@/src/lib/forms/controlled-text-input';
 import {
   type PrivateEventFormInput,
   type PrivateEventFormValues,
   privateEventSchema,
 } from '@/src/lib/forms/schemas';
+import { hapticSelection } from '@/src/lib/haptics/use-haptic';
 import { captureHandledError } from '@/src/lib/monitoring';
 import { cn } from '@/src/lib/utils';
 import {
@@ -162,6 +164,7 @@ export default function PrivateEventScreen(): React.JSX.Element {
   }
 
   function handleTypeSelect(value: string): void {
+    hapticSelection();
     setValue('eventType', value, {
       shouldDirty: true,
       shouldTouch: true,
@@ -217,76 +220,81 @@ export default function PrivateEventScreen(): React.JSX.Element {
                 {t('privateEvent.eventDetails')}
               </Text>
 
-              <Pressable
-                accessibilityRole="button"
-                className="mb-2 flex-row items-center rounded-[14px] border border-border bg-white px-4 py-3 dark:border-dark-border dark:bg-dark-bg-card"
-                onPress={() => setShowTypePicker(!showTypePicker)}
-                testID="event-type-picker"
-              >
-                <View
-                  className="mr-3 size-9 items-center justify-center rounded-[10px]"
-                  style={{ backgroundColor: `${Colors.tealLight}66` }}
+              <Animated.View layout={withRM(LinearTransition)}>
+                <Pressable
+                  accessibilityRole="button"
+                  className="mb-2 flex-row items-center rounded-[14px] border border-border bg-white px-4 py-3 dark:border-dark-border dark:bg-dark-bg-card"
+                  onPress={() => {
+                    hapticSelection();
+                    setShowTypePicker(!showTypePicker);
+                  }}
+                  testID="event-type-picker"
                 >
-                  <PartyPopper color={Colors.secondary} size={18} />
-                </View>
-                <View className="flex-1">
-                  <Text className="mb-0.5 text-[11px] font-semibold text-text-secondary dark:text-text-secondary-dark">
-                    {t('privateEvent.eventType')}
-                  </Text>
-                  <Text
-                    className={
-                      eventType
-                        ? 'text-[15px] font-semibold text-text dark:text-text-primary-dark'
-                        : 'text-[15px] font-normal text-text-muted dark:text-text-muted-dark'
-                    }
+                  <View
+                    className="mr-3 size-9 items-center justify-center rounded-[10px]"
+                    style={{ backgroundColor: `${Colors.tealLight}66` }}
                   >
-                    {eventType
-                      ? selectedEventTypeLabel
-                      : t('privateEvent.selectType')}
-                  </Text>
-                </View>
-                <ChevronDown
-                  color={isDark ? Colors.textMutedDark : Colors.textLight}
-                  size={18}
-                />
-              </Pressable>
-
-              {showTypePicker && (
-                <View className="-mt-1 mb-2 overflow-hidden rounded-[14px] border border-border bg-white dark:border-dark-border dark:bg-dark-bg-card">
-                  {resolvedEventTypeOptions.map((option) => (
-                    <Pressable
-                      accessibilityRole="button"
-                      key={option.value}
-                      className="border-b border-border px-4.5 py-3.25 last:border-b-0 dark:border-dark-border"
-                      onPress={() => handleTypeSelect(option.value)}
-                      style={
-                        eventType === option.value
-                          ? { backgroundColor: `${Colors.secondary}12` }
-                          : undefined
+                    <PartyPopper color={Colors.secondary} size={18} />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="mb-0.5 text-[11px] font-semibold text-text-secondary dark:text-text-secondary-dark">
+                      {t('privateEvent.eventType')}
+                    </Text>
+                    <Text
+                      className={
+                        eventType
+                          ? 'text-[15px] font-semibold text-text dark:text-text-primary-dark'
+                          : 'text-[15px] font-normal text-text-muted dark:text-text-muted-dark'
                       }
-                      testID={`type-${option.value}`}
                     >
-                      <Text
-                        className="text-[15px]"
-                        style={{
-                          color:
-                            eventType === option.value
-                              ? isDark
-                                ? Colors.secondaryBright
-                                : Colors.secondary
-                              : isDark
-                                ? Colors.textPrimaryDark
-                                : Colors.text,
-                          fontWeight:
-                            eventType === option.value ? '700' : '500',
-                        }}
+                      {eventType
+                        ? selectedEventTypeLabel
+                        : t('privateEvent.selectType')}
+                    </Text>
+                  </View>
+                  <ChevronDown
+                    color={isDark ? Colors.textMutedDark : Colors.textLight}
+                    size={18}
+                  />
+                </Pressable>
+
+                {showTypePicker ? (
+                  <View className="-mt-1 mb-2 overflow-hidden rounded-[14px] border border-border bg-white dark:border-dark-border dark:bg-dark-bg-card">
+                    {resolvedEventTypeOptions.map((option) => (
+                      <Pressable
+                        accessibilityRole="button"
+                        key={option.value}
+                        className="border-b border-border px-4.5 py-3.25 last:border-b-0 dark:border-dark-border"
+                        onPress={() => handleTypeSelect(option.value)}
+                        style={
+                          eventType === option.value
+                            ? { backgroundColor: `${Colors.secondary}12` }
+                            : undefined
+                        }
+                        testID={`type-${option.value}`}
                       >
-                        {option.label}
-                      </Text>
-                    </Pressable>
-                  ))}
-                </View>
-              )}
+                        <Text
+                          className="text-[15px]"
+                          style={{
+                            color:
+                              eventType === option.value
+                                ? isDark
+                                  ? Colors.secondaryBright
+                                  : Colors.secondary
+                                : isDark
+                                  ? Colors.textPrimaryDark
+                                  : Colors.text,
+                            fontWeight:
+                              eventType === option.value ? '700' : '500',
+                          }}
+                        >
+                          {option.label}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                ) : null}
+              </Animated.View>
 
               <Controller
                 control={control}

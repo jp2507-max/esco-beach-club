@@ -47,12 +47,24 @@ function getConfiguredValue(key, fallback) {
     : fallback;
 }
 
+const FETCH_TIMEOUT_MS = 10000; // 10 seconds
+
 async function fetchUrlStatus(url) {
+  const controller = new AbortController();
+  let timeoutId;
+
   try {
+    timeoutId = setTimeout(() => {
+      controller.abort();
+    }, FETCH_TIMEOUT_MS);
+
     const response = await fetch(url, {
       method: 'GET',
       redirect: 'follow',
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
 
     return {
       ok: response.ok,
@@ -60,11 +72,21 @@ async function fetchUrlStatus(url) {
       url,
     };
   } catch (error) {
+    clearTimeout(timeoutId);
+
+    const isAborted =
+      error instanceof DOMException && error.name === 'AbortError';
+    const message = isAborted
+      ? 'fetch_timeout'
+      : error instanceof Error
+        ? error.message
+        : 'network_error';
+
     return {
       ok: false,
       status: null,
       url,
-      message: error instanceof Error ? error.message : 'network_error',
+      message,
     };
   }
 }
@@ -73,12 +95,43 @@ async function main() {
   const requireReviewArtifacts =
     process.env.REQUIRE_APP_REVIEW_ARTIFACTS === 'true';
   const appJsonPath = path.join(rootDir, 'app.json');
+
+  let appJson = null;
+  const appJsonErrors = [];
+
   if (!fs.existsSync(appJsonPath)) {
-    console.error('app.json not found');
+    appJsonErrors.push('app.json not found');
+  } else {
+    try {
+      appJson = JSON.parse(fs.readFileSync(appJsonPath, 'utf8'));
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      appJsonErrors.push(`Failed to parse app.json: ${errorMessage}`);
+    }
+  }
+
+  // If app.json loading failed, write failure report and exit
+  if (appJsonErrors.length > 0) {
+    const failureReport = {
+      success: false,
+      validatedAt: new Date().toISOString(),
+      checks: {
+        appJsonValid: false,
+      },
+      errors: appJsonErrors,
+    };
+
+    fs.mkdirSync(outDir, { recursive: true });
+    fs.writeFileSync(outPath, JSON.stringify(failureReport, null, 2));
+
+    console.error('Privacy notices validation failed:');
+    for (const error of appJsonErrors) {
+      console.error(`- ${error}`);
+    }
     process.exit(1);
   }
 
-  const appJson = JSON.parse(fs.readFileSync(appJsonPath, 'utf8'));
   const associatedDomains = appJson?.expo?.ios?.associatedDomains ?? [];
   const privacyPolicyUrl = getConfiguredValue(
     'EXPO_PUBLIC_PRIVACY_POLICY_URL',
@@ -117,7 +170,9 @@ async function main() {
   const urlChecks = await Promise.all(urls.map(fetchUrlStatus));
   const domainChecks = await Promise.all(
     associatedDomains
-      .filter((domain) => typeof domain === 'string' && domain.startsWith('applinks:'))
+      .filter(
+        (domain) => typeof domain === 'string' && domain.startsWith('applinks:')
+      )
       .map((domain) =>
         fetchUrlStatus(
           `https://${domain.replace(/^applinks:/, '')}/.well-known/apple-app-site-association`

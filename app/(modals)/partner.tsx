@@ -19,6 +19,7 @@ import { claimPartnerRedemption } from '@/lib/api';
 import { usePartnerById, useUserId } from '@/providers/DataProvider';
 import { HeaderGlassButton } from '@/src/components/ui';
 import { motion, rmTiming } from '@/src/lib/animations/motion';
+import { hapticLight, hapticSuccess } from '@/src/lib/haptics/use-haptic';
 import { captureHandledError } from '@/src/lib/monitoring';
 import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
 import { Pressable, Text, View } from '@/src/tw';
@@ -76,6 +77,7 @@ export default function PartnerModal(): React.JSX.Element {
 
   async function handleCopy(): Promise<void> {
     if (!partner || claimMutation.isPending) return;
+    hapticLight();
 
     try {
       await claimMutation.mutateAsync('code_copy');
@@ -104,6 +106,7 @@ export default function PartnerModal(): React.JSX.Element {
 
     try {
       await claimMutation.mutateAsync('cta_unlock');
+      hapticSuccess();
       router.back();
     } catch (error: unknown) {
       captureHandledError(error, {

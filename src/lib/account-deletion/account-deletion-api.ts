@@ -1,38 +1,22 @@
-import Constants from 'expo-constants';
-
 import type { AuthProviderType } from '@/lib/types';
+import {
+  buildClientApiUrl,
+  type ClientApiResult,
+  readApiErrorDetails,
+} from '@/src/lib/api/client-api';
 
-function getAccountDeletionApiBaseUrl(): string | null {
-  const fromEnv = process.env.EXPO_PUBLIC_ACCOUNT_API_BASE_URL?.trim();
-  if (fromEnv) return fromEnv.replace(/\/+$/, '');
-
-  const referralBase = process.env.EXPO_PUBLIC_REFERRAL_API_BASE_URL?.trim();
-  if (referralBase) return referralBase.replace(/\/+$/, '');
-
-  const hostUri = Constants.expoConfig?.hostUri;
-  if (__DEV__ && hostUri) {
-    const host = hostUri.split(':')[0];
-    if (host) {
-      return `http://${host}:8081`;
-    }
-  }
-
-  return null;
-}
-
-type ApiFailureReason = 'network' | 'no_endpoint';
-
-export type AccountDeletionApiResult<T> =
-  | { ok: true; body: T; status: number }
-  | { ok: false; message?: string; reason: ApiFailureReason; status?: number };
+export type AccountDeletionApiResult<T> = ClientApiResult<T>;
 
 async function postJson<T>(
   path: string,
   refreshToken: string,
   body: Record<string, unknown>
 ): Promise<AccountDeletionApiResult<T>> {
-  const base = getAccountDeletionApiBaseUrl();
-  if (!base) {
+  const url = buildClientApiUrl(path, {
+    explicitBaseUrl: process.env.EXPO_PUBLIC_ACCOUNT_API_BASE_URL,
+    fallbackBaseUrl: process.env.EXPO_PUBLIC_REFERRAL_API_BASE_URL,
+  });
+  if (!url) {
     return { ok: false, reason: 'no_endpoint' };
   }
 
@@ -40,7 +24,7 @@ async function postJson<T>(
   const timeoutId = setTimeout(() => controller.abort(), 15000);
 
   try {
-    const response = await fetch(`${base}${path}`, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -50,9 +34,9 @@ async function postJson<T>(
       signal: controller.signal,
     });
 
-    let responseBody: T | null = null;
+    let responseBody: unknown = null;
     try {
-      responseBody = (await response.json()) as T;
+      responseBody = await response.json();
     } catch {
       responseBody = null;
     }
@@ -60,16 +44,16 @@ async function postJson<T>(
     if (response.ok && responseBody !== null) {
       return {
         ok: true,
-        body: responseBody,
+        body: responseBody as T,
         status: response.status,
       };
     }
 
     return {
       ok: false,
-      reason: 'network',
+      reason: 'http_error',
       status: response.status,
-      message: `HTTP ${response.status}`,
+      ...readApiErrorDetails(responseBody, response.status),
     };
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {

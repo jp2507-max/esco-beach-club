@@ -33,8 +33,8 @@ import {
   extractInviteCodeFromUrl,
   setPendingReferralCode,
 } from '@/src/lib/referral/pending-referral';
-import { usePendingReferralSignal } from '@/src/stores/pending-referral-signal-store';
 import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
+import { usePendingReferralSignal } from '@/src/stores/pending-referral-signal-store';
 import {
   applyThemePreference,
   useThemePreferenceStore,

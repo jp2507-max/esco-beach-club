@@ -52,6 +52,7 @@
       "package": "com.escobeachclub.app"
     },
     "web": {
+      "output": "server",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [

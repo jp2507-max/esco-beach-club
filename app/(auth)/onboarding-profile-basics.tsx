@@ -18,6 +18,7 @@ import {
   type OnboardingBasicsFormValues,
   onboardingBasicsSchema,
 } from '@/src/lib/forms/schemas';
+import { hapticLight } from '@/src/lib/haptics/use-haptic';
 import { shadows } from '@/src/lib/styles/shadows';
 import {
   KeyboardAvoidingView,
@@ -151,7 +152,10 @@ export default function OnboardingProfileBasicsScreen(): React.JSX.Element {
               <Pressable
                 accessibilityRole="button"
                 className="mt-7 overflow-hidden rounded-full"
-                onPress={onSubmit}
+                onPress={(e) => {
+                  hapticLight();
+                  onSubmit(e);
+                }}
                 onPressIn={ctaButton.handlePressIn}
                 onPressOut={ctaButton.handlePressOut}
                 testID="onboarding-basics-next"
