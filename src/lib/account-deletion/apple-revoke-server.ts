@@ -1,7 +1,5 @@
 import { createPrivateKey, createSign } from 'node:crypto';
 
-import { captureHandledError } from '@/src/lib/monitoring';
-
 const APPLE_AUTH_BASE_URL = 'https://appleid.apple.com';
 
 function base64UrlEncode(input: string | Buffer): string {
@@ -140,20 +138,13 @@ function reportFinalRevocationFailure(params: {
   refreshToken: string;
   status?: number;
 }): void {
-  captureHandledError(new Error('apple_token_revocation_failed'), {
-    extras: {
-      attempt: params.attempt,
-      clientId: params.clientId,
-      finalMessage: params.message,
-      maxAttempts: params.maxAttempts,
-      refreshTokenMasked: maskToken(params.refreshToken),
-      status: params.status,
-    },
-    tags: {
-      area: 'account_deletion',
-      provider: 'apple',
-      stage: 'revoke',
-    },
+  console.error('[account-deletion] apple token revocation failed', {
+    attempt: params.attempt,
+    clientId: params.clientId,
+    finalMessage: params.message,
+    maxAttempts: params.maxAttempts,
+    refreshTokenMasked: maskToken(params.refreshToken),
+    status: params.status,
   });
 }
 

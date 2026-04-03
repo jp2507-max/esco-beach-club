@@ -250,43 +250,44 @@ export default function LoginScreen(): React.JSX.Element {
 
             <Animated.View
               entering={withRM(FadeInUp.delay(140).duration(motion.dur.sm))}
-              style={buttonStyle}
             >
-              <Pressable
-                accessibilityRole="button"
-                className="mt-1 overflow-hidden rounded-2xl"
-                disabled={isAuthBusy}
-                onPress={() => {
-                  hapticMedium();
-                  if (isCodeStep) void onCodeSubmit();
-                  else void onEmailSubmit();
-                }}
-                onPressIn={handlePressIn}
-                onPressOut={handlePressOut}
-                testID="login-submit"
-              >
-                <LinearGradient
-                  colors={[Colors.primary, Colors.primaryDark]}
-                  end={{ x: 1, y: 0 }}
-                  start={{ x: 0, y: 0 }}
-                  style={{
-                    alignItems: 'center',
-                    borderRadius: 16,
-                    height: 52,
-                    justifyContent: 'center',
+              <Animated.View style={buttonStyle}>
+                <Pressable
+                  accessibilityRole="button"
+                  className="mt-1 overflow-hidden rounded-2xl"
+                  disabled={isAuthBusy}
+                  onPress={() => {
+                    hapticMedium();
+                    if (isCodeStep) void onCodeSubmit();
+                    else void onEmailSubmit();
                   }}
+                  onPressIn={handlePressIn}
+                  onPressOut={handlePressOut}
+                  testID="login-submit"
                 >
-                  {isAuthBusy ? (
-                    <ActivityIndicator color={Colors.white} />
-                  ) : (
-                    <Text className="text-base font-bold tracking-[0.5px] text-white">
-                      {isCodeStep
-                        ? t('verifyContinue')
-                        : t('sendVerificationCode')}
-                    </Text>
-                  )}
-                </LinearGradient>
-              </Pressable>
+                  <LinearGradient
+                    colors={[Colors.primary, Colors.primaryDark]}
+                    end={{ x: 1, y: 0 }}
+                    start={{ x: 0, y: 0 }}
+                    style={{
+                      alignItems: 'center',
+                      borderRadius: 16,
+                      height: 52,
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {isAuthBusy ? (
+                      <ActivityIndicator color={Colors.white} />
+                    ) : (
+                      <Text className="text-base font-bold tracking-[0.5px] text-white">
+                        {isCodeStep
+                          ? t('verifyContinue')
+                          : t('sendVerificationCode')}
+                      </Text>
+                    )}
+                  </LinearGradient>
+                </Pressable>
+              </Animated.View>
             </Animated.View>
 
             {isCodeStep ? (

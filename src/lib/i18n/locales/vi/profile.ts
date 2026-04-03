@@ -318,7 +318,7 @@ const profile = {
     },
     shareInviteLink: 'Chia sẻ liên kết mời',
     shareMessage:
-      'Tham gia Esco Life với mã giới thiệu của tôi: {{code}}\nhttps://escolife.app/invite/{{code}}',
+      'Tham gia Esco Life với mã giới thiệu của tôi: {{code}}\n{{url}}',
     milestones: {
       freeCocktail: 'Cocktail miễn phí',
       vipBadge: 'Huy hiệu VIP',

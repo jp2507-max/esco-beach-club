@@ -6,7 +6,7 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Alert, Platform, useColorScheme } from 'react-native';
-import { FadeInUp } from 'react-native-reanimated';
+import { FadeIn, FadeInUp } from 'react-native-reanimated';
 
 import { Colors } from '@/constants/colors';
 import { OnboardingHeader } from '@/src/components/onboarding/onboarding-header';
@@ -146,7 +146,7 @@ export default function OnboardingProfileBasicsScreen(): React.JSX.Element {
           </Animated.View>
 
           <Animated.View
-            entering={withRM(FadeInUp.duration(motion.dur.md).delay(CTA_DELAY))}
+            entering={withRM(FadeIn.duration(motion.dur.md).delay(CTA_DELAY))}
           >
             <Animated.View style={ctaButton.animatedStyle}>
               <Pressable

@@ -1,0 +1,11 @@
+{
+  "success": true,
+  "validatedAt": "2026-04-02T12:30:53.035Z",
+  "appConfigFound": true,
+  "checks": {
+    "privacyPolicy": null,
+    "dataTypes": null,
+    "dataSharing": null
+  },
+  "message": "Data safety validation placeholder. Configure data-safety config for full validation."
+}

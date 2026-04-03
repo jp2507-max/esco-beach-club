@@ -3,7 +3,10 @@ import {
   jsonResponse,
   parseBearerRefreshToken,
 } from '@/src/lib/api/route-helpers';
-import { getInstantAdminDb } from '@/src/lib/referral/instant-admin-server';
+import {
+  createInstantUpdateStep,
+  getInstantAdminDb,
+} from '@/src/lib/referral/instant-admin-server';
 import { verifyInstantRefreshToken } from '@/src/lib/referral/instant-runtime-server';
 
 export async function POST(request: Request): Promise<Response> {
@@ -62,7 +65,9 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
-  const staffResult = await adminDb.query({
+  const staffResult = await adminDb.query<{
+    staff_access?: { is_active?: boolean; role?: string }[];
+  }>({
     staff_access: {
       $: { where: { 'user.id': authUser.userId } },
     },
@@ -82,12 +87,14 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   try {
-    await adminDb.transact([
-      adminDb.tx.referrals[referralId].update(
+    await adminDb.transact(
+      createInstantUpdateStep(
+        'referrals',
+        referralId,
         { status: 'Completed' },
         { upsert: false }
-      ),
-    ]);
+      )
+    );
   } catch (err) {
     console.error(
       `[referrals/complete] Transaction failed for referralId: ${referralId}`,

@@ -303,6 +303,9 @@ function RootLayoutNav() {
         name="invite/[code]"
         options={{ headerShown: false, animation: 'fade' }}
       />
+      <Stack.Screen name="privacy" />
+      <Stack.Screen name="support" />
+      <Stack.Screen name="terms" />
       <Stack.Protected guard={isAuthenticated}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen

@@ -178,7 +178,7 @@ export default function OnboardingWelcomeScreen(): React.JSX.Element {
 
         <Animated.View
           entering={withRM(
-            FadeInUp.duration(motion.dur.md).delay(
+            FadeIn.duration(motion.dur.md).delay(
               CARD_BASE_DELAY + featureCards.length * CARD_STAGGER + 60
             )
           )}

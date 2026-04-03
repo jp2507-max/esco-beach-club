@@ -1,28 +1,222 @@
-import { init } from '@instantdb/admin';
+import {
+  getInstantApiUriForServer,
+  getInstantAppIdForServer,
+} from './instant-runtime-server';
 
-import schema from '@/instant.schema';
-import { getInstantAppIdForServer } from '@/src/lib/referral/instant-runtime-server';
+type InstantAdminErrorBody = {
+  message?: string;
+  type?: string;
+};
 
-let cached: ReturnType<typeof init> | null = null;
+type InstantAdminFetchJson =
+  | InstantAdminErrorBody
+  | {
+      [key: string]: unknown;
+    };
 
-export function getInstantAdminDb(): ReturnType<typeof init> | null {
+type InstantTransactionAction =
+  | 'create'
+  | 'delete'
+  | 'link'
+  | 'merge'
+  | 'ruleParams'
+  | 'unlink'
+  | 'update';
+
+type InstantTransactionLookupRef = [string, unknown];
+
+export type InstantTransactionStep = [
+  InstantTransactionAction,
+  string,
+  string | InstantTransactionLookupRef,
+  unknown,
+  { upsert?: boolean }?,
+];
+
+export type InstantAdminDb = {
+  query: <TResult = Record<string, unknown>>(
+    query: Record<string, unknown>
+  ) => Promise<TResult>;
+  signOut: (
+    params: { email: string } | { id: string } | { refresh_token: string }
+  ) => Promise<void>;
+  transact: (
+    steps: InstantTransactionStep | InstantTransactionStep[]
+  ) => Promise<Record<string, unknown>>;
+};
+
+class InstantAdminApiError extends Error {
+  body?: InstantAdminErrorBody;
+  status: number;
+
+  constructor(status: number, body?: InstantAdminErrorBody) {
+    super(body?.message ?? `Instant admin request failed with HTTP ${status}`);
+    this.body = body;
+    this.name = 'InstantAdminApiError';
+    this.status = status;
+  }
+}
+
+type InstantAdminConfig = {
+  adminToken: string;
+  apiUri: string;
+  appId: string;
+};
+
+function getInstantAdminConfig(): InstantAdminConfig | null {
   const appId = getInstantAppIdForServer();
   const adminToken = process.env.INSTANT_APP_ADMIN_TOKEN?.trim();
-  if (!appId || !adminToken) {
-    if (__DEV__) {
-      console.warn('[InstantDB Admin] Missing appId or adminToken');
+
+  if (!appId || !adminToken) return null;
+
+  return {
+    adminToken,
+    apiUri: getInstantApiUriForServer(),
+    appId,
+  };
+}
+
+async function readInstantAdminErrorBody(
+  response: Response
+): Promise<InstantAdminErrorBody | undefined> {
+  const text = await response.text();
+  if (!text) return undefined;
+
+  try {
+    const parsed = JSON.parse(text) as InstantAdminFetchJson;
+    if (parsed && typeof parsed === 'object') {
+      return parsed as InstantAdminErrorBody;
     }
-    return null;
+  } catch {}
+
+  return { message: text };
+}
+
+function buildInstantAdminUrl(
+  config: InstantAdminConfig,
+  path: string
+): string {
+  const url = new URL(path, config.apiUri);
+  url.searchParams.set('app_id', config.appId);
+  return url.toString();
+}
+
+async function instantAdminFetch<TResult>(
+  config: InstantAdminConfig,
+  path: string,
+  init: RequestInit
+): Promise<TResult> {
+  const response = await fetch(buildInstantAdminUrl(config, path), {
+    ...init,
+    headers: {
+      Authorization: `Bearer ${config.adminToken}`,
+      'Content-Type': 'application/json',
+      ...init.headers,
+      'app-id': config.appId,
+    },
+  });
+
+  if (!response.ok) {
+    throw new InstantAdminApiError(
+      response.status,
+      await readInstantAdminErrorBody(response)
+    );
   }
 
-  if (!cached) {
-    cached = init({
-      appId,
-      adminToken,
-      schema,
-      useDateObjects: true,
-    });
+  return (await response.json()) as TResult;
+}
+
+function createInstantAdminDb(config: InstantAdminConfig): InstantAdminDb {
+  return {
+    async query<TResult>(query: Record<string, unknown>): Promise<TResult> {
+      return instantAdminFetch<TResult>(config, '/admin/query', {
+        body: JSON.stringify({
+          'inference?': false,
+          query,
+        }),
+        method: 'POST',
+      });
+    },
+
+    async signOut(
+      params: { email: string } | { id: string } | { refresh_token: string }
+    ): Promise<void> {
+      await instantAdminFetch<Record<string, unknown>>(
+        config,
+        '/admin/sign_out',
+        {
+          body: JSON.stringify(params),
+          method: 'POST',
+        }
+      );
+    },
+
+    async transact(
+      steps: InstantTransactionStep | InstantTransactionStep[]
+    ): Promise<Record<string, unknown>> {
+      const normalizedSteps = Array.isArray(steps[0])
+        ? (steps as InstantTransactionStep[])
+        : [steps as InstantTransactionStep];
+
+      return instantAdminFetch<Record<string, unknown>>(
+        config,
+        '/admin/transact',
+        {
+          body: JSON.stringify({
+            steps: normalizedSteps,
+            'throw-on-missing-attrs?': false,
+          }),
+          method: 'POST',
+        }
+      );
+    },
+  };
+}
+
+let cachedDb: InstantAdminDb | null = null;
+let cachedKey: string | null = null;
+
+export function createInstantRecordId(): string {
+  return crypto.randomUUID();
+}
+
+export function createInstantCreateStep(
+  entity: string,
+  id: string | InstantTransactionLookupRef,
+  value: Record<string, unknown>
+): InstantTransactionStep {
+  return ['create', entity, id, value];
+}
+
+export function createInstantLinkStep(
+  entity: string,
+  id: string | InstantTransactionLookupRef,
+  value: Record<string, unknown>
+): InstantTransactionStep {
+  return ['link', entity, id, value];
+}
+
+// eslint-disable-next-line max-params
+export function createInstantUpdateStep(
+  entity: string,
+  id: string | InstantTransactionLookupRef,
+  value: Record<string, unknown>,
+  opts?: { upsert?: boolean }
+): InstantTransactionStep {
+  return opts
+    ? ['update', entity, id, value, opts]
+    : ['update', entity, id, value];
+}
+
+export function getInstantAdminDb(): InstantAdminDb | null {
+  const config = getInstantAdminConfig();
+  if (!config) return null;
+
+  const cacheKey = `${config.apiUri}|${config.appId}|${config.adminToken}`;
+  if (!cachedDb || cachedKey !== cacheKey) {
+    cachedDb = createInstantAdminDb(config);
+    cachedKey = cacheKey;
   }
 
-  return cached;
+  return cachedDb;
 }

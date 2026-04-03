@@ -313,8 +313,7 @@ const profile = {
       unknown: '알 수 없음',
     },
     shareInviteLink: '초대 링크 공유',
-    shareMessage:
-      '내 추천 코드로 Esco Life에 가입하세요: {{code}}\nhttps://escolife.app/invite/{{code}}',
+    shareMessage: '내 추천 코드로 Esco Life에 가입하세요: {{code}}\n{{url}}',
     milestones: {
       freeCocktail: '무료 칵테일',
       vipBadge: 'VIP 배지',

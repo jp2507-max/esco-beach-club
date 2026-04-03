@@ -506,7 +506,7 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
         </View>
 
         <Animated.View
-          entering={withRM(FadeInUp.duration(motion.dur.md).delay(CTA_DELAY))}
+          entering={withRM(FadeIn.duration(motion.dur.md).delay(CTA_DELAY))}
           className="mt-auto gap-3"
         >
           <Animated.View style={ctaButton.animatedStyle}>

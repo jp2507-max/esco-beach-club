@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 
 import { db } from '@/src/lib/instant';
-import { type InstantRecord, mapStaffAccess } from '@/src/lib/mappers';
 import { isManagerRole, isStaffRole } from '@/src/lib/loyalty';
+import { type InstantRecord, mapStaffAccess } from '@/src/lib/mappers';
 
 import type { StaffAccessData } from './context';
 
@@ -10,9 +10,7 @@ type StaffResourceParams = {
   userId: string;
 };
 
-export function useStaffResource(
-  params: StaffResourceParams
-): StaffAccessData {
+export function useStaffResource(params: StaffResourceParams): StaffAccessData {
   const { userId } = params;
   const staffAccessQuery = db.useQuery(
     userId

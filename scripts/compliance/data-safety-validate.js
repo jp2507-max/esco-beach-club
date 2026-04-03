@@ -23,7 +23,8 @@ function main() {
       dataTypes: null,
       dataSharing: null,
     },
-    message: 'Data safety validation placeholder. Configure data-safety config for full validation.',
+    message:
+      'Data safety validation placeholder. Configure data-safety config for full validation.',
   };
 
   fs.mkdirSync(outDir, { recursive: true });

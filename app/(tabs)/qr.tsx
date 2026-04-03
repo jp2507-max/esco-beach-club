@@ -43,20 +43,17 @@ export default function QrTabScreen(): React.JSX.Element {
 
   const qrSize = useMemo((): number => {
     const maxByLayout = width - QR_WIDTH_GUTTER;
-    return Math.max(QR_SIZE_MIN, Math.min(QR_SIZE_MAX, Math.floor(maxByLayout)));
+    return Math.max(
+      QR_SIZE_MIN,
+      Math.min(QR_SIZE_MAX, Math.floor(maxByLayout))
+    );
   }, [width]);
 
   useEffect(() => {
     headerOpacity.set(withTiming(1, rmTiming(motion.dur.md)));
-    cardScale.set(
-      withDelay(100, withSpring(1, motion.spring.gentle))
-    );
-    cardOpacity.set(
-      withDelay(100, withTiming(1, rmTiming(motion.dur.lg)))
-    );
-    glowScale.set(
-      withDelay(200, withSpring(1, motion.spring.gentle))
-    );
+    cardScale.set(withDelay(100, withSpring(1, motion.spring.gentle)));
+    cardOpacity.set(withDelay(100, withTiming(1, rmTiming(motion.dur.lg))));
+    glowScale.set(withDelay(200, withSpring(1, motion.spring.gentle)));
     return () => {
       cancelAnimation(cardScale);
       cancelAnimation(cardOpacity);

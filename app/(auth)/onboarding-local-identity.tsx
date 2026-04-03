@@ -458,7 +458,7 @@ export default function OnboardingLocalIdentityScreen(): React.JSX.Element {
         </Animated.View>
 
         <Animated.View
-          entering={withRM(FadeInUp.duration(motion.dur.md).delay(CTA_DELAY))}
+          entering={withRM(FadeIn.duration(motion.dur.md).delay(CTA_DELAY))}
           className="mt-auto"
         >
           <Animated.View style={ctaButton.animatedStyle}>

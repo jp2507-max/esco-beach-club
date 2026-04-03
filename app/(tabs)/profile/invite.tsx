@@ -30,6 +30,7 @@ import {
 import { ProfileSubScreenHeader } from '@/src/components/ui';
 import { rmTiming } from '@/src/lib/animations/motion';
 import { useStaggeredListEntering } from '@/src/lib/animations/use-staggered-entry';
+import { config } from '@/src/lib/config';
 import { hapticLight, hapticSuccess } from '@/src/lib/haptics/haptics';
 import { shadows } from '@/src/lib/styles/shadows';
 import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
@@ -209,9 +210,11 @@ function InviteScreenContent(): React.JSX.Element {
   async function handleShare(): Promise<void> {
     if (!code) return;
     hapticLight();
+
     try {
+      const inviteUrl = `${config.app.inviteBaseUrl}/${code}`;
       await Share.share({
-        message: t('invite.shareMessage', { code }),
+        message: t('invite.shareMessage', { code, url: inviteUrl }),
       });
     } catch (e) {
       console.error('Share failed', e);

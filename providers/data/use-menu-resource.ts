@@ -19,7 +19,9 @@ type MenuResourceParams = {
 
 export function useMenuResource(params: MenuResourceParams): MenuContentData {
   const { userId } = params;
-  const menuCategoriesQuery = db.useQuery(userId ? { menu_categories: {} } : null);
+  const menuCategoriesQuery = db.useQuery(
+    userId ? { menu_categories: {} } : null
+  );
   const menuItemsQuery = db.useQuery(userId ? { menu_items: {} } : null);
 
   const menuCategories = useMemo(() => {

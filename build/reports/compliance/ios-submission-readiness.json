@@ -1,0 +1,24 @@
+{
+  "success": true,
+  "validatedAt": "2026-04-03T06:48:34.856Z",
+  "checks": {
+    "appName": "Esco Beach Club",
+    "bundleIdentifier": "com.escobeachclub.app",
+    "hasAscAppId": true,
+    "hasAscAppIdPlaceholder": false,
+    "appStoreMetadataTitle": "Esco Beach Club",
+    "privacyManifestCollectedDataTypes": 4,
+    "reviewNotesHasPlaceholders": false,
+    "privacyChecklistReviewed": true,
+    "trackedEnvFile": false,
+    "sensitiveKeysInTrackedEnv": [
+      "INSTANT_APP_ADMIN_TOKEN",
+      "APPLE_PRIVATE_KEY"
+    ],
+    "missingClientReleaseEnv": [],
+    "missingServerReleaseEnv": [],
+    "hasAppleClientId": true
+  },
+  "warnings": [],
+  "errors": []
+}

@@ -1,6 +1,12 @@
 {
   "success": true,
-  "scannedAt": "2026-04-01T02:44:38.841Z",
-  "usesSignInWithApple": false,
-  "message": "App does not use Sign in with Apple."
+  "scannedAt": "2026-04-02T12:47:16.455Z",
+  "checks": {
+    "hasDependency": true,
+    "hasPluginConfig": true,
+    "hasSourceUsage": true,
+    "usesSignInWithApple": true
+  },
+  "message": "App uses SIWA. Dependency, source usage, and iOS config were checked together.",
+  "errors": []
 }

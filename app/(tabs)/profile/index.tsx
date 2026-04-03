@@ -34,8 +34,8 @@ import {
 } from '@/providers/DataProvider';
 import { ProfileHeader } from '@/src/components/profile/profile-header';
 import {
-  ProfileMenuList,
   type ProfileMenuItem,
+  ProfileMenuList,
 } from '@/src/components/profile/profile-menu-list';
 import { ProfileStatsRow } from '@/src/components/profile/profile-stats-row';
 import { SupportCta } from '@/src/components/profile/support-cta';

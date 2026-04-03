@@ -21,18 +21,26 @@ Members-only lifestyle app for curated events, partner perks, loyalty experience
 
 ## Environment variables
 
-Create a `.env` file in the project root:
+Start from `.env.example` for local development. Keep production secrets in EAS/GitHub secret storage rather than tracked env files.
+
+```bash
+cp .env.example .env.local
+```
+
+If you need a root `.env` for local dev, keep it local-only and out of version control.
+
+Available variables:
 
 ```env
 EXPO_PUBLIC_INSTANT_APP_ID=your_instant_app_id
 
 # Optional runtime API origins
 EXPO_PUBLIC_SENTRY_DSN=
-EXPO_PUBLIC_REFERRAL_API_BASE_URL=
-EXPO_PUBLIC_ACCOUNT_API_BASE_URL=
-EXPO_PUBLIC_PRIVACY_POLICY_URL=https://escolife.app/privacy
-EXPO_PUBLIC_TERMS_OF_SERVICE_URL=https://escolife.app/terms
-EXPO_PUBLIC_SUPPORT_URL=https://escolife.app/support
+EXPO_PUBLIC_REFERRAL_API_BASE_URL=https://escolife.expo.app
+EXPO_PUBLIC_ACCOUNT_API_BASE_URL=https://escolife.expo.app
+EXPO_PUBLIC_PRIVACY_POLICY_URL=https://escolife.expo.app/privacy
+EXPO_PUBLIC_TERMS_OF_SERVICE_URL=https://escolife.expo.app/terms
+EXPO_PUBLIC_SUPPORT_URL=https://escolife.expo.app/support
 
 # Required for EAS Build/Update sourcemap upload (do not commit real value)
 SENTRY_AUTH_TOKEN=
@@ -54,7 +62,7 @@ APPLE_PRIVATE_KEY=
 
 Because MMKV is used for auth/session persistence, run this project with a custom native build (not Expo Go).
 
-Expo Router API routes under `app/api/*` are expected to run through the Expo dev server during local development. In local native dev, the client now calls those routes through the dev-server origin by default. For production or preview native builds, set `EXPO_PUBLIC_REFERRAL_API_BASE_URL` and `EXPO_PUBLIC_ACCOUNT_API_BASE_URL` to a real deployed server origin if those routes need to be reachable outside local development.
+Expo Router API routes under `app/api/*` are expected to run through the Expo dev server during local development. In local native dev, the client now calls those routes through the dev-server origin by default. For production or preview native builds, set `EXPO_PUBLIC_REFERRAL_API_BASE_URL` and `EXPO_PUBLIC_ACCOUNT_API_BASE_URL` to a real deployed server origin if those routes need to be reachable outside local development. The current production EAS Hosting origin is `https://escolife.expo.app`, and the public legal pages are expected at `/privacy`, `/terms`, and `/support`.
 
 1. Install dependencies
 
@@ -182,7 +190,9 @@ bun run sentry:upload-sourcemaps
 - Account deletion is implemented in `Profile > Delete Account` and is finalized after a 30-day grace period by `bun run account-deletion:process-expired`.
 - `config/apple/privacy-manifest.json` is the source of truth for the iOS privacy manifest, and `./plugins/with-apple-privacy-manifest` writes it into the native iOS project during prebuild.
 - `docs/app-review/review-notes-template.md` and `docs/app-review/ios-release-checklist.md` must be completed before submission.
-- `eas.json` contains a placeholder `submit.production.ios.ascAppId`; replace it with the real App Store Connect app ID before running `bun run submit:production:ios`.
+- `store.config.json` contains the App Store metadata source of truth for title, subtitle, description, keywords, and legal/support URLs.
+- Run `bun run check:ios-submission:strict` before the final TestFlight/App Review submit.
+- For the first iOS submission, create or link the App Store Connect app record, then set `submit.production.ios.ascAppId` before switching to fully automated submit.
 
 ## Invite & Earn (referrals)
 

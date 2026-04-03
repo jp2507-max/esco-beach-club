@@ -54,6 +54,30 @@ const TITLE_DELAY = 260;
 const CARD_DELAY = 440;
 const CTA_DELAY = 680;
 
+function isPermissionDeniedError(error: unknown): boolean {
+  if (!error) return false;
+
+  if (error instanceof Error) {
+    return error.message.toLowerCase().includes('permission denied');
+  }
+
+  if (typeof error !== 'object') return false;
+
+  const maybeError = error as {
+    message?: unknown;
+    type?: unknown;
+  };
+
+  const message =
+    typeof maybeError.message === 'string'
+      ? maybeError.message.toLowerCase()
+      : '';
+  const type =
+    typeof maybeError.type === 'string' ? maybeError.type.toLowerCase() : '';
+
+  return message.includes('permission denied') || type === 'permission-denied';
+}
+
 function FloatingDot({
   delay,
   amplitude,
@@ -103,7 +127,7 @@ function FloatingDot({
 
 export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
   const router = useRouter();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, isLoading: isAuthLoading, user } = useAuth();
   const { profile } = useProfileData();
   const { t } = useTranslation('auth');
   const searchParams = useLocalSearchParams<OnboardingLocalIdentityParams>();
@@ -193,27 +217,6 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
   }
 
   async function navigateToSignup(isSetupCompleted: boolean): Promise<void> {
-    if (isAuthenticated) {
-      try {
-        await persistAuthenticatedOnboardingChoices(isSetupCompleted);
-      } catch (error: unknown) {
-        console.error(
-          '[OnboardingFinalDetails] Failed to persist onboarding updates:',
-          {
-            error,
-          }
-        );
-        Alert.alert(
-          t('onboardingPermissionsErrorTitle'),
-          t('onboardingPermissionsErrorMessage')
-        );
-        return;
-      }
-
-      router.replace('/profile');
-      return;
-    }
-
     const onboardingDateOfBirth = readSingleSearchParam(
       searchParams.onboardingDateOfBirth
     );
@@ -236,6 +239,41 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
     const onboardingPushPermissionStatus = readSingleSearchParam(
       searchParams.onboardingPushPermissionStatus
     );
+
+    if (isAuthenticated && !isAuthLoading && user?.id) {
+      let shouldFallbackToSignup = false;
+
+      try {
+        await persistAuthenticatedOnboardingChoices(isSetupCompleted);
+      } catch (error: unknown) {
+        if (isPermissionDeniedError(error)) {
+          shouldFallbackToSignup = true;
+          console.warn(
+            '[OnboardingFinalDetails] Skipping authenticated profile update after auth became unavailable:',
+            {
+              error,
+            }
+          );
+        } else {
+          console.error(
+            '[OnboardingFinalDetails] Failed to persist onboarding updates:',
+            {
+              error,
+            }
+          );
+          Alert.alert(
+            t('onboardingPermissionsErrorTitle'),
+            t('onboardingPermissionsErrorMessage')
+          );
+          return;
+        }
+      }
+
+      if (!shouldFallbackToSignup) {
+        router.replace('/profile');
+        return;
+      }
+    }
 
     router.push({
       pathname: '/signup',
@@ -453,7 +491,7 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
         </Animated.View>
 
         <Animated.View
-          entering={withRM(FadeInUp.duration(motion.dur.md).delay(CTA_DELAY))}
+          entering={withRM(FadeIn.duration(motion.dur.md).delay(CTA_DELAY))}
         >
           <Animated.View style={ctaButton.animatedStyle}>
             <Pressable

@@ -319,8 +319,7 @@ const profile = {
       unknown: 'Unknown',
     },
     shareInviteLink: 'Share Invite Link',
-    shareMessage:
-      'Join Esco Life with my referral code: {{code}}\nhttps://escolife.app/invite/{{code}}',
+    shareMessage: 'Join Esco Life with my referral code: {{code}}\n{{url}}',
     milestones: {
       freeCocktail: 'Free Cocktail',
       vipBadge: 'VIP Badge',

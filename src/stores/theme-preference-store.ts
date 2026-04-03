@@ -1,4 +1,4 @@
-import { Appearance } from 'react-native';
+import { Appearance, Platform } from 'react-native';
 import { createMMKV } from 'react-native-mmkv';
 import { create } from 'zustand';
 import {
@@ -27,6 +27,11 @@ type ApplyThemePreferenceOptions = {
 };
 
 const themeStorage = createMMKV({ id: 'esco.theme-preference' });
+const noopStateStorage: StateStorage = {
+  getItem: (): string | null => null,
+  removeItem: (): void => {},
+  setItem: (): void => {},
+};
 
 const mmkvStateStorage: StateStorage = {
   getItem: (name: string): string | null =>
@@ -39,10 +44,35 @@ const mmkvStateStorage: StateStorage = {
   },
 };
 
+const webStateStorage: StateStorage = {
+  getItem: (name: string): string | null => {
+    if (typeof window === 'undefined') return null;
+    return window.localStorage.getItem(name);
+  },
+  removeItem: (name: string): void => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.removeItem(name);
+  },
+  setItem: (name: string, value: string): void => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(name, value);
+  },
+};
+
+function getStateStorage(): StateStorage {
+  if (Platform.OS === 'web') {
+    return typeof window === 'undefined' ? noopStateStorage : webStateStorage;
+  }
+
+  return mmkvStateStorage;
+}
+
 export function applyThemePreference(
   preference: ThemePreference,
   options: ApplyThemePreferenceOptions = {}
 ): void {
+  if (Platform.OS === 'web' && typeof window === 'undefined') return;
+
   if (preference === 'system') {
     // Use the native reset value RN passes through to iOS/Android (see AppearanceModule /
     // RCTConvert). `null` is documented for newer RN stacks but on 0.83.x can mis-sync
@@ -62,8 +92,14 @@ function isThemePreference(value: unknown): value is ThemePreference {
   );
 }
 
+function readStateStorageItem(storageKey: string): string | null {
+  const rawValue = getStateStorage().getItem(storageKey);
+  if (typeof rawValue === 'string') return rawValue;
+  return null;
+}
+
 function getStoredThemePreference(): ThemePreference {
-  const rawPreferenceState = themeStorage.getString('theme-preference');
+  const rawPreferenceState = readStateStorageItem('theme-preference');
 
   if (!rawPreferenceState) return 'system';
 
@@ -106,7 +142,7 @@ export const useThemePreferenceStore = create<ThemePreferenceState>()(
     {
       name: 'theme-preference',
       partialize: (state) => ({ preference: state.preference }),
-      storage: createJSONStorage(() => mmkvStateStorage),
+      storage: createJSONStorage(getStateStorage),
       version: 1,
     }
   )

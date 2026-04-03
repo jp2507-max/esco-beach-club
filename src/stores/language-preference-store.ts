@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { createMMKV } from 'react-native-mmkv';
 import { create } from 'zustand';
 import {
@@ -23,6 +24,11 @@ const LANGUAGE_PREFERENCE_STORAGE_KEY = 'language-preference';
 const languagePreferenceStorage = createMMKV({
   id: 'esco.language-preference',
 });
+const noopStateStorage: StateStorage = {
+  getItem: (): string | null => null,
+  removeItem: (): void => {},
+  setItem: (): void => {},
+};
 
 const mmkvStateStorage: StateStorage = {
   getItem: (name: string): string | null =>
@@ -34,6 +40,29 @@ const mmkvStateStorage: StateStorage = {
     languagePreferenceStorage.set(name, value);
   },
 };
+
+const webStateStorage: StateStorage = {
+  getItem: (name: string): string | null => {
+    if (typeof window === 'undefined') return null;
+    return window.localStorage.getItem(name);
+  },
+  removeItem: (name: string): void => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.removeItem(name);
+  },
+  setItem: (name: string, value: string): void => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(name, value);
+  },
+};
+
+function getStateStorage(): StateStorage {
+  if (Platform.OS === 'web') {
+    return typeof window === 'undefined' ? noopStateStorage : webStateStorage;
+  }
+
+  return mmkvStateStorage;
+}
 
 function isSupportedLanguage(language: unknown): language is AppLanguage {
   return (
@@ -58,10 +87,14 @@ function parseStoredLanguagePreference(
   return null;
 }
 
+function readStateStorageItem(storageKey: string): string | null {
+  const rawValue = getStateStorage().getItem(storageKey);
+  if (typeof rawValue === 'string') return rawValue;
+  return null;
+}
+
 export function getStoredLanguagePreference(): AppLanguage | null {
-  const rawPreference = languagePreferenceStorage.getString(
-    LANGUAGE_PREFERENCE_STORAGE_KEY
-  );
+  const rawPreference = readStateStorageItem(LANGUAGE_PREFERENCE_STORAGE_KEY);
   return parseStoredLanguagePreference(rawPreference ?? null);
 }
 
@@ -76,7 +109,7 @@ export const useLanguagePreferenceStore = create<LanguagePreferenceState>()(
     {
       name: LANGUAGE_PREFERENCE_STORAGE_KEY,
       partialize: (state) => ({ overrideLanguage: state.overrideLanguage }),
-      storage: createJSONStorage(() => mmkvStateStorage),
+      storage: createJSONStorage(getStateStorage),
       version: 1,
     }
   )

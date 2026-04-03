@@ -7,18 +7,21 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "environment": "development",
       "ios": {
         "image": "macos-sequoia-15.5-xcode-26.0"
       }
     },
     "preview": {
       "distribution": "internal",
+      "environment": "preview",
       "ios": {
         "image": "macos-sequoia-15.5-xcode-26.0"
       }
     },
     "production": {
       "autoIncrement": true,
+      "environment": "production",
       "ios": {
         "image": "macos-sequoia-15.5-xcode-26.0"
       }
@@ -27,7 +30,8 @@
   "submit": {
     "production": {
       "ios": {
-        "ascAppId": "REPLACE_WITH_ASC_APP_ID"
+        "ascAppId": "6761538405",
+        "appleTeamId": "A6PN9VS2GX"
       }
     }
   }

@@ -1,17 +1,31 @@
 {
   "success": true,
-  "validatedAt": "2026-04-02T03:52:28.402Z",
+  "validatedAt": "2026-04-03T06:48:59.592Z",
   "checks": {
-    "associatedDomains": [
-      "applinks:escolife.app"
-    ],
+    "associatedDomains": [],
     "deleteAccountScreenExists": true,
     "reviewNotesExists": true,
     "sampleQrExists": true,
-    "supportUrl": "https://escolife.app/support",
-    "termsOfServiceUrl": "https://escolife.app/terms",
-    "privacyPolicyUrl": "https://escolife.app/privacy",
-    "urlChecks": [],
+    "supportUrl": "https://escolife.expo.app/support",
+    "termsOfServiceUrl": "https://escolife.expo.app/terms",
+    "privacyPolicyUrl": "https://escolife.expo.app/privacy",
+    "urlChecks": [
+      {
+        "ok": true,
+        "status": 200,
+        "url": "https://escolife.expo.app/privacy"
+      },
+      {
+        "ok": true,
+        "status": 200,
+        "url": "https://escolife.expo.app/terms"
+      },
+      {
+        "ok": true,
+        "status": 200,
+        "url": "https://escolife.expo.app/support"
+      }
+    ],
     "domainChecks": []
   },
   "errors": []

@@ -26,6 +26,12 @@ try {
 }
 
 fs.mkdirSync(coverageDir, { recursive: true });
-fs.writeFileSync(path.join(coverageDir, 'coverage-summary.json'), JSON.stringify(minimalCoverage, null, 2));
+fs.writeFileSync(
+  path.join(coverageDir, 'coverage-summary.json'),
+  JSON.stringify(minimalCoverage, null, 2)
+);
 fs.writeFileSync(path.join(coverageDir, 'jest-junit.xml'), minimalJunit);
-fs.writeFileSync(path.join(coverageDir, 'coverage.txt'), 'No coverage data (test infra not fully configured).\n');
+fs.writeFileSync(
+  path.join(coverageDir, 'coverage.txt'),
+  'No coverage data (test infra not fully configured).\n'
+);
