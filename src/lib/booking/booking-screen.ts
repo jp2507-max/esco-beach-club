@@ -77,34 +77,26 @@ export function getSlotColors(params: {
 }): SlotColors {
   const { active, available, isDark } = params;
 
+  if (!available) {
+    return {
+      backgroundColor: isDark ? Colors.darkBgElevated : Colors.sand,
+      borderColor: isDark ? Colors.darkBorder : Colors.sandDark,
+      color: isDark ? Colors.textMutedDark : Colors.textLight,
+    };
+  }
+
+  if (active) {
+    return {
+      backgroundColor: Colors.primary,
+      borderColor: Colors.primary,
+      color: Colors.white,
+    };
+  }
+
   return {
-    backgroundColor: !available
-      ? isDark
-        ? Colors.darkBgElevated
-        : Colors.sand
-      : active
-        ? Colors.primary
-        : isDark
-          ? Colors.darkBgCard
-          : Colors.surface,
-    borderColor: !available
-      ? isDark
-        ? Colors.darkBorder
-        : Colors.sandDark
-      : active
-        ? Colors.primary
-        : isDark
-          ? Colors.darkBorder
-          : Colors.border,
-    color: !available
-      ? isDark
-        ? Colors.textMutedDark
-        : Colors.textLight
-      : active
-        ? Colors.white
-        : isDark
-          ? Colors.textPrimaryDark
-          : Colors.text,
+    backgroundColor: isDark ? Colors.darkBgCard : Colors.surface,
+    borderColor: isDark ? Colors.darkBorder : Colors.border,
+    color: isDark ? Colors.textPrimaryDark : Colors.text,
   };
 }
 
@@ -177,6 +169,9 @@ export function getBookingConfirmationDate(params: {
   t: TFunction;
 }): string {
   const { dates, selectedDate, t } = params;
+  if (selectedDate < 0 || selectedDate >= dates.length) {
+    return '';
+  }
   const currentDate = dates[selectedDate];
 
   return (

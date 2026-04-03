@@ -262,8 +262,8 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
             }
           );
           Alert.alert(
-            t('onboardingPermissionsErrorTitle'),
-            t('onboardingPermissionsErrorMessage')
+            t('onboardingSaveErrorTitle'),
+            t('onboardingSaveErrorMessage')
           );
           return;
         }

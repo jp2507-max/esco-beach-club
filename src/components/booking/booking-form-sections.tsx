@@ -17,6 +17,7 @@ import type {
 } from '@/src/lib/booking/booking-screen';
 import {
   getDayTranslationKey,
+  getMonthTranslationKey,
   getSlotColors,
 } from '@/src/lib/booking/booking-screen';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
@@ -88,6 +89,11 @@ export function BookingFormContent({
               return (
                 <Pressable
                   accessibilityRole="button"
+                  accessibilityLabel={`${t(getDayTranslationKey(date.dayNameKey))}, ${t(getMonthTranslationKey(date.monthKey))} ${date.day}`}
+                  accessibilityState={{
+                    disabled: isSubmitting,
+                    selected: active,
+                  }}
                   key={`${date.day}-${date.monthKey}`}
                   className={
                     active
@@ -142,6 +148,11 @@ export function BookingFormContent({
               return (
                 <Pressable
                   accessibilityRole="button"
+                  accessibilityLabel={`${slot.time}, ${slot.available ? t('available') : t('full')}`}
+                  accessibilityState={{
+                    disabled: !slot.available || isSubmitting,
+                    selected: active,
+                  }}
                   key={slot.time}
                   className="mb-2.5 items-center rounded-[14px] py-3.5"
                   disabled={!slot.available || isSubmitting}

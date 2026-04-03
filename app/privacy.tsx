@@ -37,7 +37,7 @@ const privacySections = [
 export default function PrivacyScreen(): React.JSX.Element {
   return (
     <LegalPageShell
-      ctaHref={`mailto:${config.contact.supportEmail}`}
+      ctaHref={`mailto:${config.contact.supportEmail}?subject=Esco%20Beach%20Club%20Privacy`}
       ctaLabelKey="legal.contact.emailCta"
       introKey="legal.privacy.intro"
       sections={privacySections}

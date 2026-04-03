@@ -27,6 +27,7 @@ import {
   getGoogleIdTokenWithOptions,
 } from '@/src/lib/auth/social-auth';
 import { db } from '@/src/lib/instant';
+import { captureHandledError } from '@/src/lib/monitoring';
 
 function resolveOnboardingData(params: {
   onboardingData: SignupOnboardingData | undefined;
@@ -59,7 +60,7 @@ function buildCreateFields(params: {
         ...(params.email ? { email: params.email } : {}),
         ...(params.idToken ? { idToken: params.idToken } : {}),
         onboardingDisplayName: params.onboardingData?.displayName,
-      }) ?? params.t('auth:member', { defaultValue: 'Member' }),
+      }) ?? params.t('auth:member'),
   };
 }
 
@@ -70,7 +71,28 @@ async function persistProfileAuthProvider(params: {
   const signInUser = extractSignInUser(params.signInResult);
   if (!signInUser.id) return;
 
-  await setProfileAuthProvider(signInUser.id, params.providerType);
+  try {
+    await setProfileAuthProvider(signInUser.id, params.providerType);
+  } catch (error: unknown) {
+    captureHandledError(error, {
+      tags: {
+        area: 'auth',
+        operation: 'persist_profile_auth_provider',
+      },
+      extras: {
+        providerType: params.providerType,
+        userId: signInUser.id,
+      },
+    });
+
+    if (__DEV__) {
+      console.error('[AuthProvider] Failed to persist profile auth provider', {
+        error,
+        providerType: params.providerType,
+        userId: signInUser.id,
+      });
+    }
+  }
 }
 
 export async function signInWithAppleFlow(params: {

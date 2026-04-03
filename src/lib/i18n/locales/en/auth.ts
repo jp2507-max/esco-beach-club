@@ -107,6 +107,9 @@ const auth = {
     'We could not open the permission prompt. Please try again or continue for now.',
   onboardingPermissionsPrivacyNote:
     'You can change permissions anytime in your device settings.',
+  onboardingSaveErrorTitle: 'Couldn’t save your details',
+  onboardingSaveErrorMessage:
+    'Something went wrong while saving. Please try again.',
   venueUpsellNotificationChannelName: 'Venue offers',
   venueUpsellNotificationChannelDescription:
     'Timely offers when you arrive at the restaurant.',
@@ -206,6 +209,7 @@ const auth = {
   onboardingWelcomePointGlobalDescription:
     'Access rewards across 40+ countries and 6 continents.',
   genericError: 'Something went wrong. Please try again or contact support.',
+  member: 'Member',
 } as const;
 
 export default auth;

@@ -13,6 +13,7 @@ import {
   type VerifyCodeFormValues,
   verifyCodeSchema,
 } from '@/src/lib/forms/schemas';
+import { captureHandledError } from '@/src/lib/monitoring';
 import { parseOnboardingMemberSegmentSearchParam } from '@/src/lib/utils/member-segment';
 import {
   parseBooleanSearchParam,
@@ -145,7 +146,11 @@ export function useSignupScreenController() {
   const resolvedErrorMessage = resolvedError
     ? isAuthErrorKey(resolvedError.message)
       ? t(resolvedError.message)
-      : resolvedError.message
+      : socialError != null
+        ? t('genericError')
+        : isCodeStep && hasAttemptedCodeVerification
+          ? t('unableToVerifyCode')
+          : t('unableToSendCode')
     : null;
 
   function buildSignupOnboardingData(
@@ -214,7 +219,7 @@ export function useSignupScreenController() {
         error instanceof Error && error.message
           ? error.message
           : 'unableToSendCode';
-      const message = isAuthErrorKey(raw) ? t(raw) : raw;
+      const message = isAuthErrorKey(raw) ? t(raw) : t('unableToSendCode');
       Alert.alert(t('codeNotSentTitle'), message);
     }
   }
@@ -233,7 +238,7 @@ export function useSignupScreenController() {
         error instanceof Error && error.message
           ? error.message
           : 'unableToVerifyCode';
-      const message = isAuthErrorKey(raw) ? t(raw) : raw;
+      const message = isAuthErrorKey(raw) ? t(raw) : t('unableToVerifyCode');
       Alert.alert(t('verificationFailedTitle'), message);
     }
   }
@@ -297,12 +302,24 @@ export function useSignupScreenController() {
 
   function handleApplePress(): void {
     if (isAuthBusy) return;
-    void runSocialSignupWithValidation('apple').catch(() => undefined);
+    void runSocialSignupWithValidation('apple').catch((error: unknown) => {
+      captureHandledError(error, {
+        extras: { provider: 'apple' },
+        tags: { area: 'auth', operation: 'signup_social' },
+      });
+      if (__DEV__) console.error('[Signup] Apple sign-up failed', error);
+    });
   }
 
   function handleGooglePress(): void {
     if (isAuthBusy) return;
-    void runSocialSignupWithValidation('google').catch(() => undefined);
+    void runSocialSignupWithValidation('google').catch((error: unknown) => {
+      captureHandledError(error, {
+        extras: { provider: 'google' },
+        tags: { area: 'auth', operation: 'signup_social' },
+      });
+      if (__DEV__) console.error('[Signup] Google sign-up failed', error);
+    });
   }
 
   return {

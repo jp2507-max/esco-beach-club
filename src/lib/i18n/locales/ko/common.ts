@@ -126,6 +126,7 @@ const common = {
       emailCta: '개인정보 문의 이메일',
       questionsCta: '이용약관 문의하기',
       supportCta: '지원팀에 문의',
+      supportSubject: 'Esco Beach Club 지원 문의',
     },
     privacy: {
       title: '개인정보 처리방침',

@@ -1,3 +1,4 @@
+import type { Dispatch, SetStateAction } from 'react';
 import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 
 import type { Event } from '@/lib/types';
@@ -21,13 +22,36 @@ type PreparedEvent = {
   searchableContent: string;
 };
 
+type WeekDayItem = ReturnType<typeof buildCurrentWeek>[number];
+
+const LIST_CONTENT_CONTAINER_STYLE = {
+  paddingBottom: 20,
+  paddingHorizontal: 20,
+  paddingTop: 16,
+} as const;
+
+export type UseEventsScreenDataReturn = {
+  activeCategory: string;
+  featuredEvent: Event | undefined;
+  filteredEvents: Event[];
+  listContentContainerStyle: typeof LIST_CONTENT_CONTAINER_STYLE;
+  listEvents: Event[];
+  searchQuery: string;
+  selectedDay: WeekDayItem | null;
+  selectedDayKey: string;
+  weekStripItems: Array<WeekDayItem & { showIndicator: boolean }>;
+  setActiveCategory: Dispatch<SetStateAction<string>>;
+  setSearchQuery: Dispatch<SetStateAction<string>>;
+  setSelectedDayKey: Dispatch<SetStateAction<string>>;
+};
+
 export function useEventsScreenData({
   events,
   language,
 }: {
   events: Event[];
   language: string;
-}) {
+}): UseEventsScreenDataReturn {
   const [activeCategory, setActiveCategory] = useState<string>('All Events');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [now, setNow] = useState<Date>(() => new Date());
@@ -140,16 +164,12 @@ export function useEventsScreenData({
     () => filteredEvents.filter((event) => !event.featured),
     [filteredEvents]
   );
-  const listContentContainerStyle = useMemo(
-    () => ({ paddingBottom: 20, paddingHorizontal: 20, paddingTop: 16 }),
-    []
-  );
 
   return {
     activeCategory,
     featuredEvent,
     filteredEvents,
-    listContentContainerStyle,
+    listContentContainerStyle: LIST_CONTENT_CONTAINER_STYLE,
     listEvents,
     searchQuery,
     selectedDay,

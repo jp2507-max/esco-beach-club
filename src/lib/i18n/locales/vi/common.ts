@@ -128,6 +128,7 @@ const common = {
       emailCta: 'Email hỗ trợ quyền riêng tư',
       questionsCta: 'Hỏi về điều khoản',
       supportCta: 'Liên hệ hỗ trợ',
+      supportSubject: 'Hỗ trợ Esco Beach Club',
     },
     privacy: {
       title: 'Chính sách quyền riêng tư',

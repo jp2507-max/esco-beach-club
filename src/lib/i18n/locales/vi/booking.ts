@@ -38,6 +38,7 @@ const booking = {
     dec: 'Thg 12',
   },
   guestsUnit: 'khách',
+  available: 'Còn chỗ',
   full: 'Đầy',
   confirmationMessage: 'Bàn của bạn đã được đặt vào {{date}} lúc {{time}}.',
   reservationFailedTitle: 'Đặt chỗ thất bại',

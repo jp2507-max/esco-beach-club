@@ -37,18 +37,75 @@ function readText(filePath) {
 function loadDotEnvFile(filePath) {
   if (!fs.existsSync(filePath)) return {};
 
+  const keyPattern = /^[A-Za-z_][A-Za-z0-9_]*\s*=/;
+  const lines = fs.readFileSync(filePath, 'utf8').split(/\r?\n/);
   const values = {};
-  for (const line of fs.readFileSync(filePath, 'utf8').split(/\r?\n/)) {
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
     const trimmed = line.trim();
     if (!trimmed || trimmed.startsWith('#')) continue;
-    const separatorIndex = trimmed.indexOf('=');
+
+    const separatorIndex = line.indexOf('=');
     if (separatorIndex <= 0) continue;
-    const key = trimmed.slice(0, separatorIndex).trim();
-    const value = trimmed.slice(separatorIndex + 1).trim();
-    values[key] = value.replace(/^['"]|['"]$/g, '');
+
+    const key = line.slice(0, separatorIndex).trim();
+    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(key)) continue;
+
+    let value = line.slice(separatorIndex + 1);
+    const valueTrimmedStart = value.trimStart();
+    const quoteChar =
+      valueTrimmedStart.startsWith('"') || valueTrimmedStart.startsWith("'")
+        ? valueTrimmedStart[0]
+        : null;
+
+    if (quoteChar) {
+      while (hasUnclosedQuote(value, quoteChar) && index + 1 < lines.length) {
+        index += 1;
+        value += `\n${lines[index]}`;
+      }
+    } else if (isPemLikeMultilineStart(value)) {
+      while (index + 1 < lines.length) {
+        const nextLine = lines[index + 1];
+        if (keyPattern.test(nextLine.trim())) break;
+        index += 1;
+        value += `\n${lines[index]}`;
+        if (value.includes('-----END ')) break;
+      }
+    }
+
+    values[key] = value.trim().replace(/^['"]|['"]$/g, '');
   }
 
   return values;
+}
+
+function hasUnclosedQuote(value, quoteChar) {
+  let quoteCount = 0;
+  let isEscaped = false;
+
+  for (const char of value) {
+    if (char === '\\' && !isEscaped) {
+      isEscaped = true;
+      continue;
+    }
+
+    if (char === quoteChar && !isEscaped) {
+      quoteCount += 1;
+    }
+
+    isEscaped = false;
+  }
+
+  return quoteCount % 2 !== 0;
+}
+
+function isPemLikeMultilineStart(value) {
+  const trimmed = value.trim();
+  return (
+    trimmed.includes('-----BEGIN ') &&
+    !trimmed.includes('-----END ') &&
+    !trimmed.startsWith('#')
+  );
 }
 
 function getMergedEnv() {

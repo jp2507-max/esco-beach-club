@@ -109,6 +109,8 @@ const auth = {
     'Không thể mở hộp thoại cấp quyền. Vui lòng thử lại hoặc tiếp tục sau.',
   onboardingPermissionsPrivacyNote:
     'Bạn có thể thay đổi quyền bất cứ lúc nào trong cài đặt thiết bị.',
+  onboardingSaveErrorTitle: 'Không thể lưu thông tin',
+  onboardingSaveErrorMessage: 'Đã xảy ra lỗi khi lưu. Vui lòng thử lại.',
   venueUpsellNotificationChannelName: 'Ưu đãi tại địa điểm',
   venueUpsellNotificationChannelDescription:
     'Ưu đãi đúng lúc khi bạn đến nhà hàng.',
@@ -209,6 +211,7 @@ const auth = {
   onboardingWelcomePointGlobalDescription:
     'Truy cập ưu đãi tại hơn 40 quốc gia và 6 châu lục.',
   genericError: 'Đã có lỗi xảy ra. Vui lòng thử lại hoặc liên hệ hỗ trợ.',
+  member: 'Thành viên',
 } as const;
 
 export default auth;

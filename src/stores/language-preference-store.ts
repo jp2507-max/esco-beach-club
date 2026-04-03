@@ -1,13 +1,9 @@
-import { Platform } from 'react-native';
 import { createMMKV } from 'react-native-mmkv';
 import { create } from 'zustand';
-import {
-  createJSONStorage,
-  persist,
-  type StateStorage,
-} from 'zustand/middleware';
+import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { type AppLanguage, appLanguages } from '@/src/lib/i18n/types';
+import { createGetPersistStateStorage } from '@/src/lib/stores/zustand-persist-state-storage';
 
 type LanguagePreferenceState = {
   overrideLanguage: AppLanguage | null;
@@ -24,45 +20,7 @@ const LANGUAGE_PREFERENCE_STORAGE_KEY = 'language-preference';
 const languagePreferenceStorage = createMMKV({
   id: 'esco.language-preference',
 });
-const noopStateStorage: StateStorage = {
-  getItem: (): string | null => null,
-  removeItem: (): void => {},
-  setItem: (): void => {},
-};
-
-const mmkvStateStorage: StateStorage = {
-  getItem: (name: string): string | null =>
-    languagePreferenceStorage.getString(name) ?? null,
-  removeItem: (name: string): void => {
-    languagePreferenceStorage.remove(name);
-  },
-  setItem: (name: string, value: string): void => {
-    languagePreferenceStorage.set(name, value);
-  },
-};
-
-const webStateStorage: StateStorage = {
-  getItem: (name: string): string | null => {
-    if (typeof window === 'undefined') return null;
-    return window.localStorage.getItem(name);
-  },
-  removeItem: (name: string): void => {
-    if (typeof window === 'undefined') return;
-    window.localStorage.removeItem(name);
-  },
-  setItem: (name: string, value: string): void => {
-    if (typeof window === 'undefined') return;
-    window.localStorage.setItem(name, value);
-  },
-};
-
-function getStateStorage(): StateStorage {
-  if (Platform.OS === 'web') {
-    return typeof window === 'undefined' ? noopStateStorage : webStateStorage;
-  }
-
-  return mmkvStateStorage;
-}
+const getStateStorage = createGetPersistStateStorage(languagePreferenceStorage);
 
 function isSupportedLanguage(language: unknown): language is AppLanguage {
   return (

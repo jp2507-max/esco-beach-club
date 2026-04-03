@@ -29,6 +29,7 @@ import {
 import {
   BENEFIT_MAP,
   MANAGE_ITEMS,
+  type ManageItem,
   TIER_CONFIG,
   useMembershipActivities,
 } from '@/src/lib/profile/membership-screen';
@@ -124,9 +125,14 @@ export default function MembershipScreen(): React.JSX.Element {
     profile?.id
   );
 
-  function handleManagePress(): void {
+  function handleManagePress(item: ManageItem): void {
     hapticLight();
-    router.push('/profile/help-center' as never);
+    const routes: Record<string, string> = {
+      billing: '/profile/billing',
+      payments: '/profile/payments',
+      upgrade: '/profile/upgrade-tier',
+    };
+    router.push((routes[item.id] ?? '/profile/help-center') as never);
   }
 
   return (

@@ -2,15 +2,17 @@
 
 Use this file as the App Review notes source of truth and replace every `REPLACE_BEFORE_SUBMIT_*` value before TestFlight/App Review submission.
 
+Populate the placeholders from the private release artifact or submission checklist at publish time; do not commit real reviewer or demo credentials here.
+
 ## Demo Access
 
-- Member demo email: `test@example.com`
-- Member demo sign-in method: `Email magic code`
-- Review login instructions: enter the demo email above and use magic code `424242`
+- Member demo email: `REPLACE_BEFORE_SUBMIT_MEMBER_EMAIL`
+- Member demo sign-in method: `REPLACE_BEFORE_SUBMIT_SIGN_IN_METHOD`
+- Review login instructions: `REPLACE_BEFORE_SUBMIT_LOGIN_INSTRUCTIONS`
 - Staff demo account: not required for this submission
-- Review contact name: `Jan-Peter Blohm`
-- Review contact email: `jan-blohm@gmx.de`
-- Review contact phone: `+491629864012`
+- Review contact name: `REPLACE_BEFORE_SUBMIT_CONTACT_NAME`
+- Review contact email: `REPLACE_BEFORE_SUBMIT_CONTACT_EMAIL`
+- Review contact phone: `REPLACE_BEFORE_SUBMIT_CONTACT_PHONE`
 - Sample member QR payload: see `docs/app-review/sample-member-qr.txt`
 
 ## Non-obvious Flows

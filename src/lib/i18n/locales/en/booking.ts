@@ -38,6 +38,7 @@ const booking = {
     dec: 'Dec',
   },
   guestsUnit: 'guests',
+  available: 'Available',
   full: 'Full',
   confirmationMessage: 'Your table is reserved for {{date}} at {{time}}.',
   reservationFailedTitle: 'Reservation Failed',

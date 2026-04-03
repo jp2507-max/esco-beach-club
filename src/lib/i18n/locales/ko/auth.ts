@@ -107,6 +107,9 @@ const auth = {
     '권한 팝업을 열 수 없습니다. 다시 시도하거나 지금은 건너뛸 수 있어요.',
   onboardingPermissionsPrivacyNote:
     '권한은 언제든 기기 설정에서 변경할 수 있어요.',
+  onboardingSaveErrorTitle: '저장하지 못했어요',
+  onboardingSaveErrorMessage:
+    '저장 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.',
   venueUpsellNotificationChannelName: '현장 오퍼',
   venueUpsellNotificationChannelDescription:
     '레스토랑 도착 시 받을 수 있는 실시간 오퍼입니다.',
@@ -205,6 +208,7 @@ const auth = {
   onboardingWelcomePointGlobalDescription:
     '40개국 이상, 6개 대륙에서 리워드를 누리세요.',
   genericError: '문제가 발생했습니다. 다시 시도하거나 지원팀에 문의해 주세요.',
+  member: '회원',
 } as const;
 
 export default auth;

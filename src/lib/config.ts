@@ -26,7 +26,7 @@ const restaurantRadiusMeters =
   toOptionalNumber(process.env.EXPO_PUBLIC_RESTAURANT_RADIUS_METERS) ?? 90;
 const defaultPublicSiteUrl = 'https://escolife.expo.app';
 const publicSiteUrl =
-  process.env.EXPO_PUBLIC_APP_URL?.trim().replace(/\/+$/, '') ||
+  process.env.EXPO_PUBLIC_APP_URL?.trim()?.replace(/\/+$/, '') ||
   toOptionalUrlOrigin(process.env.EXPO_PUBLIC_SUPPORT_URL) ||
   toOptionalUrlOrigin(process.env.EXPO_PUBLIC_PRIVACY_POLICY_URL) ||
   toOptionalUrlOrigin(process.env.EXPO_PUBLIC_TERMS_OF_SERVICE_URL) ||

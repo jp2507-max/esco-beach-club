@@ -197,7 +197,6 @@ export function EventListCard({
 export function EventsListHeader({
   activeCategory,
   featuredEvent,
-  isDark: _isDark,
   isEventSaved,
   onCategorySelect,
   onOpenEvent,
@@ -210,7 +209,6 @@ export function EventsListHeader({
 }: {
   activeCategory: string;
   featuredEvent: Event | undefined;
-  isDark: boolean;
   isEventSaved: (id: string) => boolean;
   onCategorySelect: (value: string) => void;
   onOpenEvent: (id: string) => void;

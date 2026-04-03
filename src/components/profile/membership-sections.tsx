@@ -2,6 +2,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import type { TFunction } from 'i18next';
 import { Award, ChevronRight } from 'lucide-react-native';
 import React from 'react';
+import type { StyleProp, ViewStyle } from 'react-native';
+import type { AnimatedStyle } from 'react-native-reanimated';
 
 import { accentOnDarkBackground, Colors } from '@/constants/colors';
 import { SkeletonText } from '@/src/components/ui';
@@ -33,6 +35,8 @@ type MembershipBenefit = BenefitConfig & {
   key: string;
 };
 
+type MembershipSectionAnimatedStyle = StyleProp<AnimatedStyle<ViewStyle>>;
+
 export function MembershipTierHeroCard({
   cashbackBalancePoints,
   heroStyle,
@@ -49,7 +53,7 @@ export function MembershipTierHeroCard({
   userName,
 }: {
   cashbackBalancePoints: number;
-  heroStyle: object;
+  heroStyle: MembershipSectionAnimatedStyle;
   memberSince: string;
   nextTierLabel: string;
   progressPercent: number;
@@ -177,7 +181,7 @@ export function MembershipBenefitsSection({
   t,
 }: {
   benefits: MembershipBenefit[];
-  fadeStyle: object;
+  fadeStyle: MembershipSectionAnimatedStyle;
   isDark: boolean;
   t: TFunction;
 }): React.JSX.Element {
@@ -256,11 +260,11 @@ export function MembershipManageSection({
   t,
   onPress,
 }: {
-  fadeStyle: object;
+  fadeStyle: MembershipSectionAnimatedStyle;
   isDark: boolean;
   items: ManageItem[];
   t: TFunction;
-  onPress: () => void;
+  onPress: (item: ManageItem) => void;
 }): React.JSX.Element {
   return (
     <Animated.View className="mb-8" style={fadeStyle}>
@@ -278,7 +282,7 @@ export function MembershipManageSection({
               key={item.id}
               accessibilityRole="button"
               className="flex-row items-center justify-between rounded-2xl border border-border bg-white p-4 dark:border-dark-border dark:bg-dark-bg-card"
-              onPress={onPress}
+              onPress={() => onPress(item)}
               style={shadows.level1}
               testID={`manage-${item.id}`}
             >
@@ -317,7 +321,7 @@ export function MembershipActivitySection({
   t,
 }: {
   activities: MembershipActivityItem[];
-  fadeStyle: object;
+  fadeStyle: MembershipSectionAnimatedStyle;
   isActivityLoading: boolean;
   isDark: boolean;
   t: TFunction;

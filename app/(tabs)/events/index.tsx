@@ -106,7 +106,6 @@ export default function EventsScreen(): React.JSX.Element {
           <EventsListHeader
             activeCategory={activeCategory}
             featuredEvent={featuredEvent}
-            isDark={isDark}
             isEventSaved={isEventSaved}
             selectedDayFullLabel={selectedDay?.fullLabel ?? ''}
             selectedDayKey={selectedDayKey}

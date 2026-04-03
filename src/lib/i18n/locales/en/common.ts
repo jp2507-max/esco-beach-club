@@ -131,6 +131,7 @@ const common = {
       emailCta: 'Email privacy support',
       questionsCta: 'Ask about these terms',
       supportCta: 'Contact support',
+      supportSubject: 'Esco Beach Club Support',
     },
     privacy: {
       title: 'Privacy Policy',

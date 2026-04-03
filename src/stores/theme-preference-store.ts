@@ -1,11 +1,9 @@
 import { Appearance, Platform } from 'react-native';
 import { createMMKV } from 'react-native-mmkv';
 import { create } from 'zustand';
-import {
-  createJSONStorage,
-  persist,
-  type StateStorage,
-} from 'zustand/middleware';
+import { createJSONStorage, persist } from 'zustand/middleware';
+
+import { createGetPersistStateStorage } from '@/src/lib/stores/zustand-persist-state-storage';
 
 export const themePreferences = ['system', 'light', 'dark'] as const;
 
@@ -27,45 +25,7 @@ type ApplyThemePreferenceOptions = {
 };
 
 const themeStorage = createMMKV({ id: 'esco.theme-preference' });
-const noopStateStorage: StateStorage = {
-  getItem: (): string | null => null,
-  removeItem: (): void => {},
-  setItem: (): void => {},
-};
-
-const mmkvStateStorage: StateStorage = {
-  getItem: (name: string): string | null =>
-    themeStorage.getString(name) ?? null,
-  removeItem: (name: string): void => {
-    themeStorage.remove(name);
-  },
-  setItem: (name: string, value: string): void => {
-    themeStorage.set(name, value);
-  },
-};
-
-const webStateStorage: StateStorage = {
-  getItem: (name: string): string | null => {
-    if (typeof window === 'undefined') return null;
-    return window.localStorage.getItem(name);
-  },
-  removeItem: (name: string): void => {
-    if (typeof window === 'undefined') return;
-    window.localStorage.removeItem(name);
-  },
-  setItem: (name: string, value: string): void => {
-    if (typeof window === 'undefined') return;
-    window.localStorage.setItem(name, value);
-  },
-};
-
-function getStateStorage(): StateStorage {
-  if (Platform.OS === 'web') {
-    return typeof window === 'undefined' ? noopStateStorage : webStateStorage;
-  }
-
-  return mmkvStateStorage;
-}
+const getStateStorage = createGetPersistStateStorage(themeStorage);
 
 export function applyThemePreference(
   preference: ThemePreference,

@@ -87,7 +87,9 @@ async function readInstantAdminErrorBody(
     if (parsed && typeof parsed === 'object') {
       return parsed as InstantAdminErrorBody;
     }
-  } catch {}
+  } catch {
+    // JSON parse failed; fall through to return raw text as message
+  }
 
   return { message: text };
 }
@@ -106,6 +108,12 @@ async function instantAdminFetch<TResult>(
   path: string,
   init: RequestInit
 ): Promise<TResult> {
+  const timeoutSignal = AbortSignal.timeout(30_000);
+  const signal =
+    init.signal != null
+      ? AbortSignal.any([timeoutSignal, init.signal])
+      : timeoutSignal;
+
   const response = await fetch(buildInstantAdminUrl(config, path), {
     ...init,
     headers: {
@@ -114,6 +122,7 @@ async function instantAdminFetch<TResult>(
       ...init.headers,
       'app-id': config.appId,
     },
+    signal,
   });
 
   if (!response.ok) {
@@ -123,7 +132,16 @@ async function instantAdminFetch<TResult>(
     );
   }
 
-  return (await response.json()) as TResult;
+  if (response.status === 204) {
+    return undefined as TResult;
+  }
+
+  const responseText = await response.text();
+  if (!responseText) {
+    return undefined as TResult;
+  }
+
+  return JSON.parse(responseText) as TResult;
 }
 
 function createInstantAdminDb(config: InstantAdminConfig): InstantAdminDb {
@@ -141,19 +159,19 @@ function createInstantAdminDb(config: InstantAdminConfig): InstantAdminDb {
     async signOut(
       params: { email: string } | { id: string } | { refresh_token: string }
     ): Promise<void> {
-      await instantAdminFetch<Record<string, unknown>>(
-        config,
-        '/admin/sign_out',
-        {
-          body: JSON.stringify(params),
-          method: 'POST',
-        }
-      );
+      await instantAdminFetch<void>(config, '/admin/sign_out', {
+        body: JSON.stringify(params),
+        method: 'POST',
+      });
     },
 
     async transact(
       steps: InstantTransactionStep | InstantTransactionStep[]
     ): Promise<Record<string, unknown>> {
+      if (Array.isArray(steps) && steps.length === 0) {
+        return {}; // No-op for empty transaction
+      }
+
       const normalizedSteps = Array.isArray(steps[0])
         ? (steps as InstantTransactionStep[])
         : [steps as InstantTransactionStep];

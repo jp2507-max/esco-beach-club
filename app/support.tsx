@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { LegalPageShell } from '@/src/components/legal/legal-page-shell';
 import { config } from '@/src/lib/config';
@@ -28,9 +29,12 @@ const supportSections = [
 ] as const;
 
 export default function SupportScreen(): React.JSX.Element {
+  const { t } = useTranslation('common');
+  const supportSubject = encodeURIComponent(t('legal.contact.supportSubject'));
+
   return (
     <LegalPageShell
-      ctaHref={`mailto:${config.contact.supportEmail}?subject=Esco%20Beach%20Club%20Support`}
+      ctaHref={`mailto:${config.contact.supportEmail}?subject=${supportSubject}`}
       ctaLabelKey="legal.contact.supportCta"
       introKey="legal.support.intro"
       sections={supportSections}

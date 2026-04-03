@@ -110,13 +110,13 @@ export default function BookingModalScreen(): React.JSX.Element {
   const canConfirm = isSelectedTimeValid && isOccasionValid;
 
   useEffect(() => {
-    if (selectedTime && !isSelectedTimeValid) {
+    if (selectedTime !== null && !isSelectedTimeValid) {
       setSelectedTime(null);
     }
   }, [isSelectedTimeValid, selectedTime]);
 
   useEffect(() => {
-    if (occasion && !isOccasionValid) {
+    if (occasion !== null && !isOccasionValid) {
       setOccasion(null);
     }
   }, [isOccasionValid, occasion]);

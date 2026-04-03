@@ -38,6 +38,7 @@ const booking = {
     dec: '12월',
   },
   guestsUnit: '명',
+  available: '예약 가능',
   full: '만석',
   confirmationMessage: '{{date}} {{time}}에 테이블이 예약되었습니다.',
   reservationFailedTitle: '예약 실패',

@@ -137,6 +137,7 @@ function reportFinalRevocationFailure(params: {
   message: string;
   refreshToken: string;
   status?: number;
+  error?: unknown;
 }): void {
   console.error('[account-deletion] apple token revocation failed', {
     attempt: params.attempt,
@@ -145,6 +146,7 @@ function reportFinalRevocationFailure(params: {
     maxAttempts: params.maxAttempts,
     refreshTokenMasked: maskToken(params.refreshToken),
     status: params.status,
+    ...(params.error !== undefined ? { error: params.error } : {}),
   });
 }
 
@@ -275,6 +277,7 @@ export async function revokeAppleAuthorizationCode(
       reportFinalRevocationFailure({
         attempt,
         clientId,
+        error,
         maxAttempts,
         message,
         refreshToken: exchangeResult.refreshToken,
