@@ -10,7 +10,6 @@ export {
   useProfileData,
   useReferralsData,
   useSavedEventsData,
-  useStaffAccessData,
   useUserId,
 } from './data/context';
 export {
@@ -23,7 +22,6 @@ export {
   PartnersDataProvider,
   PerksDataProvider,
   ReferralsDataProvider,
-  StaffAccessDataProvider,
 } from './data/provider';
 export {
   useData,

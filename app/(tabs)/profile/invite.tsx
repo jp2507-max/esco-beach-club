@@ -1,4 +1,5 @@
 import * as Clipboard from 'expo-clipboard';
+import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
 import {
   Award,
@@ -212,9 +213,15 @@ function InviteScreenContent(): React.JSX.Element {
     hapticLight();
 
     try {
-      const inviteUrl = `${config.app.inviteBaseUrl}/${code}`;
+      const inviteWebUrl = `${config.app.inviteBaseUrl}/${code}`;
+      const inviteAppUrl = Linking.createURL(`/invite/${code}`);
+
       await Share.share({
-        message: t('invite.shareMessage', { code, url: inviteUrl }),
+        message: t('invite.shareMessage', {
+          appUrl: inviteAppUrl,
+          code,
+          url: inviteWebUrl,
+        }),
       });
     } catch (e) {
       console.error('Share failed', e);
@@ -235,7 +242,7 @@ function InviteScreenContent(): React.JSX.Element {
     ? Colors.inviteReferralStatusTextDark
     : Colors.inviteReferralStatusTextLight;
   const referralWarningBg = isDark
-    ? 'rgba(245, 158, 11, 0.13)'
+    ? Colors.badgeWarningDarkBackground
     : Colors.badgeWarningLightBackground;
   const referralWarningText = isDark ? Colors.warningDark : Colors.warning;
   const milestoneUnlockedBg = isDark

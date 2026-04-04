@@ -180,7 +180,7 @@ function PartnerModalContent(): React.JSX.Element {
         testID="close-modal"
         variant="overlay"
       >
-        <X color="#FFFFFF" size={20} />
+        <X color={Colors.white} size={20} />
       </HeaderGlassButton>
 
       <View
@@ -247,7 +247,7 @@ function PartnerModalContent(): React.JSX.Element {
           <Text className="mb-2.5 text-center text-[28px] font-extrabold text-primary dark:text-primary-bright">
             {partner.discount_label}!
           </Text>
-          <Text className="mb-6 text-center text-sm leading-[22px] text-text-secondary dark:text-text-secondary-dark">
+          <Text className="mb-6 text-center text-sm leading-5.5 text-text-secondary dark:text-text-secondary-dark">
             {t('partner.benefitsDescription', {
               name: partner.name,
               description: partner.description,
@@ -255,7 +255,7 @@ function PartnerModalContent(): React.JSX.Element {
           </Text>
 
           <View className="mb-6 flex-row">
-            <View className="mr-4 size-[90px] items-center justify-center rounded-2xl border border-border bg-white dark:border-dark-border dark:bg-dark-bg-elevated">
+            <View className="mr-4 size-22.5 items-center justify-center rounded-2xl border border-border bg-white dark:border-dark-border dark:bg-dark-bg-elevated">
               <Award
                 size={24}
                 color={isDark ? Colors.primaryBright : Colors.primary}
@@ -264,7 +264,7 @@ function PartnerModalContent(): React.JSX.Element {
                 {t('partner.exclusive')}
               </Text>
             </View>
-            <View className="mr-4 size-[90px] items-center justify-center rounded-2xl border border-border bg-white dark:border-dark-border dark:bg-dark-bg-elevated">
+            <View className="mr-4 size-22.5 items-center justify-center rounded-2xl border border-border bg-white dark:border-dark-border dark:bg-dark-bg-elevated">
               <Percent
                 size={24}
                 color={isDark ? Colors.primaryBright : Colors.primary}
@@ -273,7 +273,7 @@ function PartnerModalContent(): React.JSX.Element {
                 {t('partner.discount')}
               </Text>
             </View>
-            <View className="size-[90px] items-center justify-center rounded-2xl border border-border bg-white dark:border-dark-border dark:bg-dark-bg-elevated">
+            <View className="size-22.5 items-center justify-center rounded-2xl border border-border bg-white dark:border-dark-border dark:bg-dark-bg-elevated">
               <Star
                 size={24}
                 color={isDark ? Colors.primaryBright : Colors.primary}
@@ -321,7 +321,7 @@ function PartnerModalContent(): React.JSX.Element {
 
           <Pressable
             accessibilityRole="button"
-            className="mb-3.5 w-full items-center rounded-[18px] bg-primary py-[17px] dark:bg-primary-bright"
+            className="mb-3.5 w-full items-center rounded-[18px] bg-primary py-4.25 dark:bg-primary-bright"
             disabled={claimMutation.isPending}
             onPress={() => {
               void handleClaim();

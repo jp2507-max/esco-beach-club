@@ -21,7 +21,10 @@ import {
 import { motion } from '@/src/lib/animations/motion';
 import { useScreenEntry } from '@/src/lib/animations/use-screen-entry';
 import { useStaggeredListEntering } from '@/src/lib/animations/use-staggered-entry';
-import { eventCategories } from '@/src/lib/events/use-events-screen-data';
+import {
+  eventCategories,
+  type EventCategoryValue,
+} from '@/src/lib/events/use-events-screen-data';
 import { hapticLight, hapticSelection } from '@/src/lib/haptics/haptics';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
@@ -99,7 +102,7 @@ function AnimatedHeartToggle({
   );
 }
 
-export function EventListCard({
+function EventListCardComponent({
   index,
   isEventSaved,
   item,
@@ -194,6 +197,8 @@ export function EventListCard({
   );
 }
 
+export const EventListCard = React.memo(EventListCardComponent);
+
 export function EventsListHeader({
   activeCategory,
   featuredEvent,
@@ -207,10 +212,10 @@ export function EventsListHeader({
   t,
   weekStripItems,
 }: {
-  activeCategory: string;
+  activeCategory: EventCategoryValue;
   featuredEvent: Event | undefined;
   isEventSaved: (id: string) => boolean;
-  onCategorySelect: (value: string) => void;
+  onCategorySelect: (value: EventCategoryValue) => void;
   onOpenEvent: (id: string) => void;
   onToggleSavedEvent: (id: string) => void;
   onWeekDaySelect: (key: string) => void;
@@ -286,7 +291,7 @@ export function EventsListHeader({
               transition={180}
             />
             <LinearGradient
-              colors={['transparent', 'rgba(0,0,0,0.75)']}
+              colors={['transparent', Colors.featuredOverlayStrong]}
               style={{
                 bottom: 0,
                 left: 0,
@@ -318,7 +323,7 @@ export function EventsListHeader({
             </View>
             <View className="absolute bottom-0 left-0 right-20 p-4.5">
               <View className="mb-1.5 flex-row items-center gap-1.25">
-                <Calendar size={13} color="rgba(255,255,255,0.8)" />
+                <Calendar size={13} color={Colors.featuredOverlayIcon} />
                 <Text className="text-xs font-medium text-white/80">
                   {featuredEvent.date} • {featuredEvent.time}
                 </Text>
@@ -353,7 +358,7 @@ export function EventsListHeader({
               isEventSaved(featuredEvent.id) ? Colors.primary : 'transparent'
             }
             onToggle={() => onToggleSavedEvent(featuredEvent.id)}
-            style={{ backgroundColor: 'rgba(0,0,0,0.28)' }}
+            style={{ backgroundColor: Colors.featuredOverlayMedium }}
             testID="featured-save-event"
           />
         </View>

@@ -7,18 +7,41 @@ import {
   resolveEventDayKey,
 } from '@/src/lib/events/date-utils';
 
-export const eventCategories = [
-  { labelKey: 'categories.allEvents', value: 'All Events' },
-  { labelKey: 'categories.parties', value: 'Parties' },
-  { labelKey: 'categories.liveMusic', value: 'Live Music' },
-  { labelKey: 'categories.wellness', value: 'Wellness' },
-  { labelKey: 'categories.dining', value: 'Dining' },
+export const EVENT_CATEGORY_VALUES = [
+  'allEvents',
+  'parties',
+  'liveMusic',
+  'wellness',
+  'dining',
 ] as const;
+
+export type EventCategoryValue = (typeof EVENT_CATEGORY_VALUES)[number];
+
+export const eventCategories = [
+  { labelKey: 'categories.allEvents', value: 'allEvents' },
+  { labelKey: 'categories.parties', value: 'parties' },
+  { labelKey: 'categories.liveMusic', value: 'liveMusic' },
+  { labelKey: 'categories.wellness', value: 'wellness' },
+  { labelKey: 'categories.dining', value: 'dining' },
+] as const;
+
+const EVENT_CATEGORY_NORMALIZATION_MAP: Readonly<
+  Record<string, EventCategoryValue>
+> = {
+  'all events': 'allEvents',
+  allevents: 'allEvents',
+  dining: 'dining',
+  'live music': 'liveMusic',
+  livemusic: 'liveMusic',
+  parties: 'parties',
+  party: 'parties',
+  wellness: 'wellness',
+};
 
 type PreparedEvent = {
   dayKey: string | null;
   event: Event;
-  normalizedCategory: string;
+  normalizedCategory: EventCategoryValue | null;
   searchableContent: string;
 };
 
@@ -31,7 +54,7 @@ const LIST_CONTENT_CONTAINER_STYLE = {
 } as const;
 
 export type UseEventsScreenDataReturn = {
-  activeCategory: string;
+  activeCategory: EventCategoryValue;
   featuredEvent: Event | undefined;
   filteredEvents: Event[];
   listContentContainerStyle: typeof LIST_CONTENT_CONTAINER_STYLE;
@@ -40,10 +63,25 @@ export type UseEventsScreenDataReturn = {
   selectedDay: WeekDayItem | null;
   selectedDayKey: string;
   weekStripItems: (WeekDayItem & { showIndicator: boolean })[];
-  setActiveCategory: Dispatch<SetStateAction<string>>;
+  setActiveCategory: Dispatch<SetStateAction<EventCategoryValue>>;
   setSearchQuery: Dispatch<SetStateAction<string>>;
   setSelectedDayKey: Dispatch<SetStateAction<string>>;
 };
+
+function normalizeEventCategory(
+  category: string | null | undefined
+): EventCategoryValue | null {
+  if (!category) return null;
+
+  const normalizedCategory = category.trim().toLowerCase();
+  const compactCategory = normalizedCategory.replace(/[\s_-]+/g, '');
+
+  return (
+    EVENT_CATEGORY_NORMALIZATION_MAP[normalizedCategory] ??
+    EVENT_CATEGORY_NORMALIZATION_MAP[compactCategory] ??
+    null
+  );
+}
 
 export function useEventsScreenData({
   events,
@@ -52,7 +90,8 @@ export function useEventsScreenData({
   events: Event[];
   language: string;
 }): UseEventsScreenDataReturn {
-  const [activeCategory, setActiveCategory] = useState<string>('All Events');
+  const [activeCategory, setActiveCategory] =
+    useState<EventCategoryValue>('allEvents');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [now, setNow] = useState<Date>(() => new Date());
   const deferredSearchQuery = useDeferredValue(searchQuery);
@@ -98,7 +137,7 @@ export function useEventsScreenData({
       events.map((event) => ({
         dayKey: resolveEventDayKey(event, weekDays, now),
         event,
-        normalizedCategory: event.category?.toLowerCase() ?? '',
+        normalizedCategory: normalizeEventCategory(event.category),
         searchableContent: [
           event.title,
           event.description ?? '',
@@ -137,14 +176,12 @@ export function useEventsScreenData({
 
   const filteredEvents = useMemo(() => {
     const normalizedQuery = deferredSearchQuery.trim().toLowerCase();
-    const normalizedCategory = activeCategory.toLowerCase();
 
     return preparedEvents
       .filter((preparedEvent) => {
-        const isAllCategory = activeCategory === 'All Events';
+        const isAllCategory = activeCategory === 'allEvents';
         const isCategoryMatch =
-          isAllCategory ||
-          preparedEvent.normalizedCategory === normalizedCategory;
+          isAllCategory || preparedEvent.normalizedCategory === activeCategory;
         const isSelectedDayMatch = preparedEvent.dayKey === selectedDayKey;
 
         if (!isCategoryMatch) return false;

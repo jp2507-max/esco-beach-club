@@ -3,6 +3,12 @@
     "name": "Esco Beach Club",
     "slug": "escolife",
     "version": "1.0.0",
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/42db96ce-756f-4755-97eb-e30daacff231"
+    },
     "orientation": "portrait",
     "icon": "assets/images/icon.png",
     "scheme": "esco-beach-club",

@@ -2,10 +2,8 @@ const profile = {
   guest: 'Guest',
   memberFallback: 'MEMBER',
   tier: {
-    shore: 'Shore',
-    cove: 'Cove',
-    horizon: 'Horizon',
-    luminary: 'Luminary',
+    member: 'Esco Life Member',
+    legend: 'Esco Life Legend',
   },
   menu: {
     comingSoon: 'Coming soon',
@@ -46,7 +44,6 @@ const profile = {
   nightsLeft: 'Nights left',
   savedEventsCount: 'Saved events',
   memberCard: {
-    brandMark: 'Esco Beach',
     cashbackBalance: 'Points Balance',
     cashbackSuffix: 'pts',
     memberName: 'MEMBER NAME',
@@ -321,7 +318,8 @@ const profile = {
       unknown: 'Unknown',
     },
     shareInviteLink: 'Share Invite Link',
-    shareMessage: 'Join Esco Life with my referral code: {{code}}\n{{url}}',
+    shareMessage:
+      'Join Esco Life with my referral code: {{code}}\nOpen in app: {{appUrl}}\nNeed to install first? Use this link: {{url}}',
     milestones: {
       freeCocktail: 'Free Cocktail',
       vipBadge: 'VIP Badge',

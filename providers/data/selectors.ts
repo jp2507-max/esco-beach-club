@@ -21,7 +21,6 @@ import {
   type ProfileData,
   type ReferralsData,
   type SavedEventsData,
-  type StaffAccessData,
   useBookingContentData,
   useEventsData,
   useMemberOffersData,
@@ -32,7 +31,6 @@ import {
   useProfileData,
   useReferralsData,
   useSavedEventsData,
-  useStaffAccessData,
 } from './context';
 
 export type UseDataReturn = BookingContentData &
@@ -44,8 +42,7 @@ export type UseDataReturn = BookingContentData &
   PartnersData &
   PartnerRedemptionsData &
   ReferralsData &
-  SavedEventsData &
-  StaffAccessData;
+  SavedEventsData;
 
 export function useData(): UseDataReturn {
   const profileData = useProfileData();
@@ -58,7 +55,6 @@ export function useData(): UseDataReturn {
   const bookingContentData = useBookingContentData();
   const memberOffersData = useMemberOffersData();
   const menuContentData = useMenuContentData();
-  const staffAccessData = useStaffAccessData();
 
   return useMemo(
     () => ({
@@ -72,7 +68,6 @@ export function useData(): UseDataReturn {
       ...partnerRedemptionsData,
       ...referralsData,
       ...savedEventsData,
-      ...staffAccessData,
     }),
     [
       bookingContentData,
@@ -85,7 +80,6 @@ export function useData(): UseDataReturn {
       profileData,
       referralsData,
       savedEventsData,
-      staffAccessData,
     ]
   );
 }
@@ -152,7 +146,7 @@ export function useMemberSummary(): MemberSummary {
   const savedEventsCount = useSavedEventsCount();
 
   return useMemo(() => {
-    const lifetimeTierKey = profile?.lifetime_tier_key ?? rewardTierKeys.shore;
+    const lifetimeTierKey = profile?.lifetime_tier_key ?? rewardTierKeys.member;
     const nextTierKey =
       profile?.next_tier_key ?? getNextRewardTierKey(lifetimeTierKey);
     const tierProgressTargetPoints = profile?.tier_progress_target_points ?? 0;

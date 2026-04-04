@@ -13,6 +13,7 @@ const booking = {
     casual: 'Casual',
     celebration: 'Celebration',
   },
+  occasionHint: 'Select one occasion for your reservation',
   days: {
     today: 'Today',
     sun: 'Sun',

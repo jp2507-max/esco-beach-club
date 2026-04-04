@@ -288,10 +288,39 @@ export async function signInWithGoogleFlow(params: {
         extraFields: fallbackCreateFields,
       });
 
-      await applyOnboardingProfileDataForNewUser({
-        onboardingData,
-        signInResult,
-      });
+      try {
+        await applyOnboardingProfileDataForNewUser({
+          onboardingData,
+          signInResult,
+        });
+      } catch (error: unknown) {
+        const signInUser = extractSignInUser(signInResult);
+
+        captureHandledError(error, {
+          tags: {
+            area: 'auth',
+            operation: 'apply_onboarding_profile_data',
+            provider: authProviderTypes.google,
+          },
+          extras: {
+            hasOnboardingData: onboardingData !== null,
+            signInCreatedUser: signInUser.created,
+            signInUserId: signInUser.id,
+          },
+        });
+
+        if (__DEV__) {
+          console.error(
+            '[AuthProvider] Google onboarding profile sync failed',
+            {
+              error,
+              signInUser,
+            }
+          );
+        }
+
+        throw error;
+      }
       await persistProfileAuthProvider({
         providerType: authProviderTypes.google,
         signInResult,
@@ -302,10 +331,36 @@ export async function signInWithGoogleFlow(params: {
     }
   }
 
-  await applyOnboardingProfileDataForNewUser({
-    onboardingData,
-    signInResult,
-  });
+  try {
+    await applyOnboardingProfileDataForNewUser({
+      onboardingData,
+      signInResult,
+    });
+  } catch (error: unknown) {
+    const signInUser = extractSignInUser(signInResult);
+
+    captureHandledError(error, {
+      tags: {
+        area: 'auth',
+        operation: 'apply_onboarding_profile_data',
+        provider: authProviderTypes.google,
+      },
+      extras: {
+        hasOnboardingData: onboardingData !== null,
+        signInCreatedUser: signInUser.created,
+        signInUserId: signInUser.id,
+      },
+    });
+
+    if (__DEV__) {
+      console.error('[AuthProvider] Google onboarding profile sync failed', {
+        error,
+        signInUser,
+      });
+    }
+
+    throw error;
+  }
   await persistProfileAuthProvider({
     providerType: authProviderTypes.google,
     signInResult,
@@ -352,10 +407,39 @@ export async function verifyMagicCodeFlow(params: {
     extraFields: createFields,
   });
 
-  await applyOnboardingProfileDataForNewUser({
-    onboardingData,
-    signInResult,
-  });
+  try {
+    await applyOnboardingProfileDataForNewUser({
+      onboardingData,
+      signInResult,
+    });
+  } catch (error: unknown) {
+    const signInUser = extractSignInUser(signInResult);
+
+    captureHandledError(error, {
+      tags: {
+        area: 'auth',
+        operation: 'apply_onboarding_profile_data',
+        provider: authProviderTypes.magicCode,
+      },
+      extras: {
+        hasOnboardingData: onboardingData !== null,
+        signInCreatedUser: signInUser.created,
+        signInUserId: signInUser.id,
+      },
+    });
+
+    if (__DEV__) {
+      console.error(
+        '[AuthProvider] Magic code onboarding profile sync failed',
+        {
+          error,
+          signInUser,
+        }
+      );
+    }
+
+    throw error;
+  }
   await persistProfileAuthProvider({
     providerType: authProviderTypes.magicCode,
     signInResult,

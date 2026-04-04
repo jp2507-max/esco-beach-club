@@ -132,16 +132,22 @@ function ReferralListRow({
   );
 }
 
+const MemoizedReferralListRow = React.memo(ReferralListRow);
+
 function InviteReferralsScreenContent(): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation('profile');
   const { referrals, referralsLoading } = useReferralsData();
   const { contentStyle } = useScreenEntry({ durationMs: 400 });
   const isDark = useAppIsDark();
-  const referralStatusBg = isDark ? 'rgba(34,197,94,0.22)' : '#E8F5E9';
-  const referralStatusText = isDark ? '#86EFAC' : '#4CAF50';
+  const referralStatusBg = isDark
+    ? Colors.inviteReferralStatusBgDark
+    : Colors.inviteReferralStatusBgLight;
+  const referralStatusText = isDark
+    ? Colors.inviteReferralStatusTextDark
+    : Colors.inviteReferralStatusTextLight;
   const referralWarningBg = isDark
-    ? 'rgba(245, 158, 11, 0.13)'
+    ? Colors.badgeWarningDarkBackground
     : Colors.badgeWarningLightBackground;
   const referralWarningText = isDark ? Colors.warningDark : Colors.warning;
   const listContentContainerStyle = useMemo(
@@ -159,7 +165,7 @@ function InviteReferralsScreenContent(): React.JSX.Element {
       );
 
       return (
-        <ReferralListRow
+        <MemoizedReferralListRow
           isDark={isDark}
           index={index}
           joinedViaLabel={t('invite.joinedViaYourLink')}

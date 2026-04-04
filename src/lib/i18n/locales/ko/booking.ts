@@ -13,6 +13,7 @@ const booking = {
     casual: '캐주얼',
     celebration: '축하',
   },
+  occasionHint: '예약에 사용할 용도를 하나 선택하세요',
   days: {
     today: '오늘',
     sun: '일',

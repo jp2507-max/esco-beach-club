@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import {
   cancelAnimation,
   type SharedValue,
@@ -36,20 +36,21 @@ export function SignupStepDots({
   const s3 = useSharedValue(isCodeStep ? 1.2 : 1);
   const s4 = useSharedValue(isCodeStep ? 1.2 : 1);
   const s5 = useSharedValue(isCodeStep ? 1.2 : 1);
-  const scales = [s0, s1, s2, s3, s4, s5];
+  const scales = useMemo(
+    () => [s0, s1, s2, s3, s4, s5],
+    [s0, s1, s2, s3, s4, s5]
+  );
 
   useEffect(() => {
-    const stepScales = [s0, s1, s2, s3, s4, s5];
-
-    stepScales.forEach((scale, index) => {
+    scales.forEach((scale, index) => {
       const active = isCodeStep ? index >= 3 : index < 3;
       scale.set(withSpring(active ? 1.2 : 1, motion.spring.gentle));
     });
 
     return () => {
-      for (const scale of stepScales) cancelAnimation(scale);
+      for (const scale of scales) cancelAnimation(scale);
     };
-  }, [isCodeStep, s0, s1, s2, s3, s4, s5]);
+  }, [isCodeStep, scales]);
 
   return (
     <View className="flex-row items-center gap-1.5">

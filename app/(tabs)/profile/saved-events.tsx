@@ -104,6 +104,8 @@ function SavedEventRow({
   );
 }
 
+const MemoizedSavedEventRow = React.memo(SavedEventRow);
+
 export default function SavedEventsScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -148,7 +150,7 @@ export default function SavedEventsScreen(): React.JSX.Element {
 
   const renderSavedEvent = useCallback(
     ({ index, item }: ListRenderItemInfo<Event>): React.JSX.Element => (
-      <SavedEventRow
+      <MemoizedSavedEventRow
         event={item}
         index={index}
         isRemoving={pendingRemovals.has(item.id)}
@@ -171,7 +173,6 @@ export default function SavedEventsScreen(): React.JSX.Element {
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={listContentContainerStyle}
         data={savedEventsList}
-        extraData={pendingRemovals}
         keyExtractor={(item) => item.id}
         ListHeaderComponent={
           savedEventsLoading ? null : (

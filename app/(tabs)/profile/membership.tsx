@@ -69,7 +69,7 @@ export default function MembershipScreen(): React.JSX.Element {
   }));
 
   const tierLevel: RewardTierKey =
-    memberSummary.lifetimeTierKey ?? rewardTierKeys.shore;
+    memberSummary.lifetimeTierKey ?? rewardTierKeys.member;
   const tierConfig = TIER_CONFIG[tierLevel];
   const userName = memberSummary.fullName || '—';
   const memberSince = useMemo(() => {

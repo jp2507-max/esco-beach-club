@@ -127,18 +127,6 @@ export function getOccasionTranslationKey(
   return `occasions.${value}`;
 }
 
-export function getOccasionLabel(value: BookingOccasionKey): string {
-  const labels: Record<BookingOccasionKey, string> = {
-    dateNight: 'Date Night',
-    birthday: 'Birthday',
-    business: 'Business',
-    casual: 'Casual',
-    celebration: 'Celebration',
-  };
-
-  return labels[value];
-}
-
 export function isBookingOccasionTranslationKeyFromApi(
   key: unknown
 ): key is BookingOccasionTranslationKeyFromApi {

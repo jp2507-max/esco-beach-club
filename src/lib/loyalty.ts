@@ -1,5 +1,5 @@
 import type { Profile, RewardTierKey } from '@/lib/types';
-import { rewardTierKeys, rewardTierLegacyEscoLifeMember } from '@/lib/types';
+import { rewardTierKeys } from '@/lib/types';
 
 export const staffRoles = {
   manager: 'manager',
@@ -19,7 +19,7 @@ export const rewardBenefitKeys = {
 export type RewardBenefitKey =
   (typeof rewardBenefitKeys)[keyof typeof rewardBenefitKeys];
 
-type RewardTierLabelKey = 'shore' | 'cove' | 'horizon' | 'luminary';
+type RewardTierLabelKey = 'member' | 'legend';
 
 export type RewardTierDefinition = {
   hasPrioritySupport: boolean;
@@ -47,34 +47,18 @@ export const rewardTierDefinitions: Record<
   RewardTierKey,
   RewardTierDefinition
 > = {
-  [rewardTierKeys.shore]: {
+  [rewardTierKeys.member]: {
     hasPrioritySupport: false,
-    key: rewardTierKeys.shore,
-    labelKey: 'shore',
-    nextTierKey: rewardTierKeys.cove,
-    progressTargetPoints: 0,
+    key: rewardTierKeys.member,
+    labelKey: 'member',
+    nextTierKey: rewardTierKeys.legend,
+    progressTargetPoints: 50,
     unlockedBenefits: baseMemberBenefits,
   },
-  [rewardTierKeys.cove]: {
-    hasPrioritySupport: false,
-    key: rewardTierKeys.cove,
-    labelKey: 'cove',
-    nextTierKey: rewardTierKeys.horizon,
-    progressTargetPoints: 0,
-    unlockedBenefits: baseMemberBenefits,
-  },
-  [rewardTierKeys.horizon]: {
-    hasPrioritySupport: false,
-    key: rewardTierKeys.horizon,
-    labelKey: 'horizon',
-    nextTierKey: rewardTierKeys.luminary,
-    progressTargetPoints: 0,
-    unlockedBenefits: baseMemberBenefits,
-  },
-  [rewardTierKeys.luminary]: {
+  [rewardTierKeys.legend]: {
     hasPrioritySupport: true,
-    key: rewardTierKeys.luminary,
-    labelKey: 'luminary',
+    key: rewardTierKeys.legend,
+    labelKey: 'legend',
     nextTierKey: null,
     progressTargetPoints: 0,
     unlockedBenefits: [
@@ -106,13 +90,10 @@ type TierProgressSnapshot = Pick<
 >;
 
 export function normalizeRewardTierKey(value: unknown): RewardTierKey {
-  if (value === rewardTierKeys.shore) return rewardTierKeys.shore;
-  if (value === rewardTierKeys.cove) return rewardTierKeys.cove;
-  if (value === rewardTierKeys.horizon) return rewardTierKeys.horizon;
-  if (value === rewardTierKeys.luminary) return rewardTierKeys.luminary;
-  if (value === rewardTierLegacyEscoLifeMember) return rewardTierKeys.shore;
+  if (value === rewardTierKeys.member) return rewardTierKeys.member;
+  if (value === rewardTierKeys.legend) return rewardTierKeys.legend;
 
-  return rewardTierKeys.shore;
+  return rewardTierKeys.member;
 }
 
 export function getRewardTierDefinition(

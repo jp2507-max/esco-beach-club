@@ -194,7 +194,7 @@ export async function POST(request: Request): Promise<Response> {
         referred_name: referredName,
         referred_avatar: referredAvatar,
         referee_profile_id: refereeProfileId,
-        status: 'Pending',
+        status: 'Completed',
         referrer_id: referrerProfileId,
       }),
       createInstantLinkStep('referrals', newReferralId, {

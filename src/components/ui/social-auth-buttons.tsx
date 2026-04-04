@@ -121,7 +121,7 @@ export function SocialAuthButtons({
           icon={
             <Text
               className="text-[18px] font-bold"
-              style={{ color: '#4285F4' }}
+              style={{ color: Colors.brandGoogleBlue }}
             >
               G
             </Text>

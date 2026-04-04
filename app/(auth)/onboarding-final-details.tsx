@@ -249,7 +249,11 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
       searchParams.onboardingPushPermissionStatus
     );
 
-    if (isAuthenticated && !isAuthLoading && user?.id) {
+    if (isAuthLoading) {
+      return;
+    }
+
+    if (isAuthenticated && user?.id) {
       let shouldFallbackToSignup = false;
 
       try {
@@ -334,9 +338,9 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
       <View className="absolute inset-0 dark:hidden">
         <LinearGradient
           colors={[
-            'rgba(251,249,241,0.98)',
-            'rgba(251,249,241,0.98)',
-            'rgba(117,87,0,0.05)',
+            Colors.onboardingFinalGradientBase,
+            Colors.onboardingFinalGradientBase,
+            Colors.onboardingFinalGradientAccent,
           ]}
           style={{ bottom: 0, left: 0, position: 'absolute', right: 0, top: 0 }}
         />
@@ -464,7 +468,7 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
                     )}
                     className="size-16 items-center justify-center rounded-xl bg-primary dark:bg-primary-bright"
                   >
-                    <Ticket color="#ffffff" size={22} />
+                    <Ticket color={Colors.white} size={22} />
                   </Animated.View>
 
                   <View>
@@ -529,7 +533,7 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
                   <Text className="text-[17px] font-bold text-white">
                     {t('onboardingClubPrimaryCta')}
                   </Text>
-                  <ArrowRight color="#ffffff" size={22} />
+                  <ArrowRight color={Colors.white} size={22} />
                 </View>
               </LinearGradient>
             </Pressable>

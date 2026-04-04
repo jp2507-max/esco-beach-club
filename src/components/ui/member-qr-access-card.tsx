@@ -101,7 +101,7 @@ export function MemberQrAccessCard({
           <View className="items-center">
             <View
               className="items-center justify-center rounded-2xl p-3"
-              style={{ backgroundColor: 'rgba(255,255,255,0.96)' }}
+              style={{ backgroundColor: Colors.qrCardSurface }}
             >
               <MemberQrCode
                 className="bg-transparent p-0 dark:bg-transparent"
@@ -166,7 +166,7 @@ export function MemberQrAccessCard({
           <View
             className="absolute rounded-full"
             style={{
-              backgroundColor: 'rgba(200,162,77,0.03)',
+              backgroundColor: Colors.qrCardOrbGold,
               height: 240,
               right: -80,
               top: -80,
@@ -176,7 +176,7 @@ export function MemberQrAccessCard({
           <View
             className="absolute rounded-full"
             style={{
-              backgroundColor: 'rgba(233,30,99,0.025)',
+              backgroundColor: Colors.qrCardOrbPrimary,
               bottom: -60,
               height: 160,
               left: -40,

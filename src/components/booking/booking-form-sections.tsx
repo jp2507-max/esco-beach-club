@@ -253,6 +253,8 @@ export function BookingFormContent({
 
               return (
                 <Pressable
+                  accessibilityLabel={option.label}
+                  accessibilityHint={t('occasionHint')}
                   accessibilityRole="button"
                   accessibilityState={{
                     disabled: isSubmitting,

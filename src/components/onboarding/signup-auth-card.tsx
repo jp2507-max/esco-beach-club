@@ -200,7 +200,7 @@ export function SignupAuthCard({
             testID="signup-submit"
           >
             <LinearGradient
-              colors={[Colors.secondary, '#00796B']}
+              colors={[Colors.secondary, Colors.secondaryDark]}
               end={{ x: 1, y: 0 }}
               start={{ x: 0, y: 0 }}
               style={{

@@ -1,10 +1,5 @@
 import type { AuthProviderType, MemberSegment, Profile } from '@/lib/types';
-import {
-  authProviderTypes,
-  memberSegments,
-  rewardTierKeys,
-  rewardTierLegacyEscoLifeMember,
-} from '@/lib/types';
+import { authProviderTypes, memberSegments, rewardTierKeys } from '@/lib/types';
 
 import {
   type InstantRecord,
@@ -22,13 +17,8 @@ export function toRewardTierKey(
 ): Profile['lifetime_tier_key'] | null {
   const normalized = typeof value === 'string' ? value.trim() : '';
 
-  if (normalized === rewardTierKeys.shore) return rewardTierKeys.shore;
-  if (normalized === rewardTierKeys.cove) return rewardTierKeys.cove;
-  if (normalized === rewardTierKeys.horizon) return rewardTierKeys.horizon;
-  if (normalized === rewardTierKeys.luminary) return rewardTierKeys.luminary;
-  if (normalized === rewardTierLegacyEscoLifeMember) {
-    return rewardTierKeys.shore;
-  }
+  if (normalized === rewardTierKeys.member) return rewardTierKeys.member;
+  if (normalized === rewardTierKeys.legend) return rewardTierKeys.legend;
 
   return null;
 }

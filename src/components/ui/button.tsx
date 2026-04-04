@@ -51,7 +51,7 @@ function getSpinnerColor(variant: ButtonVariant, isDark: boolean): string {
     return Colors.secondaryDeeper;
   }
 
-  return '#fff';
+  return Colors.white;
 }
 
 export type ButtonProps = Omit<ComponentProps<typeof Pressable>, 'children'> & {

@@ -4,7 +4,7 @@ import {
   getBookingConfirmationDate,
   getNext7Days,
   toLocalDateString,
-} from '../src/lib/booking/booking-screen';
+} from '@/src/lib/booking/booking-screen';
 
 const t = (key: string): string => key;
 

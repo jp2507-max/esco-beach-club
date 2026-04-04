@@ -4,6 +4,10 @@ const common = {
     textInputHint: 'Nhập văn bản',
     textInputHintWithField: 'Nhập {{field}}',
   },
+  branding: {
+    mark: 'Esco Beach',
+    markHint: 'Nhận diện thương hiệu Esco Beach Club',
+  },
   validation: {
     required: 'Trường này là bắt buộc.',
     email: 'Vui lòng nhập địa chỉ email hợp lệ.',
@@ -30,6 +34,8 @@ const common = {
     howWasVisit: 'Chuyến thăm của bạn thế nào?',
     feedbackHint:
       'Phản hồi của bạn giúp chúng tôi tạo trải nghiệm câu lạc bộ biển tốt nhất.',
+    starAccessibilityLabel: 'Đánh giá {{count}} trên 5',
+    starAccessibilityHint: 'Nhấn để chọn mức đánh giá này',
     starLabels: ['Tệ', 'Kém', 'Ổn', 'Tốt', 'Tuyệt vời!'],
     placeholder: 'Cho chúng tôi biết thêm về trải nghiệm của bạn...',
     submitLabel: 'Gửi đánh giá',
@@ -71,7 +77,8 @@ const common = {
       other: 'Khác',
     },
     preferredDate: 'Ngày mong muốn',
-    preferredDatePlaceholder: 'DD - MM - YYYY',
+    preferredDatePlaceholder: 'YYYY-MM-DD',
+    preferredDateHint: 'Nhập ngày theo định dạng YYYY-MM-DD.',
     estimatedGuests: 'Số khách ước tính',
     estimatedGuestsPlaceholder: 'VD: 50',
     contactInfoOptional: 'Thông tin liên hệ (tùy chọn)',

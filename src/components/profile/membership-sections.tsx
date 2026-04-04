@@ -84,7 +84,7 @@ export function MembershipTierHeroCard({
         <View
           className="absolute rounded-full"
           style={{
-            backgroundColor: 'rgba(255,255,255,0.15)',
+            backgroundColor: Colors.overlayTintLight,
             height: 200,
             right: -60,
             top: -60,
@@ -101,7 +101,7 @@ export function MembershipTierHeroCard({
                 {tierLabel}
               </Text>
             </View>
-            <Award color="rgba(255,255,255,0.9)" size={36} />
+            <Award color={Colors.whiteAlpha90} size={36} />
           </View>
 
           <View className="mb-7">

@@ -142,11 +142,23 @@ function buildInstantAdminUrl(
   return url.toString();
 }
 
+async function instantAdminFetch(
+  config: InstantAdminConfig,
+  path: string,
+  init: RequestInit
+): Promise<undefined>;
+
 async function instantAdminFetch<TResult>(
   config: InstantAdminConfig,
   path: string,
   init: RequestInit
-): Promise<TResult> {
+): Promise<TResult>;
+
+async function instantAdminFetch<TResult>(
+  config: InstantAdminConfig,
+  path: string,
+  init: RequestInit
+): Promise<TResult | undefined> {
   const timeoutSignal = AbortSignal.timeout(30_000);
   const signal =
     init.signal != null
@@ -172,12 +184,12 @@ async function instantAdminFetch<TResult>(
   }
 
   if (response.status === 204) {
-    return undefined as TResult;
+    return undefined;
   }
 
   const responseText = await response.text();
   if (!responseText) {
-    return undefined as TResult;
+    return undefined;
   }
 
   return JSON.parse(responseText) as TResult;
@@ -198,7 +210,7 @@ function createInstantAdminDb(config: InstantAdminConfig): InstantAdminDb {
     async signOut(
       params: { email: string } | { id: string } | { refresh_token: string }
     ): Promise<void> {
-      await instantAdminFetch<void>(config, '/admin/sign_out', {
+      await instantAdminFetch(config, '/admin/sign_out', {
         body: JSON.stringify(params),
         method: 'POST',
       });

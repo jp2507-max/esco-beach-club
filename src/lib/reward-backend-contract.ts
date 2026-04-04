@@ -4,7 +4,6 @@ import {
   memberSegments,
   onboardingPermissionStatuses,
   rewardTierKeys,
-  rewardTierLegacyEscoLifeMember,
   rewardTransactionEventTypes,
   rewardTransactionSources,
   rewardTransactionStatuses,
@@ -20,11 +19,8 @@ const onboardingPermissionStatusValues = [
   onboardingPermissionStatuses.undetermined,
 ] as const;
 const rewardTierValues = [
-  rewardTierKeys.shore,
-  rewardTierKeys.cove,
-  rewardTierKeys.horizon,
-  rewardTierKeys.luminary,
-  rewardTierLegacyEscoLifeMember,
+  rewardTierKeys.member,
+  rewardTierKeys.legend,
 ] as const;
 const rewardTransactionEventTypeValues = [
   rewardTransactionEventTypes.manualAdjustment,

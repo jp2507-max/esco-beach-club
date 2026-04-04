@@ -6,19 +6,16 @@ const membership = {
     cashbackBalance: 'Số dư điểm thưởng',
     cashbackPoints: '{{value}} điểm thưởng',
     progressTo: 'Tiến tới {{nextTier}}',
-    progressPoints: '{{current}} / {{target}} pts',
+    progressPoints: '{{current}} / {{target}} điểm thưởng',
     progressExpires: 'Tiến độ sẽ đặt lại vào {{date}}',
     progressResetsMonthly:
       'Tiến độ lên hạng theo tháng sẽ đặt lại sau 1 tháng.',
-    nextTierComingSoon: 'Hạng tiếp theo sắp ra mắt',
-    progressUnavailable:
-      'Tiến độ lên hạng sẽ xuất hiện tại đây khi hạng tiếp theo được cấu hình.',
+    nextTierComingSoon: 'Bạn đã đạt hạng Legend',
+    progressUnavailable: 'Bạn đã sở hữu hạng trọn đời cao nhất.',
   },
   tiers: {
-    shore: 'Bờ biển',
-    cove: 'Vịnh',
-    horizon: 'Chân trời',
-    luminary: 'Tỏa sáng',
+    member: 'Esco Life Member',
+    legend: 'Esco Life Legend',
   },
   benefits: {
     title: 'Quyền lợi',
@@ -37,6 +34,23 @@ const membership = {
     upgradeTier: 'Nâng cấp hạng',
     billingHistory: 'Lịch sử thanh toán',
     managePayments: 'Quản lý thanh toán',
+  },
+  upgradeTier: {
+    intro: 'Theo dõi tiến độ theo tháng để mở khóa hạng Legend trọn đời.',
+    currentTierLabel: 'Hạng trọn đời hiện tại',
+    nextTierLabel: 'Hạng tiếp theo',
+    unlockRequirement:
+      'Đạt {{target}} điểm trong một chu kỳ tháng để mở khóa {{nextTier}} trọn đời.',
+    progressLabel: 'Tiến độ theo tháng',
+    resetOn: 'Tiến độ sẽ đặt lại vào {{date}}',
+    resetsMonthlyFallback:
+      'Tiến độ sẽ đặt lại sau 1 tháng kể từ khi chu kỳ đang hoạt động bắt đầu.',
+    topTierTitle: 'Bạn đã ở hạng Esco Life Legend',
+    topTierDescription:
+      'Legend là hạng trọn đời của bạn. Hãy tiếp tục tích điểm để tối đa hóa phần thưởng.',
+    formulaTitle: 'Công thức tích điểm',
+    formulaDescription:
+      '{{points}} điểm thưởng được cộng cho mỗi {{amount}} chi tiêu.',
   },
   activity: {
     title: 'Hoạt động gần đây',

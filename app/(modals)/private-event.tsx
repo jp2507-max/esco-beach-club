@@ -394,9 +394,19 @@ function PrivateEventScreenContent(): React.JSX.Element {
                   return (
                     <>
                       <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel={t('privateEvent.preferredDate')}
-                        accessibilityHint="Select preferred date in DD - MM - YYYY format"
+                        accessibilityRole={
+                          Platform.OS === 'web' ? undefined : 'button'
+                        }
+                        accessibilityLabel={
+                          Platform.OS === 'web'
+                            ? undefined
+                            : t('privateEvent.preferredDate')
+                        }
+                        accessibilityHint={
+                          Platform.OS === 'web'
+                            ? undefined
+                            : t('privateEvent.preferredDateHint')
+                        }
                         className={cn(
                           'mb-3 flex-row items-center rounded-2xl border bg-background px-4 py-3 dark:bg-dark-bg-card',
                           invalid
@@ -411,7 +421,9 @@ function PrivateEventScreenContent(): React.JSX.Element {
                                 setIsDatePickerVisible(true);
                               }
                         }
-                        testID="date-input"
+                        testID={
+                          Platform.OS === 'web' ? undefined : 'date-input'
+                        }
                       >
                         <View className="mr-3 mt-0.5">
                           <Calendar color={Colors.secondary} size={18} />
@@ -440,6 +452,7 @@ function PrivateEventScreenContent(): React.JSX.Element {
                               onChange={(e) => {
                                 onChange(e.target.value);
                               }}
+                              aria-label={t('privateEvent.preferredDate')}
                               data-testid="date-input"
                             />
                           ) : (
@@ -578,7 +591,7 @@ function PrivateEventScreenContent(): React.JSX.Element {
                 isLoading={isSubmitting}
                 leftIcon={
                   <Send
-                    color={isDark ? Colors.secondaryDeeper : '#fff'}
+                    color={isDark ? Colors.secondaryDeeper : Colors.white}
                     size={18}
                   />
                 }

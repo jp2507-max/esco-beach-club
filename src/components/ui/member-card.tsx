@@ -208,7 +208,7 @@ export function MemberCard({
         <View
           className="absolute size-37.5 rounded-full"
           style={{
-            backgroundColor: 'rgba(255,255,255,0.08)',
+            backgroundColor: Colors.memberCardAmbientSoft,
             right: -30,
             top: -30,
           }}
@@ -216,7 +216,7 @@ export function MemberCard({
         <View
           className="absolute size-25 rounded-full"
           style={{
-            backgroundColor: 'rgba(255,255,255,0.06)',
+            backgroundColor: Colors.memberCardAmbientSofter,
             bottom: -20,
             left: 50,
           }}

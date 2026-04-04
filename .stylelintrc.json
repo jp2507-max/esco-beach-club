@@ -3,7 +3,15 @@
     "at-rule-no-unknown": [
       true,
       {
-        "ignoreAtRules": ["source", "theme", "tailwind", "apply", "layer", "config", "plugin"]
+        "ignoreAtRules": [
+          "source",
+          "theme",
+          "tailwind",
+          "apply",
+          "layer",
+          "config",
+          "plugin"
+        ]
       }
     ]
   }

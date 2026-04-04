@@ -1,7 +1,6 @@
 import { z } from 'zod';
 
 import { memberSegments } from '@/lib/types';
-import { rewardConfig } from '@/src/lib/loyalty';
 
 const v = (key: string) => `common:validation.${key}` as const;
 
@@ -148,33 +147,6 @@ export const reviewSchema = z.object({
 });
 
 export type ReviewFormValues = z.infer<typeof reviewSchema>;
-
-export const staffRewardAdjustmentSchema = z.object({
-  billAmountVnd: z
-    .string()
-    .trim()
-    .min(1, { error: v('required') })
-    .regex(/^\d+$/, { error: v('number') })
-    .refine(
-      (value) =>
-        Number.parseInt(value, 10) >= rewardConfig.cashbackSpendStepVnd,
-      {
-        error: v('loyaltyMinimumSpend'),
-      }
-    ),
-  memberId: z
-    .string()
-    .trim()
-    .min(1, { error: v('required') }),
-  receiptReference: z
-    .string()
-    .trim()
-    .min(1, { error: v('required') }),
-});
-
-export type StaffRewardAdjustmentFormValues = z.infer<
-  typeof staffRewardAdjustmentSchema
->;
 
 export const accountDeletionConfirmSchema = z.object({
   confirmation: z.literal('DELETE', {

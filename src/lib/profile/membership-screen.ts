@@ -26,7 +26,7 @@ export type TierConfig = {
 };
 
 export const TIER_CONFIG: Record<RewardTierKey, TierConfig> = {
-  [rewardTierKeys.shore]: {
+  [rewardTierKeys.member]: {
     gradient: [
       Colors.secondaryDark,
       Colors.secondary,
@@ -37,35 +37,9 @@ export const TIER_CONFIG: Record<RewardTierKey, TierConfig> = {
       Colors.secondary,
       Colors.tealLight,
     ] as const,
-    qrGradientDark: ['#0A1614', '#0F2220', '#0C1C1A'] as const,
+    qrGradientDark: Colors.qrMemberDark,
   },
-  [rewardTierKeys.cove]: {
-    gradient: [
-      Colors.secondaryDeeper,
-      Colors.secondaryDark,
-      Colors.secondary,
-    ] as const,
-    qrGradientLight: [
-      Colors.secondaryDeeper,
-      Colors.secondaryDark,
-      Colors.secondary,
-    ] as const,
-    qrGradientDark: ['#081210', '#0C1A1C', '#0A2224'] as const,
-  },
-  [rewardTierKeys.horizon]: {
-    gradient: [
-      Colors.primaryDark,
-      Colors.primary,
-      Colors.primaryBright,
-    ] as const,
-    qrGradientLight: [
-      Colors.primaryDark,
-      Colors.primary,
-      Colors.primaryBright,
-    ] as const,
-    qrGradientDark: ['#140A12', '#180E14', '#1C1018'] as const,
-  },
-  [rewardTierKeys.luminary]: {
+  [rewardTierKeys.legend]: {
     gradient: [
       Colors.cardGradientStart,
       Colors.cardGradientMiddle,
@@ -76,7 +50,7 @@ export const TIER_CONFIG: Record<RewardTierKey, TierConfig> = {
       Colors.cardGradientMiddle,
       Colors.cardGradientEnd,
     ] as const,
-    qrGradientDark: ['#12080E', '#160C10', '#1A100E'] as const,
+    qrGradientDark: Colors.qrLegendDark,
   },
 } as const;
 

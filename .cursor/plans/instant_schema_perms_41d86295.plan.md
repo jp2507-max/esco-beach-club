@@ -45,7 +45,7 @@ isProject: false
   - `referrals`
   - `reviews`
   - `private_event_inquiries`
-- Explicitly leave `bookings` out of this pass because [app/(modals)/booking/index.tsx](app/(modals)/booking/index.tsx) is still local-only UI with no real data contract yet.
+- Explicitly leave `bookings` out of this pass because [app/(modals)/booking/index.tsx](<app/(modals)/booking/index.tsx>) is still local-only UI with no real data contract yet.
 
 ## Files To Change
 
@@ -61,16 +61,16 @@ isProject: false
 
 - Keep field names aligned with the current UI/types to avoid a mapper layer right now. The app already expects snake_case in [lib/types.ts](lib/types.ts) and [providers/DataProvider.tsx](providers/DataProvider.tsx).
 - Model `profiles` as a one-to-one record linked to `$users`.
-  - Keep member-facing fields already used by [app/(tabs)/home/index.tsx](app/(tabs)/home/index.tsx), [app/(tabs)/profile/index.tsx](app/(tabs)/profile/index.tsx), and [app/(tabs)/profile/invite.tsx](app/(tabs)/profile/invite.tsx): `full_name`, `tier`, `tier_label`, `member_id`, `points`, `max_points`, `earned`, `saved`, `avatar_url`, `referral_code`, `has_seen_welcome_voucher`, `created_at`, `updated_at`.
+  - Keep member-facing fields already used by [app/(tabs)/home/index.tsx](<app/(tabs)/home/index.tsx>), [app/(tabs)/profile/index.tsx](<app/(tabs)/profile/index.tsx>), and [app/(tabs)/profile/invite.tsx](<app/(tabs)/profile/invite.tsx>): `full_name`, `tier`, `tier_label`, `member_id`, `points`, `max_points`, `earned`, `saved`, `avatar_url`, `referral_code`, `has_seen_welcome_voucher`, `created_at`, `updated_at`.
   - Add unique/indexed constraints where they are meaningful now: `member_id`, `referral_code`.
 - Model shared catalog/content namespaces for authenticated members:
-  - `events` with the fields currently rendered by [app/(tabs)/events/index.tsx](app/(tabs)/events/index.tsx) and [app/(shared)/events/[id].tsx](app/(shared)/events/[id].tsx).
-  - `news_items` with the fields used by [app/(tabs)/home/index.tsx](app/(tabs)/home/index.tsx).
-  - `partners` with the fields used by [app/(tabs)/perks/index.tsx](app/(tabs)/perks/index.tsx) and [app/(modals)/partner.tsx](app/(modals)/partner.tsx).
+  - `events` with the fields currently rendered by [app/(tabs)/events/index.tsx](<app/(tabs)/events/index.tsx>) and [app/(shared)/events/[id].tsx](<app/(shared)/events/[id].tsx>).
+  - `news_items` with the fields used by [app/(tabs)/home/index.tsx](<app/(tabs)/home/index.tsx>).
+  - `partners` with the fields used by [app/(tabs)/perks/index.tsx](<app/(tabs)/perks/index.tsx>) and [app/(modals)/partner.tsx](<app/(modals)/partner.tsx>).
 - Model user-owned / user-submitted namespaces:
   - `referrals` linked back to a profile as referrer.
-  - `reviews` linked to the submitting profile/user and shaped to the form in [app/(modals)/rate-us.tsx](app/(modals)/rate-us.tsx).
-  - `private_event_inquiries` linked to the submitting profile/user and shaped to the form in [app/(modals)/private-event.tsx](app/(modals)/private-event.tsx).
+  - `reviews` linked to the submitting profile/user and shaped to the form in [app/(modals)/rate-us.tsx](<app/(modals)/rate-us.tsx>).
+  - `private_event_inquiries` linked to the submitting profile/user and shaped to the form in [app/(modals)/private-event.tsx](<app/(modals)/private-event.tsx>).
 - Prefer links for ownership instead of only raw foreign-key strings wherever Instant queries/permissions benefit from them, while retaining current display fields that the UI already needs.
 
 ## Permission Model
@@ -121,4 +121,3 @@ isProject: false
 
 - `booking` should remain mock/local until the product decides the actual reservation model and status lifecycle.
 - The highest-risk issue in the current repo is the open permission default in [instant.perms.ts](instant.perms.ts); that should be fixed before relying on Instant-backed member data.
-

@@ -44,7 +44,7 @@ export default function SignupScreen(): React.JSX.Element {
   return (
     <View className="flex-1">
       <LinearGradient
-        colors={[Colors.primary, '#C2185B', '#AD1457']}
+        colors={[Colors.primary, Colors.primaryDark, Colors.primaryDeeper]}
         end={{ x: 1, y: 1 }}
         start={{ x: 0, y: 0 }}
         style={{ bottom: 0, left: 0, position: 'absolute', right: 0, top: 0 }}

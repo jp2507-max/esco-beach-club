@@ -1,12 +1,7 @@
 export const rewardTierKeys = {
-  shore: 'SHORE',
-  cove: 'COVE',
-  horizon: 'HORIZON',
-  luminary: 'LUMINARY',
+  member: 'MEMBER',
+  legend: 'LEGEND',
 } as const;
-
-/** Legacy profile/API value; map to `rewardTierKeys.shore` in mappers. */
-export const rewardTierLegacyEscoLifeMember = 'ESCO_LIFE_MEMBER' as const;
 
 export type RewardTierKey =
   (typeof rewardTierKeys)[keyof typeof rewardTierKeys];
@@ -39,8 +34,6 @@ export const rewardTransactionStatuses = {
 
 export type RewardTransactionStatus =
   (typeof rewardTransactionStatuses)[keyof typeof rewardTransactionStatuses];
-
-export type StaffRole = 'staff' | 'manager';
 
 export const onboardingPermissionStatuses = {
   denied: 'DENIED',
@@ -291,7 +284,7 @@ export type StaffAccess = {
   id: string;
   created_at: string;
   is_active: boolean;
-  role: StaffRole | null;
+  role: 'staff' | 'manager' | null;
   updated_at: string;
   user_id: string | null;
 };

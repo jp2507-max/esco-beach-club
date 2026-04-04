@@ -13,6 +13,7 @@ const booking = {
     casual: 'Thông thường',
     celebration: 'Kỷ niệm',
   },
+  occasionHint: 'Chọn một dịp cho đặt chỗ của bạn',
   days: {
     today: 'Hôm nay',
     sun: 'CN',

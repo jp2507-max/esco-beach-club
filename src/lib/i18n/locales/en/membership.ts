@@ -9,15 +9,12 @@ const membership = {
     progressPoints: '{{current}} / {{target}} pts',
     progressExpires: 'Progress resets on {{date}}',
     progressResetsMonthly: 'Monthly tier progress resets after 1 month.',
-    nextTierComingSoon: 'Next tier coming soon',
-    progressUnavailable:
-      'Tier progress will appear here once the next tier is configured.',
+    nextTierComingSoon: 'Legend tier unlocked',
+    progressUnavailable: 'You already hold the highest lifetime tier.',
   },
   tiers: {
-    shore: 'Shore',
-    cove: 'Cove',
-    horizon: 'Horizon',
-    luminary: 'Luminary',
+    member: 'Esco Life Member',
+    legend: 'Esco Life Legend',
   },
   benefits: {
     title: 'Unlocked Benefits',
@@ -36,6 +33,23 @@ const membership = {
     upgradeTier: 'Upgrade Tier',
     billingHistory: 'Billing History',
     managePayments: 'Manage Payment Methods',
+  },
+  upgradeTier: {
+    intro: 'Track your monthly progress to unlock Legend for life.',
+    currentTierLabel: 'Current lifetime tier',
+    nextTierLabel: 'Next tier',
+    unlockRequirement:
+      'Reach {{target}} points within one monthly window to unlock {{nextTier}} for life.',
+    progressLabel: 'Monthly progress',
+    resetOn: 'Progress resets on {{date}}',
+    resetsMonthlyFallback:
+      'Progress resets one month after your active progress window starts.',
+    topTierTitle: 'You are already Esco Life Legend',
+    topTierDescription:
+      'Legend is your lifetime tier. Keep earning points to maximize your rewards.',
+    formulaTitle: 'Earning formula',
+    formulaDescription:
+      '{{points}} point is earned for every {{amount}} spent.',
   },
   activity: {
     title: 'Recent Activity',

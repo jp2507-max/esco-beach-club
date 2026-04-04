@@ -201,7 +201,7 @@ bun run sentry:upload-sourcemaps
 - **Client env**: `EXPO_PUBLIC_REFERRAL_API_BASE_URL` — base URL where Expo Router serves API routes (for example a deployed production web/API host). In local development the app uses the Expo dev-server origin automatically; for preview/production native builds you must provide a deployed origin.
 - **Client env**: `EXPO_PUBLIC_ACCOUNT_API_BASE_URL` — optional override for account deletion API routes. If omitted, account deletion reuses `EXPO_PUBLIC_REFERRAL_API_BASE_URL`.
 - **Server secrets** (never ship to the client): `INSTANT_APP_ADMIN_TOKEN` — Instant dashboard admin token; optional `INSTANT_APP_ID` if you do not want to reuse `EXPO_PUBLIC_INSTANT_APP_ID` on the server.
-- **API routes**: `POST /api/referrals/claim` (body: `referralCode`, `refreshToken`) creates a pending referral for the signed-in user; `POST /api/referrals/complete` (`Authorization: Bearer <refreshToken>`, body: `referralId`) marks a referral completed for active staff/manager in `staff_access`.
+- **API routes**: `POST /api/referrals/claim` (`Authorization: Bearer <refreshToken>`, body: `referralCode`) creates the referral record for the signed-in user and marks it completed in one step when the code is valid.
 - **Schema**: after pulling changes, run `npx instant-cli@latest push schema` so `referrals.referee_profile_id` exists in production.
 
 ## App identifiers
@@ -214,7 +214,7 @@ bun run sentry:upload-sourcemaps
 ## Troubleshooting
 
 - **`Missing EXPO_PUBLIC_INSTANT_APP_ID`**
-  - Ensure `.env` exists and contains `EXPO_PUBLIC_INSTANT_APP_ID`.
+  - Ensure `.env.local` exists and contains `EXPO_PUBLIC_INSTANT_APP_ID`. Copy from `.env.example` if needed: `cp .env.example .env.local`. Keep any root `.env` file local-only and out of version control.
 - **Native module errors after dependency changes**
   - Re-run `bunx expo prebuild`, then rebuild with `bunx expo run:ios` or `bunx expo run:android`.
 - **Lint check**

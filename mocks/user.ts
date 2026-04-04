@@ -3,9 +3,9 @@ import { rewardTierKeys } from '@/lib/types';
 export const mockUser = {
   name: 'Alex Anderson',
   firstName: 'Alex',
-  tier: 'Shore',
-  tierBadge: 'SHORE',
-  tierLevel: rewardTierKeys.shore,
+  tier: 'Esco Life Member',
+  tierBadge: 'MEMBER',
+  tierLevel: rewardTierKeys.member,
   memberId: '#8829-PLT',
   cashbackPoints: 1250,
   cashbackTargetPoints: 0,

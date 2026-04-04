@@ -5,10 +5,6 @@ export default function SharedLayout(): React.JSX.Element {
   return (
     <Stack>
       <Stack.Screen
-        name="staff/index"
-        options={{ headerShown: false, presentation: 'card' }}
-      />
-      <Stack.Screen
         name="events/[id]"
         options={{ headerShown: false, presentation: 'card' }}
       />

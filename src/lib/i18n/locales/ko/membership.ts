@@ -6,18 +6,15 @@ const membership = {
     cashbackBalance: '리워드 포인트 잔액',
     cashbackPoints: '{{value}} 리워드 포인트',
     progressTo: '{{nextTier}}까지 진행',
-    progressPoints: '{{current}} / {{target}} pts',
+    progressPoints: '{{current}} / {{target}} 리워드 포인트',
     progressExpires: '{{date}}에 진행이 초기화됩니다',
     progressResetsMonthly: '월간 등급 진행은 1개월 후 초기화됩니다.',
-    nextTierComingSoon: '다음 등급은 곧 공개됩니다',
-    progressUnavailable:
-      '다음 등급이 설정되면 등급 진행 상황이 여기에 표시됩니다.',
+    nextTierComingSoon: '레전드 등급을 달성했습니다',
+    progressUnavailable: '이미 가장 높은 평생 등급을 보유하고 있습니다.',
   },
   tiers: {
-    shore: '쇼어',
-    cove: '코브',
-    horizon: '호라이즌',
-    luminary: '루미너리',
+    member: 'Esco Life Member',
+    legend: 'Esco Life Legend',
   },
   benefits: {
     title: '혜택',
@@ -36,6 +33,23 @@ const membership = {
     upgradeTier: '등급 업그레이드',
     billingHistory: '결제 내역',
     managePayments: '결제 수단 관리',
+  },
+  upgradeTier: {
+    intro: '월간 진행 상황을 확인하고 레전드 등급을 평생 잠금 해제하세요.',
+    currentTierLabel: '현재 평생 등급',
+    nextTierLabel: '다음 등급',
+    unlockRequirement:
+      '{{target}} 포인트를 한 달 내에 달성하면 {{nextTier}}를 평생 유지할 수 있습니다.',
+    progressLabel: '월간 진행 상황',
+    resetOn: '{{date}}에 진행이 초기화됩니다',
+    resetsMonthlyFallback:
+      '활성 진행 기간이 시작된 뒤 1개월 후 진행이 초기화됩니다.',
+    topTierTitle: '이미 Esco Life Legend 등급입니다',
+    topTierDescription:
+      '레전드 등급은 평생 유지됩니다. 포인트를 계속 적립해 리워드를 더 많이 받으세요.',
+    formulaTitle: '적립 공식',
+    formulaDescription:
+      '{{amount}} 사용 시마다 {{points}} 리워드 포인트가 적립됩니다.',
   },
   activity: {
     title: '최근 활동',

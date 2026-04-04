@@ -2,10 +2,8 @@ const profile = {
   guest: '게스트',
   memberFallback: '멤버',
   tier: {
-    shore: '쇼어',
-    cove: '코브',
-    horizon: '호라이즌',
-    luminary: '루미너리',
+    member: 'Esco Life Member',
+    legend: 'Esco Life Legend',
   },
   menu: {
     comingSoon: '곧 출시',
@@ -46,7 +44,6 @@ const profile = {
   nightsLeft: '남은 숙박',
   savedEventsCount: '저장한 이벤트',
   memberCard: {
-    brandMark: 'Esco Beach',
     cashbackBalance: '리워드 포인트 잔액',
     cashbackSuffix: '리워드 포인트',
     memberName: '멤버 이름',
@@ -316,7 +313,8 @@ const profile = {
       unknown: '알 수 없음',
     },
     shareInviteLink: '초대 링크 공유',
-    shareMessage: '내 추천 코드로 Esco Life에 가입하세요: {{code}}\n{{url}}',
+    shareMessage:
+      '내 추천 코드로 Esco Life에 가입하세요: {{code}}\n앱으로 열기: {{appUrl}}\n먼저 설치가 필요하면 이 링크를 사용하세요: {{url}}',
     milestones: {
       freeCocktail: '무료 칵테일',
       vipBadge: 'VIP 배지',

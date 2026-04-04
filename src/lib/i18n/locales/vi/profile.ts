@@ -2,10 +2,8 @@ const profile = {
   guest: 'Khách',
   memberFallback: 'THÀNH VIÊN',
   tier: {
-    shore: 'Bờ biển',
-    cove: 'Vịnh',
-    horizon: 'Chân trời',
-    luminary: 'Tỏa sáng',
+    member: 'Esco Life Member',
+    legend: 'Esco Life Legend',
   },
   menu: {
     comingSoon: 'Sắp ra mắt',
@@ -46,7 +44,6 @@ const profile = {
   nightsLeft: 'Đêm còn lại',
   savedEventsCount: 'Sự kiện đã lưu',
   memberCard: {
-    brandMark: 'Esco Beach',
     cashbackBalance: 'Số dư điểm thưởng',
     cashbackSuffix: 'điểm thưởng',
     memberName: 'TÊN THÀNH VIÊN',
@@ -240,7 +237,7 @@ const profile = {
     currentPoints: 'Số dư điểm thưởng hiện tại: {{value}}',
     errors: {
       billBelowMinimumSpend:
-        'Hóa đơn này chưa đạt ngưỡng điểm thưởng tối thiểu.',
+        'Giá trị hóa đơn không đạt mức tối thiểu để nhận điểm thưởng.',
       generic: 'Đã xảy ra lỗi. Vui lòng thử lại.',
       invalidBillAmount: 'Hãy nhập giá trị hóa đơn hợp lệ bằng VND.',
       invalidRewardServiceResponse:
@@ -322,7 +319,7 @@ const profile = {
     },
     shareInviteLink: 'Chia sẻ liên kết mời',
     shareMessage:
-      'Tham gia Esco Life với mã giới thiệu của tôi: {{code}}\n{{url}}',
+      'Tham gia Esco Life với mã giới thiệu của tôi: {{code}}\nMở trong ứng dụng: {{appUrl}}\nNếu cần cài đặt trước, hãy dùng liên kết này: {{url}}',
     milestones: {
       freeCocktail: 'Cocktail miễn phí',
       vipBadge: 'Huy hiệu VIP',

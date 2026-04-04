@@ -79,7 +79,7 @@ function ProfileScreenContent(): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { t } = useTranslation('profile');
-  const { t: tHome } = useTranslation('home');
+  const { t: tCommon } = useTranslation('common');
   const isDark = useAppIsDark();
   const voucherScale = useSharedValue(0.9);
   const voucherOpacity = useSharedValue(0);
@@ -131,7 +131,7 @@ function ProfileScreenContent(): React.JSX.Element {
         route: '/profile/invite',
       },
       {
-        color: '#FFB300',
+        color: Colors.profileRateUsAccent,
         icon: Star,
         id: 'rate-us',
         label: t('menu.rateUs'),
@@ -152,7 +152,7 @@ function ProfileScreenContent(): React.JSX.Element {
         route: '/profile/membership',
       },
       {
-        color: '#FF9800',
+        color: Colors.profileRewardsAccent,
         disabled: true,
         icon: Gift,
         id: 'rewards',
@@ -167,21 +167,21 @@ function ProfileScreenContent(): React.JSX.Element {
         route: '/profile/theme-preference',
       },
       {
-        color: '#7C4DFF',
+        color: Colors.profileHelpAccent,
         icon: HelpCircle,
         id: 'help-support',
         label: t('menu.helpSupport'),
         route: '/profile/help-center',
       },
       {
-        color: '#00A884',
+        color: Colors.profileRestartAccent,
         icon: RefreshCw,
         id: 'restart-onboarding',
         label: t('menu.restartOnboarding'),
         route: '/onboarding-welcome',
       },
       {
-        color: '#EF5350',
+        color: Colors.danger,
         icon: LogOut,
         id: 'log-out',
         label: t('menu.logOut'),
@@ -297,17 +297,17 @@ function ProfileScreenContent(): React.JSX.Element {
       className="flex-1"
       style={{ backgroundColor: profileCanvasBg, paddingTop: insets.top }}
     >
-      <View className="absolute left-0 right-0 top-0 h-[500px] overflow-hidden">
+      <View className="absolute left-0 right-0 top-0 h-125 overflow-hidden">
         <View
-          className="absolute size-[250px] rounded-full"
+          className="absolute size-62.5 rounded-full"
           style={{ backgroundColor: profileOrbLarge, right: -40, top: -50 }}
         />
         <View
-          className="absolute size-[200px] rounded-full"
+          className="absolute size-50 rounded-full"
           style={{ backgroundColor: profileOrbMid, left: -60, top: 100 }}
         />
         <View
-          className="absolute size-[160px] rounded-full"
+          className="absolute size-40 rounded-full"
           style={{ backgroundColor: profileOrbSmall, right: 40, top: 50 }}
         />
       </View>
@@ -328,7 +328,7 @@ function ProfileScreenContent(): React.JSX.Element {
         />
 
         <View className="mb-5 items-center">
-          <View className="flex-row items-center rounded-full border border-border bg-white px-[18px] py-2 dark:border-dark-border dark:bg-dark-bg-card">
+          <View className="flex-row items-center rounded-full border border-border bg-white px-4.5 py-2 dark:border-dark-border dark:bg-dark-bg-card">
             <Star color={Colors.primary} size={14} />
             <Text className="ml-1.5 text-xs font-extrabold tracking-[1.5px] text-text dark:text-text-primary-dark">
               {tierBadge}
@@ -341,8 +341,8 @@ function ProfileScreenContent(): React.JSX.Element {
             copy={{
               balanceLabel: t('memberCard.cashbackBalance'),
               balanceSuffix: t('memberCard.cashbackSuffix'),
-              brandAccessibilityHint: tHome('brandMarkHint'),
-              brandLabel: t('memberCard.brandMark'),
+              brandAccessibilityHint: tCommon('branding.markHint'),
+              brandLabel: tCommon('branding.mark'),
               emptyQrLabel: t('guest'),
               memberNameLabel: t('memberCard.memberName'),
               statusLabel: t('memberCard.lifetimeTier'),
@@ -401,7 +401,7 @@ function ProfileScreenContent(): React.JSX.Element {
           onPressItem={handleMenuPress}
         />
 
-        <View className="h-[30px]" />
+        <View className="h-7.5" />
       </ScrollView>
     </View>
   );

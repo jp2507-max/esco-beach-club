@@ -4,6 +4,10 @@ const common = {
     textInputHint: 'Enter text',
     textInputHintWithField: 'Enter {{field}}',
   },
+  branding: {
+    mark: 'Esco Beach',
+    markHint: 'Esco Beach Club branding',
+  },
   validation: {
     required: 'This field is required.',
     email: 'Please enter a valid email address.',
@@ -31,6 +35,8 @@ const common = {
     howWasVisit: 'How was your visit?',
     feedbackHint:
       'Your feedback helps us create the best beach club experience.',
+    starAccessibilityLabel: 'Rate {{count}} out of 5',
+    starAccessibilityHint: 'Tap to select this rating',
     starLabels: ['Terrible', 'Poor', 'Okay', 'Great', 'Amazing!'],
     placeholder: 'Tell us more about your experience...',
     submitLabel: 'Submit Review',
@@ -72,7 +78,8 @@ const common = {
       other: 'Other',
     },
     preferredDate: 'Preferred Date',
-    preferredDatePlaceholder: 'DD - MM - YYYY',
+    preferredDatePlaceholder: 'YYYY-MM-DD',
+    preferredDateHint: 'Enter the date in YYYY-MM-DD format.',
     estimatedGuests: 'Estimated Guests',
     estimatedGuestsPlaceholder: 'e.g. 50',
     contactInfoOptional: 'Contact Info (optional)',

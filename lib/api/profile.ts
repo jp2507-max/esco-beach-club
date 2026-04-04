@@ -202,12 +202,30 @@ export async function updateProfile(
     return current;
   }
 
-  await db.transact(
-    db.tx.profiles[current.id].update({
-      ...sanitizedUpdates,
-      updated_at: nowIso(),
-    })
-  );
+  try {
+    await db.transact(
+      db.tx.profiles[current.id].update({
+        ...sanitizedUpdates,
+        updated_at: nowIso(),
+      })
+    );
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      error.message.toLowerCase().includes('permission denied')
+    ) {
+      console.warn('Profile update permission denied', {
+        profileId: current.id,
+        updates: sanitizedUpdates,
+        timestamp: nowIso(),
+      });
+      throw new PermissionDeniedUpdateError(
+        `Permission denied updating profile ${current.id}`
+      );
+    }
+
+    throw error;
+  }
 
   return fetchProfile(userId);
 }
@@ -233,9 +251,23 @@ export async function setProfileAuthProvider(
       error instanceof Error &&
       error.message.toLowerCase().includes('permission denied')
     ) {
-      return;
+      console.warn('Profile update permission denied', {
+        profileId: profile.id,
+        auth_provider: authProvider,
+        timestamp: nowIso(),
+      });
+      throw new PermissionDeniedUpdateError(
+        `Permission denied updating profile ${profile.id}`
+      );
     }
 
     throw error;
+  }
+}
+
+export class PermissionDeniedUpdateError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'PermissionDeniedUpdateError';
   }
 }

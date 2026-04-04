@@ -140,6 +140,8 @@ function HistoryListRow({
   );
 }
 
+const MemoizedHistoryListRow = React.memo(HistoryListRow);
+
 export default function PerkHistoryScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -151,8 +153,8 @@ export default function PerkHistoryScreen(): React.JSX.Element {
     usePartnerRedemptionsData();
   const { partners } = usePartnersData();
   const listContentContainerStyle = useMemo(
-    () => ({ paddingBottom: 40, paddingHorizontal: 16 }),
-    []
+    () => ({ paddingBottom: 40 + insets.bottom, paddingHorizontal: 16 }),
+    [insets.bottom]
   );
   const partnerById = useMemo(
     () => new Map(partners.map((partner) => [partner.id, partner])),
@@ -293,7 +295,11 @@ export default function PerkHistoryScreen(): React.JSX.Element {
             : t('history.status.used');
 
       return (
-        <HistoryListRow isDark={isDark} item={item} statusLabel={statusLabel} />
+        <MemoizedHistoryListRow
+          isDark={isDark}
+          item={item}
+          statusLabel={statusLabel}
+        />
       );
     },
     [isDark, t]

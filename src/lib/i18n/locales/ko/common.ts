@@ -4,6 +4,10 @@ const common = {
     textInputHint: '텍스트 입력',
     textInputHintWithField: '{{field}} 입력',
   },
+  branding: {
+    mark: 'Esco Beach',
+    markHint: 'Esco Beach Club 브랜딩',
+  },
   validation: {
     required: '이 필드는 필수입니다.',
     email: '올바른 이메일 주소를 입력해 주세요.',
@@ -21,7 +25,7 @@ const common = {
     deleteConfirmation: '계속하려면 DELETE를 정확히 입력해 주세요.',
     loyaltyManagerPin:
       '이 금액을 승인하려면 유효한 관리자 PIN을 입력해 주세요.',
-    loyaltyMinimumSpend: '이 청구 금액은 최소 포인트 기준보다 낮습니다.',
+    loyaltyMinimumSpend: '이 청구 금액은 최소 결제 금액보다 낮습니다.',
   },
   back: '뒤로',
   backHint: '이전 화면으로 돌아갑니다',
@@ -29,6 +33,8 @@ const common = {
     title: '경험을 평가해 주세요',
     howWasVisit: '방문은 어떠셨나요?',
     feedbackHint: '소중한 피드백이 최고의 비치 클럽 경험을 만듭니다.',
+    starAccessibilityLabel: '5점 만점에 {{count}}점 평가',
+    starAccessibilityHint: '이 평점을 선택하려면 탭하세요',
     starLabels: ['최악', '별로', '괜찮음', '좋음', '최고!'],
     placeholder: '경험에 대해 더 알려주세요...',
     submitLabel: '리뷰 제출',
@@ -70,7 +76,8 @@ const common = {
       other: '기타',
     },
     preferredDate: '희망 날짜',
-    preferredDatePlaceholder: 'DD - MM - YYYY',
+    preferredDatePlaceholder: 'YYYY-MM-DD',
+    preferredDateHint: 'YYYY-MM-DD 형식으로 날짜를 입력하세요.',
     estimatedGuests: '예상 인원',
     estimatedGuestsPlaceholder: '예: 50',
     contactInfoOptional: '연락처 (선택)',

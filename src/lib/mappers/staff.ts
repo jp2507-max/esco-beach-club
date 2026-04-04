@@ -6,32 +6,16 @@ import {
   rewardTransactionSources,
   type RewardTransactionStatus,
   rewardTransactionStatuses,
-  type StaffAccess,
 } from '@/lib/types';
 
 import {
   type InstantRecord,
-  toBoolean,
   toForeignKeyId,
   toIsoString,
   toNullableString,
   toNumber,
   toStringOr,
 } from './shared';
-
-export function mapStaffAccess(record: InstantRecord): StaffAccess {
-  return {
-    id: record.id,
-    created_at: toIsoString(record.created_at),
-    is_active: toBoolean(record.is_active),
-    role:
-      record.role === 'staff' || record.role === 'manager'
-        ? (record.role as StaffAccess['role'])
-        : null,
-    updated_at: toIsoString(record.updated_at),
-    user_id: toForeignKeyId(record, 'user'),
-  };
-}
 
 export function mapRewardTransaction(record: InstantRecord): RewardTransaction {
   return {

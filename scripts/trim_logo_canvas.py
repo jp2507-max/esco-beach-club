@@ -91,11 +91,11 @@ def main() -> None:
     args = parser.parse_args()
     out = args.output or args.input
 
-    img = Image.open(args.input)
-    before = img.size
-    trimmed = trim_edge_connected_background(img, color_tolerance=args.tolerance)
-    after = trimmed.size
-    trimmed.save(out, optimize=True)
+    with Image.open(args.input) as img:
+        before = img.size
+        trimmed = trim_edge_connected_background(img, color_tolerance=args.tolerance)
+        after = trimmed.size
+        trimmed.save(out, optimize=True)
     print(f"{args.input}: {before[0]}x{before[1]} -> {after[0]}x{after[1]} -> {out}")
 
 

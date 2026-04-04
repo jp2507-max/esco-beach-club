@@ -21,7 +21,6 @@ import {
   FALLBACK_TIME_SLOTS,
   getBookingConfirmationDate,
   getNext7Days,
-  getOccasionLabel,
   getOccasionTranslationKey,
   isBookingOccasionTranslationKeyFromApi,
   type ResolvedOccasion,
@@ -82,7 +81,7 @@ export default function BookingModalScreen(): React.JSX.Element {
     if (bookingOccasions.length === 0) {
       return FALLBACK_OCCASIONS.map((value) => ({
         label: t(getOccasionTranslationKey(value), {
-          defaultValue: getOccasionLabel(value),
+          defaultValue: value,
         }),
         value,
       }));
