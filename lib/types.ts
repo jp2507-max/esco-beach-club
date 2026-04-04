@@ -1,6 +1,12 @@
 export const rewardTierKeys = {
-  escoLifeMember: 'ESCO_LIFE_MEMBER',
+  shore: 'SHORE',
+  cove: 'COVE',
+  horizon: 'HORIZON',
+  luminary: 'LUMINARY',
 } as const;
+
+/** Legacy profile/API value; map to `rewardTierKeys.shore` in mappers. */
+export const rewardTierLegacyEscoLifeMember = 'ESCO_LIFE_MEMBER' as const;
 
 export type RewardTierKey =
   (typeof rewardTierKeys)[keyof typeof rewardTierKeys];

@@ -9,7 +9,10 @@ import {
   signOutFlow,
   verifyMagicCodeFlow,
 } from '@/src/lib/auth/provider-auth-flows';
-import { toError } from '@/src/lib/auth/provider-error-mapping';
+import {
+  extractAuthErrorMessage,
+  toError,
+} from '@/src/lib/auth/provider-error-mapping';
 import type { SignupOnboardingData } from '@/src/lib/auth/signup-onboarding';
 import { db } from '@/src/lib/instant';
 import { captureHandledError } from '@/src/lib/monitoring';
@@ -69,8 +72,14 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         t,
       });
     } catch (error: unknown) {
-      const nextError = toError(error, 'unableToSignInWithApple');
-      captureHandledError(nextError, {
+      const nextError = toError(error, 'unableToSignInWithApple', {
+        oauthProvider: 'apple',
+      });
+      captureHandledError(error, {
+        extras: {
+          mappedErrorKey: nextError.message,
+          rawAuthErrorMessage: extractAuthErrorMessage(error),
+        },
         tags: { area: 'auth', operation: 'sign_in_with_apple' },
       });
       setAppleSignInError(nextError);

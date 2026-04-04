@@ -1,7 +1,7 @@
 import {
   getInstantApiUriForServer,
   getInstantAppIdForServer,
-} from './instant-runtime-server';
+} from '@/src/lib/referral/instant-runtime-server';
 
 type InstantAdminErrorBody = {
   message?: string;
@@ -45,23 +45,59 @@ export type InstantAdminDb = {
   ) => Promise<Record<string, unknown>>;
 };
 
-class InstantAdminApiError extends Error {
+type InstantAdminApiError = Error & {
   body?: InstantAdminErrorBody;
+  name: 'InstantAdminApiError';
   status: number;
+};
 
-  constructor(status: number, body?: InstantAdminErrorBody) {
-    super(body?.message ?? `Instant admin request failed with HTTP ${status}`);
-    this.body = body;
-    this.name = 'InstantAdminApiError';
-    this.status = status;
-  }
+function createInstantAdminApiError(
+  status: number,
+  body?: InstantAdminErrorBody
+): InstantAdminApiError {
+  const error = new Error(
+    body?.message ?? `Instant admin request failed with HTTP ${status}`
+  ) as InstantAdminApiError;
+  error.body = body;
+  error.name = 'InstantAdminApiError';
+  error.status = status;
+  return error;
 }
 
 type InstantAdminConfig = {
   adminToken: string;
+  /** Origin only (scheme + host + optional port), e.g. `https://api.instantdb.com`. Validated at load — no pathname, query, or hash. */
   apiUri: string;
   appId: string;
 };
+
+function assertInstantAdminApiUriIsOriginOnly(apiUri: string): void {
+  let parsed: URL;
+  try {
+    parsed = new URL(apiUri);
+  } catch {
+    throw new Error(
+      `INSTANT_API_URI must be a valid absolute URL (origin only). Received: ${JSON.stringify(apiUri)}`
+    );
+  }
+
+  const { pathname, search, hash } = parsed;
+  if (pathname !== '/' && pathname !== '') {
+    throw new Error(
+      `INSTANT_API_URI must be origin-only (no path). Received ${JSON.stringify(apiUri)} with pathname ${JSON.stringify(pathname)}. Use a base like "https://api.example.com". Request paths such as "/admin/query" replace the entire base path when resolved with URL(), which would drop a prefix such as "/v1".`
+    );
+  }
+  if (search !== '') {
+    throw new Error(
+      `INSTANT_API_URI must not include a query string. Received: ${JSON.stringify(apiUri)}`
+    );
+  }
+  if (hash !== '') {
+    throw new Error(
+      `INSTANT_API_URI must not include a hash. Received: ${JSON.stringify(apiUri)}`
+    );
+  }
+}
 
 function getInstantAdminConfig(): InstantAdminConfig | null {
   const appId = getInstantAppIdForServer();
@@ -69,9 +105,12 @@ function getInstantAdminConfig(): InstantAdminConfig | null {
 
   if (!appId || !adminToken) return null;
 
+  const apiUri = getInstantApiUriForServer();
+  assertInstantAdminApiUriIsOriginOnly(apiUri);
+
   return {
     adminToken,
-    apiUri: getInstantApiUriForServer(),
+    apiUri,
     appId,
   };
 }
@@ -126,7 +165,7 @@ async function instantAdminFetch<TResult>(
   });
 
   if (!response.ok) {
-    throw new InstantAdminApiError(
+    throw createInstantAdminApiError(
       response.status,
       await readInstantAdminErrorBody(response)
     );

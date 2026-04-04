@@ -53,6 +53,7 @@ export type SlotColors = {
 };
 
 export type BookingDateOption = {
+  dateKey: string;
   labelKey: BookingDayLabelKey;
   day: string;
   date: Date;
@@ -108,6 +109,7 @@ export function getNext7Days(baseDate: Date): BookingDateOption[] {
     date.setDate(baseDate.getDate() + index);
 
     days.push({
+      dateKey: toLocalDateString(date),
       date,
       day: String(date.getDate()),
       dayNameKey: DAY_KEYS[date.getDay()],
@@ -165,14 +167,17 @@ export function toLocalDateString(date: Date): string {
 
 export function getBookingConfirmationDate(params: {
   dates: BookingDateOption[];
-  selectedDate: number;
+  selectedDateKey: string;
   t: TFunction;
 }): string {
-  const { dates, selectedDate, t } = params;
-  if (selectedDate < 0 || selectedDate >= dates.length) {
+  const { dates, selectedDateKey, t } = params;
+  const currentDate =
+    dates.find((option) => option.dateKey === selectedDateKey) ??
+    getBookingDateOptionFromKey(selectedDateKey);
+
+  if (!currentDate) {
     return '';
   }
-  const currentDate = dates[selectedDate];
 
   return (
     t(getDayTranslationKey(currentDate.dayNameKey)) +
@@ -181,4 +186,21 @@ export function getBookingConfirmationDate(params: {
     ' ' +
     currentDate.day
   );
+}
+
+function getBookingDateOptionFromKey(
+  dateKey: string
+): BookingDateOption | null {
+  const parsedDate = new Date(`${dateKey}T00:00:00`);
+
+  if (Number.isNaN(parsedDate.getTime())) return null;
+
+  return {
+    dateKey,
+    date: parsedDate,
+    day: String(parsedDate.getDate()),
+    dayNameKey: DAY_KEYS[parsedDate.getDay()],
+    labelKey: DAY_KEYS[parsedDate.getDay()],
+    monthKey: MONTH_KEYS[parsedDate.getMonth()],
+  };
 }

@@ -22,7 +22,7 @@ const common = {
     loyaltyManagerPin:
       'Please enter a valid manager PIN to approve this amount.',
     loyaltyMinimumSpend:
-      'This bill amount is below the minimum cashback threshold.',
+      'This bill amount is below the minimum points threshold.',
   },
   back: 'Back',
   backHint: 'Returns to the previous screen',
@@ -72,7 +72,7 @@ const common = {
       other: 'Other',
     },
     preferredDate: 'Preferred Date',
-    preferredDatePlaceholder: 'YYYY-MM-DD',
+    preferredDatePlaceholder: 'DD - MM - YYYY',
     estimatedGuests: 'Estimated Guests',
     estimatedGuestsPlaceholder: 'e.g. 50',
     contactInfoOptional: 'Contact Info (optional)',

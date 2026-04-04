@@ -5,6 +5,10 @@ import type {
 } from '@/lib/types';
 import { onboardingPermissionStatuses, rewardTierKeys } from '@/lib/types';
 import type { InstantRecord } from '@/src/lib/mappers';
+import {
+  toNullableRewardTierKey,
+  toRewardTierKey,
+} from '@/src/lib/mappers/profile';
 import { rewardServiceResponseSchema } from '@/src/lib/reward-backend-contract';
 import { normalizeMemberSegment } from '@/src/lib/utils/member-segment';
 
@@ -220,6 +224,8 @@ export function parseRewardServiceResponse(
     member: {
       ...member,
       auth_provider: null,
+      lifetime_tier_key: toRewardTierKey(member.lifetime_tier_key),
+      next_tier_key: toNullableRewardTierKey(member.next_tier_key),
       date_of_birth: normalizeDateOfBirth(member.date_of_birth) ?? null,
       member_segment: member.member_segment
         ? (normalizeMemberSegment(member.member_segment) ?? null)
@@ -314,7 +320,7 @@ export function getDefaultProfileValues(options: {
     date_of_birth: normalizedDateOfBirth ?? null,
     full_name: normalizedDisplayName || fallbackDisplayName,
     has_seen_welcome_voucher: false,
-    lifetime_tier_key: rewardTierKeys.escoLifeMember,
+    lifetime_tier_key: rewardTierKeys.shore,
     location_permission_status: onboardingPermissionStatuses.undetermined,
     member_id: buildMemberId(userId),
     member_segment: null,

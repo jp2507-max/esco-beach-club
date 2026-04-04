@@ -50,7 +50,7 @@ import {
   rewardBenefitKeys,
 } from '@/src/lib/loyalty';
 import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
-import { Pressable, ScrollView, Text, View } from '@/src/tw';
+import { ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 
 type MenuItem = ProfileMenuItem;
@@ -79,6 +79,7 @@ function ProfileScreenContent(): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { t } = useTranslation('profile');
+  const { t: tHome } = useTranslation('home');
   const isDark = useAppIsDark();
   const voucherScale = useSharedValue(0.9);
   const voucherOpacity = useSharedValue(0);
@@ -92,12 +93,7 @@ function ProfileScreenContent(): React.JSX.Element {
   const tierBadge = t(
     `tier.${getRewardTierLabelKey(memberSummary.lifetimeTierKey)}`
   );
-  const bio = profile?.bio?.trim() ?? '';
-  const memberSince = memberSummary.memberSince
-    ? memberSummary.memberSince.slice(0, 10)
-    : '—';
   const cashbackLifetimePoints = memberSummary.cashbackLifetimePoints;
-  const nightsLeft = memberSummary.nightsLeft;
   const saved = memberSummary.saved;
   const welcomeOfferBadgeKey = resolveWelcomeOfferVoucherKey(
     welcomeOffer?.badge_key,
@@ -345,6 +341,7 @@ function ProfileScreenContent(): React.JSX.Element {
             copy={{
               balanceLabel: t('memberCard.cashbackBalance'),
               balanceSuffix: t('memberCard.cashbackSuffix'),
+              brandAccessibilityHint: tHome('brandMarkHint'),
               brandLabel: t('memberCard.brandMark'),
               emptyQrLabel: t('guest'),
               memberNameLabel: t('memberCard.memberName'),
@@ -367,54 +364,6 @@ function ProfileScreenContent(): React.JSX.Element {
           savedProgressDegrees={(savedProgress / 100) * 360}
           savedValue={`$${saved}`}
         />
-
-        <View className="mb-5 rounded-[20px] border border-border bg-white p-5 dark:border-dark-border dark:bg-dark-bg-card">
-          <View className="mb-4 flex-row items-center justify-between">
-            <Text className="text-lg font-bold text-text dark:text-text-primary-dark">
-              {t('profileDetails')}
-            </Text>
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => router.push('/profile/edit-profile')}
-              testID="profile-edit-shortcut"
-            >
-              <Text className="text-sm font-bold text-primary dark:text-primary-bright">
-                {t('edit')}
-              </Text>
-            </Pressable>
-          </View>
-
-          <Text className="text-sm leading-6 text-text-secondary dark:text-text-secondary-dark">
-            {bio || t('noBio')}
-          </Text>
-
-          <View className="mt-4 flex-row gap-3">
-            <View className="flex-1 rounded-2xl bg-background px-4 py-3 dark:bg-dark-bg-elevated">
-              <Text className="text-[11px] font-semibold uppercase tracking-[0.8px] text-text-muted dark:text-text-secondary-dark">
-                {t('memberSince')}
-              </Text>
-              <Text className="mt-1 text-sm font-bold text-text dark:text-text-primary-dark">
-                {memberSince}
-              </Text>
-            </View>
-            <View className="flex-1 rounded-2xl bg-background px-4 py-3 dark:bg-dark-bg-elevated">
-              <Text className="text-[11px] font-semibold uppercase tracking-[0.8px] text-text-muted dark:text-text-secondary-dark">
-                {t('nightsLeft')}
-              </Text>
-              <Text className="mt-1 text-sm font-bold text-text dark:text-text-primary-dark">
-                {nightsLeft}
-              </Text>
-            </View>
-            <View className="flex-1 rounded-2xl bg-background px-4 py-3 dark:bg-dark-bg-elevated">
-              <Text className="text-[11px] font-semibold uppercase tracking-[0.8px] text-text-muted dark:text-text-secondary-dark">
-                {t('savedEventsCount')}
-              </Text>
-              <Text className="mt-1 text-sm font-bold text-text dark:text-text-primary-dark">
-                {memberSummary.savedEventsCount}
-              </Text>
-            </View>
-          </View>
-        </View>
 
         {shouldRenderVoucher && (
           <Animated.View className="mb-5" style={voucherStyle}>

@@ -8,7 +8,7 @@ import {
   UtensilsCrossed,
   Wine,
 } from 'lucide-react-native';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useColorScheme } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -38,6 +38,8 @@ import { hapticLight } from '@/src/lib/haptics/haptics';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 import { Image } from '@/src/tw/image';
+
+const escoLogoSource = require('@/assets/images/escobeach-logo-horizontal-green.png');
 
 type QuickAction = {
   color: string;
@@ -213,6 +215,7 @@ function HomeScreenContent(): React.JSX.Element {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const { contentStyle: sectionStyle } = useScreenEntry({ durationMs: 500 });
+  const [brandLogoFailed, setBrandLogoFailed] = useState(false);
 
   const { eventsLoading } = useEventsData();
   const { news, newsLoading } = useNewsData();
@@ -373,36 +376,68 @@ function HomeScreenContent(): React.JSX.Element {
         ListHeaderComponent={
           <>
             <View className="px-5">
-              <View className="flex-row items-center justify-between gap-3 pb-5 pt-4">
-                <View className="min-w-0 flex-1">
-                  <Text
-                    className="text-[28px] font-extrabold text-primary dark:text-primary-bright"
-                    numberOfLines={2}
-                  >
-                    {t('welcomeBackName', { name: userName })}
-                  </Text>
-                </View>
-                <HeaderGlassButton
-                  accessibilityLabel={t('openProfile')}
-                  accessibilityHint={t('openProfileHint')}
-                  className="size-12 shrink-0 border-white/35 dark:border-white/20"
-                  glassStyle="regular"
-                  onPress={handleProfilePress}
-                  testID="profile-avatar"
-                >
-                  <Avatar
-                    className="size-9.5 rounded-full"
-                    uri={memberSummary.avatarUrl}
-                  />
+              <View className="pb-5 pt-8">
+                <View className="mb-5 flex-row items-center justify-between gap-3">
                   <View
-                    className="absolute -bottom-px -right-px size-3.5 rounded-full"
-                    style={{
-                      backgroundColor: Colors.success,
-                      borderColor: Colors.background,
-                      borderWidth: 2.5,
-                    }}
-                  />
-                </HeaderGlassButton>
+                    accessibilityHint={t('brandMarkHint')}
+                    accessibilityLabel={t('brandMark')}
+                    accessibilityRole="header"
+                    className="min-w-0 flex-1 justify-center pr-2"
+                    style={{ minHeight: 56 }}
+                  >
+                    {brandLogoFailed ? (
+                      <Text
+                        className="font-black uppercase text-primary dark:text-primary-bright"
+                        numberOfLines={1}
+                      >
+                        {t('brandMark')}
+                      </Text>
+                    ) : (
+                      <Image
+                        accessibilityHint={t('brandMarkHint')}
+                        accessibilityLabel={t('brandMark')}
+                        className="w-full max-w-[220px]"
+                        contentFit="contain"
+                        contentPosition="left center"
+                        onError={() => setBrandLogoFailed(true)}
+                        source={escoLogoSource}
+                        style={{
+                          alignSelf: 'flex-start',
+                          height: 56,
+                          width: '100%',
+                        }}
+                      />
+                    )}
+                  </View>
+                  <HeaderGlassButton
+                    accessibilityLabel={t('openProfile')}
+                    accessibilityHint={t('openProfileHint')}
+                    className="size-12 shrink-0 border-white/35 dark:border-white/20"
+                    glassStyle="regular"
+                    onPress={handleProfilePress}
+                    testID="profile-avatar"
+                  >
+                    <Avatar
+                      className="size-9.5 rounded-full"
+                      uri={memberSummary.avatarUrl}
+                    />
+                    <View
+                      className="absolute -bottom-px -right-px size-3.5 rounded-full"
+                      style={{
+                        backgroundColor: Colors.success,
+                        borderColor: Colors.background,
+                        borderWidth: 2.5,
+                      }}
+                    />
+                  </HeaderGlassButton>
+                </View>
+
+                <Text
+                  className="text-[28px] font-extrabold text-primary dark:text-primary-bright"
+                  numberOfLines={2}
+                >
+                  {t('welcomeBackName', { name: userName })}
+                </Text>
               </View>
 
               <AccountDeletionBanner userId={userId} />

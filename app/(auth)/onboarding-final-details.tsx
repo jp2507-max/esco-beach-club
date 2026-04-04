@@ -54,6 +54,15 @@ const TITLE_DELAY = 260;
 const CARD_DELAY = 440;
 const CTA_DELAY = 680;
 
+/**
+ * Backend auth/profile permission errors currently surface as mixed shapes:
+ * - native Error instances whose message includes "permission denied"
+ * - plain objects with a message string containing "permission denied"
+ * - objects with type "permission-denied"
+ *
+ * Matching is case-insensitive. If backend error formats evolve, update these
+ * checks (or replace with structured error codes) to preserve fallback behavior.
+ */
 function isPermissionDeniedError(error: unknown): boolean {
   if (!error) return false;
 

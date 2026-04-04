@@ -33,12 +33,12 @@ type BookingFormContentProps = {
   pax: number;
   resolvedOccasions: ResolvedOccasion[];
   resolvedTimeSlots: ResolvedTimeSlot[];
-  selectedDate: number;
+  selectedDateKey: string;
   selectedTime: string | null;
   t: TFunction;
   onOccasionSelect: (value: string) => void;
   onPaxChange: (nextPax: number) => void;
-  onSelectDate: (index: number) => void;
+  onSelectDate: (dateKey: string) => void;
   onSelectTime: (time: string) => void;
 };
 
@@ -52,7 +52,7 @@ export function BookingFormContent({
   pax,
   resolvedOccasions,
   resolvedTimeSlots,
-  selectedDate,
+  selectedDateKey,
   selectedTime,
   t,
   onOccasionSelect,
@@ -83,27 +83,28 @@ export function BookingFormContent({
             horizontal
             showsHorizontalScrollIndicator={false}
           >
-            {dates.map((date, index) => {
-              const active = selectedDate === index;
+            {dates.map((date) => {
+              const active = selectedDateKey === date.dateKey;
 
               return (
                 <Pressable
+                  accessibilityHint={t('selectDateHint')}
                   accessibilityRole="button"
                   accessibilityLabel={`${t(getDayTranslationKey(date.dayNameKey))}, ${t(getMonthTranslationKey(date.monthKey))} ${date.day}`}
                   accessibilityState={{
                     disabled: isSubmitting,
                     selected: active,
                   }}
-                  key={`${date.day}-${date.monthKey}`}
+                  key={date.dateKey}
                   className={
                     active
                       ? 'h-20 w-17 items-center justify-center rounded-2xl bg-primary'
                       : 'h-20 w-17 items-center justify-center rounded-2xl border-[1.5px] border-border bg-white dark:border-dark-border dark:bg-dark-bg-card'
                   }
                   disabled={isSubmitting}
-                  onPress={() => onSelectDate(index)}
+                  onPress={() => onSelectDate(date.dateKey)}
                   style={isSubmitting ? { opacity: 0.7 } : undefined}
-                  testID={`date-${index}`}
+                  testID={`date-${date.dateKey}`}
                 >
                   <Text
                     className={
@@ -147,6 +148,7 @@ export function BookingFormContent({
 
               return (
                 <Pressable
+                  accessibilityHint={t('selectTimeHint')}
                   accessibilityRole="button"
                   accessibilityLabel={`${slot.time}, ${slot.available ? t('available') : t('full')}`}
                   accessibilityState={{
@@ -193,7 +195,10 @@ export function BookingFormContent({
           </View>
           <View className="flex-row items-center justify-center rounded-[20px] border border-border bg-white py-5 dark:border-dark-border dark:bg-dark-bg-card">
             <Pressable
+              accessibilityHint={t('paxDecreaseHint')}
               accessibilityRole="button"
+              accessibilityLabel={t('paxDecrease')}
+              accessibilityState={{ disabled: minusDisabled }}
               className="size-12 items-center justify-center rounded-full bg-sand dark:bg-dark-bg"
               disabled={minusDisabled}
               onPress={() => onPaxChange(pax - 1)}
@@ -217,7 +222,10 @@ export function BookingFormContent({
               </Text>
             </View>
             <Pressable
+              accessibilityHint={t('paxIncreaseHint')}
               accessibilityRole="button"
+              accessibilityLabel={t('paxIncrease')}
+              accessibilityState={{ disabled: plusDisabled }}
               className="size-12 items-center justify-center rounded-full bg-sand dark:bg-dark-bg"
               disabled={plusDisabled}
               onPress={() => onPaxChange(pax + 1)}
@@ -246,6 +254,10 @@ export function BookingFormContent({
               return (
                 <Pressable
                   accessibilityRole="button"
+                  accessibilityState={{
+                    disabled: isSubmitting,
+                    selected: active,
+                  }}
                   key={option.value}
                   className="mb-2.5 mr-2.5 rounded-full px-4.5 py-3"
                   disabled={isSubmitting}

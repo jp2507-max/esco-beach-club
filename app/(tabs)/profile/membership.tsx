@@ -1,4 +1,3 @@
-import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useColorScheme } from 'react-native';
@@ -16,20 +15,17 @@ import { useMemberSummary, useProfileData } from '@/providers/DataProvider';
 import {
   MembershipActivitySection,
   MembershipBenefitsSection,
-  MembershipManageSection,
   MembershipTierHeroCard,
 } from '@/src/components/profile/membership-sections';
 import { ProfileSubScreenHeader } from '@/src/components/ui';
 import { motion, rmTiming } from '@/src/lib/animations/motion';
-import { hapticLight, hapticSuccess } from '@/src/lib/haptics/haptics';
+import { hapticSuccess } from '@/src/lib/haptics/haptics';
 import {
   getRewardTierDefinition,
   getRewardTierLabelKey,
 } from '@/src/lib/loyalty';
 import {
   BENEFIT_MAP,
-  MANAGE_ITEMS,
-  type ManageItem,
   TIER_CONFIG,
   useMembershipActivities,
 } from '@/src/lib/profile/membership-screen';
@@ -37,7 +33,6 @@ import { ScrollView, View } from '@/src/tw';
 
 export default function MembershipScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
-  const router = useRouter();
   const { t, i18n } = useTranslation('membership');
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
@@ -74,7 +69,7 @@ export default function MembershipScreen(): React.JSX.Element {
   }));
 
   const tierLevel: RewardTierKey =
-    memberSummary.lifetimeTierKey ?? rewardTierKeys.escoLifeMember;
+    memberSummary.lifetimeTierKey ?? rewardTierKeys.shore;
   const tierConfig = TIER_CONFIG[tierLevel];
   const userName = memberSummary.fullName || '—';
   const memberSince = useMemo(() => {
@@ -125,16 +120,6 @@ export default function MembershipScreen(): React.JSX.Element {
     profile?.id
   );
 
-  function handleManagePress(item: ManageItem): void {
-    hapticLight();
-    const routes: Record<string, string> = {
-      billing: '/profile/billing',
-      payments: '/profile/payments',
-      upgrade: '/profile/upgrade-tier',
-    };
-    router.push((routes[item.id] ?? '/profile/help-center') as never);
-  }
-
   return (
     <View
       className="flex-1 bg-background dark:bg-dark-bg"
@@ -167,14 +152,6 @@ export default function MembershipScreen(): React.JSX.Element {
           fadeStyle={fadeStyle}
           isDark={isDark}
           t={t}
-        />
-
-        <MembershipManageSection
-          fadeStyle={fadeStyle}
-          isDark={isDark}
-          items={MANAGE_ITEMS}
-          t={t}
-          onPress={handleManagePress}
         />
 
         <MembershipActivitySection

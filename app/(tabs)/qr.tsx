@@ -13,11 +13,13 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
+import { rewardTierKeys } from '@/lib/types';
 import { useMemberSummary } from '@/providers/DataProvider';
 import { MemberQrAccessCard } from '@/src/components/ui';
 import { motion, rmTiming } from '@/src/lib/animations/motion';
 import { hapticMedium, hapticSuccess } from '@/src/lib/haptics/haptics';
 import { getRewardTierLabelKey } from '@/src/lib/loyalty';
+import { getTierQrGradient } from '@/src/lib/profile/membership-screen';
 import { Pressable, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 
@@ -88,11 +90,15 @@ export default function QrTabScreen(): React.JSX.Element {
     `tier.${getRewardTierLabelKey(memberSummary.lifetimeTierKey)}`
   );
 
+  const tierLevel = memberSummary.lifetimeTierKey ?? rewardTierKeys.shore;
+  const qrCardGradient = useMemo(
+    () => getTierQrGradient(tierLevel, isDark),
+    [tierLevel, isDark]
+  );
+
   function handleOpenStaffRoute(): void {
     router.push('/staff' as never);
   }
-
-  const goldAccent = isDark ? Colors.goldBright : Colors.gold;
 
   return (
     <View
@@ -145,7 +151,7 @@ export default function QrTabScreen(): React.JSX.Element {
         <Animated.View className="mb-8 items-center" style={headerStyle}>
           <Text
             className="text-[11px] font-extrabold tracking-[3px]"
-            style={{ color: goldAccent }}
+            style={{ color: Colors.secondaryBright }}
           >
             {t('accessPass')}
           </Text>
@@ -174,8 +180,10 @@ export default function QrTabScreen(): React.JSX.Element {
 
           <Animated.View style={cardRevealStyle}>
             <MemberQrAccessCard
+              brandAccessibilityHint={tHome('brandMarkHint')}
               brandLabel={tHome('brandMark')}
               emptyQrLabel={t('staff.memberNotFound')}
+              gradientColors={qrCardGradient}
               memberId={memberId}
               memberName={memberName}
               qrSize={qrSize}
@@ -192,7 +200,7 @@ export default function QrTabScreen(): React.JSX.Element {
               >
                 <Text
                   className="text-[12px] font-medium tracking-[0.5px]"
-                  style={{ color: `${Colors.gold}88` }}
+                  style={{ color: 'rgba(255,255,255,0.92)' }}
                 >
                   {t('refPrefix', { memberId })}
                 </Text>

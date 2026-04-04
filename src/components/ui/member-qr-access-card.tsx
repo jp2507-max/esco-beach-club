@@ -1,18 +1,20 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { type ReactNode, useMemo } from 'react';
-import { useColorScheme } from 'react-native';
+import React, { type ReactNode, useState } from 'react';
 
 import { Colors } from '@/constants/colors';
 import { cn } from '@/src/lib/utils';
 import { Text, View } from '@/src/tw';
+import { Image } from '@/src/tw/image';
 
 import { MemberQrCode } from './member-qr-code';
 
 export type MemberQrAccessCardProps = {
+  brandAccessibilityHint: string;
   brandLabel: string;
   children?: ReactNode;
   className?: string;
   emptyQrLabel: string;
+  gradientColors: readonly [string, string, string];
   memberId: string;
   memberName?: string;
   qrSize: number;
@@ -22,29 +24,22 @@ export type MemberQrAccessCardProps = {
 const CORNER_MARK_COLOR = `${Colors.gold}25`;
 const CORNER_MARK_LENGTH = 18;
 const CORNER_INSET = 20;
+const memberCardBrandLogo = require('@/assets/images/member-card-brand-horizontal.png');
 
 /** Premium access card with gold accents, QR code, and member identity. */
 export function MemberQrAccessCard({
+  brandAccessibilityHint,
   brandLabel,
   children,
   className,
   emptyQrLabel,
+  gradientColors,
   memberId,
   memberName,
   qrSize,
   tierLabel,
 }: MemberQrAccessCardProps): React.JSX.Element {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-
-  const cardGradient = useMemo((): readonly [string, string, string] => {
-    if (isDark) return ['#0C0810', '#171020', '#140E14'];
-    return [
-      Colors.cardGradientStart,
-      Colors.cardGradientMiddle,
-      Colors.cardGradientEnd,
-    ];
-  }, [isDark]);
+  const [brandLogoFailed, setBrandLogoFailed] = useState(false);
 
   return (
     <View
@@ -56,18 +51,38 @@ export function MemberQrAccessCard({
       }}
     >
       <LinearGradient
-        colors={cardGradient}
+        colors={gradientColors}
         end={{ x: 1, y: 1.1 }}
         start={{ x: 0, y: 0 }}
       >
         <View className={cn('relative px-7 pb-8 pt-7', className)}>
-          <View className="mb-6 flex-row items-center justify-between">
-            <Text
-              className="text-[11px] font-extrabold tracking-[3px]"
-              style={{ color: Colors.gold }}
+          <View className="mb-6 flex-row items-center justify-between gap-3">
+            <View
+              accessibilityHint={brandAccessibilityHint}
+              accessibilityLabel={brandLabel}
+              accessibilityRole="header"
+              className="min-w-0 min-h-11 flex-1 justify-center"
             >
-              {brandLabel}
-            </Text>
+              {brandLogoFailed ? (
+                <Text
+                  className="text-2xl font-black uppercase tracking-[0.18em] text-white"
+                  numberOfLines={2}
+                >
+                  {brandLabel}
+                </Text>
+              ) : (
+                <Image
+                  accessibilityHint={brandAccessibilityHint}
+                  accessibilityLabel={brandLabel}
+                  className="w-full"
+                  contentFit="contain"
+                  contentPosition="left center"
+                  onError={() => setBrandLogoFailed(true)}
+                  source={memberCardBrandLogo}
+                  style={{ alignSelf: 'stretch', height: 40, width: '100%' }}
+                />
+              )}
+            </View>
             {tierLabel ? (
               <View
                 className="rounded-full px-3 py-1"

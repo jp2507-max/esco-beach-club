@@ -114,9 +114,9 @@ const auth = {
   venueUpsellNotificationChannelName: 'Ưu đãi tại địa điểm',
   venueUpsellNotificationChannelDescription:
     'Ưu đãi đúng lúc khi bạn đến nhà hàng.',
-  venueUpsellNotificationTitle: 'Nhận điểm cashback tại quầy bar',
+  venueUpsellNotificationTitle: 'Nhận điểm thưởng tại quầy bar',
   venueUpsellNotificationBody:
-    'Gọi một ly cocktail ngay bây giờ để cộng điểm cashback vào số dư của bạn.',
+    'Gọi một ly cocktail ngay bây giờ để cộng điểm thưởng vào số dư của bạn.',
   onboardingClubWelcomeTitle: 'Chào mừng đến với Câu lạc bộ!',
   onboardingClubWelcomeSubtitle:
     'Nắng đã lên và gói thành viên của bạn đã được kích hoạt. Hãy bắt đầu lối sống mới bằng một ly chúc mừng.',
@@ -148,6 +148,8 @@ const auth = {
   appleAuthorizationCodeMissing:
     'Apple không trả về mã xác thực cần thiết để xác minh xóa tài khoản.',
   appleIdTokenMissing: 'Apple không trả về mã thông báo danh tính.',
+  appleOauthClientNotConfigured:
+    'Cấu hình đăng nhập Apple không đúng. Vui lòng liên hệ hỗ trợ.',
   googleAuthNotConfigured: 'Google Sign-In chưa được cấu hình.',
   googleOauthClientNotConfigured:
     'Cấu hình đăng nhập Google không đúng. Vui lòng liên hệ hỗ trợ.',

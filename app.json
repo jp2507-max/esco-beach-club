@@ -4,16 +4,16 @@
     "slug": "escolife",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "assets/images/icon.png",
     "scheme": "esco-beach-club",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/images/splash-icon.png",
+      "image": "assets/images/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "icon": "./assets/app-icon.icon",
+      "icon": "assets/app-icon.icon",
       "supportsTablet": false,
       "bundleIdentifier": "com.escobeachclub.app",
       "infoPlist": {
@@ -26,7 +26,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/android-icon.png",
+        "foregroundImage": "assets/android-icon.png",
         "backgroundColor": "#ffffff"
       },
       "permissions": [
@@ -39,7 +39,7 @@
     },
     "web": {
       "output": "server",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "assets/images/favicon.png"
     },
     "plugins": [
       "expo-router",

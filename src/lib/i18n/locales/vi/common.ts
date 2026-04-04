@@ -21,7 +21,7 @@ const common = {
     deleteConfirmation: 'Hãy nhập chính xác DELETE để tiếp tục.',
     loyaltyManagerPin:
       'Vui lòng nhập mã PIN quản lý hợp lệ để phê duyệt số tiền này.',
-    loyaltyMinimumSpend: 'Hóa đơn này chưa đạt ngưỡng cashback tối thiểu.',
+    loyaltyMinimumSpend: 'Hóa đơn này chưa đạt ngưỡng điểm thưởng tối thiểu.',
   },
   back: 'Quay lại',
   backHint: 'Quay về màn hình trước',
@@ -71,7 +71,7 @@ const common = {
       other: 'Khác',
     },
     preferredDate: 'Ngày mong muốn',
-    preferredDatePlaceholder: 'YYYY-MM-DD',
+    preferredDatePlaceholder: 'DD - MM - YYYY',
     estimatedGuests: 'Số khách ước tính',
     estimatedGuestsPlaceholder: 'VD: 50',
     contactInfoOptional: 'Thông tin liên hệ (tùy chọn)',

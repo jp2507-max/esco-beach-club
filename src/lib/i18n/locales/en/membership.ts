@@ -3,8 +3,8 @@ const membership = {
   tierCard: {
     currentTier: 'Current Tier',
     memberSince: 'Member since {{date}}',
-    cashbackBalance: 'Cashback Balance',
-    cashbackPoints: '{{value}} cashback pts',
+    cashbackBalance: 'Points Balance',
+    cashbackPoints: '{{value}} pts',
     progressTo: 'Progress to {{nextTier}}',
     progressPoints: '{{current}} / {{target}} pts',
     progressExpires: 'Progress resets on {{date}}',
@@ -14,7 +14,10 @@ const membership = {
       'Tier progress will appear here once the next tier is configured.',
   },
   tiers: {
-    escoLifeMember: 'Esco Life Member',
+    shore: 'Shore',
+    cove: 'Cove',
+    horizon: 'Horizon',
+    luminary: 'Luminary',
   },
   benefits: {
     title: 'Unlocked Benefits',
@@ -36,19 +39,18 @@ const membership = {
   },
   activity: {
     title: 'Recent Activity',
-    cashbackAdjusted: 'Manual Cashback Adjustment',
+    cashbackAdjusted: 'Manual Points Adjustment',
     cashbackAdjustedDesc:
-      '{{points}} cashback points were changed through a manual adjustment.',
-    cashbackEarned: 'Cashback Earned',
-    cashbackEarnedDesc:
-      '+{{points}} cashback points from a recent qualifying purchase.',
-    cashbackReversed: 'Cashback Reversed',
-    cashbackReversedDesc: '-{{points}} cashback points after a refund or void.',
+      '{{points}} points were changed through a manual adjustment.',
+    cashbackEarned: 'Points Earned',
+    cashbackEarnedDesc: '+{{points}} points from a recent qualifying purchase.',
+    cashbackReversed: 'Points Reversed',
+    cashbackReversedDesc: '-{{points}} points after a refund or void.',
     daysAgo: '{{count}} days ago',
     loading: 'Loading recent activity...',
     emptyTitle: 'No member activity yet',
     emptyDescription:
-      'New cashback activity and monthly tier progress will appear here after your next qualifying purchase.',
+      'New points activity and monthly tier progress will appear here after your next qualifying purchase.',
     progressReset: 'Tier Progress Reset',
     progressResetDesc: 'Your monthly tier progress window was reset.',
     sampleData: 'Sample Content',

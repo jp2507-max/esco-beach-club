@@ -11,6 +11,7 @@ import {
   DEFAULT_GOOGLE_CLIENT_NAME,
   extractAuthErrorMessage,
   shouldRetryGoogleSignInWithDefaultClientName,
+  shouldRetryOauthClientSignInWithAlternateClientName,
   shouldTryGoogleAudienceFallback,
 } from '@/src/lib/auth/provider-error-mapping';
 import {
@@ -28,6 +29,8 @@ import {
 } from '@/src/lib/auth/social-auth';
 import { db } from '@/src/lib/instant';
 import { captureHandledError } from '@/src/lib/monitoring';
+
+const DEFAULT_APPLE_CLIENT_NAME = 'apple';
 
 function resolveOnboardingData(params: {
   onboardingData: SignupOnboardingData | undefined;
@@ -60,7 +63,7 @@ function buildCreateFields(params: {
         ...(params.email ? { email: params.email } : {}),
         ...(params.idToken ? { idToken: params.idToken } : {}),
         onboardingDisplayName: params.onboardingData?.displayName,
-      }) ?? params.t('auth:member'),
+      }) ?? params.t('member'),
   };
 }
 
@@ -108,17 +111,93 @@ export async function signInWithAppleFlow(params: {
     onboardingData,
     t: params.t,
   });
-  const signInResult: unknown = await db.auth.signInWithIdToken({
-    clientName,
-    idToken,
-    nonce,
-    extraFields: createFields,
-  });
+  const appleTokenAudience = getIdTokenAudienceClaim(idToken);
+  const clientNameCandidates = Array.from(
+    new Set(
+      [clientName, appleTokenAudience, DEFAULT_APPLE_CLIENT_NAME]
+        .map((value) => value?.trim())
+        .filter((value): value is string => !!value)
+    )
+  );
 
-  await applyOnboardingProfileDataForNewUser({
-    onboardingData,
-    signInResult,
-  });
+  let signInResult: unknown = null;
+  let signInError: unknown = null;
+
+  for (const [index, currentClientName] of clientNameCandidates.entries()) {
+    try {
+      signInResult = await db.auth.signInWithIdToken({
+        clientName: currentClientName,
+        idToken,
+        nonce,
+        extraFields: createFields,
+      });
+      signInError = null;
+      break;
+    } catch (error: unknown) {
+      signInError = error;
+      const nextClientName = clientNameCandidates[index + 1];
+
+      if (
+        !nextClientName ||
+        !shouldRetryOauthClientSignInWithAlternateClientName(
+          error,
+          currentClientName,
+          nextClientName
+        )
+      ) {
+        break;
+      }
+
+      if (__DEV__) {
+        console.error(
+          '[AuthProvider] Retrying Apple sign-in with alternate client name',
+          {
+            currentClientName,
+            error,
+            extractedMessage: extractAuthErrorMessage(error),
+            nextClientName,
+            tokenAudClaim: appleTokenAudience,
+          }
+        );
+      }
+    }
+  }
+
+  if (signInError) {
+    throw signInError;
+  }
+
+  try {
+    await applyOnboardingProfileDataForNewUser({
+      onboardingData,
+      signInResult,
+    });
+  } catch (error: unknown) {
+    const signInUser = extractSignInUser(signInResult);
+
+    captureHandledError(error, {
+      tags: {
+        area: 'auth',
+        operation: 'apply_onboarding_profile_data',
+        provider: authProviderTypes.apple,
+      },
+      extras: {
+        hasOnboardingData: onboardingData !== null,
+        signInCreatedUser: signInUser.created,
+        signInUserId: signInUser.id,
+      },
+    });
+
+    if (__DEV__) {
+      console.error('[AuthProvider] Apple onboarding profile sync failed', {
+        error,
+        signInUser,
+      });
+    }
+
+    throw error;
+  }
+
   await persistProfileAuthProvider({
     providerType: authProviderTypes.apple,
     signInResult,
@@ -161,69 +240,66 @@ export async function signInWithGoogleFlow(params: {
     }
 
     if (
-      !shouldRetryGoogleSignInWithDefaultClientName(
+      shouldRetryGoogleSignInWithDefaultClientName(
         error,
         primaryToken.clientName
       )
     ) {
-      if (
-        shouldTryGoogleAudienceFallback(error) &&
-        canTryGoogleAudienceFallback()
-      ) {
-        const fallbackAudience =
-          primaryToken.audience === 'ios' ? 'web' : 'ios';
-        const fallbackToken = await getGoogleIdTokenWithOptions({
-          audience: fallbackAudience,
-          forceReconfigure: true,
-        });
-        const fallbackTokenNonce = getIdTokenNonceClaim(fallbackToken.idToken);
-        const fallbackCreateFields = buildCreateFields({
-          idToken: fallbackToken.idToken,
-          onboardingData,
-          t: params.t,
-        });
+      signInResult = await db.auth.signInWithIdToken({
+        clientName: DEFAULT_GOOGLE_CLIENT_NAME,
+        idToken: primaryToken.idToken,
+        ...(primaryTokenNonce ? { nonce: primaryTokenNonce } : {}),
+        extraFields: primaryCreateFields,
+      });
+    } else if (
+      shouldTryGoogleAudienceFallback(error) &&
+      canTryGoogleAudienceFallback()
+    ) {
+      const fallbackAudience = primaryToken.audience === 'ios' ? 'web' : 'ios';
+      const fallbackToken = await getGoogleIdTokenWithOptions({
+        audience: fallbackAudience,
+        forceReconfigure: true,
+      });
+      const fallbackTokenNonce = getIdTokenNonceClaim(fallbackToken.idToken);
+      const fallbackCreateFields = buildCreateFields({
+        idToken: fallbackToken.idToken,
+        onboardingData,
+        t: params.t,
+      });
 
-        if (__DEV__) {
-          console.error(
-            '[AuthProvider] Retrying Google sign-in with fallback audience',
-            {
-              fallbackAudience,
-              fallbackClientName: fallbackToken.clientName,
-              fallbackTokenAudClaim: getIdTokenAudienceClaim(
-                fallbackToken.idToken
-              ),
-              fallbackTokenNonceClaim: fallbackTokenNonce,
-            }
-          );
-        }
-
-        signInResult = await db.auth.signInWithIdToken({
-          clientName: fallbackToken.clientName,
-          idToken: fallbackToken.idToken,
-          ...(fallbackTokenNonce ? { nonce: fallbackTokenNonce } : {}),
-          extraFields: fallbackCreateFields,
-        });
-
-        await applyOnboardingProfileDataForNewUser({
-          onboardingData,
-          signInResult,
-        });
-        await persistProfileAuthProvider({
-          providerType: authProviderTypes.google,
-          signInResult,
-        });
-        return;
+      if (__DEV__) {
+        console.error(
+          '[AuthProvider] Retrying Google sign-in with fallback audience',
+          {
+            fallbackAudience,
+            fallbackClientName: fallbackToken.clientName,
+            fallbackTokenAudClaim: getIdTokenAudienceClaim(
+              fallbackToken.idToken
+            ),
+            fallbackTokenNonceClaim: fallbackTokenNonce,
+          }
+        );
       }
 
+      signInResult = await db.auth.signInWithIdToken({
+        clientName: fallbackToken.clientName,
+        idToken: fallbackToken.idToken,
+        ...(fallbackTokenNonce ? { nonce: fallbackTokenNonce } : {}),
+        extraFields: fallbackCreateFields,
+      });
+
+      await applyOnboardingProfileDataForNewUser({
+        onboardingData,
+        signInResult,
+      });
+      await persistProfileAuthProvider({
+        providerType: authProviderTypes.google,
+        signInResult,
+      });
+      return;
+    } else {
       throw error;
     }
-
-    signInResult = await db.auth.signInWithIdToken({
-      clientName: DEFAULT_GOOGLE_CLIENT_NAME,
-      idToken: primaryToken.idToken,
-      ...(primaryTokenNonce ? { nonce: primaryTokenNonce } : {}),
-      extraFields: primaryCreateFields,
-    });
   }
 
   await applyOnboardingProfileDataForNewUser({

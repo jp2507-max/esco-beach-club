@@ -44,6 +44,30 @@ function createMmkvStateStorage(mmkv: MMKV): StateStorage {
 }
 
 /**
+ * Read the raw Zustand persist envelope synchronously for client-side bootstrap
+ * (initial store state, etc.). On web without `window` (SSR/prerender/static
+ * export in Node), returns `null` — do not treat as a user-cleared preference;
+ * rely on persist `onRehydrateStorage` in the browser.
+ *
+ * Prefer this over calling `createGetPersistStateStorage(mmkv)().getItem` for
+ * reads: the persist getter intentionally returns noop storage during SSR.
+ */
+export function readPersistEnvelopeSync(
+  mmkv: MMKV,
+  storageName: string
+): string | null {
+  if (Platform.OS === 'web') {
+    if (typeof window === 'undefined') return null;
+    try {
+      return window.localStorage.getItem(storageName);
+    } catch {
+      return null;
+    }
+  }
+  return mmkv.getString(storageName) ?? null;
+}
+
+/**
  * Returns a getter suitable for `createJSONStorage(getStateStorage)` so Zustand
  * persist uses localStorage on web (with SSR noop), MMKV on native.
  */

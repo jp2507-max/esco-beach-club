@@ -221,10 +221,21 @@ export async function setProfileAuthProvider(
   const profile = await ensureProfile({ userId });
   if (!profile || profile.auth_provider === authProvider) return;
 
-  await db.transact(
-    db.tx.profiles[profile.id].update({
-      auth_provider: authProvider,
-      updated_at: nowIso(),
-    })
-  );
+  try {
+    await db.transact(
+      db.tx.profiles[profile.id].update({
+        auth_provider: authProvider,
+        updated_at: nowIso(),
+      })
+    );
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      error.message.toLowerCase().includes('permission denied')
+    ) {
+      return;
+    }
+
+    throw error;
+  }
 }

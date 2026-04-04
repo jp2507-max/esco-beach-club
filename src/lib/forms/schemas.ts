@@ -134,17 +134,6 @@ export const editProfileSchema = z.object({
     .string()
     .trim()
     .max(160, { error: v('profileBioMax') }),
-  memberSince: z
-    .string()
-    .trim()
-    .min(1, { error: v('required') })
-    .regex(/^\d{4}-\d{2}-\d{2}$/, { error: v('invalidDate') })
-    .refine(isValidCalendarDate, { error: v('invalidDate') }),
-  nightsLeft: z
-    .string()
-    .trim()
-    .min(1, { error: v('required') })
-    .regex(/^[1-9]\d*$|^0$/, { error: v('number') }),
 });
 
 export type EditProfileFormValues = z.infer<typeof editProfileSchema>;

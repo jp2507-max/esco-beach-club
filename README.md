@@ -33,6 +33,7 @@ Available variables:
 
 ```env
 EXPO_PUBLIC_INSTANT_APP_ID=your_instant_app_id
+EXPO_PUBLIC_INSTANT_APPLE_CLIENT_NAME=apple
 
 # Optional runtime API origins
 EXPO_PUBLIC_SENTRY_DSN=

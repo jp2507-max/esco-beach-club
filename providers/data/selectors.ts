@@ -152,8 +152,7 @@ export function useMemberSummary(): MemberSummary {
   const savedEventsCount = useSavedEventsCount();
 
   return useMemo(() => {
-    const lifetimeTierKey =
-      profile?.lifetime_tier_key ?? rewardTierKeys.escoLifeMember;
+    const lifetimeTierKey = profile?.lifetime_tier_key ?? rewardTierKeys.shore;
     const nextTierKey =
       profile?.next_tier_key ?? getNextRewardTierKey(lifetimeTierKey);
     const tierProgressTargetPoints = profile?.tier_progress_target_points ?? 0;

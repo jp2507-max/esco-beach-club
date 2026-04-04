@@ -1,17 +1,21 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { Wifi } from 'lucide-react-native';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useColorScheme } from 'react-native';
 
 import { Colors } from '@/constants/colors';
 import { cn } from '@/src/lib/utils';
 import { Text, View } from '@/src/tw';
+import { Image } from '@/src/tw/image';
 
 import { MemberQrCode } from './member-qr-code';
+
+const memberCardBrandLogo = require('@/assets/images/member-card-brand-horizontal.png');
+const memberCardMarkTopRight = require('@/assets/images/member-card-mark-top-right.png');
 
 type MemberCardCopy = {
   balanceLabel: string;
   balanceSuffix: string;
+  brandAccessibilityHint: string;
   brandLabel: string;
   emptyQrLabel: string;
   memberNameLabel: string;
@@ -39,6 +43,7 @@ export function MemberCard({
   tierLabel,
   variant = 'compact',
 }: MemberCardProps): React.JSX.Element {
+  const [brandLogoFailed, setBrandLogoFailed] = useState(false);
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const isCompact = variant === 'compact';
@@ -72,11 +77,55 @@ export function MemberCard({
           className
         )}
       >
-        <View className="mb-2 flex-row items-center justify-between">
-          <Text className="text-xs font-extrabold tracking-[2px] text-white/85">
-            {copy.brandLabel}
-          </Text>
-          <Wifi color="rgba(255,255,255,0.8)" size={isCompact ? 24 : 26} />
+        <View className="mb-3 flex-row items-center justify-between gap-2">
+          <View
+            accessibilityHint={copy.brandAccessibilityHint}
+            accessibilityLabel={copy.brandLabel}
+            accessibilityRole="header"
+            className={cn(
+              'min-w-0 flex-1 justify-center pr-2',
+              isCompact ? 'min-h-9' : 'min-h-11'
+            )}
+          >
+            {brandLogoFailed ? (
+              <Text
+                className={cn(
+                  'font-black uppercase text-white',
+                  isCompact
+                    ? 'text-2xl tracking-[0.18em]'
+                    : 'text-3xl tracking-[0.2em]'
+                )}
+                numberOfLines={2}
+              >
+                {copy.brandLabel}
+              </Text>
+            ) : (
+              <Image
+                accessibilityHint={copy.brandAccessibilityHint}
+                accessibilityLabel={copy.brandLabel}
+                className="w-full"
+                contentFit="contain"
+                contentPosition="left center"
+                onError={() => setBrandLogoFailed(true)}
+                source={memberCardBrandLogo}
+                style={
+                  isCompact
+                    ? { alignSelf: 'stretch', height: 34, width: '100%' }
+                    : { alignSelf: 'stretch', height: 42, width: '100%' }
+                }
+              />
+            )}
+          </View>
+          <Image
+            accessible={false}
+            className="shrink-0 rounded-md"
+            contentFit="contain"
+            importantForAccessibility="no"
+            source={memberCardMarkTopRight}
+            style={
+              isCompact ? { height: 34, width: 34 } : { height: 42, width: 42 }
+            }
+          />
         </View>
 
         <View className="mb-1 flex-row items-start justify-between">
@@ -141,7 +190,7 @@ export function MemberCard({
           <View
             className={cn(
               'items-center justify-center rounded-md bg-white/92',
-              isCompact ? 'size-14 p-1.5' : 'size-[168px] rounded-xl p-2.5'
+              isCompact ? 'size-14 p-1.5' : 'size-42 rounded-xl p-2.5'
             )}
           >
             <MemberQrCode

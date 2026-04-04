@@ -113,9 +113,9 @@ const auth = {
   venueUpsellNotificationChannelName: '현장 오퍼',
   venueUpsellNotificationChannelDescription:
     '레스토랑 도착 시 받을 수 있는 실시간 오퍼입니다.',
-  venueUpsellNotificationTitle: '바에서 캐시백 포인트 적립',
+  venueUpsellNotificationTitle: '바에서 리워드 포인트 적립',
   venueUpsellNotificationBody:
-    '지금 칵테일을 주문하고 캐시백 포인트를 잔액에 추가하세요!',
+    '지금 칵테일을 주문하고 리워드 포인트를 잔액에 추가하세요!',
   onboardingClubWelcomeTitle: '클럽에 오신 것을 환영합니다!',
   onboardingClubWelcomeSubtitle:
     '햇살이 가득하고 멤버십이 활성화되었습니다. 새로운 라이프스타일을 위한 첫 건배를 시작해 보세요.',
@@ -146,6 +146,8 @@ const auth = {
   appleAuthorizationCodeMissing:
     'Apple에서 삭제 확인용 인증 코드를 반환하지 않았습니다.',
   appleIdTokenMissing: 'Apple에서 신원 토큰을 반환하지 않았습니다.',
+  appleOauthClientNotConfigured:
+    'Apple 로그인 구성이 잘못되었습니다. 지원팀에 문의해 주세요.',
   googleAuthNotConfigured: 'Google 로그인이 아직 구성되지 않았습니다.',
   googleOauthClientNotConfigured:
     'Google 로그인 구성이 잘못되었습니다. 지원팀에 문의해 주세요.',

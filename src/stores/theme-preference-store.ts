@@ -3,7 +3,10 @@ import { createMMKV } from 'react-native-mmkv';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-import { createGetPersistStateStorage } from '@/src/lib/stores/zustand-persist-state-storage';
+import {
+  createGetPersistStateStorage,
+  readPersistEnvelopeSync,
+} from '@/src/lib/stores/zustand-persist-state-storage';
 
 export const themePreferences = ['system', 'light', 'dark'] as const;
 
@@ -23,6 +26,8 @@ type ThemePreferenceState = {
 type ApplyThemePreferenceOptions = {
   allowSystemReset?: boolean;
 };
+
+const THEME_PREFERENCE_STORAGE_KEY = 'theme-preference';
 
 const themeStorage = createMMKV({ id: 'esco.theme-preference' });
 const getStateStorage = createGetPersistStateStorage(themeStorage);
@@ -52,14 +57,11 @@ function isThemePreference(value: unknown): value is ThemePreference {
   );
 }
 
-function readStateStorageItem(storageKey: string): string | null {
-  const rawValue = getStateStorage().getItem(storageKey);
-  if (typeof rawValue === 'string') return rawValue;
-  return null;
-}
-
 function getStoredThemePreference(): ThemePreference {
-  const rawPreferenceState = readStateStorageItem('theme-preference');
+  const rawPreferenceState = readPersistEnvelopeSync(
+    themeStorage,
+    THEME_PREFERENCE_STORAGE_KEY
+  );
 
   if (!rawPreferenceState) return 'system';
 
@@ -75,6 +77,7 @@ function getStoredThemePreference(): ThemePreference {
   }
 }
 
+/** Resolved from real storage on native and web client; `'system'` on web SSR until rehydrate. */
 const initialThemePreference = getStoredThemePreference();
 
 applyThemePreference(initialThemePreference, { allowSystemReset: false });
@@ -100,10 +103,16 @@ export const useThemePreferenceStore = create<ThemePreferenceState>()(
       },
     }),
     {
-      name: 'theme-preference',
+      name: THEME_PREFERENCE_STORAGE_KEY,
       partialize: (state) => ({ preference: state.preference }),
       storage: createJSONStorage(getStateStorage),
       version: 1,
+      onRehydrateStorage:
+        () =>
+        (state, error): void => {
+          if (error != null || state == null) return;
+          applyThemePreference(state.preference, { allowSystemReset: true });
+        },
     }
   )
 );

@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, useColorScheme } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -45,11 +45,14 @@ export default function BookingModalScreen(): React.JSX.Element {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const [now, setNow] = useState(() => new Date());
-  const [selectedDate, setSelectedDate] = useState<number>(0);
+  const [selectedDateKey, setSelectedDateKey] = useState<string>(() =>
+    toLocalDateString(new Date())
+  );
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [pax, setPax] = useState<number>(2);
   const [occasion, setOccasion] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const isSubmittingRef = useRef(false);
   const { contentStyle } = useScreenEntry();
 
   const dates = useMemo(() => getNext7Days(now), [now]);
@@ -107,7 +110,19 @@ export default function BookingModalScreen(): React.JSX.Element {
       resolvedOccasions.some((option) => option.value === occasion),
     [occasion, resolvedOccasions]
   );
-  const canConfirm = isSelectedTimeValid && isOccasionValid;
+  const isSelectedDateValid = useMemo(
+    () => dates.some((date) => date.dateKey === selectedDateKey),
+    [dates, selectedDateKey]
+  );
+  const canConfirm =
+    isSelectedDateValid && isSelectedTimeValid && isOccasionValid;
+
+  useEffect(() => {
+    if (isSelectedDateValid) return;
+
+    const nextDateKey = dates[0]?.dateKey ?? toLocalDateString(now);
+    setSelectedDateKey(nextDateKey);
+  }, [dates, isSelectedDateValid, now]);
 
   useEffect(() => {
     if (selectedTime !== null && !isSelectedTimeValid) {
@@ -121,36 +136,41 @@ export default function BookingModalScreen(): React.JSX.Element {
     }
   }, [isOccasionValid, occasion]);
 
-  function handleSelectDate(index: number): void {
-    if (isSubmitting) return;
+  function handleSelectDate(dateKey: string): void {
+    if (isSubmittingRef.current || isSubmitting) return;
     hapticSelection();
-    setSelectedDate(index);
+    setSelectedDateKey(dateKey);
   }
 
   function handleSelectTime(time: string): void {
     const slot = resolvedTimeSlots.find((candidate) => candidate.time === time);
-    if (!slot?.available || isSubmitting) return;
+    if (!slot?.available || isSubmittingRef.current || isSubmitting) return;
 
     hapticSelection();
     setSelectedTime(time);
   }
 
   function handlePaxChange(nextPax: number): void {
-    if (!canChangeGuestCount(nextPax) || isSubmitting) return;
+    if (
+      !canChangeGuestCount(nextPax) ||
+      isSubmittingRef.current ||
+      isSubmitting
+    )
+      return;
 
     hapticSelection();
     setPax(nextPax);
   }
 
   function handleSelectOccasion(value: string): void {
-    if (isSubmitting) return;
+    if (isSubmittingRef.current || isSubmitting) return;
 
     hapticSelection();
     setOccasion(value);
   }
 
   async function handleConfirm(): Promise<void> {
-    if (!canConfirm) return;
+    if (isSubmittingRef.current || !canConfirm) return;
     if (!userId || !selectedTime || !occasion) {
       Alert.alert(
         t('booking:reservationFailedTitle'),
@@ -160,6 +180,7 @@ export default function BookingModalScreen(): React.JSX.Element {
     }
 
     hapticMedium();
+    isSubmittingRef.current = true;
     setIsSubmitting(true);
 
     try {
@@ -168,7 +189,7 @@ export default function BookingModalScreen(): React.JSX.Element {
         event_title: eventTitle,
         occasion,
         party_size: pax,
-        reservation_date: toLocalDateString(dates[selectedDate].date),
+        reservation_date: selectedDateKey,
         reservation_time: selectedTime,
         source: eventId ? 'event' : 'general',
         user_id: userId,
@@ -179,7 +200,7 @@ export default function BookingModalScreen(): React.JSX.Element {
       const subtitle = t('booking:confirmationMessage', {
         date: getBookingConfirmationDate({
           dates,
-          selectedDate,
+          selectedDateKey,
           t,
         }),
         time: selectedTime,
@@ -196,6 +217,7 @@ export default function BookingModalScreen(): React.JSX.Element {
         t('booking:reservationFailedMessage')
       );
     } finally {
+      isSubmittingRef.current = false;
       setIsSubmitting(false);
     }
   }
@@ -246,7 +268,7 @@ export default function BookingModalScreen(): React.JSX.Element {
         pax={pax}
         resolvedOccasions={resolvedOccasions}
         resolvedTimeSlots={resolvedTimeSlots}
-        selectedDate={selectedDate}
+        selectedDateKey={selectedDateKey}
         selectedTime={selectedTime}
         t={t}
         onOccasionSelect={handleSelectOccasion}

@@ -1,5 +1,5 @@
 import type { Profile, RewardTierKey } from '@/lib/types';
-import { rewardTierKeys } from '@/lib/types';
+import { rewardTierKeys, rewardTierLegacyEscoLifeMember } from '@/lib/types';
 
 export const staffRoles = {
   manager: 'manager',
@@ -19,7 +19,7 @@ export const rewardBenefitKeys = {
 export type RewardBenefitKey =
   (typeof rewardBenefitKeys)[keyof typeof rewardBenefitKeys];
 
-type RewardTierLabelKey = 'escoLifeMember';
+type RewardTierLabelKey = 'shore' | 'cove' | 'horizon' | 'luminary';
 
 export type RewardTierDefinition = {
   hasPrioritySupport: boolean;
@@ -38,19 +38,50 @@ export const rewardConfig = {
   tierProgressWindowMonths: 1,
 } as const;
 
+const baseMemberBenefits: readonly RewardBenefitKey[] = [
+  rewardBenefitKeys.memberEvents,
+  rewardBenefitKeys.discountDining,
+];
+
 export const rewardTierDefinitions: Record<
   RewardTierKey,
   RewardTierDefinition
 > = {
-  [rewardTierKeys.escoLifeMember]: {
+  [rewardTierKeys.shore]: {
     hasPrioritySupport: false,
-    key: rewardTierKeys.escoLifeMember,
-    labelKey: 'escoLifeMember',
+    key: rewardTierKeys.shore,
+    labelKey: 'shore',
+    nextTierKey: rewardTierKeys.cove,
+    progressTargetPoints: 0,
+    unlockedBenefits: baseMemberBenefits,
+  },
+  [rewardTierKeys.cove]: {
+    hasPrioritySupport: false,
+    key: rewardTierKeys.cove,
+    labelKey: 'cove',
+    nextTierKey: rewardTierKeys.horizon,
+    progressTargetPoints: 0,
+    unlockedBenefits: baseMemberBenefits,
+  },
+  [rewardTierKeys.horizon]: {
+    hasPrioritySupport: false,
+    key: rewardTierKeys.horizon,
+    labelKey: 'horizon',
+    nextTierKey: rewardTierKeys.luminary,
+    progressTargetPoints: 0,
+    unlockedBenefits: baseMemberBenefits,
+  },
+  [rewardTierKeys.luminary]: {
+    hasPrioritySupport: true,
+    key: rewardTierKeys.luminary,
+    labelKey: 'luminary',
     nextTierKey: null,
     progressTargetPoints: 0,
     unlockedBenefits: [
-      rewardBenefitKeys.memberEvents,
-      rewardBenefitKeys.discountDining,
+      ...baseMemberBenefits,
+      rewardBenefitKeys.poolsideDrinks,
+      rewardBenefitKeys.priorityBooking,
+      rewardBenefitKeys.concierge,
     ],
   },
 };
@@ -75,11 +106,13 @@ type TierProgressSnapshot = Pick<
 >;
 
 export function normalizeRewardTierKey(value: unknown): RewardTierKey {
-  if (value === rewardTierKeys.escoLifeMember) {
-    return rewardTierKeys.escoLifeMember;
-  }
+  if (value === rewardTierKeys.shore) return rewardTierKeys.shore;
+  if (value === rewardTierKeys.cove) return rewardTierKeys.cove;
+  if (value === rewardTierKeys.horizon) return rewardTierKeys.horizon;
+  if (value === rewardTierKeys.luminary) return rewardTierKeys.luminary;
+  if (value === rewardTierLegacyEscoLifeMember) return rewardTierKeys.shore;
 
-  return rewardTierKeys.escoLifeMember;
+  return rewardTierKeys.shore;
 }
 
 export function getRewardTierDefinition(

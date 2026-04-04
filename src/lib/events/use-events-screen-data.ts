@@ -39,7 +39,7 @@ export type UseEventsScreenDataReturn = {
   searchQuery: string;
   selectedDay: WeekDayItem | null;
   selectedDayKey: string;
-  weekStripItems: Array<WeekDayItem & { showIndicator: boolean }>;
+  weekStripItems: (WeekDayItem & { showIndicator: boolean })[];
   setActiveCategory: Dispatch<SetStateAction<string>>;
   setSearchQuery: Dispatch<SetStateAction<string>>;
   setSelectedDayKey: Dispatch<SetStateAction<string>>;

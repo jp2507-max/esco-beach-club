@@ -3,7 +3,7 @@ import { isAuthErrorKey } from '@/src/lib/auth-errors';
 export const DEFAULT_GOOGLE_CLIENT_NAME = 'google';
 
 export type MapAuthErrorOptions = {
-  oauthProvider?: 'google';
+  oauthProvider?: 'apple' | 'google';
 };
 
 export function extractAuthErrorMessage(error: unknown): string | null {
@@ -62,6 +62,10 @@ function mapAuthErrorMessageToKey(
     return null;
   }
 
+  if (isOauthClientNotFound && options?.oauthProvider === 'apple') {
+    return 'appleOauthClientNotConfigured';
+  }
+
   const isGoogleScoped =
     normalizedMessage.includes('google') || options?.oauthProvider === 'google';
 
@@ -94,6 +98,35 @@ export function shouldRetryGoogleSignInWithDefaultClientName(
     RECORD_NOT_FOUND_PATTERN.test(message) &&
     (OAUTH_CLIENT_PATTERN.test(message) ||
       message.includes(normalizedClientName))
+  );
+}
+
+export function shouldRetryOauthClientSignInWithAlternateClientName(
+  error: unknown,
+  currentClientName: string,
+  nextClientName: string
+): boolean {
+  const normalizedCurrentClientName = currentClientName.trim().toLowerCase();
+  const normalizedNextClientName = nextClientName.trim().toLowerCase();
+
+  if (
+    !normalizedCurrentClientName ||
+    !normalizedNextClientName ||
+    normalizedCurrentClientName === normalizedNextClientName
+  ) {
+    return false;
+  }
+
+  const message = extractAuthErrorMessage(error)?.trim().toLowerCase();
+
+  if (!message) {
+    return false;
+  }
+
+  return (
+    RECORD_NOT_FOUND_PATTERN.test(message) &&
+    (OAUTH_CLIENT_PATTERN.test(message) ||
+      message.includes(normalizedCurrentClientName))
   );
 }
 

@@ -21,7 +21,7 @@ const common = {
     deleteConfirmation: '계속하려면 DELETE를 정확히 입력해 주세요.',
     loyaltyManagerPin:
       '이 금액을 승인하려면 유효한 관리자 PIN을 입력해 주세요.',
-    loyaltyMinimumSpend: '이 청구 금액은 최소 캐시백 기준보다 낮습니다.',
+    loyaltyMinimumSpend: '이 청구 금액은 최소 포인트 기준보다 낮습니다.',
   },
   back: '뒤로',
   backHint: '이전 화면으로 돌아갑니다',
@@ -70,7 +70,7 @@ const common = {
       other: '기타',
     },
     preferredDate: '희망 날짜',
-    preferredDatePlaceholder: 'YYYY-MM-DD',
+    preferredDatePlaceholder: 'DD - MM - YYYY',
     estimatedGuests: '예상 인원',
     estimatedGuestsPlaceholder: '예: 50',
     contactInfoOptional: '연락처 (선택)',

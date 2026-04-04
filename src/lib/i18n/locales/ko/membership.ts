@@ -3,8 +3,8 @@ const membership = {
   tierCard: {
     currentTier: '현재 등급',
     memberSince: '가입일 {{date}}',
-    cashbackBalance: '캐시백 잔액',
-    cashbackPoints: '{{value}} 캐시백 포인트',
+    cashbackBalance: '리워드 포인트 잔액',
+    cashbackPoints: '{{value}} 리워드 포인트',
     progressTo: '{{nextTier}}까지 진행',
     progressPoints: '{{current}} / {{target}} pts',
     progressExpires: '{{date}}에 진행이 초기화됩니다',
@@ -14,7 +14,10 @@ const membership = {
       '다음 등급이 설정되면 등급 진행 상황이 여기에 표시됩니다.',
   },
   tiers: {
-    escoLifeMember: 'Esco Life 멤버',
+    shore: '쇼어',
+    cove: '코브',
+    horizon: '호라이즌',
+    luminary: '루미너리',
   },
   benefits: {
     title: '혜택',
@@ -36,20 +39,20 @@ const membership = {
   },
   activity: {
     title: '최근 활동',
-    cashbackAdjusted: '수동 캐시백 조정',
+    cashbackAdjusted: '수동 포인트 조정',
     cashbackAdjustedDesc:
-      '{{points}} 캐시백 포인트가 수동 조정으로 변경되었습니다.',
-    cashbackEarned: '캐시백 적립',
+      '{{points}} 리워드 포인트가 수동 조정으로 변경되었습니다.',
+    cashbackEarned: '포인트 적립',
     cashbackEarnedDesc:
-      '최근 적격 구매에서 +{{points}} 캐시백 포인트가 적립되었습니다.',
-    cashbackReversed: '캐시백 취소',
+      '최근 적격 구매에서 +{{points}} 리워드 포인트가 적립되었습니다.',
+    cashbackReversed: '포인트 취소',
     cashbackReversedDesc:
-      '환불 또는 취소 처리로 -{{points}} 캐시백 포인트가 반영되었습니다.',
+      '환불 또는 취소 처리로 -{{points}} 리워드 포인트가 반영되었습니다.',
     daysAgo: '{{count}}일 전',
     loading: '최근 활동을 불러오는 중입니다...',
     emptyTitle: '아직 멤버 활동이 없습니다',
     emptyDescription:
-      '다음 적격 구매 이후 새로운 캐시백 활동과 월간 등급 진행이 여기에 표시됩니다.',
+      '다음 적격 구매 이후 새로운 포인트 활동과 월간 등급 진행이 여기에 표시됩니다.',
     progressReset: '등급 진행 초기화',
     progressResetDesc: '월간 등급 진행 창이 초기화되었습니다.',
     sampleData: '샘플 데이터',

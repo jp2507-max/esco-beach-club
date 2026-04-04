@@ -113,9 +113,9 @@ const auth = {
   venueUpsellNotificationChannelName: 'Venue offers',
   venueUpsellNotificationChannelDescription:
     'Timely offers when you arrive at the restaurant.',
-  venueUpsellNotificationTitle: 'Earn cashback points at the bar',
+  venueUpsellNotificationTitle: 'Earn reward points at the bar',
   venueUpsellNotificationBody:
-    'Order a cocktail now to add cashback points to your balance.',
+    'Order a cocktail now to add reward points to your balance.',
   onboardingClubWelcomeTitle: 'Welcome to the Club!',
   onboardingClubWelcomeSubtitle:
     'The sun is out and your membership is active. Let’s start with a toast to your new lifestyle.',
@@ -145,6 +145,8 @@ const auth = {
   appleAuthUnavailable: 'Apple Sign In is not available on this device.',
   appleAuthorizationCodeMissing: 'Apple did not return an authorization code.',
   appleIdTokenMissing: 'Apple did not return an identity token.',
+  appleOauthClientNotConfigured:
+    'Apple sign-in is misconfigured. Please contact support.',
   googleAuthNotConfigured: 'Google Sign-In is not configured yet.',
   googleOauthClientNotConfigured:
     'Google sign-in is misconfigured. Please contact support.',

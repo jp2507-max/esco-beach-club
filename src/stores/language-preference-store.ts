@@ -3,7 +3,10 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { type AppLanguage, appLanguages } from '@/src/lib/i18n/types';
-import { createGetPersistStateStorage } from '@/src/lib/stores/zustand-persist-state-storage';
+import {
+  createGetPersistStateStorage,
+  readPersistEnvelopeSync,
+} from '@/src/lib/stores/zustand-persist-state-storage';
 
 type LanguagePreferenceState = {
   overrideLanguage: AppLanguage | null;
@@ -45,14 +48,11 @@ function parseStoredLanguagePreference(
   return null;
 }
 
-function readStateStorageItem(storageKey: string): string | null {
-  const rawValue = getStateStorage().getItem(storageKey);
-  if (typeof rawValue === 'string') return rawValue;
-  return null;
-}
-
 export function getStoredLanguagePreference(): AppLanguage | null {
-  const rawPreference = readStateStorageItem(LANGUAGE_PREFERENCE_STORAGE_KEY);
+  const rawPreference = readPersistEnvelopeSync(
+    languagePreferenceStorage,
+    LANGUAGE_PREFERENCE_STORAGE_KEY
+  );
   return parseStoredLanguagePreference(rawPreference ?? null);
 }
 
