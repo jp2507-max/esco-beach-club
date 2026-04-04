@@ -217,7 +217,7 @@ export function EventsListHeader({
   isEventSaved: (id: string) => boolean;
   onCategorySelect: (value: EventCategoryValue) => void;
   onOpenEvent: (id: string) => void;
-  onToggleSavedEvent: (id: string) => void;
+  onToggleSavedEvent: (id: string) => Promise<void> | void;
   onWeekDaySelect: (key: string) => void;
   selectedDayFullLabel: string;
   selectedDayKey: string;
@@ -357,7 +357,9 @@ export function EventsListHeader({
             fill={
               isEventSaved(featuredEvent.id) ? Colors.primary : 'transparent'
             }
-            onToggle={() => onToggleSavedEvent(featuredEvent.id)}
+            onToggle={() => {
+              void onToggleSavedEvent(featuredEvent.id);
+            }}
             style={{ backgroundColor: Colors.featuredOverlayMedium }}
             testID="featured-save-event"
           />

@@ -98,7 +98,7 @@ export function BookingFormContent({
                   key={date.dateKey}
                   className={
                     active
-                      ? 'h-20 w-17 items-center justify-center rounded-2xl bg-primary'
+                      ? 'h-20 w-17 items-center justify-center rounded-2xl bg-primary dark:bg-primary-bright'
                       : 'h-20 w-17 items-center justify-center rounded-2xl border-[1.5px] border-border bg-white dark:border-dark-border dark:bg-dark-bg-card'
                   }
                   disabled={isSubmitting}
@@ -176,7 +176,7 @@ export function BookingFormContent({
                     {slot.time}
                   </Text>
                   {!slot.available ? (
-                    <Text className="mt-0.5 text-[9px] font-bold tracking-[0.5px] text-primary">
+                    <Text className="mt-0.5 text-[9px] font-bold tracking-[0.5px] text-primary dark:text-primary-bright">
                       {t('full')}
                     </Text>
                   ) : null}

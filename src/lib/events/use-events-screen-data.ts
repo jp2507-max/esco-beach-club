@@ -198,8 +198,11 @@ export function useEventsScreenData({
     [filteredEvents]
   );
   const listEvents = useMemo(
-    () => filteredEvents.filter((event) => !event.featured),
-    [filteredEvents]
+    () =>
+      featuredEvent
+        ? filteredEvents.filter((event) => event.id !== featuredEvent.id)
+        : filteredEvents,
+    [featuredEvent, filteredEvents]
   );
 
   return {

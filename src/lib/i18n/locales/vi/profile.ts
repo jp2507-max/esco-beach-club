@@ -312,7 +312,6 @@ const profile = {
     noReferralsYet: 'Chưa có lượt giới thiệu nào. Hãy chia sẻ mã của bạn!',
     status: {
       completed: 'Hoàn tất',
-      pending: 'Đang chờ',
       accepted: 'Đã chấp nhận',
       rejected: 'Đã từ chối',
       unknown: 'Không xác định',

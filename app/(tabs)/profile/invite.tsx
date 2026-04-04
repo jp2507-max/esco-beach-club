@@ -53,14 +53,12 @@ type Milestone = {
 type ReferralStatusKey =
   | 'invite.status.accepted'
   | 'invite.status.completed'
-  | 'invite.status.pending'
   | 'invite.status.rejected'
   | 'invite.status.unknown';
 
 const referralStatusToKey: Record<string, ReferralStatusKey> = {
   Accepted: 'invite.status.accepted',
   Completed: 'invite.status.completed',
-  Pending: 'invite.status.pending',
   Rejected: 'invite.status.rejected',
   Unknown: 'invite.status.unknown',
 };
@@ -519,7 +517,7 @@ function InviteScreenContent(): React.JSX.Element {
                     className="rounded-[10px] px-3 py-1.25"
                     style={{
                       backgroundColor:
-                        ref.status === 'Pending' || ref.status === 'Rejected'
+                        ref.status === 'Rejected'
                           ? referralWarningBg
                           : referralStatusBg,
                     }}
@@ -528,7 +526,7 @@ function InviteScreenContent(): React.JSX.Element {
                       className="text-xs font-bold"
                       style={{
                         color:
-                          ref.status === 'Pending' || ref.status === 'Rejected'
+                          ref.status === 'Rejected'
                             ? referralWarningText
                             : referralStatusText,
                       }}

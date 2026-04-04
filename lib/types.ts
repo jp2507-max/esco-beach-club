@@ -1,3 +1,5 @@
+import type { StaffRole } from '@/src/lib/loyalty';
+
 export const rewardTierKeys = {
   member: 'MEMBER',
   legend: 'LEGEND',
@@ -225,7 +227,7 @@ export type Referral = {
   referrer_id: string;
   referred_name: string;
   referred_avatar: string | null;
-  status: 'Accepted' | 'Completed' | 'Pending' | 'Rejected' | 'Unknown';
+  status: 'Accepted' | 'Completed' | 'Rejected' | 'Unknown';
   created_at: string;
 };
 
@@ -284,7 +286,7 @@ export type StaffAccess = {
   id: string;
   created_at: string;
   is_active: boolean;
-  role: 'staff' | 'manager' | null;
+  role: StaffRole | null;
   updated_at: string;
   user_id: string | null;
 };

@@ -216,7 +216,7 @@ export async function updateProfile(
     ) {
       console.warn('Profile update permission denied', {
         profileId: current.id,
-        updates: sanitizedUpdates,
+        updateFields: Object.keys(sanitizedUpdates),
         timestamp: nowIso(),
       });
       throw new PermissionDeniedUpdateError(

@@ -175,8 +175,8 @@ npx sentry-expo-upload-sourcemaps dist
 
 ### Sentry quick setup checklist
 
-1. Ensure `EXPO_PUBLIC_SENTRY_DSN` is set in local `.env` (runtime SDK init).
-2. Ensure `SENTRY_AUTH_TOKEN` is set in EAS project secrets for build/update environments.
+1. Ensure `EXPO_PUBLIC_SENTRY_DSN` is set in every runtime environment that produces a bundle (`.env.local` for local dev, EAS envs for preview/production builds and updates).
+2. Ensure `SENTRY_AUTH_TOKEN` is set in EAS project secrets for build/update environments. This is only for symbol/sourcemap upload, not for runtime event, trace, or profile capture.
 3. Build a release profile once (`preview` or `production`) and verify a test error appears symbolicated in Sentry.
 4. For OTA updates, run `eas update`, then upload update sourcemaps:
 
@@ -185,6 +185,7 @@ bun run sentry:upload-sourcemaps
 ```
 
 5. Confirm Sentry event tags include update metadata (`expo-update-id`, `expo-update-group-id`, `expo-update-debug-url`).
+6. Performance data requires traces to be sampled in release builds. If you also want performance profiles, enable `profilesSampleRate` in the SDK config.
 
 ### iOS App Review release gate
 

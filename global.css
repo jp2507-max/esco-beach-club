@@ -44,4 +44,10 @@
   --color-secondary-fixed: #b2dfdb;
   --color-surface: #ffffff;
   --color-surface-container-low: #faf8f0;
+  --spacing-1.25: 0.3125rem;
+  --spacing-4.5: 1.125rem;
+  --spacing-25: 6.25rem;
+  --spacing-30: 7.5rem;
+  --line-height-5.5: 1.375rem;
+  --leading-5.5: 1.375rem;
 }

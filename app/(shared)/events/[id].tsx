@@ -110,13 +110,13 @@ export default function EventDetailsScreen(): React.JSX.Element {
     transform: [{ translateY: slide.get() }],
   }));
 
-  const imageParallaxTranslateY = useDerivedValue(() =>
+  const imageParallaxTranslateYD = useDerivedValue(() =>
     interpolate(scrollY.get(), [0, 280], [0, -72], Extrapolation.CLAMP)
   );
 
   const imageParallaxStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ translateY: imageParallaxTranslateY.get() }],
+      transform: [{ translateY: imageParallaxTranslateYD.get() }],
     };
   });
 

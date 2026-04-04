@@ -114,7 +114,10 @@ export default function BookingModalScreen(): React.JSX.Element {
     [dates, selectedDateKey]
   );
   const canConfirm =
-    isSelectedDateValid && isSelectedTimeValid && isOccasionValid;
+    Boolean(userId) &&
+    isSelectedDateValid &&
+    isSelectedTimeValid &&
+    isOccasionValid;
 
   useEffect(() => {
     if (isSelectedDateValid) return;
@@ -169,8 +172,8 @@ export default function BookingModalScreen(): React.JSX.Element {
   }
 
   async function handleConfirm(): Promise<void> {
-    if (isSubmittingRef.current || !canConfirm) return;
-    if (!userId || !selectedTime || !occasion) {
+    if (isSubmittingRef.current || !canConfirm || !userId) return;
+    if (!selectedTime || !occasion) {
       Alert.alert(
         t('booking:reservationFailedTitle'),
         t('booking:reservationFailedMessage')

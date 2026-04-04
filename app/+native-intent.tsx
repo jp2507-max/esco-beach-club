@@ -39,7 +39,10 @@ export function redirectSystemPath({
     const inviteRoute = resolveInviteRoute(path);
     if (inviteRoute) return inviteRoute;
 
-    return path;
+    // Normalizing the incoming URL to an internal router path (pathname + search)
+    // to ensure it's a valid relative route for Expo Router.
+    const url = new URL(path, FALLBACK_BASE_URL);
+    return url.pathname + url.search;
   } catch {
     return '/';
   }

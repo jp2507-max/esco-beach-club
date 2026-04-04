@@ -307,7 +307,6 @@ const profile = {
     noReferralsYet: '아직 추천이 없습니다. 코드를 공유해 보세요!',
     status: {
       completed: '완료',
-      pending: '대기 중',
       accepted: '수락됨',
       rejected: '거절됨',
       unknown: '알 수 없음',

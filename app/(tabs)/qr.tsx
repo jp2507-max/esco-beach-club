@@ -12,12 +12,14 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
-import { rewardTierKeys } from '@/lib/types';
 import { useMemberSummary } from '@/providers/DataProvider';
 import { MemberQrAccessCard } from '@/src/components/ui';
 import { motion, rmTiming } from '@/src/lib/animations/motion';
 import { hapticSuccess } from '@/src/lib/haptics/haptics';
-import { getRewardTierLabelKey } from '@/src/lib/loyalty';
+import {
+  getRewardTierLabelKey,
+  normalizeRewardTierKey,
+} from '@/src/lib/loyalty';
 import { getTierQrGradient } from '@/src/lib/profile/membership-screen';
 import { Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
@@ -88,7 +90,7 @@ export default function QrTabScreen(): React.JSX.Element {
     `tier.${getRewardTierLabelKey(memberSummary.lifetimeTierKey)}`
   );
 
-  const tierLevel = memberSummary.lifetimeTierKey ?? rewardTierKeys.member;
+  const tierLevel = normalizeRewardTierKey(memberSummary.lifetimeTierKey);
   const qrCardGradient = useMemo(
     () => getTierQrGradient(tierLevel, isDark),
     [tierLevel, isDark]

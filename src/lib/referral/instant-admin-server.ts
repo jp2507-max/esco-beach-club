@@ -142,18 +142,6 @@ function buildInstantAdminUrl(
   return url.toString();
 }
 
-async function instantAdminFetch(
-  config: InstantAdminConfig,
-  path: string,
-  init: RequestInit
-): Promise<undefined>;
-
-async function instantAdminFetch<TResult>(
-  config: InstantAdminConfig,
-  path: string,
-  init: RequestInit
-): Promise<TResult>;
-
 async function instantAdminFetch<TResult>(
   config: InstantAdminConfig,
   path: string,
@@ -198,19 +186,27 @@ async function instantAdminFetch<TResult>(
 function createInstantAdminDb(config: InstantAdminConfig): InstantAdminDb {
   return {
     async query<TResult>(query: Record<string, unknown>): Promise<TResult> {
-      return instantAdminFetch<TResult>(config, '/admin/query', {
+      const result = await instantAdminFetch<TResult>(config, '/admin/query', {
         body: JSON.stringify({
           'inference?': false,
           query,
         }),
         method: 'POST',
       });
+
+      if (result === undefined) {
+        throw createInstantAdminApiError(200, {
+          message: 'Unexpected empty response from /admin/query',
+        });
+      }
+
+      return result;
     },
 
     async signOut(
       params: { email: string } | { id: string } | { refresh_token: string }
     ): Promise<void> {
-      await instantAdminFetch(config, '/admin/sign_out', {
+      await instantAdminFetch<undefined>(config, '/admin/sign_out', {
         body: JSON.stringify(params),
         method: 'POST',
       });
@@ -227,7 +223,7 @@ function createInstantAdminDb(config: InstantAdminConfig): InstantAdminDb {
         ? (steps as InstantTransactionStep[])
         : [steps as InstantTransactionStep];
 
-      return instantAdminFetch<Record<string, unknown>>(
+      const result = await instantAdminFetch<Record<string, unknown>>(
         config,
         '/admin/transact',
         {
@@ -238,6 +234,14 @@ function createInstantAdminDb(config: InstantAdminConfig): InstantAdminDb {
           method: 'POST',
         }
       );
+
+      if (result === undefined) {
+        throw createInstantAdminApiError(200, {
+          message: 'Unexpected empty response from /admin/transact',
+        });
+      }
+
+      return result;
     },
   };
 }

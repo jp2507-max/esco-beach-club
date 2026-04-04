@@ -81,17 +81,25 @@ function parseDateFromISO(dateString: string): Date {
   return new Date();
 }
 
-function formatPrivateEventDateForDisplay(dateString: string): string {
+function formatPrivateEventDateForDisplay(
+  dateString: string,
+  locale?: string
+): string {
   if (!dateString) return '';
 
-  const [year, month, day] = dateString.split('-');
-  if (!year || !month || !day) return dateString;
+  const [year, month, day] = dateString.split('-').map(Number);
+  if (!year || !month || !day) return '';
 
-  return `${day} - ${month} - ${year}`;
+  return new Intl.DateTimeFormat(locale, {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(new Date(Date.UTC(year, month - 1, day)));
 }
 
 function PrivateEventScreenContent(): React.JSX.Element {
-  const { t } = useTranslation('common');
+  const { t, i18n } = useTranslation('common');
   const insets = useSafeAreaInsets();
   const isDark = useColorScheme() === 'dark';
   const router = useRouter();
@@ -370,8 +378,10 @@ function PrivateEventScreenContent(): React.JSX.Element {
                     typeof value === 'string'
                       ? value
                       : (value as Date)?.toISOString?.().substring(0, 10) || '';
-                  const displayValue =
-                    formatPrivateEventDateForDisplay(stringValue);
+                  const displayValue = formatPrivateEventDateForDisplay(
+                    stringValue,
+                    i18n.language
+                  );
                   const pickerValue = stringValue
                     ? parseDateFromISO(stringValue)
                     : new Date();
@@ -382,13 +392,12 @@ function PrivateEventScreenContent(): React.JSX.Element {
                   ): void {
                     if (Platform.OS === 'android') {
                       setIsDatePickerVisible(false);
+                      onBlur();
                     }
 
                     if (selectedDate) {
                       onChange(formatDateToISO(selectedDate));
                     }
-
-                    onBlur();
                   }
 
                   return (
@@ -465,8 +474,7 @@ function PrivateEventScreenContent(): React.JSX.Element {
                               )}
                             >
                               {displayValue ||
-                                t('privateEvent.preferredDatePlaceholder') ||
-                                'DD - MM - YYYY'}
+                                t('privateEvent.preferredDatePlaceholder')}
                             </Text>
                           )}
                         </View>

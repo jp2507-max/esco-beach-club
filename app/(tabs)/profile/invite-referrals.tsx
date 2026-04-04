@@ -21,14 +21,12 @@ const defaultAvatar = require('@/assets/images/icon.png');
 
 const statusToKey: Record<string, string> = {
   Completed: 'invite.status.completed',
-  Pending: 'invite.status.pending',
   Accepted: 'invite.status.accepted',
   Rejected: 'invite.status.rejected',
 };
 
 type StatusKey =
   | 'invite.status.completed'
-  | 'invite.status.pending'
   | 'invite.status.accepted'
   | 'invite.status.rejected'
   | 'invite.status.unknown';
@@ -110,7 +108,7 @@ function ReferralListRow({
           className="rounded-[10px] px-3 py-1.25"
           style={{
             backgroundColor:
-              refItem.status === 'Pending' || refItem.status === 'Rejected'
+              refItem.status === 'Rejected'
                 ? referralWarningBg
                 : referralStatusBg,
           }}
@@ -119,7 +117,7 @@ function ReferralListRow({
             className="text-xs font-bold"
             style={{
               color:
-                refItem.status === 'Pending' || refItem.status === 'Rejected'
+                refItem.status === 'Rejected'
                   ? referralWarningText
                   : referralStatusText,
             }}

@@ -182,6 +182,7 @@ export default function RateUsScreen(): React.JSX.Element {
         {!submitted ? (
           <>
             <ScrollView
+              className="flex-1"
               contentInsetAdjustmentBehavior="automatic"
               contentContainerClassName="items-center px-6 pb-6"
               showsVerticalScrollIndicator={false}
@@ -272,6 +273,7 @@ export default function RateUsScreen(): React.JSX.Element {
           </>
         ) : (
           <ScrollView
+            className="flex-1"
             contentInsetAdjustmentBehavior="automatic"
             contentContainerClassName="items-center px-6 pb-10"
             showsVerticalScrollIndicator={false}
