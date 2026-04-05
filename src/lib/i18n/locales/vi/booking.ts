@@ -43,6 +43,7 @@ const booking = {
   paxIncrease: 'Tăng số khách',
   paxDecreaseHint: 'Giảm số khách đi một người',
   paxIncreaseHint: 'Tăng số khách thêm một người',
+  dateLabel: '{{weekday}}, ngày {{day}} {{month}}',
   selectDateHint: 'Chọn ngày này cho đặt bàn của bạn',
   selectTimeHint: 'Chọn khung giờ này khi còn chỗ',
   available: 'Còn chỗ',

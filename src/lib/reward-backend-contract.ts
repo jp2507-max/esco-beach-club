@@ -10,8 +10,8 @@ import {
 } from '@/lib/types';
 
 const memberSegmentValues = [
-  memberSegments.foreigner,
-  memberSegments.local,
+  memberSegments.longTerm,
+  memberSegments.shortTerm,
 ] as const;
 const onboardingPermissionStatusValues = [
   onboardingPermissionStatuses.denied,

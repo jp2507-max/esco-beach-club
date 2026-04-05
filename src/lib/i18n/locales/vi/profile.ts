@@ -49,6 +49,44 @@ const profile = {
     memberName: 'TÊN THÀNH VIÊN',
     lifetimeTier: 'Hạng trọn đời',
   },
+  benefits: {
+    title: 'Đặc quyền đã mở khóa',
+    viewAll: 'Xem tất cả',
+    concierge: 'Dịch vụ Concierge 24/7',
+    priorityBooking: 'Quyền ưu tiên đặt chỗ',
+    poolsideDrinks: 'Đồ uống miễn phí tại hồ bơi',
+    poolsideDrinksDesc: 'Cocktail đặc trưng tặng kèm hằng ngày',
+    memberEvents: 'Truy cập sự kiện thành viên',
+    memberEventsDesc:
+      'Quyền truy cập độc quyền các sự kiện dành riêng cho hội viên',
+    discountDining: 'Giảm giá ẩm thực',
+    discountDiningDesc: 'Giảm 10% cho tất cả menu đồ ăn & thức uống',
+  },
+  manageAccount: {
+    title: 'Quản lý tài khoản',
+    upgradeTier: 'Nâng hạng thẻ',
+    billingHistory: 'Lịch sử thanh toán',
+    managePayments: 'Quản lý phương thức thanh toán',
+  },
+  activity: {
+    title: 'Hoạt động gần đây',
+    cashbackAdjusted: 'Điều chỉnh điểm thủ công',
+    cashbackAdjustedDesc:
+      '{{points}} điểm đã được thay đổi qua điều chỉnh thủ công.',
+    cashbackEarned: 'Điểm đã nhận',
+    cashbackEarnedDesc: '+{{points}} điểm từ một giao dịch hợp lệ gần đây.',
+    cashbackReversed: 'Điểm đã bị hoàn lại',
+    cashbackReversedDesc:
+      '-{{points}} điểm sau khi hoàn tiền hoặc hủy giao dịch.',
+    daysAgo: '{{count}} ngày trước',
+    loading: 'Đang tải hoạt động gần đây...',
+    emptyTitle: 'Chưa có hoạt động hội viên',
+    emptyDescription:
+      'Hoạt động điểm mới và tiến độ hạng tháng sẽ xuất hiện tại đây sau giao dịch hợp lệ tiếp theo của bạn.',
+    progressReset: 'Đặt lại tiến độ hạng',
+    progressResetDesc: 'Chu kỳ tiến độ hạng tháng của bạn đã được đặt lại.',
+    sampleData: 'Dữ liệu mẫu',
+  },
   noBio: 'Thêm một đoạn giới thiệu ngắn để cá nhân hóa hồ sơ của bạn.',
   welcomeGift: 'QUÀ CHÀO MỪNG',
   welcomeDiscount: 'GIẢM 10%',
@@ -237,7 +275,7 @@ const profile = {
     currentPoints: 'Số dư điểm thưởng hiện tại: {{value}}',
     errors: {
       billBelowMinimumSpend:
-        'Giá trị hóa đơn không đạt mức tối thiểu để nhận điểm thưởng.',
+        'Giá trị hóa đơn không đạt ngưỡng chi tiêu tối thiểu.',
       generic: 'Đã xảy ra lỗi. Vui lòng thử lại.',
       invalidBillAmount: 'Hãy nhập giá trị hóa đơn hợp lệ bằng VND.',
       invalidRewardServiceResponse:

@@ -109,7 +109,7 @@ Sentry.init({
   // Capture all traces in development, sample in production.
   tracesSampleRate: __DEV__ ? 1 : 0.2,
 
-  // Profile a subset of sampled transactions to unlock performance profiles.
+  // Profile all sampled transactions to unlock performance profiles.
   profilesSampleRate: __DEV__ ? 1 : 1,
 
   // Native frame metrics are only supported in native builds (not Expo Go).

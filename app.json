@@ -49,6 +49,7 @@
     },
     "plugins": [
       "expo-router",
+      "expo-font",
       "expo-image",
       "./plugins/with-apple-privacy-manifest",
       [

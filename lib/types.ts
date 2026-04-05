@@ -47,8 +47,8 @@ export type OnboardingPermissionStatus =
   (typeof onboardingPermissionStatuses)[keyof typeof onboardingPermissionStatuses];
 
 export const memberSegments = {
-  foreigner: 'FOREIGNER',
-  local: 'LOCAL',
+  longTerm: 'LONG_TERM',
+  shortTerm: 'SHORT_TERM',
 } as const;
 
 export type MemberSegment =

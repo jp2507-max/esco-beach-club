@@ -198,7 +198,7 @@ bun run sentry:upload-sourcemaps
 
 ## Invite & Earn (referrals)
 
-- **Deep links**: `esco-beach-club://invite/<CODE>` and `https://escolife.app/invite/<CODE>` (universal links require Apple/Google verification + hosting `apple-app-site-association` / Digital Asset Links).
+- **Deep links**: `esco-beach-club://invite/<CODE>` and `https://escolife.expo.app/invite/<CODE>` (universal links require Apple/Google verification + hosting `apple-app-site-association` / Digital Asset Links).
 - **Client env**: `EXPO_PUBLIC_REFERRAL_API_BASE_URL` — base URL where Expo Router serves API routes (for example a deployed production web/API host). In local development the app uses the Expo dev-server origin automatically; for preview/production native builds you must provide a deployed origin.
 - **Client env**: `EXPO_PUBLIC_ACCOUNT_API_BASE_URL` — optional override for account deletion API routes. If omitted, account deletion reuses `EXPO_PUBLIC_REFERRAL_API_BASE_URL`.
 - **Server secrets** (never ship to the client): `INSTANT_APP_ADMIN_TOKEN` — Instant dashboard admin token; optional `INSTANT_APP_ID` if you do not want to reuse `EXPO_PUBLIC_INSTANT_APP_ID` on the server.

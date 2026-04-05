@@ -268,6 +268,7 @@ export async function setProfileAuthProvider(
 export class PermissionDeniedUpdateError extends Error {
   constructor(message: string) {
     super(message);
+    Object.setPrototypeOf(this, new.target.prototype);
     this.name = 'PermissionDeniedUpdateError';
   }
 }

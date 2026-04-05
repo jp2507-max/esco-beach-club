@@ -22,23 +22,23 @@ const auth = {
   onboardingBasicsTermsCta: 'Điều khoản Dịch vụ',
   onboardingLocalIdentityTitle: 'Hồ sơ khách',
   onboardingLocalIdentitySubtitle:
-    'Hãy cho biết bạn là người địa phương hay người nước ngoài để chúng tôi cá nhân hóa trải nghiệm thành viên.',
+    'Hãy cho biết bạn lưu trú dài hạn hay ngắn hạn để chúng tôi cá nhân hóa trải nghiệm thành viên.',
   onboardingLocalIdentityRegionalAccessTitle: 'Phân nhóm thành viên',
   onboardingLocalIdentityRegionalAccessDescription:
-    'Thông tin này giúp cá nhân hóa ưu đãi, gợi ý và đề xuất tại địa điểm.',
-  onboardingLocalIdentityLocalTitle: 'Người địa phương',
+    'Thông tin này giúp cá nhân hóa ưu đãi, gợi ý và đề xuất phù hợp với thời gian lưu trú.',
+  onboardingLocalIdentityLocalTitle: 'Lưu trú dài hạn',
   onboardingLocalIdentityLocalDescription:
-    'Tôi sống tại địa phương và muốn nhận ưu đãi phù hợp cho cư dân.',
-  onboardingLocalIdentityForeignerTitle: 'Người nước ngoài',
+    'Tôi lưu trú dài hạn và muốn nhận ưu đãi theo phong cách cư dân.',
+  onboardingLocalIdentityForeignerTitle: 'Lưu trú ngắn hạn',
   onboardingLocalIdentityForeignerDescription:
-    'Tôi đến từ nước ngoài và muốn nhận gợi ý phù hợp cho khách du lịch.',
+    'Tôi lưu trú ngắn hạn và muốn nhận gợi ý thân thiện cho chuyến đi.',
   onboardingLocalIdentityLegalConsentsTitle: 'Chấp thuận pháp lý',
   onboardingInfoButtonLabel: 'Vì sao cần thông tin này',
   onboardingInfoButtonHint: 'Hiển thị giải thích ngắn',
   onboardingLocalIdentityRegionalAccessInfoTitle:
     'Vì sao hỏi phân nhóm thành viên',
   onboardingLocalIdentityRegionalAccessInfoMessage:
-    'Chúng tôi dùng thông tin này để cá nhân hóa ưu đãi địa phương, quyền lợi phù hợp cho du khách và trải nghiệm tại điểm đến.',
+    'Chúng tôi dùng thông tin này để cá nhân hóa quyền lợi, ưu đãi và trải nghiệm phù hợp với thời gian lưu trú của bạn.',
   onboardingLocalIdentityTermsInfoTitle: 'Vì sao cần đồng ý điều khoản',
   onboardingLocalIdentityTermsInfoMessage:
     'Điều này giúp bảo vệ thành viên và đối tác với quy định rõ ràng về đặt chỗ, hành vi và hủy lịch.',
@@ -56,7 +56,7 @@ const auth = {
   onboardingLocalIdentityContinue: 'Tiếp tục',
   onboardingLocalIdentityInvalidTitle: 'Thiếu thông tin',
   onboardingLocalIdentityInvalidMessage:
-    'Vui lòng chọn Người địa phương hoặc Người nước ngoài và chấp thuận đầy đủ các mục pháp lý.',
+    'Vui lòng chọn Lưu trú dài hạn hoặc Lưu trú ngắn hạn và chấp thuận đầy đủ các mục pháp lý.',
   onboardingFinalDetailsTitle: 'Thông tin cuối cùng',
   onboardingFinalDetailsSubtitle:
     'Tải ảnh lên để host cabana có thể chào đón bạn bằng tên.',

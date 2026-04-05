@@ -62,7 +62,7 @@ Ensure to review `src/lib/forms/schemas.ts` and controlled components (`src/lib/
 
 - **All user-facing strings must be internationalized** — never hardcode display text. Use `t()` from `react-i18next`.
 - Config: `src/lib/i18n/index.ts`; translations: `src/lib/i18n/locales/{en,vi,ko}/*.ts`
-- Namespaces: `common` (default), `auth`, `garden`, `schedule`, `scan`, `strains`, `community`, `profile`, `addPlant`, `harvest`, `taskDetail`
+- Namespaces: `common` (default), `auth`, `events`, `home`, `profile`, `perks`, `booking`, `menu`, `membership`
 - Usage: `const { t } = useTranslation('namespace');` — cross-namespace via `t('common:key')`
 - Keys use `camelCase`. Interpolation: `t('key', { variable })`. Plurals: `t('key', { count })`.
 - New screens/components must add keys to the appropriate namespace file for EN, VI, and KO

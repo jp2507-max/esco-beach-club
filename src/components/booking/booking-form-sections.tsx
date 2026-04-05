@@ -7,6 +7,8 @@ import {
   Users,
 } from 'lucide-react-native';
 import React from 'react';
+import type { StyleProp, ViewStyle } from 'react-native';
+import type { AnimatedStyle } from 'react-native-reanimated';
 
 import { accentOnDarkBackground, Colors } from '@/constants/colors';
 import { Button } from '@/src/components/ui';
@@ -25,7 +27,7 @@ import { Animated } from '@/src/tw/animated';
 
 type BookingFormContentProps = {
   canChangeGuestCount: (nextPax: number) => boolean;
-  contentStyle: object;
+  contentStyle: StyleProp<AnimatedStyle<ViewStyle>>;
   dates: BookingDateOption[];
   isDark: boolean;
   isSubmitting: boolean;
@@ -85,12 +87,18 @@ export function BookingFormContent({
           >
             {dates.map((date) => {
               const active = selectedDateKey === date.dateKey;
+              const weekday = t(getDayTranslationKey(date.dayNameKey));
+              const month = t(getMonthTranslationKey(date.monthKey));
 
               return (
                 <Pressable
                   accessibilityHint={t('selectDateHint')}
                   accessibilityRole="button"
-                  accessibilityLabel={`${t(getDayTranslationKey(date.dayNameKey))}, ${t(getMonthTranslationKey(date.monthKey))} ${date.day}`}
+                  accessibilityLabel={t('dateLabel', {
+                    day: date.day,
+                    month,
+                    weekday,
+                  })}
                   accessibilityState={{
                     disabled: isSubmitting,
                     selected: active,

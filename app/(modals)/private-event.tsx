@@ -170,16 +170,22 @@ function PrivateEventScreenContent(): React.JSX.Element {
   }));
 
   const inquiryMutation = useMutation({
-    mutationFn: (values: PrivateEventFormValues) =>
-      submitPrivateEventInquiry({
+    mutationFn: (values: PrivateEventFormValues) => {
+      const preferredDate =
+        values.preferredDate instanceof Date
+          ? values.preferredDate
+          : parseDateFromISO(String(values.preferredDate));
+
+      return submitPrivateEventInquiry({
         user_id: userId,
         event_type: values.eventType,
-        preferred_date: values.preferredDate.toISOString(),
+        preferred_date: formatDateToISO(preferredDate),
         estimated_pax: Number.parseInt(values.estimatedPax, 10) || 0,
         contact_name: values.contactName?.trim() || undefined,
         contact_email: values.contactEmail?.trim() || undefined,
         notes: values.notes?.trim() || undefined,
-      }),
+      });
+    },
     onSuccess: () => {
       setSubmitted(true);
       successScale.set(withSpring(1, motion.spring.bouncy));
@@ -382,6 +388,10 @@ function PrivateEventScreenContent(): React.JSX.Element {
                     stringValue,
                     i18n.language
                   );
+                  const placeholder = t(
+                    'privateEvent.preferredDatePlaceholder'
+                  );
+                  const nativeDateAccessibilityLabel = `${t('privateEvent.preferredDate')} ${displayValue || placeholder}`;
                   const pickerValue = stringValue
                     ? parseDateFromISO(stringValue)
                     : new Date();
@@ -409,7 +419,7 @@ function PrivateEventScreenContent(): React.JSX.Element {
                         accessibilityLabel={
                           Platform.OS === 'web'
                             ? undefined
-                            : t('privateEvent.preferredDate')
+                            : nativeDateAccessibilityLabel
                         }
                         accessibilityHint={
                           Platform.OS === 'web'
@@ -473,8 +483,7 @@ function PrivateEventScreenContent(): React.JSX.Element {
                                   : 'text-text-muted dark:text-text-muted-dark'
                               )}
                             >
-                              {displayValue ||
-                                t('privateEvent.preferredDatePlaceholder')}
+                              {displayValue || placeholder}
                             </Text>
                           )}
                         </View>

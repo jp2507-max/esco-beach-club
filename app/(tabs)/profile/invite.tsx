@@ -477,69 +477,81 @@ function InviteScreenContent(): React.JSX.Element {
                 </Pressable>
               ) : null}
             </View>
-            {referrals.slice(0, 3).map((ref, refIndex) => (
-              <InviteReferralRowStagger key={ref.id} index={refIndex}>
-                <View
-                  className="mb-3 flex-row items-center justify-between rounded-2xl border border-border bg-white p-3.5 dark:border-dark-border dark:bg-dark-bg-card"
-                  style={shadows.level1}
-                >
-                  <View className="flex-row items-center">
-                    <View className="mr-3 size-11">
-                      <Image
-                        className="size-11 rounded-full"
-                        source={
-                          ref.referred_avatar
-                            ? { uri: ref.referred_avatar }
-                            : defaultAvatar
-                        }
-                      />
-                      <View
-                        className="absolute bottom-0 left-0 size-3 rounded-full"
-                        style={{
-                          backgroundColor: Colors.success,
-                          borderColor: isDark
-                            ? Colors.darkBgCard
-                            : Colors.surface,
-                          borderWidth: 2,
-                        }}
-                      />
-                    </View>
-                    <View>
-                      <Text className="text-[15px] font-bold text-text dark:text-text-primary-dark">
-                        {ref.referred_name}
-                      </Text>
-                      <Text className="mt-0.5 text-xs text-text-secondary dark:text-text-secondary-dark">
-                        {t('invite.joinedViaYourLink')}
-                      </Text>
-                    </View>
-                  </View>
+            {referrals.slice(0, 3).map((ref, refIndex) => {
+              const isPositiveStatus =
+                ref.status === 'Accepted' || ref.status === 'Completed';
+              const isRejectedStatus = ref.status === 'Rejected';
+
+              return (
+                <InviteReferralRowStagger key={ref.id} index={refIndex}>
                   <View
-                    className="rounded-[10px] px-3 py-1.25"
-                    style={{
-                      backgroundColor:
-                        ref.status === 'Rejected'
-                          ? referralWarningBg
-                          : referralStatusBg,
-                    }}
+                    className="mb-3 flex-row items-center justify-between rounded-2xl border border-border bg-white p-3.5 dark:border-dark-border dark:bg-dark-bg-card"
+                    style={shadows.level1}
                   >
-                    <Text
-                      className="text-xs font-bold"
+                    <View className="flex-row items-center">
+                      <View className="mr-3 size-11">
+                        <Image
+                          className="size-11 rounded-full"
+                          source={
+                            ref.referred_avatar
+                              ? { uri: ref.referred_avatar }
+                              : defaultAvatar
+                          }
+                        />
+                        <View
+                          className="absolute bottom-0 left-0 size-3 rounded-full"
+                          style={{
+                            backgroundColor: Colors.success,
+                            borderColor: isDark
+                              ? Colors.darkBgCard
+                              : Colors.surface,
+                            borderWidth: 2,
+                          }}
+                        />
+                      </View>
+                      <View>
+                        <Text className="text-[15px] font-bold text-text dark:text-text-primary-dark">
+                          {ref.referred_name}
+                        </Text>
+                        <Text className="mt-0.5 text-xs text-text-secondary dark:text-text-secondary-dark">
+                          {t('invite.joinedViaYourLink')}
+                        </Text>
+                      </View>
+                    </View>
+                    <View
+                      className="rounded-[10px] px-3 py-1.25"
                       style={{
-                        color:
-                          ref.status === 'Rejected'
-                            ? referralWarningText
-                            : referralStatusText,
+                        backgroundColor: isRejectedStatus
+                          ? referralWarningBg
+                          : isPositiveStatus
+                            ? referralStatusBg
+                            : isDark
+                              ? Colors.badgeDarkBackground
+                              : Colors.badgeLightBackground,
                       }}
                     >
-                      {t(
-                        referralStatusToKey[ref.status] ||
-                          'invite.status.unknown'
-                      )}
-                    </Text>
+                      <Text
+                        className="text-xs font-bold"
+                        style={{
+                          color: isRejectedStatus
+                            ? referralWarningText
+                            : isPositiveStatus
+                              ? referralStatusText
+                              : isDark
+                                ? Colors.textSecondaryDark
+                                : Colors.textSecondary,
+                        }}
+                      >
+                        {t(
+                          referralStatusToKey[ref.status] ||
+                            'invite.status.unknown'
+                        )}
+                      </Text>
+                    </View>
                   </View>
-                </View>
-              </InviteReferralRowStagger>
-            ))}
+                </InviteReferralRowStagger>
+              );
+            })}
             {referrals.length === 0 ? (
               <Text className="py-5 text-center text-sm text-text-secondary dark:text-text-secondary-dark">
                 {t('invite.noReferralsYet')}

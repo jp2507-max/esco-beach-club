@@ -22,22 +22,22 @@ const auth = {
   onboardingBasicsTermsCta: 'Terms of Service',
   onboardingLocalIdentityTitle: 'Guest Profile',
   onboardingLocalIdentitySubtitle:
-    'Tell us whether you are a local or a foreigner so we can tailor your member experience.',
+    'Tell us whether your stay is long-term or short-term so we can tailor your member experience.',
   onboardingLocalIdentityRegionalAccessTitle: 'Member Segment',
   onboardingLocalIdentityRegionalAccessDescription:
-    'This helps us personalize your perks, recommendations, and venue offers.',
-  onboardingLocalIdentityLocalTitle: 'Local',
+    'This helps us personalize your perks, recommendations, and stay-relevant offers.',
+  onboardingLocalIdentityLocalTitle: 'Long-term',
   onboardingLocalIdentityLocalDescription:
-    'I live locally and want offers tailored to residents.',
-  onboardingLocalIdentityForeignerTitle: 'Foreigner',
+    'I stay in this area long-term and want resident-style recommendations.',
+  onboardingLocalIdentityForeignerTitle: 'Short-term',
   onboardingLocalIdentityForeignerDescription:
-    'I am visiting from abroad and want traveler-friendly recommendations.',
+    'I am here short-term and want visit-friendly recommendations.',
   onboardingLocalIdentityLegalConsentsTitle: 'Legal Consents',
   onboardingInfoButtonLabel: 'Why we ask this',
   onboardingInfoButtonHint: 'Shows a short explanation',
   onboardingLocalIdentityRegionalAccessInfoTitle: 'Why we ask your segment',
   onboardingLocalIdentityRegionalAccessInfoMessage:
-    'We use this to personalize local offers, travel-friendly perks, and on-site experiences.',
+    'We use this to personalize stay-appropriate perks, offers, and on-site experiences.',
   onboardingLocalIdentityTermsInfoTitle: 'Why terms are required',
   onboardingLocalIdentityTermsInfoMessage:
     'This protects members and partners by setting clear booking, conduct, and cancellation rules.',
@@ -56,7 +56,7 @@ const auth = {
   onboardingLocalIdentityContinue: 'Continue',
   onboardingLocalIdentityInvalidTitle: 'Missing Information',
   onboardingLocalIdentityInvalidMessage:
-    'Please choose Local or Foreigner and accept all legal consents.',
+    'Please choose Long-term or Short-term and accept all legal consents.',
   onboardingFinalDetailsTitle: 'Final Details',
   onboardingFinalDetailsSubtitle:
     'Upload a photo so your cabana host can welcome you by name.',

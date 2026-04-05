@@ -33,12 +33,12 @@ function toMemberSegment(value: unknown): MemberSegment | null {
   const normalized =
     typeof value === 'string' ? value.trim().toUpperCase() : '';
 
-  if (normalized === memberSegments.local) {
-    return memberSegments.local;
+  if (normalized === memberSegments.longTerm) {
+    return memberSegments.longTerm;
   }
 
-  if (normalized === memberSegments.foreigner) {
-    return memberSegments.foreigner;
+  if (normalized === memberSegments.shortTerm) {
+    return memberSegments.shortTerm;
   }
 
   return null;

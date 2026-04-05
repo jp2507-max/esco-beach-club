@@ -49,6 +49,44 @@ const profile = {
     memberName: '멤버 이름',
     lifetimeTier: '평생 등급',
   },
+  benefits: {
+    title: '해제된 혜택',
+    viewAll: '모두 보기',
+    concierge: '24/7 컨시어지 서비스',
+    priorityBooking: '우선 예약 권한',
+    poolsideDrinks: '무료 풀사이드 음료',
+    poolsideDrinksDesc: '매일 제공되는 시그니처 칵테일',
+    memberEvents: '멤버 전용 이벤트 참여',
+    memberEventsDesc: '멤버 전용 이벤트에 대한 독점적인 접근',
+    discountDining: '다이닝 할인',
+    discountDiningDesc: '모든 음식 및 음료 10% 할인',
+  },
+  manageAccount: {
+    title: '계정 관리',
+    upgradeTier: '등급 업그레이드',
+    billingHistory: '청구 내역',
+    managePayments: '결제 수단 관리',
+  },
+  activity: {
+    title: '최근 활동',
+    cashbackAdjusted: '수동 포인트 조정',
+    cashbackAdjustedDesc:
+      '{{points}} 포인트가 수동 조정을 통해 변경되었습니다.',
+    cashbackEarned: '포인트 적립',
+    cashbackEarnedDesc:
+      '최근 적격 구매를 통해 +{{points}} 포인트가 적립되었습니다.',
+    cashbackReversed: '포인트 회수',
+    cashbackReversedDesc:
+      '환불 또는 취소 후 -{{points}} 포인트가 차감되었습니다.',
+    daysAgo: '{{count}}일 전',
+    loading: '최근 활동을 불러오는 중...',
+    emptyTitle: '활동 내역이 없습니다',
+    emptyDescription:
+      '적격 구매를 하시면 새로운 포인트 활동과 월간 등급 진행 현황이 여기에 표시됩니다.',
+    progressReset: '등급 진행 초기화',
+    progressResetDesc: '월간 등급 진행 기간이 초기화되었습니다.',
+    sampleData: '샘플 데이터',
+  },
   noBio: '프로필을 더 잘 보여줄 짧은 소개를 추가해 보세요.',
   welcomeGift: '웰컴 기프트',
   welcomeDiscount: '10% 할인',
@@ -233,7 +271,7 @@ const profile = {
     cameraPermissionTitle: '카메라 권한 필요',
     currentPoints: '현재 포인트 잔액: {{value}}',
     errors: {
-      billBelowMinimumSpend: '이 결제 금액은 최소 포인트 기준에 미달합니다.',
+      billBelowMinimumSpend: '이 결제 금액은 최소 결제 금액 기준에 미달합니다.',
       generic: '문제가 발생했습니다. 다시 시도해 주세요.',
       invalidBillAmount: 'VND 기준의 올바른 결제 금액을 입력해 주세요.',
       invalidRewardServiceResponse:

@@ -74,7 +74,7 @@ export const onboardingLocalIdentitySchema = z.object({
   acceptedTerms: z
     .boolean()
     .refine((value) => value === true, { error: v('required') }),
-  memberSegment: z.enum([memberSegments.local, memberSegments.foreigner], {
+  memberSegment: z.enum([memberSegments.longTerm, memberSegments.shortTerm], {
     error: v('required'),
   }),
 });

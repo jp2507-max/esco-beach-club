@@ -70,6 +70,10 @@ function ReferralListRow({
   refItem,
   statusLabel,
 }: ReferralListRowProps): React.JSX.Element {
+  const isPositiveStatus =
+    refItem.status === 'Accepted' || refItem.status === 'Completed';
+  const isRejectedStatus = refItem.status === 'Rejected';
+
   return (
     <InviteReferralListRowStagger index={index}>
       <View
@@ -107,19 +111,25 @@ function ReferralListRow({
         <View
           className="rounded-[10px] px-3 py-1.25"
           style={{
-            backgroundColor:
-              refItem.status === 'Rejected'
-                ? referralWarningBg
-                : referralStatusBg,
+            backgroundColor: isRejectedStatus
+              ? referralWarningBg
+              : isPositiveStatus
+                ? referralStatusBg
+                : isDark
+                  ? Colors.badgeDarkBackground
+                  : Colors.badgeLightBackground,
           }}
         >
           <Text
             className="text-xs font-bold"
             style={{
-              color:
-                refItem.status === 'Rejected'
-                  ? referralWarningText
-                  : referralStatusText,
+              color: isRejectedStatus
+                ? referralWarningText
+                : isPositiveStatus
+                  ? referralStatusText
+                  : isDark
+                    ? Colors.textSecondaryDark
+                    : Colors.textSecondary,
             }}
           >
             {statusLabel}

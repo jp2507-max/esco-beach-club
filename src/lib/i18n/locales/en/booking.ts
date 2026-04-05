@@ -43,6 +43,7 @@ const booking = {
   paxIncrease: 'Increase number of guests',
   paxDecreaseHint: 'Reduces the number of guests by one',
   paxIncreaseHint: 'Increases the number of guests by one',
+  dateLabel: '{{weekday}}, {{month}} {{day}}',
   selectDateHint: 'Selects this day for your table reservation',
   selectTimeHint: 'Selects this time slot when available',
   available: 'Available',

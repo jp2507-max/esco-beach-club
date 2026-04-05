@@ -274,7 +274,7 @@ const profile = {
     currentPoints: 'Current points balance: {{value}}',
     errors: {
       billBelowMinimumSpend:
-        'This bill does not meet the minimum points threshold.',
+        'This bill does not meet the minimum spend threshold.',
       generic: 'Something went wrong. Please try again.',
       invalidBillAmount: 'Enter a valid bill amount in VND.',
       invalidRewardServiceResponse:

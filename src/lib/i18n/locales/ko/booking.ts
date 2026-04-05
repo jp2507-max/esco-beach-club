@@ -43,6 +43,7 @@ const booking = {
   paxIncrease: '인원 늘리기',
   paxDecreaseHint: '게스트 수를 한 명 줄입니다',
   paxIncreaseHint: '게스트 수를 한 명 늘립니다',
+  dateLabel: '{{month}} {{day}}일 {{weekday}}',
   selectDateHint: '테이블 예약에 이 날짜를 선택합니다',
   selectTimeHint: '이용 가능할 때 이 시간대를 선택합니다',
   available: '예약 가능',
