@@ -41,17 +41,29 @@ const rules = {
     },
   },
   partner_redemptions: {
+    bind: {
+      hasClaimedStatusOnly: "data.status == 'claimed'",
+      onlySafePartnerRedemptionFields:
+        "request.modifiedFields.all(field, field in ['created_at', 'entry_key', 'partner_code', 'partner_id', 'redemption_method', 'status'])",
+    },
     allow: {
       view: "auth.id != null && auth.id in data.ref('owner.id')",
-      create: "auth.id != null && auth.id in data.ref('owner.id')",
+      create:
+        "auth.id != null && auth.id in data.ref('owner.id') && onlySafePartnerRedemptionFields && hasClaimedStatusOnly",
       delete: 'false',
       update: 'false',
     },
   },
   reviews: {
+    bind: {
+      hasValidRating: 'data.rating >= 1 && data.rating <= 5',
+      onlySafeReviewFields:
+        "request.modifiedFields.all(field, field in ['comment', 'created_at', 'rating'])",
+    },
     allow: {
       view: "auth.id != null && auth.id in data.ref('owner.id')",
-      create: "auth.id != null && auth.id in data.ref('owner.id')",
+      create:
+        "auth.id != null && auth.id in data.ref('owner.id') && onlySafeReviewFields && hasValidRating",
       delete: 'false',
       update: 'false',
     },
@@ -79,28 +91,42 @@ const rules = {
   },
   profiles: {
     bind: {
-      authHasActiveStaffRole:
-        "auth.id != null && ('staff' in auth.ref('$user.staff_access.role') || 'manager' in auth.ref('$user.staff_access.role')) && true in auth.ref('$user.staff_access.is_active')",
       isLinkedProfile:
         "auth.id != null && data.id in auth.ref('$user.profile.id')",
       isOwner: "auth.id != null && auth.id in data.ref('user.id')",
       isOwnerOrLinkedProfile: 'isOwner || isLinkedProfile',
-      onlySafeProfileFields:
-        "request.modifiedFields.all(field, field in ['full_name', 'avatar_url', 'has_seen_welcome_voucher', 'bio', 'member_since', 'member_segment', 'nights_left', 'date_of_birth', 'location_permission_status', 'push_notification_permission_status', 'onboarding_completed_at', 'updated_at'])",
+      canSetAuthProviderOnce:
+        "!('auth_provider' in request.modifiedFields) || (data.auth_provider == null && newData.auth_provider in ['apple', 'google', 'magic_code'])",
+      hasValidProfileCreateValues:
+        "data.cashback_points_balance == 0 && data.cashback_points_lifetime_earned == 0 && data.has_seen_welcome_voucher == false && data.lifetime_tier_key == 'MEMBER' && data.nights_left == 0 && data.saved == 0 && data.tier_progress_points == 0 && data.location_permission_status in ['GRANTED', 'DENIED', 'UNDETERMINED'] && data.push_notification_permission_status in ['GRANTED', 'DENIED', 'UNDETERMINED'] && (data.member_segment == null || data.member_segment in ['LONG_TERM', 'SHORT_TERM']) && data.full_name != null && data.full_name.size() >= 1 && data.full_name.size() <= 60 && data.member_id != null && data.member_id.size() >= 6 && data.referral_code != null && data.referral_code.size() >= 4 && (data.next_tier_key == null || data.next_tier_key == 'LEGEND')",
+      hasValidProfileUpdates:
+        "(!('full_name' in request.modifiedFields) || (newData.full_name != null && newData.full_name.size() >= 1 && newData.full_name.size() <= 60)) && (!('location_permission_status' in request.modifiedFields) || newData.location_permission_status in ['GRANTED', 'DENIED', 'UNDETERMINED']) && (!('push_notification_permission_status' in request.modifiedFields) || newData.push_notification_permission_status in ['GRANTED', 'DENIED', 'UNDETERMINED']) && (!('member_segment' in request.modifiedFields) || newData.member_segment == null || newData.member_segment in ['LONG_TERM', 'SHORT_TERM']) && canSetAuthProviderOnce",
+      onlySafeProfileCreateFields:
+        "request.modifiedFields.all(field, field in ['avatar_url', 'bio', 'cashback_points_balance', 'cashback_points_lifetime_earned', 'created_at', 'date_of_birth', 'full_name', 'has_seen_welcome_voucher', 'lifetime_tier_key', 'location_permission_status', 'member_id', 'member_segment', 'member_since', 'next_tier_key', 'nights_left', 'onboarding_completed_at', 'push_notification_permission_status', 'referral_code', 'saved', 'tier_progress_expires_at', 'tier_progress_points', 'tier_progress_started_at', 'tier_progress_target_points', 'updated_at'])",
+      onlySafeProfileUpdateFields:
+        "request.modifiedFields.all(field, field in ['auth_provider', 'full_name', 'avatar_url', 'has_seen_welcome_voucher', 'bio', 'member_since', 'member_segment', 'nights_left', 'date_of_birth', 'location_permission_status', 'push_notification_permission_status', 'onboarding_completed_at', 'updated_at'])",
       canCreateOwnedProfile:
         "auth.id != null && auth.id in data.ref('user.id')",
     },
     allow: {
-      view: 'isOwnerOrLinkedProfile || authHasActiveStaffRole',
-      create: 'canCreateOwnedProfile',
+      view: 'isOwnerOrLinkedProfile',
+      create:
+        'canCreateOwnedProfile && onlySafeProfileCreateFields && hasValidProfileCreateValues',
       delete: 'false',
-      update: 'isOwnerOrLinkedProfile && onlySafeProfileFields',
+      update:
+        'isOwnerOrLinkedProfile && onlySafeProfileUpdateFields && hasValidProfileUpdates',
     },
   },
   table_reservations: {
+    bind: {
+      hasPendingStatusOnly: "data.status == 'pending'",
+      onlySafeTableReservationFields:
+        "request.modifiedFields.all(field, field in ['created_at', 'entry_key', 'event_id', 'event_title', 'occasion', 'party_size', 'reservation_date', 'reservation_time', 'source', 'status', 'updated_at'])",
+    },
     allow: {
       view: "auth.id != null && auth.id in data.ref('owner.id')",
-      create: "auth.id != null && auth.id in data.ref('owner.id')",
+      create:
+        "auth.id != null && auth.id in data.ref('owner.id') && onlySafeTableReservationFields && hasPendingStatusOnly",
       delete: 'false',
       update: 'false',
     },
@@ -119,9 +145,15 @@ const rules = {
     },
   },
   private_event_inquiries: {
+    bind: {
+      hasValidEstimatedPax: 'data.estimated_pax >= 1',
+      onlySafePrivateEventInquiryFields:
+        "request.modifiedFields.all(field, field in ['contact_email', 'contact_name', 'created_at', 'entry_key', 'estimated_pax', 'event_type', 'notes', 'preferred_date'])",
+    },
     allow: {
       view: "auth.id != null && auth.id in data.ref('owner.id')",
-      create: "auth.id != null && auth.id in data.ref('owner.id')",
+      create:
+        "auth.id != null && auth.id in data.ref('owner.id') && onlySafePrivateEventInquiryFields && hasValidEstimatedPax",
       delete: 'false',
       update: 'false',
     },
@@ -136,12 +168,10 @@ const rules = {
   },
   reward_transactions: {
     bind: {
-      authHasActiveStaffRole:
-        "auth.id != null && ('staff' in auth.ref('$user.staff_access.role') || 'manager' in auth.ref('$user.staff_access.role')) && true in auth.ref('$user.staff_access.is_active')",
       isMemberOwner: "auth.id != null && auth.id in data.ref('member.user.id')",
     },
     allow: {
-      view: 'isMemberOwner || authHasActiveStaffRole',
+      view: 'isMemberOwner',
       create: 'false',
       delete: 'false',
       update: 'false',
@@ -188,26 +218,15 @@ const rules = {
     },
   },
   saved_events: {
+    bind: {
+      onlySafeSavedEventFields:
+        "request.modifiedFields.all(field, field in ['created_at', 'entry_key', 'event_id'])",
+    },
     allow: {
       view: "auth.id != null && auth.id in data.ref('owner.id')",
-      create: "auth.id != null && auth.id in data.ref('owner.id')",
+      create:
+        "auth.id != null && auth.id in data.ref('owner.id') && onlySafeSavedEventFields",
       delete: "auth.id != null && auth.id in data.ref('owner.id')",
-      update: 'false',
-    },
-  },
-  staff_access: {
-    bind: {
-      authHasActiveManagerRole:
-        "auth.id != null && 'manager' in auth.ref('$user.staff_access.role') && true in auth.ref('$user.staff_access.is_active')",
-      authHasActiveStaffRole:
-        "auth.id != null && ('staff' in auth.ref('$user.staff_access.role') || 'manager' in auth.ref('$user.staff_access.role')) && true in auth.ref('$user.staff_access.is_active')",
-      isManagerRecord: "data.role == 'manager' && data.is_active == true",
-      isOwner: "auth.id != null && auth.id in data.ref('user.id')",
-    },
-    allow: {
-      view: 'isOwner || (authHasActiveStaffRole && isManagerRecord)',
-      create: 'false',
-      delete: 'false',
       update: 'false',
     },
   },

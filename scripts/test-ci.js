@@ -21,11 +21,35 @@ const minimalJunit = `<?xml version="1.0" encoding="UTF-8"?><testsuites tests="0
 
 try {
   execSync('bun test', { stdio: 'inherit' });
-} catch {
-  // bun test may fail if no tests; continue to produce coverage artifacts
+} catch (error) {
+  // Preserve artifact generation, but fail the process after writing artifacts.
+  // This avoids false-green CI runs when tests fail or are not executed correctly.
+  process.exitCode = 1;
+  console.error(
+    '[test-ci] bun test failed:',
+    error instanceof Error ? error.message : String(error)
+  );
 }
 
 fs.mkdirSync(coverageDir, { recursive: true });
-fs.writeFileSync(path.join(coverageDir, 'coverage-summary.json'), JSON.stringify(minimalCoverage, null, 2));
-fs.writeFileSync(path.join(coverageDir, 'jest-junit.xml'), minimalJunit);
-fs.writeFileSync(path.join(coverageDir, 'coverage.txt'), 'No coverage data (test infra not fully configured).\n');
+const summaryPath = path.join(coverageDir, 'coverage-summary.json');
+if (!fs.existsSync(summaryPath)) {
+  fs.writeFileSync(summaryPath, JSON.stringify(minimalCoverage, null, 2));
+}
+
+const junitPath = path.join(coverageDir, 'jest-junit.xml');
+if (!fs.existsSync(junitPath)) {
+  fs.writeFileSync(junitPath, minimalJunit);
+}
+
+const txtPath = path.join(coverageDir, 'coverage.txt');
+if (!fs.existsSync(txtPath)) {
+  fs.writeFileSync(
+    txtPath,
+    'No coverage data (test infra not fully configured).\n'
+  );
+}
+
+if (process.exitCode && process.exitCode !== 0) {
+  process.exit(process.exitCode);
+}

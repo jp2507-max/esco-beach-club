@@ -44,8 +44,6 @@ type GlassSupportState = {
   error?: string;
   liquidAvailable: boolean;
 };
-
-let hasLoggedGlassDiagnostics = false;
 const GLASS_FILL_STYLE = { borderRadius: 999 } as const;
 
 function getGlassSupportState(): GlassSupportState {
@@ -133,32 +131,6 @@ export function HeaderGlassButton({
       isMounted = false;
     };
   }, []);
-
-  React.useEffect(() => {
-    if (!__DEV__ || Platform.OS !== 'ios' || hasLoggedGlassDiagnostics) return;
-
-    const iosVersion =
-      typeof Platform.Version === 'string'
-        ? Platform.Version
-        : String(Platform.Version);
-
-    console.info('[HeaderGlassButton] glass-support', {
-      apiAvailable: supportState.apiAvailable,
-      canUseGlass,
-      error: supportState.error ?? null,
-      iosVersion,
-      liquidAvailable: supportState.liquidAvailable,
-      reduceTransparencyEnabled: isReduceTransparencyEnabled,
-    });
-
-    hasLoggedGlassDiagnostics = true;
-  }, [
-    canUseGlass,
-    isReduceTransparencyEnabled,
-    supportState.apiAvailable,
-    supportState.error,
-    supportState.liquidAvailable,
-  ]);
 
   const glassContainerClassName =
     variant === 'overlay'

@@ -1,3 +1,4 @@
+import type { Translations } from '@/src/lib/i18n/locales/en';
 import auth from '@/src/lib/i18n/locales/ko/auth';
 import booking from '@/src/lib/i18n/locales/ko/booking';
 import common from '@/src/lib/i18n/locales/ko/common';
@@ -18,4 +19,4 @@ export const korean = {
   profile,
   booking,
   menu,
-} as const;
+} as const satisfies Translations;

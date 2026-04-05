@@ -22,22 +22,22 @@ const auth = {
   onboardingBasicsTermsCta: 'Terms of Service',
   onboardingLocalIdentityTitle: 'Guest Profile',
   onboardingLocalIdentitySubtitle:
-    'Tell us whether you are a local or a foreigner so we can tailor your member experience.',
+    'Tell us whether your stay is long-term or short-term so we can tailor your member experience.',
   onboardingLocalIdentityRegionalAccessTitle: 'Member Segment',
   onboardingLocalIdentityRegionalAccessDescription:
-    'This helps us personalize your perks, recommendations, and venue offers.',
-  onboardingLocalIdentityLocalTitle: 'Local',
+    'This helps us personalize your perks, recommendations, and stay-relevant offers.',
+  onboardingLocalIdentityLocalTitle: 'Long-term',
   onboardingLocalIdentityLocalDescription:
-    'I live locally and want offers tailored to residents.',
-  onboardingLocalIdentityForeignerTitle: 'Foreigner',
+    'I stay in this area long-term and want resident-style recommendations.',
+  onboardingLocalIdentityForeignerTitle: 'Short-term',
   onboardingLocalIdentityForeignerDescription:
-    'I am visiting from abroad and want traveler-friendly recommendations.',
+    'I am here short-term and want visit-friendly recommendations.',
   onboardingLocalIdentityLegalConsentsTitle: 'Legal Consents',
   onboardingInfoButtonLabel: 'Why we ask this',
   onboardingInfoButtonHint: 'Shows a short explanation',
   onboardingLocalIdentityRegionalAccessInfoTitle: 'Why we ask your segment',
   onboardingLocalIdentityRegionalAccessInfoMessage:
-    'We use this to personalize local offers, travel-friendly perks, and on-site experiences.',
+    'We use this to personalize stay-appropriate perks, offers, and on-site experiences.',
   onboardingLocalIdentityTermsInfoTitle: 'Why terms are required',
   onboardingLocalIdentityTermsInfoMessage:
     'This protects members and partners by setting clear booking, conduct, and cancellation rules.',
@@ -56,7 +56,7 @@ const auth = {
   onboardingLocalIdentityContinue: 'Continue',
   onboardingLocalIdentityInvalidTitle: 'Missing Information',
   onboardingLocalIdentityInvalidMessage:
-    'Please choose Local or Foreigner and accept all legal consents.',
+    'Please choose Long-term or Short-term and accept all legal consents.',
   onboardingFinalDetailsTitle: 'Final Details',
   onboardingFinalDetailsSubtitle:
     'Upload a photo so your cabana host can welcome you by name.',
@@ -107,12 +107,15 @@ const auth = {
     'We could not open the permission prompt. Please try again or continue for now.',
   onboardingPermissionsPrivacyNote:
     'You can change permissions anytime in your device settings.',
+  onboardingSaveErrorTitle: 'Couldn’t save your details',
+  onboardingSaveErrorMessage:
+    'Something went wrong while saving. Please try again.',
   venueUpsellNotificationChannelName: 'Venue offers',
   venueUpsellNotificationChannelDescription:
     'Timely offers when you arrive at the restaurant.',
-  venueUpsellNotificationTitle: 'Earn cashback points at the bar',
+  venueUpsellNotificationTitle: 'Earn reward points at the bar',
   venueUpsellNotificationBody:
-    'Order a cocktail now to add cashback points to your balance.',
+    'Order a cocktail now to add reward points to your balance.',
   onboardingClubWelcomeTitle: 'Welcome to the Club!',
   onboardingClubWelcomeSubtitle:
     'The sun is out and your membership is active. Let’s start with a toast to your new lifestyle.',
@@ -142,6 +145,8 @@ const auth = {
   appleAuthUnavailable: 'Apple Sign In is not available on this device.',
   appleAuthorizationCodeMissing: 'Apple did not return an authorization code.',
   appleIdTokenMissing: 'Apple did not return an identity token.',
+  appleOauthClientNotConfigured:
+    'Apple sign-in is misconfigured. Please contact support.',
   googleAuthNotConfigured: 'Google Sign-In is not configured yet.',
   googleOauthClientNotConfigured:
     'Google sign-in is misconfigured. Please contact support.',
@@ -206,6 +211,7 @@ const auth = {
   onboardingWelcomePointGlobalDescription:
     'Access rewards across 40+ countries and 6 continents.',
   genericError: 'Something went wrong. Please try again or contact support.',
+  member: 'Member',
 } as const;
 
 export default auth;

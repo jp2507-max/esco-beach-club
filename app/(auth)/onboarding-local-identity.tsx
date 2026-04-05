@@ -156,8 +156,8 @@ export default function OnboardingLocalIdentityScreen(): React.JSX.Element {
             control={control}
             name="memberSegment"
             render={({ field }) => {
-              const isLocalSelected = field.value === 'LOCAL';
-              const isForeignerSelected = field.value === 'FOREIGNER';
+              const isLongTermSelected = field.value === 'LONG_TERM';
+              const isShortTermSelected = field.value === 'SHORT_TERM';
 
               return (
                 <View className="gap-2">
@@ -170,26 +170,26 @@ export default function OnboardingLocalIdentityScreen(): React.JSX.Element {
                   >
                     <Pressable
                       accessibilityRole="radio"
-                      accessibilityState={{ selected: isLocalSelected }}
+                      accessibilityState={{ selected: isLongTermSelected }}
                       className={`flex-row items-center gap-3 rounded-2xl border px-4 py-3 ${
-                        isLocalSelected
+                        isLongTermSelected
                           ? 'border-primary bg-primary/5 dark:border-primary-bright dark:bg-primary-bright/15'
                           : 'border-border bg-surface dark:border-dark-border dark:bg-dark-bg-elevated'
                       }`}
                       onPress={() => {
                         hapticSelection();
-                        field.onChange('LOCAL');
+                        field.onChange('LONG_TERM');
                       }}
-                      testID="onboarding-local-identity-local"
+                      testID="onboarding-local-identity-long-term"
                     >
                       <View
                         className={`size-5 items-center justify-center rounded-full border-2 ${
-                          isLocalSelected
+                          isLongTermSelected
                             ? 'border-primary dark:border-primary-bright'
                             : 'border-border dark:border-dark-border'
                         }`}
                       >
-                        {isLocalSelected ? (
+                        {isLongTermSelected ? (
                           <Check
                             className="text-primary dark:text-primary-bright"
                             size={12}
@@ -216,26 +216,26 @@ export default function OnboardingLocalIdentityScreen(): React.JSX.Element {
                   >
                     <Pressable
                       accessibilityRole="radio"
-                      accessibilityState={{ selected: isForeignerSelected }}
+                      accessibilityState={{ selected: isShortTermSelected }}
                       className={`flex-row items-center gap-3 rounded-2xl border px-4 py-3 ${
-                        isForeignerSelected
+                        isShortTermSelected
                           ? 'border-primary bg-primary/5 dark:border-primary-bright dark:bg-primary-bright/15'
                           : 'border-border bg-surface dark:border-dark-border dark:bg-dark-bg-elevated'
                       }`}
                       onPress={() => {
                         hapticSelection();
-                        field.onChange('FOREIGNER');
+                        field.onChange('SHORT_TERM');
                       }}
-                      testID="onboarding-local-identity-foreigner"
+                      testID="onboarding-local-identity-short-term"
                     >
                       <View
                         className={`size-5 items-center justify-center rounded-full border-2 ${
-                          isForeignerSelected
+                          isShortTermSelected
                             ? 'border-primary dark:border-primary-bright'
                             : 'border-border dark:border-dark-border'
                         }`}
                       >
-                        {isForeignerSelected ? (
+                        {isShortTermSelected ? (
                           <Check
                             className="text-primary dark:text-primary-bright"
                             size={12}
@@ -458,7 +458,7 @@ export default function OnboardingLocalIdentityScreen(): React.JSX.Element {
         </Animated.View>
 
         <Animated.View
-          entering={withRM(FadeInUp.duration(motion.dur.md).delay(CTA_DELAY))}
+          entering={withRM(FadeIn.duration(motion.dur.md).delay(CTA_DELAY))}
           className="mt-auto"
         >
           <Animated.View style={ctaButton.animatedStyle}>

@@ -8,7 +8,7 @@ import {
   UtensilsCrossed,
   Wine,
 } from 'lucide-react-native';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useColorScheme } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -38,6 +38,8 @@ import { hapticLight } from '@/src/lib/haptics/haptics';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 import { Image } from '@/src/tw/image';
+
+const escoLogoSource = require('@/assets/images/escobeach-logo-horizontal-green.png');
 
 type QuickAction = {
   color: string;
@@ -123,12 +125,12 @@ function HomeEventCard({
         transition={180}
       />
       <LinearGradient
-        colors={['transparent', 'rgba(0,0,0,0.7)']}
+        colors={['transparent', Colors.imageOverlayStrong]}
         style={{ bottom: 0, left: 0, position: 'absolute', right: 0, top: 0 }}
       />
       <View
         className="absolute right-3.5 top-3.5 rounded-lg px-3 py-1.25"
-        style={{ backgroundColor: 'rgba(0,0,0,0.45)' }}
+        style={{ backgroundColor: Colors.imageOverlayMedium }}
       >
         <Text className="text-[11px] font-bold tracking-[0.5px] text-white">
           {event.day_label ?? event.date}
@@ -139,12 +141,12 @@ function HomeEventCard({
           {event.title}
         </Text>
         <View className="flex-row items-center">
-          <Clock size={13} color="rgba(255,255,255,0.85)" />
+          <Clock size={13} color={Colors.imageOverlayIcon} />
           <Text className="ml-1.25 text-xs font-medium text-white/85">
             {event.time}
           </Text>
           <Text className="mx-1.5 text-xs text-white/50">·</Text>
-          <MapPin size={13} color="rgba(255,255,255,0.85)" />
+          <MapPin size={13} color={Colors.imageOverlayIcon} />
           <Text className="ml-1.25 text-xs font-medium text-white/85">
             {event.location}
           </Text>
@@ -210,9 +212,11 @@ function HomeScreenContent(): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { t } = useTranslation('home');
+  const { t: tCommon } = useTranslation('common');
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const { contentStyle: sectionStyle } = useScreenEntry({ durationMs: 500 });
+  const [brandLogoFailed, setBrandLogoFailed] = useState(false);
 
   const { eventsLoading } = useEventsData();
   const { news, newsLoading } = useNewsData();
@@ -268,7 +272,10 @@ function HomeScreenContent(): React.JSX.Element {
     [homeEvents, news, t]
   );
 
-  const listContentContainerStyle = useMemo(() => ({ paddingBottom: 30 }), []);
+  const listContentContainerStyle = useMemo(
+    () => ({ paddingBottom: 30 + insets.bottom }),
+    [insets.bottom]
+  );
 
   const handleRoutePress = useCallback(
     (route: string): void => {
@@ -339,7 +346,9 @@ function HomeScreenContent(): React.JSX.Element {
         <View
           className="absolute size-45 rounded-full"
           style={{
-            backgroundColor: isDark ? '#FF6B9D22' : '#E91E6310',
+            backgroundColor: isDark
+              ? Colors.homeOrbPrimaryDark
+              : Colors.homeOrbPrimaryLight,
             right: -20,
             top: -40,
           }}
@@ -347,7 +356,9 @@ function HomeScreenContent(): React.JSX.Element {
         <View
           className="absolute size-30 rounded-full"
           style={{
-            backgroundColor: isDark ? '#5ED4AF1C' : '#00968812',
+            backgroundColor: isDark
+              ? Colors.homeOrbSecondaryDark
+              : Colors.homeOrbSecondaryLight,
             right: 80,
             top: 30,
           }}
@@ -355,7 +366,9 @@ function HomeScreenContent(): React.JSX.Element {
         <View
           className="absolute size-25 rounded-full"
           style={{
-            backgroundColor: isDark ? '#FF6B9D18' : '#FF980010',
+            backgroundColor: isDark
+              ? Colors.homeOrbAccentDark
+              : Colors.homeOrbAccentLight,
             left: -20,
             top: 10,
           }}
@@ -373,36 +386,68 @@ function HomeScreenContent(): React.JSX.Element {
         ListHeaderComponent={
           <>
             <View className="px-5">
-              <View className="flex-row items-center justify-between gap-3 pb-5 pt-4">
-                <View className="min-w-0 flex-1">
-                  <Text
-                    className="text-[28px] font-extrabold text-primary dark:text-primary-bright"
-                    numberOfLines={2}
-                  >
-                    {t('welcomeBackName', { name: userName })}
-                  </Text>
-                </View>
-                <HeaderGlassButton
-                  accessibilityLabel={t('openProfile')}
-                  accessibilityHint={t('openProfileHint')}
-                  className="size-12 shrink-0 border-white/35 dark:border-white/20"
-                  glassStyle="regular"
-                  onPress={handleProfilePress}
-                  testID="profile-avatar"
-                >
-                  <Avatar
-                    className="size-9.5 rounded-full"
-                    uri={memberSummary.avatarUrl}
-                  />
+              <View className="pb-5 pt-8">
+                <View className="mb-5 flex-row items-center justify-between gap-3">
                   <View
-                    className="absolute -bottom-px -right-px size-3.5 rounded-full"
-                    style={{
-                      backgroundColor: Colors.success,
-                      borderColor: Colors.background,
-                      borderWidth: 2.5,
-                    }}
-                  />
-                </HeaderGlassButton>
+                    accessibilityHint={tCommon('branding.markHint')}
+                    accessibilityLabel={tCommon('branding.mark')}
+                    accessibilityRole="header"
+                    className="min-w-0 flex-1 justify-center pr-2"
+                    style={{ minHeight: 56 }}
+                  >
+                    {brandLogoFailed ? (
+                      <Text
+                        className="font-black uppercase text-primary dark:text-primary-bright"
+                        numberOfLines={1}
+                      >
+                        {tCommon('branding.mark')}
+                      </Text>
+                    ) : (
+                      <Image
+                        accessibilityHint={tCommon('branding.markHint')}
+                        accessibilityLabel={tCommon('branding.mark')}
+                        className="w-full max-w-55"
+                        contentFit="contain"
+                        contentPosition="left center"
+                        onError={() => setBrandLogoFailed(true)}
+                        source={escoLogoSource}
+                        style={{
+                          alignSelf: 'flex-start',
+                          height: 56,
+                          width: '100%',
+                        }}
+                      />
+                    )}
+                  </View>
+                  <HeaderGlassButton
+                    accessibilityLabel={t('openProfile')}
+                    accessibilityHint={t('openProfileHint')}
+                    className="size-12 shrink-0 border-white/35 dark:border-white/20"
+                    glassStyle="regular"
+                    onPress={handleProfilePress}
+                    testID="profile-avatar"
+                  >
+                    <Avatar
+                      className="size-9.5 rounded-full"
+                      uri={memberSummary.avatarUrl}
+                    />
+                    <View
+                      className="absolute -bottom-px -right-px size-3.5 rounded-full"
+                      style={{
+                        backgroundColor: Colors.success,
+                        borderColor: Colors.background,
+                        borderWidth: 2.5,
+                      }}
+                    />
+                  </HeaderGlassButton>
+                </View>
+
+                <Text
+                  className="text-[28px] font-extrabold text-primary dark:text-primary-bright"
+                  numberOfLines={2}
+                >
+                  {t('welcomeBackName', { name: userName })}
+                </Text>
               </View>
 
               <AccountDeletionBanner userId={userId} />

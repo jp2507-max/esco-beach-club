@@ -3,18 +3,18 @@ const membership = {
   tierCard: {
     currentTier: 'Current Tier',
     memberSince: 'Member since {{date}}',
-    cashbackBalance: 'Cashback Balance',
-    cashbackPoints: '{{value}} cashback pts',
+    cashbackBalance: 'Points Balance',
+    cashbackPoints: '{{value}} pts',
     progressTo: 'Progress to {{nextTier}}',
     progressPoints: '{{current}} / {{target}} pts',
     progressExpires: 'Progress resets on {{date}}',
     progressResetsMonthly: 'Monthly tier progress resets after 1 month.',
-    nextTierComingSoon: 'Next tier coming soon',
-    progressUnavailable:
-      'Tier progress will appear here once the next tier is configured.',
+    nextTierComingSoon: 'Legend tier unlocked',
+    progressUnavailable: 'You already hold the highest lifetime tier.',
   },
   tiers: {
-    escoLifeMember: 'Esco Life Member',
+    member: 'Esco Life Member',
+    legend: 'Esco Life Legend',
   },
   benefits: {
     title: 'Unlocked Benefits',
@@ -34,21 +34,37 @@ const membership = {
     billingHistory: 'Billing History',
     managePayments: 'Manage Payment Methods',
   },
+  upgradeTier: {
+    intro: 'Track your monthly progress to unlock Legend for life.',
+    currentTierLabel: 'Current lifetime tier',
+    nextTierLabel: 'Next tier',
+    unlockRequirement:
+      'Reach {{target}} points within one monthly window to unlock {{nextTier}} for life.',
+    progressLabel: 'Monthly progress',
+    resetOn: 'Progress resets on {{date}}',
+    resetsMonthlyFallback:
+      'Progress resets one month after your active progress window starts.',
+    topTierTitle: 'You are already Esco Life Legend',
+    topTierDescription:
+      'Legend is your lifetime tier. Keep earning points to maximize your rewards.',
+    formulaTitle: 'Earning formula',
+    formulaDescription:
+      '{{points}} point is earned for every {{amount}} spent.',
+  },
   activity: {
     title: 'Recent Activity',
-    cashbackAdjusted: 'Manual Cashback Adjustment',
+    cashbackAdjusted: 'Manual Points Adjustment',
     cashbackAdjustedDesc:
-      '{{points}} cashback points were changed through a manual adjustment.',
-    cashbackEarned: 'Cashback Earned',
-    cashbackEarnedDesc:
-      '+{{points}} cashback points from a recent qualifying purchase.',
-    cashbackReversed: 'Cashback Reversed',
-    cashbackReversedDesc: '-{{points}} cashback points after a refund or void.',
+      '{{points}} points were changed through a manual adjustment.',
+    cashbackEarned: 'Points Earned',
+    cashbackEarnedDesc: '+{{points}} points from a recent qualifying purchase.',
+    cashbackReversed: 'Points Reversed',
+    cashbackReversedDesc: '-{{points}} points after a refund or void.',
     daysAgo: '{{count}} days ago',
     loading: 'Loading recent activity...',
     emptyTitle: 'No member activity yet',
     emptyDescription:
-      'New cashback activity and monthly tier progress will appear here after your next qualifying purchase.',
+      'New points activity and monthly tier progress will appear here after your next qualifying purchase.',
     progressReset: 'Tier Progress Reset',
     progressResetDesc: 'Your monthly tier progress window was reset.',
     sampleData: 'Sample Content',

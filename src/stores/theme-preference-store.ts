@@ -1,11 +1,12 @@
-import { Appearance } from 'react-native';
+import { Appearance, Platform } from 'react-native';
 import { createMMKV } from 'react-native-mmkv';
 import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
+
 import {
-  createJSONStorage,
-  persist,
-  type StateStorage,
-} from 'zustand/middleware';
+  createGetPersistStateStorage,
+  readPersistEnvelopeSync,
+} from '@/src/lib/stores/zustand-persist-state-storage';
 
 export const themePreferences = ['system', 'light', 'dark'] as const;
 
@@ -26,23 +27,17 @@ type ApplyThemePreferenceOptions = {
   allowSystemReset?: boolean;
 };
 
-const themeStorage = createMMKV({ id: 'esco.theme-preference' });
+const THEME_PREFERENCE_STORAGE_KEY = 'theme-preference';
 
-const mmkvStateStorage: StateStorage = {
-  getItem: (name: string): string | null =>
-    themeStorage.getString(name) ?? null,
-  removeItem: (name: string): void => {
-    themeStorage.remove(name);
-  },
-  setItem: (name: string, value: string): void => {
-    themeStorage.set(name, value);
-  },
-};
+const themeStorage = createMMKV({ id: 'esco.theme-preference' });
+const getStateStorage = createGetPersistStateStorage(themeStorage);
 
 export function applyThemePreference(
   preference: ThemePreference,
   options: ApplyThemePreferenceOptions = {}
 ): void {
+  if (Platform.OS === 'web' && typeof window === 'undefined') return;
+
   if (preference === 'system') {
     // Use the native reset value RN passes through to iOS/Android (see AppearanceModule /
     // RCTConvert). `null` is documented for newer RN stacks but on 0.83.x can mis-sync
@@ -63,7 +58,10 @@ function isThemePreference(value: unknown): value is ThemePreference {
 }
 
 function getStoredThemePreference(): ThemePreference {
-  const rawPreferenceState = themeStorage.getString('theme-preference');
+  const rawPreferenceState = readPersistEnvelopeSync(
+    themeStorage,
+    THEME_PREFERENCE_STORAGE_KEY
+  );
 
   if (!rawPreferenceState) return 'system';
 
@@ -79,6 +77,7 @@ function getStoredThemePreference(): ThemePreference {
   }
 }
 
+/** Resolved from real storage on native and web client; `'system'` on web SSR until rehydrate. */
 const initialThemePreference = getStoredThemePreference();
 
 applyThemePreference(initialThemePreference, { allowSystemReset: false });
@@ -104,10 +103,16 @@ export const useThemePreferenceStore = create<ThemePreferenceState>()(
       },
     }),
     {
-      name: 'theme-preference',
+      name: THEME_PREFERENCE_STORAGE_KEY,
       partialize: (state) => ({ preference: state.preference }),
-      storage: createJSONStorage(() => mmkvStateStorage),
+      storage: createJSONStorage(getStateStorage),
       version: 1,
+      onRehydrateStorage:
+        () =>
+        (state, error): void => {
+          if (error != null || state == null) return;
+          applyThemePreference(state.preference, { allowSystemReset: true });
+        },
     }
   )
 );

@@ -1,4 +1,3 @@
-import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useColorScheme, useWindowDimensions } from 'react-native';
@@ -16,9 +15,13 @@ import { Colors } from '@/constants/colors';
 import { useMemberSummary } from '@/providers/DataProvider';
 import { MemberQrAccessCard } from '@/src/components/ui';
 import { motion, rmTiming } from '@/src/lib/animations/motion';
-import { hapticMedium, hapticSuccess } from '@/src/lib/haptics/haptics';
-import { getRewardTierLabelKey } from '@/src/lib/loyalty';
-import { Pressable, Text, View } from '@/src/tw';
+import { hapticSuccess } from '@/src/lib/haptics/haptics';
+import {
+  getRewardTierLabelKey,
+  normalizeRewardTierKey,
+} from '@/src/lib/loyalty';
+import { getTierQrGradient } from '@/src/lib/profile/membership-screen';
+import { Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 
 const QR_WIDTH_GUTTER = 108;
@@ -28,9 +31,8 @@ const QR_SIZE_MAX = 280;
 export default function QrTabScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const router = useRouter();
   const { t } = useTranslation('profile');
-  const { t: tHome } = useTranslation('home');
+  const { t: tCommon } = useTranslation('common');
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const memberSummary = useMemberSummary();
@@ -43,20 +45,17 @@ export default function QrTabScreen(): React.JSX.Element {
 
   const qrSize = useMemo((): number => {
     const maxByLayout = width - QR_WIDTH_GUTTER;
-    return Math.max(QR_SIZE_MIN, Math.min(QR_SIZE_MAX, Math.floor(maxByLayout)));
+    return Math.max(
+      QR_SIZE_MIN,
+      Math.min(QR_SIZE_MAX, Math.floor(maxByLayout))
+    );
   }, [width]);
 
   useEffect(() => {
     headerOpacity.set(withTiming(1, rmTiming(motion.dur.md)));
-    cardScale.set(
-      withDelay(100, withSpring(1, motion.spring.gentle))
-    );
-    cardOpacity.set(
-      withDelay(100, withTiming(1, rmTiming(motion.dur.lg)))
-    );
-    glowScale.set(
-      withDelay(200, withSpring(1, motion.spring.gentle))
-    );
+    cardScale.set(withDelay(100, withSpring(1, motion.spring.gentle)));
+    cardOpacity.set(withDelay(100, withTiming(1, rmTiming(motion.dur.lg))));
+    glowScale.set(withDelay(200, withSpring(1, motion.spring.gentle)));
     return () => {
       cancelAnimation(cardScale);
       cancelAnimation(cardOpacity);
@@ -91,11 +90,11 @@ export default function QrTabScreen(): React.JSX.Element {
     `tier.${getRewardTierLabelKey(memberSummary.lifetimeTierKey)}`
   );
 
-  function handleOpenStaffRoute(): void {
-    router.push('/staff' as never);
-  }
-
-  const goldAccent = isDark ? Colors.goldBright : Colors.gold;
+  const tierLevel = normalizeRewardTierKey(memberSummary.lifetimeTierKey);
+  const qrCardGradient = useMemo(
+    () => getTierQrGradient(tierLevel, isDark),
+    [tierLevel, isDark]
+  );
 
   return (
     <View
@@ -108,8 +107,8 @@ export default function QrTabScreen(): React.JSX.Element {
           className="absolute rounded-full"
           style={{
             backgroundColor: isDark
-              ? 'rgba(233,30,99,0.05)'
-              : 'rgba(233,30,99,0.03)',
+              ? Colors.qrOrbPrimaryDark
+              : Colors.qrOrbPrimaryLight,
             height: 320,
             left: -120,
             top: '10%',
@@ -120,8 +119,8 @@ export default function QrTabScreen(): React.JSX.Element {
           className="absolute rounded-full"
           style={{
             backgroundColor: isDark
-              ? 'rgba(200,162,77,0.04)'
-              : 'rgba(200,162,77,0.03)',
+              ? Colors.qrOrbGoldDark
+              : Colors.qrOrbGoldLight,
             height: 220,
             right: -80,
             top: '25%',
@@ -132,8 +131,8 @@ export default function QrTabScreen(): React.JSX.Element {
           className="absolute rounded-full"
           style={{
             backgroundColor: isDark
-              ? 'rgba(255,107,157,0.03)'
-              : 'rgba(255,107,157,0.02)',
+              ? Colors.qrOrbAccentDark
+              : Colors.qrOrbAccentLight,
             bottom: '8%',
             height: 180,
             left: '25%',
@@ -148,7 +147,7 @@ export default function QrTabScreen(): React.JSX.Element {
         <Animated.View className="mb-8 items-center" style={headerStyle}>
           <Text
             className="text-[11px] font-extrabold tracking-[3px]"
-            style={{ color: goldAccent }}
+            style={{ color: Colors.secondaryBright }}
           >
             {t('accessPass')}
           </Text>
@@ -167,8 +166,8 @@ export default function QrTabScreen(): React.JSX.Element {
               className="rounded-full"
               style={{
                 backgroundColor: isDark
-                  ? 'rgba(200,162,77,0.08)'
-                  : 'rgba(200,162,77,0.05)',
+                  ? Colors.qrGlowDark
+                  : Colors.qrGlowLight,
                 height: 300,
                 width: 300,
               }}
@@ -177,29 +176,23 @@ export default function QrTabScreen(): React.JSX.Element {
 
           <Animated.View style={cardRevealStyle}>
             <MemberQrAccessCard
-              brandLabel={tHome('brandMark')}
+              brandAccessibilityHint={tCommon('branding.markHint')}
+              brandLabel={tCommon('branding.mark')}
               emptyQrLabel={t('staff.memberNotFound')}
+              gradientColors={qrCardGradient}
               memberId={memberId}
               memberName={memberName}
               qrSize={qrSize}
               tierLabel={tierLabel}
             >
-              <Pressable
-                accessibilityRole="button"
-                className="mt-5 items-center"
-                onLongPress={() => {
-                  hapticMedium();
-                  handleOpenStaffRoute();
-                }}
-                testID="member-qr-hidden-staff-entry"
-              >
+              <View className="mt-5 items-center">
                 <Text
                   className="text-[12px] font-medium tracking-[0.5px]"
-                  style={{ color: `${Colors.gold}88` }}
+                  style={{ color: Colors.qrRefText }}
                 >
                   {t('refPrefix', { memberId })}
                 </Text>
-              </Pressable>
+              </View>
             </MemberQrAccessCard>
           </Animated.View>
         </View>

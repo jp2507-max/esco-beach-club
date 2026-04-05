@@ -136,9 +136,7 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
       .finally(() => {
         isProvisioningProfileRef.current.delete(userId);
         setIsProvisioningProfile(
-          Boolean(
-            isProvisioningProfileRef.current.get(latestUserIdRef.current)
-          )
+          Boolean(isProvisioningProfileRef.current.get(latestUserIdRef.current))
         );
       });
 

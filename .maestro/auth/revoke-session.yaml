@@ -48,10 +48,10 @@ env:
     commands:
       # Tap the "Revoke All Other Sessions" button
       - tapOn: 'Revoke All Other Sessions'
-      
+
       # Confirm the alert
       - tapOn: 'Revoke All'
-      
+
       # Wait for success message
       - assertVisible: 'All other sessions revoked'
 

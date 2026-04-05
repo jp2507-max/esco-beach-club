@@ -13,7 +13,6 @@ export function toReferralStatus(value: unknown): Referral['status'] {
 
   if (normalized === 'accepted') return 'Accepted';
   if (normalized === 'completed') return 'Completed';
-  if (normalized === 'pending') return 'Pending';
   if (normalized === 'rejected') return 'Rejected';
 
   return 'Unknown';

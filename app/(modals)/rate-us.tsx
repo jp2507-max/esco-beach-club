@@ -49,6 +49,8 @@ const STAR_LABEL_KEYS = [
   'rateUs.starLabels.4',
 ] as const;
 
+const STAR_VALUES = [1, 2, 3, 4, 5] as const;
+
 function useStarScales(): SharedValue<number>[] {
   const s0 = useSharedValue(1);
   const s1 = useSharedValue(1);
@@ -64,15 +66,17 @@ function StarButton({
   scale,
   star,
 }: StarButtonProps): React.JSX.Element {
+  const { t } = useTranslation('common');
+
   const style = useAnimatedStyle(() => ({
     transform: [{ scale: scale.get() }],
   }));
 
   return (
     <Pressable
-      accessibilityLabel={`${star} star${star === 1 ? '' : 's'}`}
+      accessibilityLabel={t('rateUs.starAccessibilityLabel', { count: star })}
       accessibilityRole="button"
-      accessibilityHint="Tap to select this star rating"
+      accessibilityHint={t('rateUs.starAccessibilityHint')}
       accessibilityState={{ selected: isActive }}
       onPress={onPress}
       testID={`star-${star}`}
@@ -175,15 +179,16 @@ export default function RateUsScreen(): React.JSX.Element {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"
       >
-        <ScrollView
-          contentInsetAdjustmentBehavior="automatic"
-          contentContainerClassName="items-center px-6 pb-10"
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          {!submitted ? (
-            <>
-              <View className="mb-5 mt-5 size-[90px] items-center justify-center rounded-full border border-border bg-white dark:border-dark-border dark:bg-dark-bg-card">
+        {!submitted ? (
+          <>
+            <ScrollView
+              className="flex-1"
+              contentInsetAdjustmentBehavior="automatic"
+              contentContainerClassName="items-center px-6 pb-6"
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
+              <View className="mb-5 mt-5 size-22.5 items-center justify-center rounded-full border border-border bg-white dark:border-dark-border dark:bg-dark-bg-card">
                 <Text className="text-[40px]">
                   {rating === 0
                     ? '🏖️'
@@ -202,9 +207,9 @@ export default function RateUsScreen(): React.JSX.Element {
                 {t('rateUs.feedbackHint')}
               </Text>
 
-              <View className="mb-[10px] flex-row">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <View key={star} className={star < 5 ? 'mr-[14px]' : ''}>
+              <View className="mb-2.5 flex-row">
+                {STAR_VALUES.map((star) => (
+                  <View key={star} className={star < 5 ? 'mr-3.5' : ''}>
                     <StarButton
                       isActive={star <= rating}
                       onPress={() => handleStarPress(star)}
@@ -220,13 +225,13 @@ export default function RateUsScreen(): React.JSX.Element {
                   className="mb-7 mt-1.5 text-[15px] font-bold"
                   style={{ color: Colors.starActive }}
                 >
-                  {t(STAR_LABEL_KEYS[rating - 1])}
+                  {t(STAR_LABEL_KEYS[rating - 1] as never)}
                 </Text>
               ) : null}
 
               <View className="w-full">
                 <ControlledTextInput<ReviewFormValues>
-                  className="min-h-[90px]"
+                  className="min-h-22.5"
                   containerClassName="min-h-[130px] items-start p-4"
                   control={control}
                   maxLength={500}
@@ -241,7 +246,12 @@ export default function RateUsScreen(): React.JSX.Element {
                   {comment.length}/500
                 </Text>
               </View>
+            </ScrollView>
 
+            <View
+              className="border-t border-border bg-background px-6 pt-4 dark:border-dark-border dark:bg-dark-bg"
+              style={{ paddingBottom: Math.max(insets.bottom, 12) }}
+            >
               <Pressable
                 accessibilityRole="button"
                 className="w-full flex-row items-center justify-center rounded-2xl bg-primary py-4"
@@ -254,22 +264,27 @@ export default function RateUsScreen(): React.JSX.Element {
                 }
                 testID="submit-review"
               >
-                <Send color="#fff" size={18} />
+                <Send color={Colors.white} size={18} />
                 <Text className="ml-2 text-base font-bold text-white">
                   {t('rateUs.submitLabel')}
                 </Text>
               </Pressable>
-            </>
-          ) : (
-            <Animated.View
-              className="items-center pt-[60px]"
-              style={successStyle}
-            >
+            </View>
+          </>
+        ) : (
+          <ScrollView
+            className="flex-1"
+            contentInsetAdjustmentBehavior="automatic"
+            contentContainerClassName="items-center px-6 pb-10"
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            <Animated.View className="items-center pt-15" style={successStyle}>
               <Text className="mb-5 text-[64px]">🎉</Text>
-              <Text className="mb-[10px] text-[28px] font-extrabold text-text dark:text-text-primary-dark">
+              <Text className="mb-2.5 text-[28px] font-extrabold text-text dark:text-text-primary-dark">
                 {t('rateUs.thankYou')}
               </Text>
-              <Text className="mb-9 px-5 text-center text-[15px] leading-[22px] text-text-secondary dark:text-text-secondary-dark">
+              <Text className="mb-9 px-5 text-center text-[15px] leading-5.5 text-text-secondary dark:text-text-secondary-dark">
                 {t('rateUs.thankYouMessage')}
               </Text>
               <Pressable
@@ -283,8 +298,8 @@ export default function RateUsScreen(): React.JSX.Element {
                 </Text>
               </Pressable>
             </Animated.View>
-          )}
-        </ScrollView>
+          </ScrollView>
+        )}
       </KeyboardAvoidingView>
     </View>
   );

@@ -2,11 +2,7 @@ import { id } from '@instantdb/react-native';
 
 import type { Event, SavedEvent } from '@/lib/types';
 import { db } from '@/src/lib/instant';
-import {
-  type InstantRecord,
-  mapEvent,
-  mapSavedEvent,
-} from '@/src/lib/mappers';
+import { type InstantRecord, mapEvent, mapSavedEvent } from '@/src/lib/mappers';
 
 import { nowIso } from './shared';
 

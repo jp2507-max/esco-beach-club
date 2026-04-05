@@ -103,7 +103,7 @@ export default function SuccessScreen(): React.JSX.Element {
         <View
           className="absolute rounded-full"
           style={{
-            backgroundColor: '#FF980010',
+            backgroundColor: Colors.homeOrbAccentLight,
             height: 120,
             right: 20,
             top: '40%',
@@ -112,10 +112,10 @@ export default function SuccessScreen(): React.JSX.Element {
         />
       </View>
 
-      <View className="flex-1 items-center justify-center px-[30px]">
+      <View className="flex-1 items-center justify-center px-7.5">
         <Animated.View className="relative mb-8" style={iconStyle}>
           <View
-            className="size-[110px] items-center justify-center rounded-full"
+            className="size-27.5 items-center justify-center rounded-full"
             style={{
               backgroundColor: Colors.success,
               elevation: 12,
@@ -125,10 +125,10 @@ export default function SuccessScreen(): React.JSX.Element {
               shadowRadius: 20,
             }}
           >
-            <CircleCheck color="#fff" size={56} />
+            <CircleCheck color={Colors.white} size={56} />
           </View>
           <View
-            className="absolute right-[-12px] top-[-8px] size-10 items-center justify-center rounded-full bg-white dark:bg-dark-bg-card"
+            className="absolute -right-3 -top-2 size-10 items-center justify-center rounded-full bg-white dark:bg-dark-bg-card"
             style={shadows.level2}
           >
             <PartyPopper color={Colors.primary} size={28} />
@@ -141,7 +141,7 @@ export default function SuccessScreen(): React.JSX.Element {
               name: name ?? t('bookingSuccess.guest'),
             })}
           </Text>
-          <Text className="max-w-[280px] text-center text-base leading-6 text-text-secondary dark:text-text-secondary-dark">
+          <Text className="max-w-70 text-center text-base leading-6 text-text-secondary dark:text-text-secondary-dark">
             {subtitle ?? t('bookingSuccess.subtitle')}
           </Text>
         </Animated.View>
@@ -150,7 +150,7 @@ export default function SuccessScreen(): React.JSX.Element {
       <Animated.View className="px-5" style={buttonStyle}>
         <Pressable
           accessibilityRole="button"
-          className="items-center rounded-2xl bg-primary py-[18px]"
+          className="items-center rounded-2xl bg-primary py-4.5"
           onPress={() => router.replace('/')}
           testID="back-home"
         >

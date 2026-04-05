@@ -24,7 +24,7 @@ export function MemberQrCode({
   return (
     <View
       className={cn(
-        'items-center justify-center rounded-[16px] bg-white p-4 dark:bg-dark-bg-card',
+        'items-center justify-center rounded-2xl bg-white p-4 dark:bg-dark-bg-card',
         className
       )}
     >

@@ -5,6 +5,7 @@ import { Compass, ExternalLink } from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Linking, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { accentOnDarkBackground, Colors } from '@/constants/colors';
 import type { Partner } from '@/lib/types';
@@ -65,7 +66,7 @@ function DanangCtaCard({
       testID="danang-365-cta"
     >
       <LinearGradient
-        colors={['rgba(233,30,99,0.08)', 'rgba(0,150,136,0.1)']}
+        colors={[Colors.ctaGradientStart, Colors.ctaGradientEnd]}
         end={{ x: 1, y: 1 }}
         start={{ x: 0, y: 0 }}
         style={{
@@ -174,15 +175,22 @@ function PartnerGridCard({
   );
 }
 
+const MemoizedPartnerGridCard = React.memo(PartnerGridCard);
+
 export default function PerksScreen(): React.JSX.Element {
   const router = useRouter();
   const { t } = useTranslation('perks');
+  const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const cardWidth = (width - 52) / 2;
   const listContentContainerStyle = useMemo(
-    () => ({ paddingBottom: 20, paddingHorizontal: 16, paddingTop: 16 }),
-    []
+    () => ({
+      paddingBottom: 20 + insets.bottom,
+      paddingHorizontal: 16,
+      paddingTop: 16,
+    }),
+    [insets.bottom]
   );
 
   const { partnersLoading } = usePartnersData();
@@ -207,7 +215,7 @@ export default function PerksScreen(): React.JSX.Element {
 
   const renderCard = useCallback(
     ({ index, item }: ListRenderItemInfo<Partner>): React.JSX.Element => (
-      <PartnerGridCard
+      <MemoizedPartnerGridCard
         cardWidth={cardWidth}
         index={index}
         item={item}
@@ -223,7 +231,6 @@ export default function PerksScreen(): React.JSX.Element {
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={listContentContainerStyle}
         data={filtered}
-        extraData={cardWidth}
         keyExtractor={(item) => item.id}
         ListHeaderComponent={
           <PerksListHeader>

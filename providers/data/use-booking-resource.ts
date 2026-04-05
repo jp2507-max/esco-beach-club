@@ -9,10 +9,10 @@ import {
 } from '@/src/lib/mappers';
 
 import {
+  type BookingContentData,
   EMPTY_BOOKING_OCCASIONS,
   EMPTY_BOOKING_TIME_SLOTS,
   EMPTY_PRIVATE_EVENT_TYPES,
-  type BookingContentData,
 } from './context';
 
 type BookingResourceParams = {

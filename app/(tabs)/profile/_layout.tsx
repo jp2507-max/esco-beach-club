@@ -36,6 +36,18 @@ export default function ProfileStackLayout(): React.JSX.Element {
         options={{ headerShown: false, presentation: 'card' }}
       />
       <Stack.Screen
+        name="upgrade-tier"
+        options={{ headerShown: false, presentation: 'card' }}
+      />
+      <Stack.Screen
+        name="billing"
+        options={{ headerShown: false, presentation: 'card' }}
+      />
+      <Stack.Screen
+        name="payments"
+        options={{ headerShown: false, presentation: 'card' }}
+      />
+      <Stack.Screen
         name="delete-account"
         options={{ headerShown: false, presentation: 'card' }}
       />

@@ -5,6 +5,7 @@ export const AUTH_ERROR_KEYS = [
   'signupConsentRequired',
   'appleAuthUnavailable',
   'appleIdTokenMissing',
+  'appleOauthClientNotConfigured',
   'googleAuthNotConfigured',
   'googleOauthClientNotConfigured',
   'googleIdTokenMissing',

@@ -7,7 +7,7 @@ env:
 # Tests: sign-up form → submit → success message → email verification banner
 
 - launchApp
-  
+
 # Navigate to sign-up screen from login
 - assertVisible:
     id: 'login-title'

@@ -2,10 +2,65 @@ import { describe, expect, test } from 'bun:test';
 
 import rules from '../instant.perms';
 
-describe('profiles permission whitelist', () => {
-  test('does not allow auth_provider writes', () => {
-    expect(rules.profiles.bind.onlySafeProfileFields).not.toContain(
+describe('profiles permissions', () => {
+  test('does not allow auth_provider on create', () => {
+    expect(rules.profiles.bind.onlySafeProfileCreateFields).not.toContain(
       'auth_provider'
     );
+  });
+
+  test('allows auth_provider updates only through the guarded update path', () => {
+    expect(rules.profiles.bind.onlySafeProfileUpdateFields).toContain(
+      'auth_provider'
+    );
+    expect(rules.profiles.bind.canSetAuthProviderOnce).toContain(
+      'data.auth_provider == null'
+    );
+    expect(rules.profiles.bind.canSetAuthProviderOnce).toContain('apple');
+    expect(rules.profiles.bind.canSetAuthProviderOnce).toContain('google');
+    expect(rules.profiles.bind.canSetAuthProviderOnce).toContain('magic_code');
+  });
+
+  test('removes broad reads from profiles and reward transactions', () => {
+    expect(rules.profiles.allow.view).toBe('isOwnerOrLinkedProfile');
+    expect(rules.reward_transactions.allow.view).toBe('isMemberOwner');
+  });
+});
+
+describe('owner-scoped create permissions', () => {
+  test('whitelists saved event fields', () => {
+    expect(rules.saved_events.bind.onlySafeSavedEventFields).toContain(
+      'created_at'
+    );
+    expect(rules.saved_events.bind.onlySafeSavedEventFields).toContain(
+      'entry_key'
+    );
+    expect(rules.saved_events.bind.onlySafeSavedEventFields).toContain(
+      'event_id'
+    );
+  });
+
+  test('locks partner redemptions to claimed status on create', () => {
+    expect(
+      rules.partner_redemptions.bind.onlySafePartnerRedemptionFields
+    ).toContain('status');
+    expect(rules.partner_redemptions.bind.hasClaimedStatusOnly).toContain(
+      "data.status == 'claimed'"
+    );
+  });
+
+  test('locks table reservations to pending status on create', () => {
+    expect(
+      rules.table_reservations.bind.onlySafeTableReservationFields
+    ).toContain('status');
+    expect(rules.table_reservations.bind.hasPendingStatusOnly).toContain(
+      "data.status == 'pending'"
+    );
+  });
+
+  test('validates review ratings in permissions', () => {
+    expect(rules.reviews.bind.onlySafeReviewFields).toContain('rating');
+    expect(rules.reviews.bind.hasValidRating).toContain('data.rating >= 1');
+    expect(rules.reviews.bind.hasValidRating).toContain('data.rating <= 5');
   });
 });

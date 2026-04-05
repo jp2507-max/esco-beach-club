@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import {
@@ -11,7 +12,7 @@ import {
 import React, { useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { Alert, Platform, useColorScheme } from 'react-native';
+import { Alert, Modal, Platform, useColorScheme } from 'react-native';
 import {
   LinearTransition,
   useAnimatedStyle,
@@ -44,7 +45,6 @@ import {
   Pressable,
   ScrollView,
   Text,
-  TextInput,
   View,
 } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
@@ -63,12 +63,49 @@ type EventTypeOption = {
   value: string;
 };
 
+function formatDateToISO(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+}
+
+function parseDateFromISO(dateString: string): Date {
+  const [year, month, day] = dateString.split('-').map(Number);
+
+  if (year && month && day) {
+    return new Date(year, month - 1, day);
+  }
+
+  return new Date();
+}
+
+function formatPrivateEventDateForDisplay(
+  dateString: string,
+  locale?: string
+): string {
+  if (!dateString) return '';
+
+  const [year, month, day] = dateString.split('-').map(Number);
+  if (!year || !month || !day) return '';
+
+  return new Intl.DateTimeFormat(locale, {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(new Date(Date.UTC(year, month - 1, day)));
+}
+
 function PrivateEventScreenContent(): React.JSX.Element {
-  const { t } = useTranslation('common');
+  const { t, i18n } = useTranslation('common');
   const insets = useSafeAreaInsets();
   const isDark = useColorScheme() === 'dark';
   const router = useRouter();
   const [showTypePicker, setShowTypePicker] = useState<boolean>(false);
+  const [isDatePickerVisible, setIsDatePickerVisible] =
+    useState<boolean>(false);
   const [submitted, setSubmitted] = useState<boolean>(false);
   const successScale = useSharedValue(0);
 
@@ -133,16 +170,22 @@ function PrivateEventScreenContent(): React.JSX.Element {
   }));
 
   const inquiryMutation = useMutation({
-    mutationFn: (values: PrivateEventFormValues) =>
-      submitPrivateEventInquiry({
+    mutationFn: (values: PrivateEventFormValues) => {
+      const preferredDate =
+        values.preferredDate instanceof Date
+          ? values.preferredDate
+          : parseDateFromISO(String(values.preferredDate));
+
+      return submitPrivateEventInquiry({
         user_id: userId,
         event_type: values.eventType,
-        preferred_date: values.preferredDate.toISOString(),
+        preferred_date: formatDateToISO(preferredDate),
         estimated_pax: Number.parseInt(values.estimatedPax, 10) || 0,
         contact_name: values.contactName?.trim() || undefined,
         contact_email: values.contactEmail?.trim() || undefined,
         notes: values.notes?.trim() || undefined,
-      }),
+      });
+    },
     onSuccess: () => {
       setSubmitted(true);
       successScale.set(withSpring(1, motion.spring.bouncy));
@@ -336,91 +379,181 @@ function PrivateEventScreenContent(): React.JSX.Element {
                 render={({
                   field: { onChange, onBlur, value },
                   fieldState: { invalid },
-                }) => (
-                  <View
-                    className={cn(
-                      'mb-3 flex-row items-center rounded-2xl border bg-background px-4 py-3 dark:bg-dark-bg-card',
-                      invalid
-                        ? 'border-danger dark:border-error-dark'
-                        : 'border-border dark:border-dark-border'
-                    )}
-                  >
-                    <View className="mr-3 mt-0.5">
-                      <Calendar color={Colors.secondary} size={18} />
-                    </View>
-                    <View className="flex-1">
-                      <Text className="mb-1 text-[11px] font-semibold uppercase tracking-[0.8px] text-text-secondary dark:text-text-secondary-dark">
-                        {t('privateEvent.preferredDate')}
-                      </Text>
-                      {Platform.OS === 'web' ? (
-                        <input
-                          type="date"
-                          style={{
-                            background: 'transparent',
-                            border: 'none',
-                            color: 'currentColor',
-                            fontFamily: 'inherit',
-                            fontSize: '15px',
-                            fontWeight: '600',
-                            outline: 'none',
-                            padding: 0,
-                            minHeight: '24px',
-                            width: '100%',
+                }) => {
+                  const stringValue =
+                    typeof value === 'string'
+                      ? value
+                      : (value as Date)?.toISOString?.().substring(0, 10) || '';
+                  const displayValue = formatPrivateEventDateForDisplay(
+                    stringValue,
+                    i18n.language
+                  );
+                  const placeholder = t(
+                    'privateEvent.preferredDatePlaceholder'
+                  );
+                  const nativeDateAccessibilityLabel = `${t('privateEvent.preferredDate')} ${displayValue || placeholder}`;
+                  const pickerValue = stringValue
+                    ? parseDateFromISO(stringValue)
+                    : new Date();
+
+                  function handleNativeDateChange(
+                    _event: unknown,
+                    selectedDate: Date | undefined
+                  ): void {
+                    if (Platform.OS === 'android') {
+                      setIsDatePickerVisible(false);
+                      onBlur();
+                    }
+
+                    if (selectedDate) {
+                      onChange(formatDateToISO(selectedDate));
+                    }
+                  }
+
+                  return (
+                    <>
+                      <Pressable
+                        accessibilityRole={
+                          Platform.OS === 'web' ? undefined : 'button'
+                        }
+                        accessibilityLabel={
+                          Platform.OS === 'web'
+                            ? undefined
+                            : nativeDateAccessibilityLabel
+                        }
+                        accessibilityHint={
+                          Platform.OS === 'web'
+                            ? undefined
+                            : t('privateEvent.preferredDateHint')
+                        }
+                        className={cn(
+                          'mb-3 flex-row items-center rounded-2xl border bg-background px-4 py-3 dark:bg-dark-bg-card',
+                          invalid
+                            ? 'border-danger dark:border-error-dark'
+                            : 'border-border dark:border-dark-border'
+                        )}
+                        onPress={
+                          Platform.OS === 'web'
+                            ? undefined
+                            : () => {
+                                hapticSelection();
+                                setIsDatePickerVisible(true);
+                              }
+                        }
+                        testID={
+                          Platform.OS === 'web' ? undefined : 'date-input'
+                        }
+                      >
+                        <View className="mr-3 mt-0.5">
+                          <Calendar color={Colors.secondary} size={18} />
+                        </View>
+                        <View className="flex-1">
+                          <Text className="mb-1 text-[11px] font-semibold uppercase tracking-[0.8px] text-text-secondary dark:text-text-secondary-dark">
+                            {t('privateEvent.preferredDate')}
+                          </Text>
+                          {Platform.OS === 'web' ? (
+                            <input
+                              type="date"
+                              style={{
+                                background: 'transparent',
+                                border: 'none',
+                                color: 'currentColor',
+                                fontFamily: 'inherit',
+                                fontSize: '15px',
+                                fontWeight: '600',
+                                minHeight: '24px',
+                                outline: 'none',
+                                padding: 0,
+                                width: '100%',
+                              }}
+                              value={stringValue}
+                              onBlur={onBlur}
+                              onChange={(e) => {
+                                onChange(e.target.value);
+                              }}
+                              aria-label={t('privateEvent.preferredDate')}
+                              data-testid="date-input"
+                            />
+                          ) : (
+                            <Text
+                              className={cn(
+                                'min-h-6 text-[15px] font-semibold',
+                                displayValue
+                                  ? 'text-text dark:text-text-primary-dark'
+                                  : 'text-text-muted dark:text-text-muted-dark'
+                              )}
+                            >
+                              {displayValue || placeholder}
+                            </Text>
+                          )}
+                        </View>
+                      </Pressable>
+
+                      {Platform.OS === 'ios' ? (
+                        <Modal
+                          animationType="slide"
+                          transparent
+                          visible={isDatePickerVisible}
+                          onRequestClose={() => {
+                            setIsDatePickerVisible(false);
+                            onBlur();
                           }}
-                          value={
-                            typeof value === 'string'
-                              ? value
-                              : (value as Date)
-                                  ?.toISOString?.()
-                                  ?.substring(0, 10) || ''
-                          }
-                          onChange={(e) => {
-                            onChange(e.target.value);
-                          }}
-                          onBlur={onBlur}
-                          data-testid="date-input"
+                        >
+                          <View className="flex-1">
+                            <Pressable
+                              accessibilityHint={t('datePicker.dismissHint')}
+                              accessibilityRole="button"
+                              accessibilityLabel={t('close')}
+                              className="flex-1"
+                              onPress={() => {
+                                setIsDatePickerVisible(false);
+                                onBlur();
+                              }}
+                            />
+                            <View className="rounded-t-3xl bg-card pb-8 dark:bg-dark-bg-card">
+                              <View className="flex-row items-center justify-between border-b border-border/50 px-5 py-3 dark:border-dark-border/50">
+                                <View className="w-16" />
+                                <Text className="text-[15px] font-bold text-text dark:text-text-primary-dark">
+                                  {t('privateEvent.preferredDate')}
+                                </Text>
+                                <Pressable
+                                  accessibilityRole="button"
+                                  className="w-16 items-end"
+                                  onPress={() => {
+                                    setIsDatePickerVisible(false);
+                                    onBlur();
+                                  }}
+                                  testID="date-input-done"
+                                >
+                                  <Text className="text-[16px] font-bold text-primary dark:text-primary-bright">
+                                    {t('done')}
+                                  </Text>
+                                </Pressable>
+                              </View>
+                              <DateTimePicker
+                                display="inline"
+                                mode="date"
+                                onChange={handleNativeDateChange}
+                                testID="date-input-picker"
+                                value={pickerValue}
+                              />
+                            </View>
+                          </View>
+                        </Modal>
+                      ) : null}
+
+                      {Platform.OS === 'android' && isDatePickerVisible ? (
+                        <DateTimePicker
+                          display="default"
+                          mode="date"
+                          onChange={handleNativeDateChange}
+                          testID="date-input-picker"
+                          value={pickerValue}
                         />
-                      ) : (
-                        <TextInput
-                          accessibilityLabel="Text input field"
-                          accessibilityHint="Enter preferred date in YYYY-MM-DD format"
-                          className="min-h-6 flex-1 p-0 text-[15px] font-semibold text-text dark:text-text-primary-dark"
-                          placeholder={
-                            t('privateEvent.preferredDatePlaceholder') ||
-                            'YYYY-MM-DD'
-                          }
-                          placeholderTextColor={
-                            isDark ? Colors.textMutedDark : Colors.textLight
-                          }
-                          value={
-                            typeof value === 'string'
-                              ? value
-                              : (value as Date)
-                                  ?.toISOString?.()
-                                  ?.substring(0, 10) || ''
-                          }
-                          onChangeText={(text) => {
-                            const cleaned = text.replace(/\D/g, '').slice(0, 8);
-                            const match = cleaned.match(
-                              /^(\d{1,4})(\d{1,2})?(\d{1,2})?$/
-                            );
-                            if (match) {
-                              let formatted = match[1];
-                              if (match[2]) formatted += '-' + match[2];
-                              if (match[3]) formatted += '-' + match[3];
-                              onChange(formatted);
-                            } else {
-                              onChange(cleaned);
-                            }
-                          }}
-                          onBlur={onBlur}
-                          keyboardType="number-pad"
-                          testID="date-input"
-                        />
-                      )}
-                    </View>
-                  </View>
-                )}
+                      ) : null}
+                    </>
+                  );
+                }}
               />
 
               <ControlledTextInput<PrivateEventFormInput>
@@ -475,7 +608,7 @@ function PrivateEventScreenContent(): React.JSX.Element {
                 isLoading={isSubmitting}
                 leftIcon={
                   <Send
-                    color={isDark ? Colors.secondaryDeeper : '#fff'}
+                    color={isDark ? Colors.secondaryDeeper : Colors.white}
                     size={18}
                   />
                 }

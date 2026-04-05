@@ -4,7 +4,15 @@ import type {
   RewardTransaction,
 } from '@/lib/types';
 import { onboardingPermissionStatuses, rewardTierKeys } from '@/lib/types';
+import {
+  getNextRewardTierKey,
+  getRewardTierDefinition,
+} from '@/src/lib/loyalty';
 import type { InstantRecord } from '@/src/lib/mappers';
+import {
+  toNullableRewardTierKey,
+  toRewardTierKey,
+} from '@/src/lib/mappers/profile';
 import { rewardServiceResponseSchema } from '@/src/lib/reward-backend-contract';
 import { normalizeMemberSegment } from '@/src/lib/utils/member-segment';
 
@@ -220,6 +228,8 @@ export function parseRewardServiceResponse(
     member: {
       ...member,
       auth_provider: null,
+      lifetime_tier_key: toRewardTierKey(member.lifetime_tier_key),
+      next_tier_key: toNullableRewardTierKey(member.next_tier_key),
       date_of_birth: normalizeDateOfBirth(member.date_of_birth) ?? null,
       member_segment: member.member_segment
         ? (normalizeMemberSegment(member.member_segment) ?? null)
@@ -261,6 +271,20 @@ export function withoutUndefined<T extends Record<string, unknown>>(
   return Object.fromEntries(entries) as Partial<T>;
 }
 
+const PROFILE_FULL_NAME_MAX_LENGTH = 60;
+const PROFILE_FALLBACK_FULL_NAME = 'Member';
+
+function normalizeProfileFullNameCandidate(
+  value: string | null | undefined
+): string {
+  if (!value) return '';
+
+  const normalized = value.trim().replace(/\s+/g, ' ');
+  if (!normalized) return '';
+
+  return normalized.slice(0, PROFILE_FULL_NAME_MAX_LENGTH);
+}
+
 export type DefaultProfileValues = {
   bio: string;
   cashback_points_balance: number;
@@ -296,15 +320,17 @@ export function getDefaultProfileValues(options: {
 }): DefaultProfileValues {
   const { userId, email, displayName, dateOfBirth, referralCode } = options;
   const createdAt = nowIso();
-  const normalizedDisplayName = displayName?.trim() ?? '';
+  const normalizedDisplayName = normalizeProfileFullNameCandidate(displayName);
   const emailPrefix = email?.split('@')[0]?.split('+')[0]?.trim() ?? '';
-  const fallbackDisplayName = emailPrefix
-    ? emailPrefix
-        .replace(/[._-]+/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim()
-    : '';
+  const fallbackDisplayName = normalizeProfileFullNameCandidate(
+    emailPrefix ? emailPrefix.replace(/[._-]+/g, ' ') : ''
+  );
+  const resolvedFullName =
+    normalizedDisplayName || fallbackDisplayName || PROFILE_FALLBACK_FULL_NAME;
   const normalizedDateOfBirth = normalizeDateOfBirth(dateOfBirth);
+  const defaultLifetimeTier = rewardTierKeys.member;
+  const defaultNextTier = getNextRewardTierKey(defaultLifetimeTier);
+  const defaultTierDefinition = getRewardTierDefinition(defaultLifetimeTier);
 
   return {
     bio: '',
@@ -312,14 +338,14 @@ export function getDefaultProfileValues(options: {
     cashback_points_lifetime_earned: 0,
     created_at: createdAt,
     date_of_birth: normalizedDateOfBirth ?? null,
-    full_name: normalizedDisplayName || fallbackDisplayName,
+    full_name: resolvedFullName,
     has_seen_welcome_voucher: false,
-    lifetime_tier_key: rewardTierKeys.escoLifeMember,
+    lifetime_tier_key: defaultLifetimeTier,
     location_permission_status: onboardingPermissionStatuses.undetermined,
     member_id: buildMemberId(userId),
     member_segment: null,
     member_since: createdAt,
-    next_tier_key: null,
+    next_tier_key: defaultNextTier,
     nights_left: 0,
     onboarding_completed_at: null,
     push_notification_permission_status:
@@ -329,7 +355,8 @@ export function getDefaultProfileValues(options: {
     tier_progress_expires_at: null,
     tier_progress_points: 0,
     tier_progress_started_at: null,
-    tier_progress_target_points: 0,
+    tier_progress_target_points:
+      defaultNextTier === null ? 0 : defaultTierDefinition.progressTargetPoints,
     updated_at: createdAt,
   };
 }

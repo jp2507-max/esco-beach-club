@@ -34,8 +34,8 @@ import {
 } from '@/providers/DataProvider';
 import { ProfileHeader } from '@/src/components/profile/profile-header';
 import {
-  ProfileMenuList,
   type ProfileMenuItem,
+  ProfileMenuList,
 } from '@/src/components/profile/profile-menu-list';
 import { ProfileStatsRow } from '@/src/components/profile/profile-stats-row';
 import { SupportCta } from '@/src/components/profile/support-cta';
@@ -50,7 +50,7 @@ import {
   rewardBenefitKeys,
 } from '@/src/lib/loyalty';
 import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
-import { Pressable, ScrollView, Text, View } from '@/src/tw';
+import { ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 
 type MenuItem = ProfileMenuItem;
@@ -79,6 +79,7 @@ function ProfileScreenContent(): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { t } = useTranslation('profile');
+  const { t: tCommon } = useTranslation('common');
   const isDark = useAppIsDark();
   const voucherScale = useSharedValue(0.9);
   const voucherOpacity = useSharedValue(0);
@@ -92,12 +93,7 @@ function ProfileScreenContent(): React.JSX.Element {
   const tierBadge = t(
     `tier.${getRewardTierLabelKey(memberSummary.lifetimeTierKey)}`
   );
-  const bio = profile?.bio?.trim() ?? '';
-  const memberSince = memberSummary.memberSince
-    ? memberSummary.memberSince.slice(0, 10)
-    : '—';
   const cashbackLifetimePoints = memberSummary.cashbackLifetimePoints;
-  const nightsLeft = memberSummary.nightsLeft;
   const saved = memberSummary.saved;
   const welcomeOfferBadgeKey = resolveWelcomeOfferVoucherKey(
     welcomeOffer?.badge_key,
@@ -135,7 +131,7 @@ function ProfileScreenContent(): React.JSX.Element {
         route: '/profile/invite',
       },
       {
-        color: '#FFB300',
+        color: Colors.profileRateUsAccent,
         icon: Star,
         id: 'rate-us',
         label: t('menu.rateUs'),
@@ -156,7 +152,7 @@ function ProfileScreenContent(): React.JSX.Element {
         route: '/profile/membership',
       },
       {
-        color: '#FF9800',
+        color: Colors.profileRewardsAccent,
         disabled: true,
         icon: Gift,
         id: 'rewards',
@@ -171,21 +167,21 @@ function ProfileScreenContent(): React.JSX.Element {
         route: '/profile/theme-preference',
       },
       {
-        color: '#7C4DFF',
+        color: Colors.profileHelpAccent,
         icon: HelpCircle,
         id: 'help-support',
         label: t('menu.helpSupport'),
         route: '/profile/help-center',
       },
       {
-        color: '#00A884',
+        color: Colors.profileRestartAccent,
         icon: RefreshCw,
         id: 'restart-onboarding',
         label: t('menu.restartOnboarding'),
         route: '/onboarding-welcome',
       },
       {
-        color: '#EF5350',
+        color: Colors.danger,
         icon: LogOut,
         id: 'log-out',
         label: t('menu.logOut'),
@@ -301,17 +297,17 @@ function ProfileScreenContent(): React.JSX.Element {
       className="flex-1"
       style={{ backgroundColor: profileCanvasBg, paddingTop: insets.top }}
     >
-      <View className="absolute left-0 right-0 top-0 h-[500px] overflow-hidden">
+      <View className="absolute left-0 right-0 top-0 h-125 overflow-hidden">
         <View
-          className="absolute size-[250px] rounded-full"
+          className="absolute size-62.5 rounded-full"
           style={{ backgroundColor: profileOrbLarge, right: -40, top: -50 }}
         />
         <View
-          className="absolute size-[200px] rounded-full"
+          className="absolute size-50 rounded-full"
           style={{ backgroundColor: profileOrbMid, left: -60, top: 100 }}
         />
         <View
-          className="absolute size-[160px] rounded-full"
+          className="absolute size-40 rounded-full"
           style={{ backgroundColor: profileOrbSmall, right: 40, top: 50 }}
         />
       </View>
@@ -332,7 +328,7 @@ function ProfileScreenContent(): React.JSX.Element {
         />
 
         <View className="mb-5 items-center">
-          <View className="flex-row items-center rounded-full border border-border bg-white px-[18px] py-2 dark:border-dark-border dark:bg-dark-bg-card">
+          <View className="flex-row items-center rounded-full border border-border bg-white px-4.5 py-2 dark:border-dark-border dark:bg-dark-bg-card">
             <Star color={Colors.primary} size={14} />
             <Text className="ml-1.5 text-xs font-extrabold tracking-[1.5px] text-text dark:text-text-primary-dark">
               {tierBadge}
@@ -345,7 +341,8 @@ function ProfileScreenContent(): React.JSX.Element {
             copy={{
               balanceLabel: t('memberCard.cashbackBalance'),
               balanceSuffix: t('memberCard.cashbackSuffix'),
-              brandLabel: t('memberCard.brandMark'),
+              brandAccessibilityHint: tCommon('branding.markHint'),
+              brandLabel: tCommon('branding.mark'),
               emptyQrLabel: t('guest'),
               memberNameLabel: t('memberCard.memberName'),
               statusLabel: t('memberCard.lifetimeTier'),
@@ -367,54 +364,6 @@ function ProfileScreenContent(): React.JSX.Element {
           savedProgressDegrees={(savedProgress / 100) * 360}
           savedValue={`$${saved}`}
         />
-
-        <View className="mb-5 rounded-[20px] border border-border bg-white p-5 dark:border-dark-border dark:bg-dark-bg-card">
-          <View className="mb-4 flex-row items-center justify-between">
-            <Text className="text-lg font-bold text-text dark:text-text-primary-dark">
-              {t('profileDetails')}
-            </Text>
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => router.push('/profile/edit-profile')}
-              testID="profile-edit-shortcut"
-            >
-              <Text className="text-sm font-bold text-primary dark:text-primary-bright">
-                {t('edit')}
-              </Text>
-            </Pressable>
-          </View>
-
-          <Text className="text-sm leading-6 text-text-secondary dark:text-text-secondary-dark">
-            {bio || t('noBio')}
-          </Text>
-
-          <View className="mt-4 flex-row gap-3">
-            <View className="flex-1 rounded-2xl bg-background px-4 py-3 dark:bg-dark-bg-elevated">
-              <Text className="text-[11px] font-semibold uppercase tracking-[0.8px] text-text-muted dark:text-text-secondary-dark">
-                {t('memberSince')}
-              </Text>
-              <Text className="mt-1 text-sm font-bold text-text dark:text-text-primary-dark">
-                {memberSince}
-              </Text>
-            </View>
-            <View className="flex-1 rounded-2xl bg-background px-4 py-3 dark:bg-dark-bg-elevated">
-              <Text className="text-[11px] font-semibold uppercase tracking-[0.8px] text-text-muted dark:text-text-secondary-dark">
-                {t('nightsLeft')}
-              </Text>
-              <Text className="mt-1 text-sm font-bold text-text dark:text-text-primary-dark">
-                {nightsLeft}
-              </Text>
-            </View>
-            <View className="flex-1 rounded-2xl bg-background px-4 py-3 dark:bg-dark-bg-elevated">
-              <Text className="text-[11px] font-semibold uppercase tracking-[0.8px] text-text-muted dark:text-text-secondary-dark">
-                {t('savedEventsCount')}
-              </Text>
-              <Text className="mt-1 text-sm font-bold text-text dark:text-text-primary-dark">
-                {memberSummary.savedEventsCount}
-              </Text>
-            </View>
-          </View>
-        </View>
 
         {shouldRenderVoucher && (
           <Animated.View className="mb-5" style={voucherStyle}>
@@ -452,7 +401,7 @@ function ProfileScreenContent(): React.JSX.Element {
           onPressItem={handleMenuPress}
         />
 
-        <View className="h-[30px]" />
+        <View className="h-7.5" />
       </ScrollView>
     </View>
   );

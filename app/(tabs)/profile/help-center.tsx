@@ -58,7 +58,7 @@ export default function HelpCenterScreen(): React.JSX.Element {
   const categoryItems = useMemo<CategoryItem[]>(
     () => [
       {
-        color: '#C08400',
+        color: Colors.supportBookingAccent,
         icon: Calendar,
         id: 'booking',
         label: t('helpCenter.categories.booking'),
@@ -76,7 +76,7 @@ export default function HelpCenterScreen(): React.JSX.Element {
         label: t('helpCenter.categories.perks'),
       },
       {
-        color: '#6E4A4D',
+        color: Colors.supportTechnicalAccent,
         icon: Settings,
         id: 'technical',
         label: t('helpCenter.categories.technical'),
@@ -164,8 +164,14 @@ export default function HelpCenterScreen(): React.JSX.Element {
             <LinearGradient
               colors={
                 isDark
-                  ? ['rgba(13,11,20,0)', 'rgba(13,11,20,0.92)']
-                  : ['rgba(255,255,255,0)', 'rgba(251,249,241,0.92)']
+                  ? [
+                      Colors.helpCenterOverlayDarkStart,
+                      Colors.helpCenterOverlayDarkEnd,
+                    ]
+                  : [
+                      Colors.helpCenterOverlayLightStart,
+                      Colors.helpCenterOverlayLightEnd,
+                    ]
               }
               style={{
                 bottom: 0,

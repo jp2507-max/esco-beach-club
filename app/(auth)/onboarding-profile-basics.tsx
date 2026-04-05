@@ -6,7 +6,7 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Alert, Platform, useColorScheme } from 'react-native';
-import { FadeInUp } from 'react-native-reanimated';
+import { FadeIn, FadeInUp } from 'react-native-reanimated';
 
 import { Colors } from '@/constants/colors';
 import { OnboardingHeader } from '@/src/components/onboarding/onboarding-header';
@@ -73,9 +73,9 @@ export default function OnboardingProfileBasicsScreen(): React.JSX.Element {
       {!isDark ? (
         <LinearGradient
           colors={[
-            'rgba(251,236,243,0.9)',
-            'rgba(251,249,241,0.95)',
-            'rgba(232,246,241,0.88)',
+            Colors.onboardingBasicsGradientStart,
+            Colors.onboardingBasicsGradientMiddle,
+            Colors.onboardingBasicsGradientEnd,
           ]}
           style={{ bottom: 0, left: 0, position: 'absolute', right: 0, top: 0 }}
         />
@@ -146,7 +146,7 @@ export default function OnboardingProfileBasicsScreen(): React.JSX.Element {
           </Animated.View>
 
           <Animated.View
-            entering={withRM(FadeInUp.duration(motion.dur.md).delay(CTA_DELAY))}
+            entering={withRM(FadeIn.duration(motion.dur.md).delay(CTA_DELAY))}
           >
             <Animated.View style={ctaButton.animatedStyle}>
               <Pressable
@@ -175,7 +175,7 @@ export default function OnboardingProfileBasicsScreen(): React.JSX.Element {
                     <Text className="text-[17px] font-bold text-white">
                       {t('onboardingBasicsNext')}
                     </Text>
-                    <ArrowRight color="#ffffff" size={22} />
+                    <ArrowRight color={Colors.white} size={22} />
                   </View>
                 </LinearGradient>
               </Pressable>

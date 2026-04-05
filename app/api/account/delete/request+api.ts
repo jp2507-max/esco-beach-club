@@ -3,13 +3,17 @@ import {
   type AuthProviderType,
   authProviderTypes,
 } from '@/lib/types';
+import { revokeAppleAuthorizationCode } from '@/src/lib/account-deletion/apple-revoke-server';
 import {
   isRecord,
   jsonResponse,
   parseBearerRefreshToken,
 } from '@/src/lib/api/route-helpers';
-import { revokeAppleAuthorizationCode } from '@/src/lib/account-deletion/apple-revoke-server';
-import { getInstantAdminDb } from '@/src/lib/referral/instant-admin-server';
+import {
+  createInstantCreateStep,
+  createInstantUpdateStep,
+  getInstantAdminDb,
+} from '@/src/lib/referral/instant-admin-server';
 import { verifyInstantRefreshToken } from '@/src/lib/referral/instant-runtime-server';
 
 type AccountDeletionRequestRecord = {
@@ -75,7 +79,9 @@ async function resolveProfileContextForUser(
   adminDb: NonNullable<ReturnType<typeof getInstantAdminDb>>,
   userId: string
 ): Promise<ResolvedProfileContext> {
-  const directResult = await adminDb.query({
+  const directResult = await adminDb.query<{
+    profiles?: LinkedProfileRecord[];
+  }>({
     profiles: {
       $: { where: { 'user.id': userId } },
     },
@@ -94,7 +100,9 @@ async function resolveProfileContextForUser(
     };
   }
 
-  const linkedResult = await adminDb.query({
+  const linkedResult = await adminDb.query<{
+    $users?: LinkedUserRecord[];
+  }>({
     $users: {
       $: { where: { id: userId } },
       profile: {},
@@ -186,7 +194,9 @@ export async function POST(request: Request): Promise<Response> {
       : '';
 
   const recordId = `account-delete-${authUser.userId}`;
-  const existingResult = await adminDb.query({
+  const existingResult = await adminDb.query<{
+    account_deletion_requests?: AccountDeletionRequestRecord[];
+  }>({
     account_deletion_requests: {
       $: { where: { auth_user_id: authUser.userId } },
     },
@@ -262,24 +272,24 @@ export async function POST(request: Request): Promise<Response> {
 
   await adminDb.transact(
     existingRequest?.id
-      ? adminDb.tx.account_deletion_requests[existingRequest.id].update(
+      ? createInstantUpdateStep(
+          'account_deletion_requests',
+          existingRequest.id,
           payload,
           {
             upsert: false,
           }
         )
-      : adminDb.tx.account_deletion_requests[recordId].create({
+      : createInstantCreateStep('account_deletion_requests', recordId, {
           created_at: nowIso,
           ...payload,
         })
   );
 
-  if (typeof adminDb.auth?.signOut === 'function') {
-    try {
-      await adminDb.auth.signOut({ refresh_token: refreshToken });
-    } catch (error) {
-      console.error('[account/delete/request] Failed to revoke session', error);
-    }
+  try {
+    await adminDb.signOut({ refresh_token: refreshToken });
+  } catch (error) {
+    console.error('[account/delete/request] Failed to revoke session', error);
   }
 
   return jsonResponse(

@@ -1,4 +1,5 @@
-import React, { createContext, useContext } from 'react';
+import type React from 'react';
+import { createContext, useContext } from 'react';
 
 import type {
   BookingOccasionOption,
@@ -14,7 +15,6 @@ import type {
   Profile,
   Referral,
   SavedEvent,
-  StaffAccess,
 } from '@/lib/types';
 
 export type ProfileData = {
@@ -76,13 +76,6 @@ export type MenuContentData = {
   menuItems: MenuItemContent[];
 };
 
-export type StaffAccessData = {
-  isManagerUser: boolean;
-  isStaffUser: boolean;
-  staffAccess: StaffAccess | null;
-  staffAccessLoading: boolean;
-};
-
 export type MemberSummary = {
   activeTierProgressPoints: number;
   avatarUrl: string | null;
@@ -120,7 +113,6 @@ export const BookingContentContext = createContext<BookingContentData | null>(
 );
 export const MemberOffersContext = createContext<MemberOffersData | null>(null);
 export const MenuContentContext = createContext<MenuContentData | null>(null);
-export const StaffAccessContext = createContext<StaffAccessData | null>(null);
 
 export const EMPTY_EVENTS: Event[] = [];
 export const EMPTY_NEWS: NewsItem[] = [];
@@ -181,12 +173,6 @@ const FALLBACK_MENU_CONTENT: MenuContentData = {
   menuContentLoading: false,
   menuItems: EMPTY_MENU_ITEMS,
 };
-const FALLBACK_STAFF_ACCESS: StaffAccessData = {
-  isManagerUser: false,
-  isStaffUser: false,
-  staffAccess: null,
-  staffAccessLoading: false,
-};
 
 function useRequiredContext<T>(
   context: React.Context<T | null>,
@@ -237,10 +223,6 @@ export function useMemberOffersData(): MemberOffersData {
 
 export function useMenuContentData(): MenuContentData {
   return useRequiredContext(MenuContentContext, FALLBACK_MENU_CONTENT);
-}
-
-export function useStaffAccessData(): StaffAccessData {
-  return useRequiredContext(StaffAccessContext, FALLBACK_STAFF_ACCESS);
 }
 
 export function useUserId(): string {

@@ -5,4 +5,3 @@ export * from './partners';
 export * from './profile';
 export * from './reviews';
 export * from './shared';
-export * from './staff';

@@ -2,7 +2,8 @@ const profile = {
   guest: '게스트',
   memberFallback: '멤버',
   tier: {
-    escoLifeMember: 'Esco Life 멤버',
+    member: 'Esco Life Member',
+    legend: 'Esco Life Legend',
   },
   menu: {
     comingSoon: '곧 출시',
@@ -36,18 +37,55 @@ const profile = {
   accessPass: '액세스 패스',
   scanAtTable: '체크아웃 시 스캔하여 회원 ID를 연결하세요',
   refPrefix: '참조: {{memberId}}',
-  earned: '적립된 캐시백',
+  earned: '적립된 포인트',
   saved: '절약',
   profileDetails: '프로필 정보',
   memberSince: '가입일',
   nightsLeft: '남은 숙박',
   savedEventsCount: '저장한 이벤트',
   memberCard: {
-    brandMark: 'ESCO LIFE',
-    cashbackBalance: '캐시백 잔액',
-    cashbackSuffix: '캐시백 포인트',
+    cashbackBalance: '리워드 포인트 잔액',
+    cashbackSuffix: '리워드 포인트',
     memberName: '멤버 이름',
     lifetimeTier: '평생 등급',
+  },
+  benefits: {
+    title: '해제된 혜택',
+    viewAll: '모두 보기',
+    concierge: '24/7 컨시어지 서비스',
+    priorityBooking: '우선 예약 권한',
+    poolsideDrinks: '무료 풀사이드 음료',
+    poolsideDrinksDesc: '매일 제공되는 시그니처 칵테일',
+    memberEvents: '멤버 전용 이벤트 참여',
+    memberEventsDesc: '멤버 전용 이벤트에 대한 독점적인 접근',
+    discountDining: '다이닝 할인',
+    discountDiningDesc: '모든 음식 및 음료 10% 할인',
+  },
+  manageAccount: {
+    title: '계정 관리',
+    upgradeTier: '등급 업그레이드',
+    billingHistory: '청구 내역',
+    managePayments: '결제 수단 관리',
+  },
+  activity: {
+    title: '최근 활동',
+    cashbackAdjusted: '수동 포인트 조정',
+    cashbackAdjustedDesc:
+      '{{points}} 포인트가 수동 조정을 통해 변경되었습니다.',
+    cashbackEarned: '포인트 적립',
+    cashbackEarnedDesc:
+      '최근 적격 구매를 통해 +{{points}} 포인트가 적립되었습니다.',
+    cashbackReversed: '포인트 회수',
+    cashbackReversedDesc:
+      '환불 또는 취소 후 -{{points}} 포인트가 차감되었습니다.',
+    daysAgo: '{{count}}일 전',
+    loading: '최근 활동을 불러오는 중...',
+    emptyTitle: '활동 내역이 없습니다',
+    emptyDescription:
+      '적격 구매를 하시면 새로운 포인트 활동과 월간 등급 진행 현황이 여기에 표시됩니다.',
+    progressReset: '등급 진행 초기화',
+    progressResetDesc: '월간 등급 진행 기간이 초기화되었습니다.',
+    sampleData: '샘플 데이터',
   },
   noBio: '프로필을 더 잘 보여줄 짧은 소개를 추가해 보세요.',
   welcomeGift: '웰컴 기프트',
@@ -222,18 +260,18 @@ const profile = {
     allowlistPending:
       '관리자에게 이 계정을 직원 허용 목록에 추가해 달라고 요청하세요.',
     approvalRequired: '민감한 수동 조정에는 관리자 승인이 필요합니다.',
-    award: '캐시백 기록',
+    award: '포인트 기록',
     awarding: '기록 중...',
-    awardTitle: '캐시백 조정 기록',
+    awardTitle: '포인트 조정 기록',
     badge: '직원',
     billAmountLabel: '결제 금액 (VND)',
     billAmountPlaceholder: '100000',
     cameraPermissionDescription:
       'Esco Beach에서 회원 QR 코드를 스캔할 수 있도록 카메라 접근 권한을 허용해 주세요.',
     cameraPermissionTitle: '카메라 권한 필요',
-    currentPoints: '현재 캐시백 잔액: {{value}}',
+    currentPoints: '현재 포인트 잔액: {{value}}',
     errors: {
-      billBelowMinimumSpend: '이 결제 금액은 최소 캐시백 기준에 미달합니다.',
+      billBelowMinimumSpend: '이 결제 금액은 최소 결제 금액 기준에 미달합니다.',
       generic: '문제가 발생했습니다. 다시 시도해 주세요.',
       invalidBillAmount: 'VND 기준의 올바른 결제 금액을 입력해 주세요.',
       invalidRewardServiceResponse:
@@ -247,14 +285,14 @@ const profile = {
         '승인 한도를 초과하는 거래에는 유효한 관리자 PIN이 필요합니다.',
       memberNotFound: '해당 ID의 회원을 찾을 수 없습니다.',
       receiptReferenceRequired:
-        '안전한 캐시백 기록을 위해 영수증 또는 청구 참조 번호가 필요합니다.',
+        '안전한 포인트 기록을 위해 영수증 또는 청구 참조 번호가 필요합니다.',
       staffAccessRequired:
         '이 계정은 수동 리워드 조정용 허용 목록에 등록되어 있지 않습니다.',
       title: '작업을 완료할 수 없습니다',
     },
     findMember: '회원 찾기',
     formulaNote:
-      '{{amount}} 사용 시마다 {{points}} 캐시백 포인트가 적립됩니다.',
+      '{{amount}} 사용 시마다 {{points}} 리워드 포인트가 적립됩니다.',
     goBack: '뒤로 가기',
     grantPermission: '카메라 권한 허용',
     invalidQrTitle: '잘못된 QR 코드',
@@ -271,18 +309,18 @@ const profile = {
     memberNotFound: '해당 코드와 일치하는 회원이 없습니다.',
     memberNotFoundTitle: '회원을 찾을 수 없음',
     memberPendingLookup:
-      '캐시백을 기록하기 전에 회원을 확인하려면 회원 찾기를 눌러 주세요.',
+      '포인트를 기록하기 전에 회원을 확인하려면 회원 찾기를 눌러 주세요.',
     pointsPreviewDescription:
-      '캐시백 포인트는 {{amount}} 단위로 내림 처리됩니다.',
-    pointsPreviewLabel: '캐시백 미리보기',
+      '리워드 포인트는 {{amount}} 단위로 내림 처리됩니다.',
+    pointsPreviewLabel: '포인트 미리보기',
     receiptReferenceLabel: '영수증 참조',
     receiptReferencePlaceholder: '영수증 또는 청구 번호',
     scanAgain: '다시 스캔',
     subtitle:
-      '고객 QR을 스캔하거나 회원 ID를 입력하여 안전한 캐시백 조정을 기록하세요.',
+      '고객 QR을 스캔하거나 회원 ID를 입력하여 안전한 포인트 조정을 기록하세요.',
     successMessage:
-      '{{name}}님에게 {{amount}} 결제로 {{points}} 캐시백 포인트가 기록되었습니다.',
-    successTitle: '캐시백 기록 완료',
+      '{{name}}님에게 {{amount}} 결제로 {{points}} 리워드 포인트가 기록되었습니다.',
+    successTitle: '포인트 기록 완료',
     title: '리워드 스캐너',
   },
   invite: {
@@ -307,14 +345,13 @@ const profile = {
     noReferralsYet: '아직 추천이 없습니다. 코드를 공유해 보세요!',
     status: {
       completed: '완료',
-      pending: '대기 중',
       accepted: '수락됨',
       rejected: '거절됨',
       unknown: '알 수 없음',
     },
     shareInviteLink: '초대 링크 공유',
     shareMessage:
-      '내 추천 코드로 Esco Life에 가입하세요: {{code}}\nhttps://escolife.app/invite/{{code}}',
+      '내 추천 코드로 Esco Life에 가입하세요: {{code}}\n앱으로 열기: {{appUrl}}\n먼저 설치가 필요하면 이 링크를 사용하세요: {{url}}',
     milestones: {
       freeCocktail: '무료 칵테일',
       vipBadge: 'VIP 배지',

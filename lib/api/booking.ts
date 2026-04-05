@@ -10,7 +10,9 @@ import {
 
 import { nowIso } from './shared';
 
-function normalizedOptionalString(value: string | undefined): string | undefined {
+function normalizedOptionalString(
+  value: string | undefined
+): string | undefined {
   if (value === undefined) return undefined;
   const trimmed = value.trim();
   return trimmed === '' ? undefined : trimmed;

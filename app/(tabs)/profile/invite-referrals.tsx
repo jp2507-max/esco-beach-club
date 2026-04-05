@@ -21,14 +21,12 @@ const defaultAvatar = require('@/assets/images/icon.png');
 
 const statusToKey: Record<string, string> = {
   Completed: 'invite.status.completed',
-  Pending: 'invite.status.pending',
   Accepted: 'invite.status.accepted',
   Rejected: 'invite.status.rejected',
 };
 
 type StatusKey =
   | 'invite.status.completed'
-  | 'invite.status.pending'
   | 'invite.status.accepted'
   | 'invite.status.rejected'
   | 'invite.status.unknown';
@@ -72,6 +70,10 @@ function ReferralListRow({
   refItem,
   statusLabel,
 }: ReferralListRowProps): React.JSX.Element {
+  const isPositiveStatus =
+    refItem.status === 'Accepted' || refItem.status === 'Completed';
+  const isRejectedStatus = refItem.status === 'Rejected';
+
   return (
     <InviteReferralListRowStagger index={index}>
       <View
@@ -109,19 +111,25 @@ function ReferralListRow({
         <View
           className="rounded-[10px] px-3 py-1.25"
           style={{
-            backgroundColor:
-              refItem.status === 'Pending' || refItem.status === 'Rejected'
-                ? referralWarningBg
-                : referralStatusBg,
+            backgroundColor: isRejectedStatus
+              ? referralWarningBg
+              : isPositiveStatus
+                ? referralStatusBg
+                : isDark
+                  ? Colors.badgeDarkBackground
+                  : Colors.badgeLightBackground,
           }}
         >
           <Text
             className="text-xs font-bold"
             style={{
-              color:
-                refItem.status === 'Pending' || refItem.status === 'Rejected'
-                  ? referralWarningText
-                  : referralStatusText,
+              color: isRejectedStatus
+                ? referralWarningText
+                : isPositiveStatus
+                  ? referralStatusText
+                  : isDark
+                    ? Colors.textSecondaryDark
+                    : Colors.textSecondary,
             }}
           >
             {statusLabel}
@@ -132,16 +140,22 @@ function ReferralListRow({
   );
 }
 
+const MemoizedReferralListRow = React.memo(ReferralListRow);
+
 function InviteReferralsScreenContent(): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation('profile');
   const { referrals, referralsLoading } = useReferralsData();
   const { contentStyle } = useScreenEntry({ durationMs: 400 });
   const isDark = useAppIsDark();
-  const referralStatusBg = isDark ? 'rgba(34,197,94,0.22)' : '#E8F5E9';
-  const referralStatusText = isDark ? '#86EFAC' : '#4CAF50';
+  const referralStatusBg = isDark
+    ? Colors.inviteReferralStatusBgDark
+    : Colors.inviteReferralStatusBgLight;
+  const referralStatusText = isDark
+    ? Colors.inviteReferralStatusTextDark
+    : Colors.inviteReferralStatusTextLight;
   const referralWarningBg = isDark
-    ? 'rgba(245, 158, 11, 0.13)'
+    ? Colors.badgeWarningDarkBackground
     : Colors.badgeWarningLightBackground;
   const referralWarningText = isDark ? Colors.warningDark : Colors.warning;
   const listContentContainerStyle = useMemo(
@@ -159,7 +173,7 @@ function InviteReferralsScreenContent(): React.JSX.Element {
       );
 
       return (
-        <ReferralListRow
+        <MemoizedReferralListRow
           isDark={isDark}
           index={index}
           joinedViaLabel={t('invite.joinedViaYourLink')}

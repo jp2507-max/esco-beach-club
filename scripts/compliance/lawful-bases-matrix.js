@@ -14,8 +14,16 @@ function main() {
   const report = {
     success: true,
     validatedAt: new Date().toISOString(),
-    lawfulBases: ['consent', 'contract', 'legal_obligation', 'legitimate_interest', 'vital_interests', 'public_task'],
-    message: 'Lawful bases matrix validation placeholder. Add lawful-bases config for full validation.',
+    lawfulBases: [
+      'consent',
+      'contract',
+      'legal_obligation',
+      'legitimate_interest',
+      'vital_interests',
+      'public_task',
+    ],
+    message:
+      'Lawful bases matrix validation placeholder. Add lawful-bases config for full validation.',
   };
 
   fs.mkdirSync(outDir, { recursive: true });

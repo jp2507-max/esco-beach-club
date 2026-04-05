@@ -139,21 +139,30 @@ function reportFinalRevocationFailure(params: {
   message: string;
   refreshToken: string;
   status?: number;
+  error?: unknown;
 }): void {
-  captureHandledError(new Error('apple_token_revocation_failed'), {
-    extras: {
-      attempt: params.attempt,
-      clientId: params.clientId,
-      finalMessage: params.message,
-      maxAttempts: params.maxAttempts,
-      refreshTokenMasked: maskToken(params.refreshToken),
-      status: params.status,
-    },
+  const context = {
+    attempt: params.attempt,
+    clientId: params.clientId,
+    finalMessage: params.message,
+    maxAttempts: params.maxAttempts,
+    refreshTokenMasked: maskToken(params.refreshToken),
+    status: params.status,
+  };
+  const error = params.error ?? new Error(params.message);
+
+  captureHandledError(error, {
+    extras: context,
     tags: {
-      area: 'account_deletion',
+      feature: 'account-deletion',
+      operation: 'apple-token-revocation',
       provider: 'apple',
-      stage: 'revoke',
     },
+  });
+
+  console.error('[account-deletion] apple token revocation failed', {
+    ...context,
+    error,
   });
 }
 
@@ -284,6 +293,7 @@ export async function revokeAppleAuthorizationCode(
       reportFinalRevocationFailure({
         attempt,
         clientId,
+        error,
         maxAttempts,
         message,
         refreshToken: exchangeResult.refreshToken,

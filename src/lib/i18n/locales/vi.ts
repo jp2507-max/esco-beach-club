@@ -1,3 +1,4 @@
+import type { Translations } from '@/src/lib/i18n/locales/en';
 import auth from '@/src/lib/i18n/locales/vi/auth';
 import booking from '@/src/lib/i18n/locales/vi/booking';
 import common from '@/src/lib/i18n/locales/vi/common';
@@ -18,4 +19,4 @@ export const vietnamese = {
   profile,
   booking,
   menu,
-} as const;
+} as const satisfies Translations;

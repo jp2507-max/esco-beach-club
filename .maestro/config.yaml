@@ -6,11 +6,11 @@ excludeTags:
   - util
 
 executionOrder:
-    continueOnFailure: false # default is true
-    flowsOrder:
-        - onboarding
-        - login-with-validation
-        - sign-up
-        - sign-in
-        - password-reset
-        - revoke-session
+  continueOnFailure: false # default is true
+  flowsOrder:
+    - onboarding
+    - login-with-validation
+    - sign-up
+    - sign-in
+    - password-reset
+    - revoke-session

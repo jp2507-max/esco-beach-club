@@ -10,15 +10,18 @@ import {
 } from '@/lib/types';
 
 const memberSegmentValues = [
-  memberSegments.foreigner,
-  memberSegments.local,
+  memberSegments.longTerm,
+  memberSegments.shortTerm,
 ] as const;
 const onboardingPermissionStatusValues = [
   onboardingPermissionStatuses.denied,
   onboardingPermissionStatuses.granted,
   onboardingPermissionStatuses.undetermined,
 ] as const;
-const rewardTierValues = [rewardTierKeys.escoLifeMember] as const;
+const rewardTierValues = [
+  rewardTierKeys.member,
+  rewardTierKeys.legend,
+] as const;
 const rewardTransactionEventTypeValues = [
   rewardTransactionEventTypes.manualAdjustment,
   rewardTransactionEventTypes.purchase,

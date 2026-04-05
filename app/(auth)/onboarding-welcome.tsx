@@ -90,7 +90,10 @@ export default function OnboardingWelcomeScreen(): React.JSX.Element {
               transition={180}
             />
             <LinearGradient
-              colors={['rgba(0,0,0,0.1)', 'rgba(0,0,0,0.52)']}
+              colors={[
+                Colors.onboardingHeroOverlayStart,
+                Colors.onboardingHeroOverlayEnd,
+              ]}
               style={{
                 bottom: 0,
                 left: 0,
@@ -178,7 +181,7 @@ export default function OnboardingWelcomeScreen(): React.JSX.Element {
 
         <Animated.View
           entering={withRM(
-            FadeInUp.duration(motion.dur.md).delay(
+            FadeIn.duration(motion.dur.md).delay(
               CARD_BASE_DELAY + featureCards.length * CARD_STAGGER + 60
             )
           )}
@@ -211,7 +214,7 @@ export default function OnboardingWelcomeScreen(): React.JSX.Element {
                   <Text className="text-[17px] font-bold text-white">
                     {t('onboardingWelcomeGetStarted')}
                   </Text>
-                  <ArrowRight color="#ffffff" size={22} />
+                  <ArrowRight color={Colors.white} size={22} />
                 </View>
               </LinearGradient>
             </Pressable>

@@ -166,4 +166,3 @@ const handleSubmit = () => {
 - Uniwind docs require Metro wrapping via `withUniwindConfig` and a relative `cssEntryFile`; the CSS entry also defines the scan root.
 - Reanimated 4 is New Architecture only, depends on `react-native-worklets`, and expects `react-native-worklets/plugin` in Babel.
 - Rule-file constraints still apply during implementation: `@/src/tw` wrappers, stable `className`, Reanimated styles for motion, `Controller` for React Native forms, and `zod` v4 semantics.
-

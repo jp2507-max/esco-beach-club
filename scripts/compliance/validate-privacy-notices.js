@@ -16,9 +16,9 @@ const outDir = path.join(rootDir, 'build', 'reports', 'compliance');
 const outPath = path.join(outDir, 'privacy-notices-validation.json');
 
 const defaults = {
-  privacyPolicyUrl: 'https://escolife.app/privacy',
-  supportUrl: 'https://escolife.app/support',
-  termsOfServiceUrl: 'https://escolife.app/terms',
+  privacyPolicyUrl: 'https://escolife.expo.app/privacy',
+  supportUrl: 'https://escolife.expo.app/support',
+  termsOfServiceUrl: 'https://escolife.expo.app/terms',
 };
 
 function loadDotEnvFile(filePath) {
@@ -340,8 +340,13 @@ async function main() {
     errors.push('docs/app-review/review-notes-template.md is missing');
   } else if (requireReviewArtifacts) {
     const reviewNotes = fs.readFileSync(reviewNotesPath, 'utf8');
-    if (/TODO_[A-Z0-9_]+/i.test(reviewNotes)) {
-      errors.push('App Review notes template still contains TODO placeholders');
+    if (
+      /TODO_[A-Z0-9_]+/i.test(reviewNotes) ||
+      /REPLACE_BEFORE_SUBMIT_[A-Z0-9_]+/i.test(reviewNotes)
+    ) {
+      errors.push(
+        'App Review notes template still contains submit-time placeholders'
+      );
     }
   }
 
