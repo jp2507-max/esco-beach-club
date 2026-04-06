@@ -1,15 +1,4 @@
-export {
-  BookingContentDataProvider,
-  DataProvider,
-  MemberOffersDataProvider,
-  MenuContentDataProvider,
-  NewsDataProvider,
-  PartnerRedemptionsDataProvider,
-  PerksDataProvider,
-  PartnersDataProvider,
-  ReferralsDataProvider,
-  StaffAccessDataProvider,
-} from './data/provider';
+export type { MemberSummary } from './data/context';
 export {
   useBookingContentData,
   useEventsData,
@@ -21,10 +10,19 @@ export {
   useProfileData,
   useReferralsData,
   useSavedEventsData,
-  useStaffAccessData,
   useUserId,
 } from './data/context';
-export type { MemberSummary } from './data/context';
+export {
+  BookingContentDataProvider,
+  DataProvider,
+  MemberOffersDataProvider,
+  MenuContentDataProvider,
+  NewsDataProvider,
+  PartnerRedemptionsDataProvider,
+  PartnersDataProvider,
+  PerksDataProvider,
+  ReferralsDataProvider,
+} from './data/provider';
 export {
   useData,
   useEventById,

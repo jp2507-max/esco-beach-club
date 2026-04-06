@@ -22,6 +22,7 @@ import {
   interpolate,
   useAnimatedScrollHandler,
   useAnimatedStyle,
+  useDerivedValue,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
@@ -109,11 +110,13 @@ export default function EventDetailsScreen(): React.JSX.Element {
     transform: [{ translateY: slide.get() }],
   }));
 
+  const imageParallaxTranslateYD = useDerivedValue(() =>
+    interpolate(scrollY.get(), [0, 280], [0, -72], Extrapolation.CLAMP)
+  );
+
   const imageParallaxStyle = useAnimatedStyle(() => {
-    const y = scrollY.get();
-    const translateY = interpolate(y, [0, 280], [0, -72], Extrapolation.CLAMP);
     return {
-      transform: [{ translateY }],
+      transform: [{ translateY: imageParallaxTranslateYD.get() }],
     };
   });
 
@@ -155,7 +158,7 @@ export default function EventDetailsScreen(): React.JSX.Element {
               testID="back-btn-skeleton"
               variant="overlay"
             >
-              <ArrowLeft size={20} color="#fff" />
+              <ArrowLeft size={20} color={Colors.white} />
             </HeaderGlassButton>
           </View>
           <View className="absolute bottom-0 left-0 right-0 p-5">
@@ -269,7 +272,11 @@ export default function EventDetailsScreen(): React.JSX.Element {
           />
         </Animated.View>
         <LinearGradient
-          colors={['rgba(0,0,0,0.3)', 'transparent', 'rgba(0,0,0,0.7)']}
+          colors={[
+            Colors.imageOverlaySoft,
+            'transparent',
+            Colors.imageOverlayStrong,
+          ]}
           locations={[0, 0.4, 1]}
           style={{ bottom: 0, left: 0, position: 'absolute', right: 0, top: 0 }}
         />
@@ -285,7 +292,7 @@ export default function EventDetailsScreen(): React.JSX.Element {
             testID="back-btn"
             variant="overlay"
           >
-            <ArrowLeft size={20} color="#fff" />
+            <ArrowLeft size={20} color={Colors.white} />
           </HeaderGlassButton>
           <View className="flex-row">
             <HeaderGlassButton
@@ -296,7 +303,7 @@ export default function EventDetailsScreen(): React.JSX.Element {
               testID="share-btn"
               variant="overlay"
             >
-              <Share2 size={18} color="#fff" />
+              <Share2 size={18} color={Colors.white} />
             </HeaderGlassButton>
             <HeaderGlassButton
               onPress={handleToggleLike}
@@ -312,7 +319,7 @@ export default function EventDetailsScreen(): React.JSX.Element {
             >
               <Heart
                 size={18}
-                color={isLiked ? Colors.primary : '#fff'}
+                color={isLiked ? Colors.primary : Colors.white}
                 fill={isLiked ? Colors.primary : 'transparent'}
               />
             </HeaderGlassButton>
@@ -320,7 +327,7 @@ export default function EventDetailsScreen(): React.JSX.Element {
         </View>
 
         {event.badge ? (
-          <View className="absolute right-4 top-[100px] rounded-[10px] bg-warning px-[14px] py-1.5">
+          <View className="absolute right-4 top-25 rounded-[10px] bg-warning px-3.5 py-1.5">
             <Text className="text-[10px] font-extrabold tracking-[0.5px] text-white">
               {event.badge}
             </Text>
@@ -333,18 +340,18 @@ export default function EventDetailsScreen(): React.JSX.Element {
           </Text>
           <View className="flex-row items-center">
             <View className="flex-row items-center">
-              <Calendar size={14} color="rgba(255,255,255,0.85)" />
-              <Text className="ml-[5px] text-[13px] font-medium text-white/90">
+              <Calendar size={14} color={Colors.imageOverlayIcon} />
+              <Text className="ml-1.25 text-[13px] font-medium text-white/90">
                 {event.date}
               </Text>
             </View>
             <View
-              className="mx-[10px] size-1 rounded-full"
-              style={{ backgroundColor: 'rgba(255,255,255,0.5)' }}
+              className="mx-2.5 size-1 rounded-full"
+              style={{ backgroundColor: Colors.imageOverlayDivider }}
             />
             <View className="flex-row items-center">
-              <Clock size={14} color="rgba(255,255,255,0.85)" />
-              <Text className="ml-[5px] text-[13px] font-medium text-white/90">
+              <Clock size={14} color={Colors.imageOverlayIcon} />
+              <Text className="ml-1.25 text-[13px] font-medium text-white/90">
                 {event.time}
               </Text>
             </View>
@@ -387,7 +394,7 @@ export default function EventDetailsScreen(): React.JSX.Element {
             <Text className="mb-2 text-xl font-extrabold text-text dark:text-text-primary-dark">
               {t('aboutThisEvent')}
             </Text>
-            <Text className="text-sm leading-[22px] text-text-secondary dark:text-text-secondary-dark">
+            <Text className="text-sm leading-5.5 text-text-secondary dark:text-text-secondary-dark">
               {t('aboutDescription1', { location: event.location })}{' '}
               {event.description || t('aboutDescription2')}{' '}
               {t('aboutDescription3')}
@@ -405,7 +412,7 @@ export default function EventDetailsScreen(): React.JSX.Element {
             {priceTiers.map((tier) => (
               <View
                 key={tier.labelKey}
-                className="mb-3 rounded-[18px] border p-[18px]"
+                className="mb-3 rounded-[18px] border p-4.5"
                 style={{
                   backgroundColor: tier.highlight
                     ? isDark
@@ -423,7 +430,7 @@ export default function EventDetailsScreen(): React.JSX.Element {
                 }}
               >
                 {tier.highlight ? (
-                  <View className="absolute right-4 top-[-10px] rounded-lg bg-primary px-2.5 py-1">
+                  <View className="absolute -top-2.5 right-4 rounded-lg bg-primary px-2.5 py-1">
                     <Text className="text-[9px] font-extrabold tracking-[1px] text-white">
                       {t('recommended')}
                     </Text>
@@ -483,7 +490,7 @@ export default function EventDetailsScreen(): React.JSX.Element {
                   </Text>
                 </View>
 
-                <View className="my-[14px] h-px bg-border dark:bg-dark-border" />
+                <View className="my-3.5 h-px bg-border dark:bg-dark-border" />
 
                 {tier.perkKeys.map((key) => (
                   <View key={key} className="mb-2 flex-row items-center">
@@ -541,7 +548,7 @@ export default function EventDetailsScreen(): React.JSX.Element {
             </View>
           </Pressable>
 
-          <View className="h-[120px]" />
+          <View className="h-30" />
         </Animated.View>
       </Animated.ScrollView>
 

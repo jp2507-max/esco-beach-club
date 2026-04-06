@@ -35,10 +35,10 @@ isProject: false
 
 ## What I Verified
 
-- The root router is still a flat stack in [app/_layout.tsx](c:\Users\Peter\esco-beach-club\app_layout.tsx), and auth protection is done with `useEffect` redirects rather than router-native protected screens.
+- The root router is still a flat stack in [app/\_layout.tsx](c:\Users\Peter\esco-beach-club\app_layout.tsx), and auth protection is done with `useEffect` redirects rather than router-native protected screens.
 - The modal route in [app/modal.tsx](c:\Users\Peter\esco-beach-club\app\modal.tsx) renders React Native `Modal` inside an Expo Router modal route, which is an architecture mismatch.
 - The app already uses `expo-image`, `FlashList`, Reanimated 4, and React Compiler, but several screens do not yet follow the installed stack’s best practices.
-- The highest confirmed render hotspots are [providers/DataProvider.tsx](c:\Users\Peter\esco-beach-club\providers\DataProvider.tsx), [app/(tabs)/index.tsx](c:\Users\Peter\esco-beach-club\app(tabs)\index.tsx), [app/invite.tsx](c:\Users\Peter\esco-beach-club\app\invite.tsx), [app/menu.tsx](c:\Users\Peter\esco-beach-club\app\menu.tsx), [app/(tabs)/events.tsx](c:\Users\Peter\esco-beach-club\app(tabs)\events.tsx), and [app/partner-modal.tsx](c:\Users\Peter\esco-beach-club\app\partner-modal.tsx).
+- The highest confirmed render hotspots are [providers/DataProvider.tsx](c:\Users\Peter\esco-beach-club\providers\DataProvider.tsx), [app/(tabs)/index.tsx](<c:\Users\Peter\esco-beach-club\app(tabs)\index.tsx>), [app/invite.tsx](c:\Users\Peter\esco-beach-club\app\invite.tsx), [app/menu.tsx](c:\Users\Peter\esco-beach-club\app\menu.tsx), [app/(tabs)/events.tsx](<c:\Users\Peter\esco-beach-club\app(tabs)\events.tsx>), and [app/partner-modal.tsx](c:\Users\Peter\esco-beach-club\app\partner-modal.tsx).
 
 ```59:74:c:\Users\Peter\esco-beach-club\app_layout.tsx
 function RootLayoutNav() {
@@ -96,12 +96,10 @@ flowchart TD
   root --> modals
 ```
 
-
-
 Planned ownership:
 
-- Auth routes move under [app/(auth)/](c:\Users\Peter\esco-beach-club\app(auth)) for `login` and `signup`.
-- Each tab gets its own nested stack under [app/(tabs)/](c:\Users\Peter\esco-beach-club\app(tabs)) so push history is owned by the tab instead of the flat root stack.
+- Auth routes move under [app/(auth)/](<c:\Users\Peter\esco-beach-club\app(auth)>) for `login` and `signup`.
+- Each tab gets its own nested stack under [app/(tabs)/](<c:\Users\Peter\esco-beach-club\app(tabs)>) so push history is owned by the tab instead of the flat root stack.
 - Shared event details move from [app/event-details.tsx](c:\Users\Peter\esco-beach-club\app\event-details.tsx) to a shared route such as `events/[id]` in a common group.
 - Modal-only flows move under a dedicated modal group so booking, partner, private-event, rate-us, and success are configured once and presented consistently.
 
@@ -111,8 +109,8 @@ Planned ownership:
 
 Touch:
 
-- [app/_layout.tsx](c:\Users\Peter\esco-beach-club\app_layout.tsx)
-- [app/(tabs)/_layout.tsx](c:\Users\Peter\esco-beach-club\app(tabs)layout.tsx)
+- [app/\_layout.tsx](c:\Users\Peter\esco-beach-club\app_layout.tsx)
+- [app/(tabs)/\_layout.tsx](<c:\Users\Peter\esco-beach-club\app(tabs)layout.tsx>)
 - new grouped layouts under [app/](c:\Users\Peter\esco-beach-club\app)
 
 Work:
@@ -129,7 +127,7 @@ Why first:
 
 Touch:
 
-- [app/_layout.tsx](c:\Users\Peter\esco-beach-club\app_layout.tsx)
+- [app/\_layout.tsx](c:\Users\Peter\esco-beach-club\app_layout.tsx)
 - [providers/AuthProvider.tsx](c:\Users\Peter\esco-beach-club\providers\AuthProvider.tsx)
 
 Work:
@@ -164,11 +162,11 @@ Work:
 
 Touch:
 
-- [app/(tabs)/index.tsx](c:\Users\Peter\esco-beach-club\app(tabs)\index.tsx)
+- [app/(tabs)/index.tsx](<c:\Users\Peter\esco-beach-club\app(tabs)\index.tsx>)
 - [app/invite.tsx](c:\Users\Peter\esco-beach-club\app\invite.tsx)
 - [app/menu.tsx](c:\Users\Peter\esco-beach-club\app\menu.tsx)
-- [app/(tabs)/events.tsx](c:\Users\Peter\esco-beach-club\app(tabs)\events.tsx)
-- [app/(tabs)/perks.tsx](c:\Users\Peter\esco-beach-club\app(tabs)\perks.tsx)
+- [app/(tabs)/events.tsx](<c:\Users\Peter\esco-beach-club\app(tabs)\events.tsx>)
+- [app/(tabs)/perks.tsx](<c:\Users\Peter\esco-beach-club\app(tabs)\perks.tsx>)
 - [app/partner-modal.tsx](c:\Users\Peter\esco-beach-club\app\partner-modal.tsx)
 
 Work:
@@ -227,4 +225,3 @@ Work:
 - High-traffic lists follow FlashList/image best practices where applicable.
 - `DataProvider` and form screens have narrower subscription surfaces.
 - Critical flows lint clean and navigate correctly with the new route topology.
-

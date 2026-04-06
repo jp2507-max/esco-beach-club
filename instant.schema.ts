@@ -192,12 +192,6 @@ const _schema = i.schema({
       event_id: i.string().indexed(),
       entry_key: i.string().unique().indexed(),
     }),
-    staff_access: i.entity({
-      created_at: i.date().indexed().optional(),
-      is_active: i.boolean().indexed(),
-      role: i.string().indexed(),
-      updated_at: i.date().indexed().optional(),
-    }),
     private_event_types: i.entity({
       created_at: i.date().indexed().optional(),
       is_active: i.boolean().indexed().optional(),
@@ -358,19 +352,6 @@ const _schema = i.schema({
         on: '$users',
         has: 'many',
         label: 'saved_events',
-      },
-    },
-    staffAccessUser: {
-      forward: {
-        on: 'staff_access',
-        has: 'one',
-        label: 'user',
-        onDelete: 'cascade',
-      },
-      reverse: {
-        on: '$users',
-        has: 'one',
-        label: 'staff_access',
       },
     },
     tableReservationsEvent: {

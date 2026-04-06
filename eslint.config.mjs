@@ -32,6 +32,19 @@ export default defineConfig([
     '**/*.d.ts',
   ]),
   expoConfig,
+  {
+    files: ['plugins/**/*.js'],
+    languageOptions: {
+      globals: {
+        __dirname: 'readonly',
+        __filename: 'readonly',
+        exports: 'writable',
+        module: 'writable',
+        require: 'readonly',
+      },
+      sourceType: 'script',
+    },
+  },
   eslintConfigPrettier,
   {
     plugins: {
@@ -81,7 +94,22 @@ export default defineConfig([
     },
   },
   {
+    files: ['tests/**/*.ts', 'tests/**/*.tsx'],
+    languageOptions: {
+      parser: parser,
+      parserOptions: {
+        project: false,
+        sourceType: 'module',
+      },
+    },
+    rules: {
+      '@typescript-eslint/consistent-type-imports': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
+  },
+  {
     files: ['**/*.ts', '**/*.tsx'],
+    ignores: ['tests/**'],
     languageOptions: {
       parser: parser,
       parserOptions: {

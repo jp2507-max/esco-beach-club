@@ -109,8 +109,15 @@ Sentry.init({
   // Capture all traces in development, sample in production.
   tracesSampleRate: __DEV__ ? 1 : 0.2,
 
+  // Profile all sampled transactions to unlock performance profiles.
+  profilesSampleRate: __DEV__ ? 1 : 1,
+
   // Native frame metrics are only supported in native builds (not Expo Go).
   enableNativeFramesTracking: !isRunningInExpoGo(),
+
+  // Add spans for taps/gestures and failed network requests in native builds.
+  enableUserInteractionTracing: !isRunningInExpoGo(),
+  enableCaptureFailedRequests: !isRunningInExpoGo(),
 
   // Enable Logs
   enableLogs: __DEV__,
@@ -303,6 +310,9 @@ function RootLayoutNav() {
         name="invite/[code]"
         options={{ headerShown: false, animation: 'fade' }}
       />
+      <Stack.Screen name="privacy" />
+      <Stack.Screen name="support" />
+      <Stack.Screen name="terms" />
       <Stack.Protected guard={isAuthenticated}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen

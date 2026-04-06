@@ -3,7 +3,10 @@ import {
   jsonResponse,
   parseBearerRefreshToken,
 } from '@/src/lib/api/route-helpers';
-import { getInstantAdminDb } from '@/src/lib/referral/instant-admin-server';
+import {
+  createInstantUpdateStep,
+  getInstantAdminDb,
+} from '@/src/lib/referral/instant-admin-server';
 import { verifyInstantRefreshToken } from '@/src/lib/referral/instant-runtime-server';
 
 type AccountDeletionRequestRecord = {
@@ -59,7 +62,9 @@ export async function POST(request: Request): Promise<Response> {
     return jsonResponse({ error: 'unauthorized' }, 401);
   }
 
-  const queryResult = await adminDb.query({
+  const queryResult = await adminDb.query<{
+    account_deletion_requests?: AccountDeletionRequestRecord[];
+  }>({
     account_deletion_requests: {
       $: { where: { auth_user_id: authUser.userId } },
     },
@@ -82,7 +87,9 @@ export async function POST(request: Request): Promise<Response> {
   const restoredAt = new Date().toISOString();
 
   await adminDb.transact(
-    adminDb.tx.account_deletion_requests[currentRequest.id].update(
+    createInstantUpdateStep(
+      'account_deletion_requests',
+      currentRequest.id,
       {
         restored_at: restoredAt,
         status: accountDeletionStatuses.restored,

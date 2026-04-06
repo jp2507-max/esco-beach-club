@@ -2,7 +2,8 @@ const profile = {
   guest: 'Guest',
   memberFallback: 'MEMBER',
   tier: {
-    escoLifeMember: 'Esco Life Member',
+    member: 'Esco Life Member',
+    legend: 'Esco Life Legend',
   },
   menu: {
     comingSoon: 'Coming soon',
@@ -36,18 +37,53 @@ const profile = {
   accessPass: 'ACCESS PASS',
   scanAtTable: 'Scan at checkout to link your member ID',
   refPrefix: 'Ref: {{memberId}}',
-  earned: 'CASHBACK EARNED',
+  earned: 'POINTS EARNED',
   saved: 'SAVED',
   profileDetails: 'Profile details',
   memberSince: 'Member since',
   nightsLeft: 'Nights left',
   savedEventsCount: 'Saved events',
   memberCard: {
-    brandMark: 'ESCO LIFE',
-    cashbackBalance: 'Cashback Balance',
-    cashbackSuffix: 'cashback pts',
+    cashbackBalance: 'Points Balance',
+    cashbackSuffix: 'pts',
     memberName: 'MEMBER NAME',
     lifetimeTier: 'Lifetime Tier',
+  },
+  benefits: {
+    title: 'Unlocked Benefits',
+    viewAll: 'View All',
+    concierge: '24/7 Concierge Service',
+    priorityBooking: 'Priority Booking Access',
+    poolsideDrinks: 'Free Poolside Drinks',
+    poolsideDrinksDesc: 'Daily complimentary signature cocktails',
+    memberEvents: 'Member Events Access',
+    memberEventsDesc: 'Exclusive access to members-only events',
+    discountDining: 'Dining Discounts',
+    discountDiningDesc: '10% off all food & beverages',
+  },
+  manageAccount: {
+    title: 'Manage Account',
+    upgradeTier: 'Upgrade Tier',
+    billingHistory: 'Billing History',
+    managePayments: 'Manage Payment Methods',
+  },
+  activity: {
+    title: 'Recent Activity',
+    cashbackAdjusted: 'Manual Points Adjustment',
+    cashbackAdjustedDesc:
+      '{{points}} points were changed through a manual adjustment.',
+    cashbackEarned: 'Points Earned',
+    cashbackEarnedDesc: '+{{points}} points from a recent qualifying purchase.',
+    cashbackReversed: 'Points Reversed',
+    cashbackReversedDesc: '-{{points}} points after a refund or void.',
+    daysAgo: '{{count}} days ago',
+    loading: 'Loading recent activity...',
+    emptyTitle: 'No member activity yet',
+    emptyDescription:
+      'New points activity and monthly tier progress will appear here after your next qualifying purchase.',
+    progressReset: 'Tier Progress Reset',
+    progressResetDesc: 'Your monthly tier progress window was reset.',
+    sampleData: 'Sample Content',
   },
   noBio: 'Add a short bio to personalize your profile.',
   welcomeGift: 'WELCOME GIFT',
@@ -226,19 +262,19 @@ const profile = {
       'Ask an admin to add this account to the staff allowlist.',
     approvalRequired:
       'Manager approval is required for sensitive manual adjustments.',
-    award: 'Record cashback',
+    award: 'Record points',
     awarding: 'Recording...',
-    awardTitle: 'Record cashback adjustment',
+    awardTitle: 'Record points adjustment',
     badge: 'Staff',
     billAmountLabel: 'Bill amount (VND)',
     billAmountPlaceholder: '100000',
     cameraPermissionDescription:
       'Grant camera access so staff can scan member QR codes at Esco Beach.',
     cameraPermissionTitle: 'Camera access needed',
-    currentPoints: 'Current cashback balance: {{value}}',
+    currentPoints: 'Current points balance: {{value}}',
     errors: {
       billBelowMinimumSpend:
-        'This bill does not meet the minimum cashback threshold.',
+        'This bill does not meet the minimum spend threshold.',
       generic: 'Something went wrong. Please try again.',
       invalidBillAmount: 'Enter a valid bill amount in VND.',
       invalidRewardServiceResponse:
@@ -252,14 +288,13 @@ const profile = {
         'A valid manager PIN is required for transactions above the approval cap.',
       memberNotFound: 'We could not find a member for that ID.',
       receiptReferenceRequired:
-        'A receipt or bill reference is required to record cashback securely.',
+        'A receipt or bill reference is required to record points securely.',
       staffAccessRequired:
         'This account is not allowlisted for manual reward adjustments.',
       title: 'Unable to complete action',
     },
     findMember: 'Find member',
-    formulaNote:
-      '{{points}} cashback point is earned for every {{amount}} spent.',
+    formulaNote: '{{points}} point is earned for every {{amount}} spent.',
     goBack: 'Go back',
     grantPermission: 'Grant camera access',
     invalidQrTitle: 'Invalid QR code',
@@ -276,18 +311,18 @@ const profile = {
     memberNotFound: 'No member matches that code.',
     memberNotFoundTitle: 'Member not found',
     memberPendingLookup:
-      'Tap Find Member to confirm this member before recording cashback.',
+      'Tap Find Member to confirm this member before recording points.',
     pointsPreviewDescription:
-      'Cashback points are rounded down to full {{amount}} spend steps.',
-    pointsPreviewLabel: 'Cashback preview',
+      'Points are rounded down to full {{amount}} spend steps.',
+    pointsPreviewLabel: 'Points preview',
     receiptReferenceLabel: 'Receipt reference',
     receiptReferencePlaceholder: 'Receipt or bill number',
     scanAgain: 'Scan again',
     subtitle:
-      'Scan a customer QR or enter their member ID to record a secure cashback adjustment.',
+      'Scan a customer QR or enter their member ID to record a secure points adjustment.',
     successMessage:
-      '{{name}} received {{points}} cashback points from a bill of {{amount}}.',
-    successTitle: 'Cashback recorded',
+      '{{name}} received {{points}} points from a bill of {{amount}}.',
+    successTitle: 'Points recorded',
     title: 'Reward scanner',
   },
   invite: {
@@ -313,14 +348,13 @@ const profile = {
     noReferralsYet: 'No referrals yet. Share your code!',
     status: {
       completed: 'Completed',
-      pending: 'Pending',
       accepted: 'Accepted',
       rejected: 'Rejected',
       unknown: 'Unknown',
     },
     shareInviteLink: 'Share Invite Link',
     shareMessage:
-      'Join Esco Life with my referral code: {{code}}\nhttps://escolife.app/invite/{{code}}',
+      'Join Esco Life with my referral code: {{code}}\nOpen in app: {{appUrl}}\nNeed to install first? Use this link: {{url}}',
     milestones: {
       freeCocktail: 'Free Cocktail',
       vipBadge: 'VIP Badge',

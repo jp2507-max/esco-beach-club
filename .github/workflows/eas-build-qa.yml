@@ -51,4 +51,3 @@ jobs:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           VERSION: ${{ github.event.release.tag_name || format('qa-{0}', github.run_number) }}
           IOS: true
-

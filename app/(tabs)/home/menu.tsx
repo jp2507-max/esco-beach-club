@@ -7,6 +7,7 @@ import React, {
   useState,
 } from 'react';
 import { useColorScheme } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
 import {
@@ -231,23 +232,70 @@ function MenuItemRow({ item, tMenu }: MenuItemRowProps): React.JSX.Element {
   );
 }
 
-const getTabStyles = (active: boolean, isDark: boolean) => {
-  if (active) {
-    return {
-      backgroundColor: isDark ? Colors.textPrimaryDark : Colors.text,
-      borderColor: isDark ? Colors.textPrimaryDark : Colors.text,
-      color: isDark ? Colors.darkBg : Colors.white,
-    };
-  }
-  return {
-    backgroundColor: isDark ? Colors.darkBgCard : Colors.surface,
-    borderColor: isDark ? Colors.darkBorder : Colors.border,
-    color: isDark ? Colors.textSecondaryDark : Colors.textSecondary,
+const MemoizedMenuItemRow = React.memo(MenuItemRow);
+
+type TabVisualStyle = {
+  container: {
+    backgroundColor: string;
+    borderColor: string;
+    borderWidth: number;
+  };
+  label: {
+    color: string;
   };
 };
 
+const TAB_VISUAL_STYLES: Record<
+  'dark' | 'light',
+  Record<'active' | 'inactive', TabVisualStyle>
+> = {
+  dark: {
+    active: {
+      container: {
+        backgroundColor: Colors.textPrimaryDark,
+        borderColor: Colors.textPrimaryDark,
+        borderWidth: 1.5,
+      },
+      label: { color: Colors.darkBg },
+    },
+    inactive: {
+      container: {
+        backgroundColor: Colors.darkBgCard,
+        borderColor: Colors.darkBorder,
+        borderWidth: 1.5,
+      },
+      label: { color: Colors.textSecondaryDark },
+    },
+  },
+  light: {
+    active: {
+      container: {
+        backgroundColor: Colors.text,
+        borderColor: Colors.text,
+        borderWidth: 1.5,
+      },
+      label: { color: Colors.white },
+    },
+    inactive: {
+      container: {
+        backgroundColor: Colors.surface,
+        borderColor: Colors.border,
+        borderWidth: 1.5,
+      },
+      label: { color: Colors.textSecondary },
+    },
+  },
+};
+
+function getTabStyles(active: boolean, isDark: boolean): TabVisualStyle {
+  const theme = isDark ? 'dark' : 'light';
+  const state = active ? 'active' : 'inactive';
+  return TAB_VISUAL_STYLES[theme][state];
+}
+
 function MenuScreenContent(): React.JSX.Element {
   const tMenu = useMenuTranslation();
+  const insets = useSafeAreaInsets();
   const isDark = useColorScheme() === 'dark';
   const [activeCategory, setActiveCategory] = useState<string>('cocktails');
   const { contentStyle } = useScreenEntry();
@@ -293,13 +341,17 @@ function MenuScreenContent(): React.JSX.Element {
   );
 
   const listContentContainerStyle = useMemo(
-    () => ({ paddingBottom: 40, paddingHorizontal: 20, paddingTop: 18 }),
-    []
+    () => ({
+      paddingBottom: 40 + insets.bottom,
+      paddingHorizontal: 20,
+      paddingTop: 18,
+    }),
+    [insets.bottom]
   );
 
   const renderMenuItem = useCallback(
     ({ item }: ListRenderItemInfo<MenuItem>): React.JSX.Element => (
-      <MenuItemRow item={item} tMenu={tMenu} />
+      <MemoizedMenuItemRow item={item} tMenu={tMenu} />
     ),
     [tMenu]
   );
@@ -322,17 +374,10 @@ function MenuScreenContent(): React.JSX.Element {
                 key={cat.key}
                 className="rounded-full px-5 py-2.5"
                 onPress={() => setActiveCategory(cat.key)}
-                style={{
-                  backgroundColor: tabStyles.backgroundColor,
-                  borderColor: tabStyles.borderColor,
-                  borderWidth: 1.5,
-                }}
+                style={tabStyles.container}
                 testID={`tab-${cat.key}`}
               >
-                <Text
-                  className="text-sm font-semibold"
-                  style={{ color: tabStyles.color }}
-                >
+                <Text className="text-sm font-semibold" style={tabStyles.label}>
                   {tMenu(cat.labelKey)}
                 </Text>
               </Pressable>
@@ -343,6 +388,7 @@ function MenuScreenContent(): React.JSX.Element {
 
       <Animated.View className="flex-1" style={contentStyle}>
         <FlashList
+          contentInsetAdjustmentBehavior="automatic"
           contentContainerStyle={listContentContainerStyle}
           data={currentItems}
           keyExtractor={(item) => item.id}

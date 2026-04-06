@@ -21,22 +21,22 @@ const auth = {
   onboardingBasicsTermsCta: '서비스 이용약관',
   onboardingLocalIdentityTitle: '게스트 프로필',
   onboardingLocalIdentitySubtitle:
-    '로컬인지 외국인인지 알려주시면 맞춤 멤버 경험을 제공해 드려요.',
+    '장기 체류인지 단기 체류인지 알려주시면 맞춤 멤버 경험을 제공해 드려요.',
   onboardingLocalIdentityRegionalAccessTitle: '회원 구분',
   onboardingLocalIdentityRegionalAccessDescription:
-    '혜택, 추천, 현장 오퍼를 더 정확히 개인화하는 데 도움이 됩니다.',
-  onboardingLocalIdentityLocalTitle: '로컬',
+    '체류 기간에 맞는 혜택, 추천, 현장 오퍼를 개인화하는 데 도움이 됩니다.',
+  onboardingLocalIdentityLocalTitle: '장기 체류',
   onboardingLocalIdentityLocalDescription:
-    '현지 거주자에게 맞는 혜택과 추천을 받고 싶어요.',
-  onboardingLocalIdentityForeignerTitle: '외국인',
+    '장기 체류에 맞는 상시형 혜택과 추천을 받고 싶어요.',
+  onboardingLocalIdentityForeignerTitle: '단기 체류',
   onboardingLocalIdentityForeignerDescription:
-    '해외 방문객에게 맞는 추천과 혜택을 받고 싶어요.',
+    '단기 방문에 맞는 여행 친화형 추천과 혜택을 받고 싶어요.',
   onboardingLocalIdentityLegalConsentsTitle: '법적 동의',
   onboardingInfoButtonLabel: '왜 필요한가요',
   onboardingInfoButtonHint: '짧은 설명을 보여줍니다',
   onboardingLocalIdentityRegionalAccessInfoTitle: '회원 구분을 묻는 이유',
   onboardingLocalIdentityRegionalAccessInfoMessage:
-    '로컬 혜택, 여행자 친화 혜택, 현장 경험을 더 적절하게 맞춤 제공하기 위해서예요.',
+    '체류 기간에 맞는 혜택, 오퍼, 현장 경험을 더 적절하게 맞춤 제공하기 위해서예요.',
   onboardingLocalIdentityTermsInfoTitle: '약관 동의가 필요한 이유',
   onboardingLocalIdentityTermsInfoMessage:
     '예약, 이용 수칙, 취소 정책을 명확히 해 회원과 파트너를 보호하기 위해 필요합니다.',
@@ -56,7 +56,7 @@ const auth = {
   onboardingLocalIdentityContinue: '계속',
   onboardingLocalIdentityInvalidTitle: '정보가 부족합니다',
   onboardingLocalIdentityInvalidMessage:
-    '로컬 또는 외국인을 선택하고 모든 법적 동의 항목을 확인해 주세요.',
+    '장기 체류 또는 단기 체류를 선택하고 모든 법적 동의 항목을 확인해 주세요.',
   onboardingFinalDetailsTitle: '마무리 정보',
   onboardingFinalDetailsSubtitle:
     '카바나 호스트가 이름으로 맞이할 수 있도록 사진을 업로드해 주세요.',
@@ -107,12 +107,15 @@ const auth = {
     '권한 팝업을 열 수 없습니다. 다시 시도하거나 지금은 건너뛸 수 있어요.',
   onboardingPermissionsPrivacyNote:
     '권한은 언제든 기기 설정에서 변경할 수 있어요.',
+  onboardingSaveErrorTitle: '저장하지 못했어요',
+  onboardingSaveErrorMessage:
+    '저장 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.',
   venueUpsellNotificationChannelName: '현장 오퍼',
   venueUpsellNotificationChannelDescription:
     '레스토랑 도착 시 받을 수 있는 실시간 오퍼입니다.',
-  venueUpsellNotificationTitle: '바에서 캐시백 포인트 적립',
+  venueUpsellNotificationTitle: '바에서 리워드 포인트 적립',
   venueUpsellNotificationBody:
-    '지금 칵테일을 주문하고 캐시백 포인트를 잔액에 추가하세요!',
+    '지금 칵테일을 주문하고 리워드 포인트를 잔액에 추가하세요!',
   onboardingClubWelcomeTitle: '클럽에 오신 것을 환영합니다!',
   onboardingClubWelcomeSubtitle:
     '햇살이 가득하고 멤버십이 활성화되었습니다. 새로운 라이프스타일을 위한 첫 건배를 시작해 보세요.',
@@ -143,6 +146,8 @@ const auth = {
   appleAuthorizationCodeMissing:
     'Apple에서 삭제 확인용 인증 코드를 반환하지 않았습니다.',
   appleIdTokenMissing: 'Apple에서 신원 토큰을 반환하지 않았습니다.',
+  appleOauthClientNotConfigured:
+    'Apple 로그인 구성이 잘못되었습니다. 지원팀에 문의해 주세요.',
   googleAuthNotConfigured: 'Google 로그인이 아직 구성되지 않았습니다.',
   googleOauthClientNotConfigured:
     'Google 로그인 구성이 잘못되었습니다. 지원팀에 문의해 주세요.',
@@ -205,6 +210,7 @@ const auth = {
   onboardingWelcomePointGlobalDescription:
     '40개국 이상, 6개 대륙에서 리워드를 누리세요.',
   genericError: '문제가 발생했습니다. 다시 시도하거나 지원팀에 문의해 주세요.',
+  member: '회원',
 } as const;
 
 export default auth;

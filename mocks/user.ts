@@ -1,11 +1,11 @@
-export type RewardTierKey = 'ESCO_LIFE_MEMBER';
+import { rewardTierKeys } from '@/lib/types';
 
 export const mockUser = {
   name: 'Alex Anderson',
   firstName: 'Alex',
   tier: 'Esco Life Member',
-  tierBadge: 'ESCO LIFE MEMBER',
-  tierLevel: 'ESCO_LIFE_MEMBER' as RewardTierKey,
+  tierBadge: 'MEMBER',
+  tierLevel: rewardTierKeys.member,
   memberId: '#8829-PLT',
   cashbackPoints: 1250,
   cashbackTargetPoints: 0,

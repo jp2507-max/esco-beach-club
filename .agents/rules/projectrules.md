@@ -61,11 +61,11 @@ Ensure to review `src/lib/forms/schemas.ts` and controlled components (`src/lib/
 ## Internationalization (i18n)
 
 - **All user-facing strings must be internationalized** — never hardcode display text. Use `t()` from `react-i18next`.
-- Config: `src/lib/i18n/index.ts`; translations: `src/lib/i18n/locales/{en,de}/*.ts`
-- Namespaces: `common` (default), `auth`, `garden`, `schedule`, `scan`, `strains`, `community`, `profile`, `addPlant`, `harvest`, `taskDetail`
+- Config: `src/lib/i18n/index.ts`; translations: `src/lib/i18n/locales/{en,vi,ko}/*.ts`
+- Namespaces: `common` (default), `auth`, `events`, `home`, `profile`, `perks`, `booking`, `menu`, `membership`
 - Usage: `const { t } = useTranslation('namespace');` — cross-namespace via `t('common:key')`
 - Keys use `camelCase`. Interpolation: `t('key', { variable })`. Plurals: `t('key', { count })`.
-- New screens/components must add keys to the appropriate namespace file for both EN and DE
+- New screens/components must add keys to the appropriate namespace file for EN, VI, and KO
 - No in-app language picker — uses native per-app language settings via `expo-localization`
 
 ## InstantDB Integration

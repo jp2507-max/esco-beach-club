@@ -2,7 +2,11 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-const { IOSConfig, withDangerousMod, withXcodeProject } = require('expo/config-plugins');
+const {
+  IOSConfig,
+  withDangerousMod,
+  withXcodeProject,
+} = require('expo/config-plugins');
 
 const PLUGIN_NAME = 'with-apple-privacy-manifest';
 const MANIFEST_SOURCE = path.join(

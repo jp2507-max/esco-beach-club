@@ -1,0 +1,34 @@
+{
+  "configVersion": 0,
+  "apple": {
+    "copyright": "2026 Esco Beach Club",
+    "categories": ["LIFESTYLE", "FOOD_AND_DRINK"],
+    "info": {
+      "en-US": {
+        "title": "Esco Beach Club",
+        "subtitle": "Private Events & Perks",
+        "description": "Esco Beach Club is the private members app for curated events, partner perks, and premium beach-club access.\n\nInside the app, members can:\n• Discover upcoming club events and VIP experiences\n• Unlock partner perks across hospitality, dining, travel, and wellness\n• Manage their digital member identity and benefits\n• Book tables and submit private-event requests\n• Track loyalty progress, rewards, and savings\n• Access invite links, referrals, and member-only updates\n\nBuilt for a polished, members-first experience, Esco Beach Club keeps access, reservations, perks, and account controls in one place.\n\nPrivacy-first by design:\n• Optional background location is used to recognize venue arrival for in-club offers\n• Camera access is reserved for staff QR scanning flows\n• Account deletion includes a 30-day restore window\n\nDownload Esco Beach Club to manage your membership and stay close to the club.",
+        "keywords": [
+          "beach club",
+          "membership",
+          "events",
+          "perks",
+          "vip",
+          "booking",
+          "loyalty",
+          "lifestyle",
+          "travel",
+          "dining"
+        ],
+        "releaseNotes": "Welcome to the first App Store release of Esco Beach Club. Members can access curated events, partner perks, digital membership, bookings, referrals, and account controls in one premium app.",
+        "promoText": "Unlock curated events, partner perks, and members-only access designed around life at Esco Beach Club.",
+        "privacyPolicyUrl": "https://escolife.expo.app/privacy",
+        "supportUrl": "https://escolife.expo.app/support",
+        "marketingUrl": "https://escolife.expo.app"
+      }
+    },
+    "release": {
+      "automaticRelease": false
+    }
+  }
+}

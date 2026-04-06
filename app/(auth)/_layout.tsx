@@ -16,6 +16,13 @@ export default function AuthLayout(): React.JSX.Element {
         />
       </Stack.Protected>
 
+      <Stack.Protected guard={isAuthenticated}>
+        <Stack.Screen
+          name="post-auth-redirect"
+          options={{ animation: 'none' }}
+        />
+      </Stack.Protected>
+
       {/* Onboarding is intentionally outside Stack.Protected: signed-in members use
           Profile → restart onboarding without signing out. */}
       <Stack.Screen

@@ -3,19 +3,19 @@ const membership = {
   tierCard: {
     currentTier: 'Hạng hiện tại',
     memberSince: 'Thành viên từ {{date}}',
-    cashbackBalance: 'Số dư cashback',
-    cashbackPoints: '{{value}} điểm cashback',
+    cashbackBalance: 'Số dư điểm thưởng',
+    cashbackPoints: '{{value}} điểm thưởng',
     progressTo: 'Tiến tới {{nextTier}}',
-    progressPoints: '{{current}} / {{target}} pts',
+    progressPoints: '{{current}} / {{target}} điểm thưởng',
     progressExpires: 'Tiến độ sẽ đặt lại vào {{date}}',
     progressResetsMonthly:
       'Tiến độ lên hạng theo tháng sẽ đặt lại sau 1 tháng.',
-    nextTierComingSoon: 'Hạng tiếp theo sắp ra mắt',
-    progressUnavailable:
-      'Tiến độ lên hạng sẽ xuất hiện tại đây khi hạng tiếp theo được cấu hình.',
+    nextTierComingSoon: 'Bạn đã đạt hạng Legend',
+    progressUnavailable: 'Bạn đã sở hữu hạng trọn đời cao nhất.',
   },
   tiers: {
-    escoLifeMember: 'Thành viên Esco Life',
+    member: 'Esco Life Member',
+    legend: 'Esco Life Legend',
   },
   benefits: {
     title: 'Quyền lợi',
@@ -35,22 +35,39 @@ const membership = {
     billingHistory: 'Lịch sử thanh toán',
     managePayments: 'Quản lý thanh toán',
   },
+  upgradeTier: {
+    intro: 'Theo dõi tiến độ theo tháng để mở khóa hạng Legend trọn đời.',
+    currentTierLabel: 'Hạng trọn đời hiện tại',
+    nextTierLabel: 'Hạng tiếp theo',
+    unlockRequirement:
+      'Đạt {{target}} điểm trong một chu kỳ tháng để mở khóa {{nextTier}} trọn đời.',
+    progressLabel: 'Tiến độ theo tháng',
+    resetOn: 'Tiến độ sẽ đặt lại vào {{date}}',
+    resetsMonthlyFallback:
+      'Tiến độ sẽ đặt lại sau 1 tháng kể từ khi chu kỳ đang hoạt động bắt đầu.',
+    topTierTitle: 'Bạn đã ở hạng Esco Life Legend',
+    topTierDescription:
+      'Legend là hạng trọn đời của bạn. Hãy tiếp tục tích điểm để tối đa hóa phần thưởng.',
+    formulaTitle: 'Công thức tích điểm',
+    formulaDescription:
+      '{{points}} điểm thưởng được cộng cho mỗi {{amount}} chi tiêu.',
+  },
   activity: {
     title: 'Hoạt động gần đây',
-    cashbackAdjusted: 'Điều chỉnh cashback thủ công',
+    cashbackAdjusted: 'Điều chỉnh điểm thưởng thủ công',
     cashbackAdjustedDesc:
-      '{{points}} điểm cashback đã được thay đổi bằng điều chỉnh thủ công.',
-    cashbackEarned: 'Cashback đã ghi nhận',
+      '{{points}} điểm thưởng đã được thay đổi bằng điều chỉnh thủ công.',
+    cashbackEarned: 'Điểm thưởng đã ghi nhận',
     cashbackEarnedDesc:
-      '+{{points}} điểm cashback từ giao dịch đủ điều kiện gần đây.',
-    cashbackReversed: 'Cashback đã đảo ngược',
+      '+{{points}} điểm thưởng từ giao dịch đủ điều kiện gần đây.',
+    cashbackReversed: 'Điểm thưởng đã đảo ngược',
     cashbackReversedDesc:
-      '-{{points}} điểm cashback sau khi hoàn tiền hoặc hủy giao dịch.',
+      '-{{points}} điểm thưởng sau khi hoàn tiền hoặc hủy giao dịch.',
     daysAgo: '{{count}} ngày trước',
     loading: 'Đang tải hoạt động gần đây...',
     emptyTitle: 'Chưa có hoạt động thành viên',
     emptyDescription:
-      'Hoạt động cashback mới và tiến độ hạng theo tháng sẽ xuất hiện tại đây sau giao dịch đủ điều kiện tiếp theo của bạn.',
+      'Hoạt động điểm thưởng mới và tiến độ hạng theo tháng sẽ xuất hiện tại đây sau giao dịch đủ điều kiện tiếp theo của bạn.',
     progressReset: 'Đặt lại tiến độ hạng',
     progressResetDesc:
       'Chu kỳ tiến độ hạng theo tháng của bạn đã được đặt lại.',

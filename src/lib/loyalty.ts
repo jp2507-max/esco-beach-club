@@ -19,7 +19,7 @@ export const rewardBenefitKeys = {
 export type RewardBenefitKey =
   (typeof rewardBenefitKeys)[keyof typeof rewardBenefitKeys];
 
-type RewardTierLabelKey = 'escoLifeMember';
+type RewardTierLabelKey = 'member' | 'legend';
 
 export type RewardTierDefinition = {
   hasPrioritySupport: boolean;
@@ -38,19 +38,34 @@ export const rewardConfig = {
   tierProgressWindowMonths: 1,
 } as const;
 
+const baseMemberBenefits: readonly RewardBenefitKey[] = [
+  rewardBenefitKeys.memberEvents,
+  rewardBenefitKeys.discountDining,
+];
+
 export const rewardTierDefinitions: Record<
   RewardTierKey,
   RewardTierDefinition
 > = {
-  [rewardTierKeys.escoLifeMember]: {
+  [rewardTierKeys.member]: {
     hasPrioritySupport: false,
-    key: rewardTierKeys.escoLifeMember,
-    labelKey: 'escoLifeMember',
+    key: rewardTierKeys.member,
+    labelKey: 'member',
+    nextTierKey: rewardTierKeys.legend,
+    progressTargetPoints: 50,
+    unlockedBenefits: baseMemberBenefits,
+  },
+  [rewardTierKeys.legend]: {
+    hasPrioritySupport: true,
+    key: rewardTierKeys.legend,
+    labelKey: 'legend',
     nextTierKey: null,
     progressTargetPoints: 0,
     unlockedBenefits: [
-      rewardBenefitKeys.memberEvents,
-      rewardBenefitKeys.discountDining,
+      ...baseMemberBenefits,
+      rewardBenefitKeys.poolsideDrinks,
+      rewardBenefitKeys.priorityBooking,
+      rewardBenefitKeys.concierge,
     ],
   },
 };
@@ -75,11 +90,10 @@ type TierProgressSnapshot = Pick<
 >;
 
 export function normalizeRewardTierKey(value: unknown): RewardTierKey {
-  if (value === rewardTierKeys.escoLifeMember) {
-    return rewardTierKeys.escoLifeMember;
-  }
+  if (value === rewardTierKeys.member) return rewardTierKeys.member;
+  if (value === rewardTierKeys.legend) return rewardTierKeys.legend;
 
-  return rewardTierKeys.escoLifeMember;
+  return rewardTierKeys.member;
 }
 
 export function getRewardTierDefinition(

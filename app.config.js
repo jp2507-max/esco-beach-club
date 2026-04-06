@@ -21,8 +21,16 @@ module.exports = ({ config }) => {
     ];
   });
 
+  if (!plugins.includes('expo-font')) {
+    plugins.push('expo-font');
+  }
+
   return {
     ...config,
+    updates: {
+      ...config.updates,
+      enableBsdiffPatchSupport: true,
+    },
     ios: {
       ...config.ios,
       usesAppleSignIn: true,

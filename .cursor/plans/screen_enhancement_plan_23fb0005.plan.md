@@ -3,46 +3,46 @@ name: Screen Enhancement Plan
 overview: Systematically elevate every screen in Esco Beach Club with entering animations, haptic feedback, skeleton loading states, staggered list animations, and micro-interactions — leveraging the existing motion token system and Reanimated 4 infrastructure.
 todos:
   - id: infra-haptics
-    content: "Phase 1A: Create useHaptic utility (src/lib/haptics/use-haptic.ts) with iOS-only guard and typed helpers"
+    content: 'Phase 1A: Create useHaptic utility (src/lib/haptics/use-haptic.ts) with iOS-only guard and typed helpers'
     status: completed
   - id: infra-skeleton
-    content: "Phase 1B: Create Skeleton / SkeletonCard / SkeletonText / SkeletonAvatar components (src/components/ui/skeleton.tsx)"
+    content: 'Phase 1B: Create Skeleton / SkeletonCard / SkeletonText / SkeletonAvatar components (src/components/ui/skeleton.tsx)'
     status: completed
   - id: infra-stagger
-    content: "Phase 1C: Create useStaggeredEntry hook (src/lib/animations/use-staggered-entry.ts)"
+    content: 'Phase 1C: Create useStaggeredEntry hook (src/lib/animations/use-staggered-entry.ts)'
     status: completed
   - id: infra-screen-entry
-    content: "Phase 1D: Extend useScreenEntry with optional delay param"
+    content: 'Phase 1D: Extend useScreenEntry with optional delay param'
     status: completed
   - id: tab-events
-    content: "Phase 2A: Events tab — screen entry, card stagger, heart haptic, chip haptic, skeleton loading"
+    content: 'Phase 2A: Events tab — screen entry, card stagger, heart haptic, chip haptic, skeleton loading'
     status: completed
   - id: tab-perks
-    content: "Phase 2B: Perks tab — screen entry, card stagger, press haptic, skeleton loading"
+    content: 'Phase 2B: Perks tab — screen entry, card stagger, press haptic, skeleton loading'
     status: completed
   - id: tab-qr
-    content: "Phase 2C: QR tab — card reveal spring, haptic on show, long-press haptic"
+    content: 'Phase 2C: QR tab — card reveal spring, haptic on show, long-press haptic'
     status: completed
   - id: tab-home
-    content: "Phase 2D: Home tab — card stagger, quick-action haptic, skeleton loading"
+    content: 'Phase 2D: Home tab — card stagger, quick-action haptic, skeleton loading'
     status: completed
   - id: tab-profile
-    content: "Phase 2E: Profile tab — menu stagger, avatar scale-in, row haptics, voucher haptic"
+    content: 'Phase 2E: Profile tab — menu stagger, avatar scale-in, row haptics, voucher haptic'
     status: completed
   - id: auth-login-signup
-    content: "Phase 3A-B: Login + Signup — FadeInUp stagger, step dot animation, submit haptic"
+    content: 'Phase 3A-B: Login + Signup — FadeInUp stagger, step dot animation, submit haptic'
     status: completed
   - id: onboarding-haptics
-    content: "Phase 3C: Onboarding screens — haptics on permissions, CTA, radio/checkbox"
+    content: 'Phase 3C: Onboarding screens — haptics on permissions, CTA, radio/checkbox'
     status: completed
   - id: modals-polish
-    content: "Phase 4: All modals — selection haptics, success haptics, LinearTransition on pickers"
+    content: 'Phase 4: All modals — selection haptics, success haptics, LinearTransition on pickers'
     status: completed
   - id: profile-subs
-    content: "Phase 5: Profile sub-screens — screen entry, stagger, haptics, skeleton for membership"
+    content: 'Phase 5: Profile sub-screens — screen entry, stagger, haptics, skeleton for membership'
     status: completed
   - id: detail-shared
-    content: "Phase 6: Event detail parallax hero, skeleton loading, not-found FadeIn"
+    content: 'Phase 6: Event detail parallax hero, skeleton loading, not-found FadeIn'
     status: completed
 isProject: false
 ---
@@ -59,7 +59,6 @@ The app has **44 routes** across 5 tabs, auth/onboarding, modals, and shared scr
 
 ### Audit Results
 
-
 | Area                    | Entering Anim                      | Haptics | Skeleton | List Stagger | Exiting Anim |
 | ----------------------- | ---------------------------------- | ------- | -------- | ------------ | ------------ |
 | Onboarding (5 screens)  | Good (FadeIn/Up, ZoomIn, floating) | None    | None     | Partial      | None         |
@@ -72,7 +71,6 @@ The app has **44 routes** across 5 tabs, auth/onboarding, modals, and shared scr
 | Modals (5)              | Partial (mount springs)            | None    | None     | None         | None         |
 | Event detail            | Custom fade/slide                  | None    | None     | None         | None         |
 | Auth (login/signup)     | CTA scale only                     | None    | None     | None         | None         |
-
 
 **Zero screens use haptics. Zero screens use skeletons. Zero screens use exiting or layout animations.**
 
@@ -272,8 +270,6 @@ graph TD
     P5 --> P6[Phase 6: Shared/Detail screens]
 ```
 
-
-
 ## Key Principles
 
 - **Every animation respects Reduced Motion** via `withRM` or `reduceMotion: ReduceMotion.System`
@@ -283,4 +279,3 @@ graph TD
 - **No per-frame className churn** — all dynamic styles via Reanimated `style`
 - **All strings remain i18n'd** — no hardcoded text additions
 - **Cleanup**: every `withRepeat` / looping animation calls `cancelAnimation` on unmount
-

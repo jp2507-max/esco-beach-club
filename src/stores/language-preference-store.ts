@@ -1,12 +1,12 @@
 import { createMMKV } from 'react-native-mmkv';
 import { create } from 'zustand';
-import {
-  createJSONStorage,
-  persist,
-  type StateStorage,
-} from 'zustand/middleware';
+import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { type AppLanguage, appLanguages } from '@/src/lib/i18n/types';
+import {
+  createGetPersistStateStorage,
+  readPersistEnvelopeSync,
+} from '@/src/lib/stores/zustand-persist-state-storage';
 
 type LanguagePreferenceState = {
   overrideLanguage: AppLanguage | null;
@@ -23,17 +23,7 @@ const LANGUAGE_PREFERENCE_STORAGE_KEY = 'language-preference';
 const languagePreferenceStorage = createMMKV({
   id: 'esco.language-preference',
 });
-
-const mmkvStateStorage: StateStorage = {
-  getItem: (name: string): string | null =>
-    languagePreferenceStorage.getString(name) ?? null,
-  removeItem: (name: string): void => {
-    languagePreferenceStorage.remove(name);
-  },
-  setItem: (name: string, value: string): void => {
-    languagePreferenceStorage.set(name, value);
-  },
-};
+const getStateStorage = createGetPersistStateStorage(languagePreferenceStorage);
 
 function isSupportedLanguage(language: unknown): language is AppLanguage {
   return (
@@ -59,7 +49,8 @@ function parseStoredLanguagePreference(
 }
 
 export function getStoredLanguagePreference(): AppLanguage | null {
-  const rawPreference = languagePreferenceStorage.getString(
+  const rawPreference = readPersistEnvelopeSync(
+    languagePreferenceStorage,
     LANGUAGE_PREFERENCE_STORAGE_KEY
   );
   return parseStoredLanguagePreference(rawPreference ?? null);
@@ -76,7 +67,7 @@ export const useLanguagePreferenceStore = create<LanguagePreferenceState>()(
     {
       name: LANGUAGE_PREFERENCE_STORAGE_KEY,
       partialize: (state) => ({ overrideLanguage: state.overrideLanguage }),
-      storage: createJSONStorage(() => mmkvStateStorage),
+      storage: createJSONStorage(getStateStorage),
       version: 1,
     }
   )

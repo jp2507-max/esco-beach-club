@@ -12,12 +12,12 @@ import {
   stopRestaurantGeofencing,
   syncBackgroundLocationPermissionStatus,
 } from '@/src/lib/location/restaurant-geofence';
+import { toOnboardingPermissionStatus } from '@/src/lib/mappers';
+import { captureHandledError } from '@/src/lib/monitoring';
 import {
   configureNotificationPresentation,
   ensureVenueUpsellNotificationChannel,
 } from '@/src/lib/notifications';
-import { toOnboardingPermissionStatus } from '@/src/lib/mappers';
-import { captureHandledError } from '@/src/lib/monitoring';
 import { useRestaurantPresenceStore } from '@/src/stores/restaurant-presence-store';
 
 type RestaurantPresenceProviderProps = {
@@ -75,9 +75,9 @@ export function RestaurantPresenceProvider({
   }, []);
 
   React.useEffect(() => {
-    useRestaurantPresenceStore.getState().setMemberSegment(
-      profile?.member_segment ?? null
-    );
+    useRestaurantPresenceStore
+      .getState()
+      .setMemberSegment(profile?.member_segment ?? null);
   }, [profile]);
 
   React.useEffect(() => {
@@ -112,7 +112,10 @@ export function RestaurantPresenceProvider({
       });
     }
 
-    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    const subscription = AppState.addEventListener(
+      'change',
+      handleAppStateChange
+    );
 
     return () => {
       subscription.remove();

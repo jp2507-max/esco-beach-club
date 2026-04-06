@@ -2,7 +2,8 @@ const profile = {
   guest: 'Khách',
   memberFallback: 'THÀNH VIÊN',
   tier: {
-    escoLifeMember: 'Thành viên Esco Life',
+    member: 'Esco Life Member',
+    legend: 'Esco Life Legend',
   },
   menu: {
     comingSoon: 'Sắp ra mắt',
@@ -36,18 +37,55 @@ const profile = {
   accessPass: 'THẺ TRUY CẬP',
   scanAtTable: 'Quét tại quầy thanh toán để liên kết mã thành viên của bạn',
   refPrefix: 'Mã: {{memberId}}',
-  earned: 'CASHBACK ĐÃ NHẬN',
+  earned: 'ĐIỂM THƯỞNG ĐÃ NHẬN',
   saved: 'ĐÃ TIẾT KIỆM',
   profileDetails: 'Chi tiết hồ sơ',
   memberSince: 'Thành viên từ',
   nightsLeft: 'Đêm còn lại',
   savedEventsCount: 'Sự kiện đã lưu',
   memberCard: {
-    brandMark: 'ESCO LIFE',
-    cashbackBalance: 'Số dư cashback',
-    cashbackSuffix: 'điểm cashback',
+    cashbackBalance: 'Số dư điểm thưởng',
+    cashbackSuffix: 'điểm thưởng',
     memberName: 'TÊN THÀNH VIÊN',
     lifetimeTier: 'Hạng trọn đời',
+  },
+  benefits: {
+    title: 'Đặc quyền đã mở khóa',
+    viewAll: 'Xem tất cả',
+    concierge: 'Dịch vụ Concierge 24/7',
+    priorityBooking: 'Quyền ưu tiên đặt chỗ',
+    poolsideDrinks: 'Đồ uống miễn phí tại hồ bơi',
+    poolsideDrinksDesc: 'Cocktail đặc trưng tặng kèm hằng ngày',
+    memberEvents: 'Truy cập sự kiện thành viên',
+    memberEventsDesc:
+      'Quyền truy cập độc quyền các sự kiện dành riêng cho hội viên',
+    discountDining: 'Giảm giá ẩm thực',
+    discountDiningDesc: 'Giảm 10% cho tất cả menu đồ ăn & thức uống',
+  },
+  manageAccount: {
+    title: 'Quản lý tài khoản',
+    upgradeTier: 'Nâng hạng thẻ',
+    billingHistory: 'Lịch sử thanh toán',
+    managePayments: 'Quản lý phương thức thanh toán',
+  },
+  activity: {
+    title: 'Hoạt động gần đây',
+    cashbackAdjusted: 'Điều chỉnh điểm thủ công',
+    cashbackAdjustedDesc:
+      '{{points}} điểm đã được thay đổi qua điều chỉnh thủ công.',
+    cashbackEarned: 'Điểm đã nhận',
+    cashbackEarnedDesc: '+{{points}} điểm từ một giao dịch hợp lệ gần đây.',
+    cashbackReversed: 'Điểm đã bị hoàn lại',
+    cashbackReversedDesc:
+      '-{{points}} điểm sau khi hoàn tiền hoặc hủy giao dịch.',
+    daysAgo: '{{count}} ngày trước',
+    loading: 'Đang tải hoạt động gần đây...',
+    emptyTitle: 'Chưa có hoạt động hội viên',
+    emptyDescription:
+      'Hoạt động điểm mới và tiến độ hạng tháng sẽ xuất hiện tại đây sau giao dịch hợp lệ tiếp theo của bạn.',
+    progressReset: 'Đặt lại tiến độ hạng',
+    progressResetDesc: 'Chu kỳ tiến độ hạng tháng của bạn đã được đặt lại.',
+    sampleData: 'Dữ liệu mẫu',
   },
   noBio: 'Thêm một đoạn giới thiệu ngắn để cá nhân hóa hồ sơ của bạn.',
   welcomeGift: 'QUÀ CHÀO MỪNG',
@@ -225,18 +263,19 @@ const profile = {
     allowlistPending:
       'Hãy nhờ admin thêm tài khoản này vào allowlist nhân viên.',
     approvalRequired: 'Các điều chỉnh thủ công nhạy cảm cần quản lý phê duyệt.',
-    award: 'Ghi nhận cashback',
+    award: 'Ghi nhận điểm thưởng',
     awarding: 'Đang ghi nhận...',
-    awardTitle: 'Ghi nhận điều chỉnh cashback',
+    awardTitle: 'Ghi nhận điều chỉnh điểm thưởng',
     badge: 'Nhân viên',
     billAmountLabel: 'Giá trị hóa đơn (VND)',
     billAmountPlaceholder: '100000',
     cameraPermissionDescription:
       'Cho phép truy cập camera để nhân viên quét mã QR thành viên tại Esco Beach.',
     cameraPermissionTitle: 'Cần quyền camera',
-    currentPoints: 'Số dư cashback hiện tại: {{value}}',
+    currentPoints: 'Số dư điểm thưởng hiện tại: {{value}}',
     errors: {
-      billBelowMinimumSpend: 'Hóa đơn này chưa đạt ngưỡng cashback tối thiểu.',
+      billBelowMinimumSpend:
+        'Giá trị hóa đơn không đạt ngưỡng chi tiêu tối thiểu.',
       generic: 'Đã xảy ra lỗi. Vui lòng thử lại.',
       invalidBillAmount: 'Hãy nhập giá trị hóa đơn hợp lệ bằng VND.',
       invalidRewardServiceResponse:
@@ -250,14 +289,14 @@ const profile = {
         'Cần mã PIN quản lý hợp lệ cho giao dịch vượt ngưỡng phê duyệt.',
       memberNotFound: 'Không tìm thấy thành viên với mã này.',
       receiptReferenceRequired:
-        'Cần mã tham chiếu hóa đơn để ghi nhận cashback an toàn.',
+        'Cần mã tham chiếu hóa đơn để ghi nhận điểm thưởng an toàn.',
       staffAccessRequired:
         'Tài khoản này chưa được allowlist để điều chỉnh phần thưởng thủ công.',
       title: 'Không thể hoàn tất thao tác',
     },
     findMember: 'Tìm thành viên',
     formulaNote:
-      '{{points}} điểm cashback được cộng cho mỗi {{amount}} chi tiêu.',
+      '{{points}} điểm thưởng được cộng cho mỗi {{amount}} chi tiêu.',
     goBack: 'Quay lại',
     grantPermission: 'Cấp quyền camera',
     invalidQrTitle: 'Mã QR không hợp lệ',
@@ -274,18 +313,18 @@ const profile = {
     memberNotFound: 'Không có thành viên nào khớp với mã này.',
     memberNotFoundTitle: 'Không tìm thấy thành viên',
     memberPendingLookup:
-      'Nhấn Tìm thành viên để xác nhận thành viên này trước khi ghi nhận cashback.',
+      'Nhấn Tìm thành viên để xác nhận thành viên này trước khi ghi nhận điểm thưởng.',
     pointsPreviewDescription:
-      'Điểm cashback được làm tròn xuống theo từng bậc {{amount}} trước khi ghi nhận.',
-    pointsPreviewLabel: 'Xem trước cashback',
+      'Điểm thưởng được làm tròn xuống theo từng bậc {{amount}} trước khi ghi nhận.',
+    pointsPreviewLabel: 'Xem trước điểm thưởng',
     receiptReferenceLabel: 'Mã tham chiếu hóa đơn',
     receiptReferencePlaceholder: 'Số bill hoặc hóa đơn',
     scanAgain: 'Quét lại',
     subtitle:
-      'Quét QR của khách hoặc nhập mã thành viên để ghi nhận một điều chỉnh cashback an toàn.',
+      'Quét QR của khách hoặc nhập mã thành viên để ghi nhận một điều chỉnh điểm thưởng an toàn.',
     successMessage:
-      '{{name}} đã nhận {{points}} điểm cashback từ hóa đơn {{amount}}.',
-    successTitle: 'Đã ghi nhận cashback',
+      '{{name}} đã nhận {{points}} điểm thưởng từ hóa đơn {{amount}}.',
+    successTitle: 'Đã ghi nhận điểm thưởng',
     title: 'Máy quét phần thưởng',
   },
   invite: {
@@ -311,14 +350,13 @@ const profile = {
     noReferralsYet: 'Chưa có lượt giới thiệu nào. Hãy chia sẻ mã của bạn!',
     status: {
       completed: 'Hoàn tất',
-      pending: 'Đang chờ',
       accepted: 'Đã chấp nhận',
       rejected: 'Đã từ chối',
       unknown: 'Không xác định',
     },
     shareInviteLink: 'Chia sẻ liên kết mời',
     shareMessage:
-      'Tham gia Esco Life với mã giới thiệu của tôi: {{code}}\nhttps://escolife.app/invite/{{code}}',
+      'Tham gia Esco Life với mã giới thiệu của tôi: {{code}}\nMở trong ứng dụng: {{appUrl}}\nNếu cần cài đặt trước, hãy dùng liên kết này: {{url}}',
     milestones: {
       freeCocktail: 'Cocktail miễn phí',
       vipBadge: 'Huy hiệu VIP',

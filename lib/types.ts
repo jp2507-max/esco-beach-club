@@ -1,5 +1,8 @@
+import type { StaffRole } from '@/src/lib/loyalty';
+
 export const rewardTierKeys = {
-  escoLifeMember: 'ESCO_LIFE_MEMBER',
+  member: 'MEMBER',
+  legend: 'LEGEND',
 } as const;
 
 export type RewardTierKey =
@@ -34,8 +37,6 @@ export const rewardTransactionStatuses = {
 export type RewardTransactionStatus =
   (typeof rewardTransactionStatuses)[keyof typeof rewardTransactionStatuses];
 
-export type StaffRole = 'staff' | 'manager';
-
 export const onboardingPermissionStatuses = {
   denied: 'DENIED',
   granted: 'GRANTED',
@@ -46,8 +47,8 @@ export type OnboardingPermissionStatus =
   (typeof onboardingPermissionStatuses)[keyof typeof onboardingPermissionStatuses];
 
 export const memberSegments = {
-  foreigner: 'FOREIGNER',
-  local: 'LOCAL',
+  longTerm: 'LONG_TERM',
+  shortTerm: 'SHORT_TERM',
 } as const;
 
 export type MemberSegment =
@@ -226,7 +227,7 @@ export type Referral = {
   referrer_id: string;
   referred_name: string;
   referred_avatar: string | null;
-  status: 'Accepted' | 'Completed' | 'Pending' | 'Rejected' | 'Unknown';
+  status: 'Accepted' | 'Completed' | 'Rejected' | 'Unknown';
   created_at: string;
 };
 

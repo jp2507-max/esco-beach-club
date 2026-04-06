@@ -54,6 +54,39 @@ const TITLE_DELAY = 260;
 const CARD_DELAY = 440;
 const CTA_DELAY = 680;
 
+/**
+ * Backend auth/profile permission errors currently surface as mixed shapes:
+ * - native Error instances whose message includes "permission denied"
+ * - plain objects with a message string containing "permission denied"
+ * - objects with type "permission-denied"
+ *
+ * Matching is case-insensitive. If backend error formats evolve, update these
+ * checks (or replace with structured error codes) to preserve fallback behavior.
+ */
+function isPermissionDeniedError(error: unknown): boolean {
+  if (!error) return false;
+
+  if (error instanceof Error) {
+    return error.message.toLowerCase().includes('permission denied');
+  }
+
+  if (typeof error !== 'object') return false;
+
+  const maybeError = error as {
+    message?: unknown;
+    type?: unknown;
+  };
+
+  const message =
+    typeof maybeError.message === 'string'
+      ? maybeError.message.toLowerCase()
+      : '';
+  const type =
+    typeof maybeError.type === 'string' ? maybeError.type.toLowerCase() : '';
+
+  return message.includes('permission denied') || type === 'permission-denied';
+}
+
 function FloatingDot({
   delay,
   amplitude,
@@ -103,7 +136,7 @@ function FloatingDot({
 
 export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
   const router = useRouter();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, isLoading: isAuthLoading, user } = useAuth();
   const { profile } = useProfileData();
   const { t } = useTranslation('auth');
   const searchParams = useLocalSearchParams<OnboardingLocalIdentityParams>();
@@ -193,27 +226,6 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
   }
 
   async function navigateToSignup(isSetupCompleted: boolean): Promise<void> {
-    if (isAuthenticated) {
-      try {
-        await persistAuthenticatedOnboardingChoices(isSetupCompleted);
-      } catch (error: unknown) {
-        console.error(
-          '[OnboardingFinalDetails] Failed to persist onboarding updates:',
-          {
-            error,
-          }
-        );
-        Alert.alert(
-          t('onboardingPermissionsErrorTitle'),
-          t('onboardingPermissionsErrorMessage')
-        );
-        return;
-      }
-
-      router.replace('/profile');
-      return;
-    }
-
     const onboardingDateOfBirth = readSingleSearchParam(
       searchParams.onboardingDateOfBirth
     );
@@ -236,6 +248,45 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
     const onboardingPushPermissionStatus = readSingleSearchParam(
       searchParams.onboardingPushPermissionStatus
     );
+
+    if (isAuthLoading) {
+      return;
+    }
+
+    if (isAuthenticated && user?.id) {
+      let shouldFallbackToSignup = false;
+
+      try {
+        await persistAuthenticatedOnboardingChoices(isSetupCompleted);
+      } catch (error: unknown) {
+        if (isPermissionDeniedError(error)) {
+          shouldFallbackToSignup = true;
+          console.warn(
+            '[OnboardingFinalDetails] Skipping authenticated profile update after auth became unavailable:',
+            {
+              error,
+            }
+          );
+        } else {
+          console.error(
+            '[OnboardingFinalDetails] Failed to persist onboarding updates:',
+            {
+              error,
+            }
+          );
+          Alert.alert(
+            t('onboardingSaveErrorTitle'),
+            t('onboardingSaveErrorMessage')
+          );
+          return;
+        }
+      }
+
+      if (!shouldFallbackToSignup) {
+        router.replace('/profile');
+        return;
+      }
+    }
 
     router.push({
       pathname: '/signup',
@@ -287,9 +338,9 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
       <View className="absolute inset-0 dark:hidden">
         <LinearGradient
           colors={[
-            'rgba(251,249,241,0.98)',
-            'rgba(251,249,241,0.98)',
-            'rgba(117,87,0,0.05)',
+            Colors.onboardingFinalGradientBase,
+            Colors.onboardingFinalGradientBase,
+            Colors.onboardingFinalGradientAccent,
           ]}
           style={{ bottom: 0, left: 0, position: 'absolute', right: 0, top: 0 }}
         />
@@ -417,7 +468,7 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
                     )}
                     className="size-16 items-center justify-center rounded-xl bg-primary dark:bg-primary-bright"
                   >
-                    <Ticket color="#ffffff" size={22} />
+                    <Ticket color={Colors.white} size={22} />
                   </Animated.View>
 
                   <View>
@@ -453,7 +504,7 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
         </Animated.View>
 
         <Animated.View
-          entering={withRM(FadeInUp.duration(motion.dur.md).delay(CTA_DELAY))}
+          entering={withRM(FadeIn.duration(motion.dur.md).delay(CTA_DELAY))}
         >
           <Animated.View style={ctaButton.animatedStyle}>
             <Pressable
@@ -482,7 +533,7 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
                   <Text className="text-[17px] font-bold text-white">
                     {t('onboardingClubPrimaryCta')}
                   </Text>
-                  <ArrowRight color="#ffffff" size={22} />
+                  <ArrowRight color={Colors.white} size={22} />
                 </View>
               </LinearGradient>
             </Pressable>

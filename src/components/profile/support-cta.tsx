@@ -37,7 +37,7 @@ export function SupportCta({
         }}
         testID="vip-concierge"
       >
-        <Crown size={20} color="#fff" />
+        <Crown size={20} color={Colors.white} />
         <Text className="ml-2.5 text-base font-bold text-white">
           {conciergeLabel}
         </Text>

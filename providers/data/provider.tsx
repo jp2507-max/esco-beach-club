@@ -14,7 +14,6 @@ import {
   ProfileContext,
   ReferralsContext,
   SavedEventsContext,
-  StaffAccessContext,
 } from './context';
 import { useBookingResource } from './use-booking-resource';
 import { useEventsResource } from './use-events-resource';
@@ -24,7 +23,6 @@ import { useNewsResource } from './use-news-resource';
 import { usePartnersResource } from './use-partners-resource';
 import { useProfileResource } from './use-profile-resource';
 import { useReferralsResource } from './use-referrals-resource';
-import { useStaffResource } from './use-staff-resource';
 
 export function DataProvider({
   children,
@@ -158,18 +156,5 @@ export function MenuContentDataProvider({
     <MenuContentContext.Provider value={menuContentValue}>
       {children}
     </MenuContentContext.Provider>
-  );
-}
-
-export function StaffAccessDataProvider({
-  children,
-}: DataProviderProps): React.JSX.Element {
-  const userId = useFeatureUserId();
-  const staffAccessValue = useStaffResource({ userId });
-
-  return (
-    <StaffAccessContext.Provider value={staffAccessValue}>
-      {children}
-    </StaffAccessContext.Provider>
   );
 }

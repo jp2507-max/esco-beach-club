@@ -378,7 +378,7 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
               testID="onboarding-permissions-enable-location"
             >
               <LinearGradient
-                colors={[Colors.secondary, '#00796B']}
+                colors={[Colors.secondary, Colors.secondaryDark]}
                 end={{ x: 1, y: 0 }}
                 start={{ x: 0, y: 0 }}
                 style={{
@@ -389,7 +389,7 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
                 }}
               >
                 {isRequestingLocation ? (
-                  <ActivityIndicator color="#fff" />
+                  <ActivityIndicator color={Colors.white} />
                 ) : (
                   <Text className="text-[14px] font-bold text-white">
                     {actionLabel(resolveEffectiveLocationStatus())}
@@ -481,7 +481,7 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
                 }}
               >
                 {isRequestingPush ? (
-                  <ActivityIndicator color="#fff" />
+                  <ActivityIndicator color={Colors.white} />
                 ) : (
                   <Text className="text-[14px] font-bold text-white">
                     {actionLabel(pushStatus)}
@@ -506,7 +506,7 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
         </View>
 
         <Animated.View
-          entering={withRM(FadeInUp.duration(motion.dur.md).delay(CTA_DELAY))}
+          entering={withRM(FadeIn.duration(motion.dur.md).delay(CTA_DELAY))}
           className="mt-auto gap-3"
         >
           <Animated.View style={ctaButton.animatedStyle}>
@@ -534,7 +534,7 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
                   <Text className="text-[17px] font-bold text-white">
                     {t('onboardingPermissionsContinue')}
                   </Text>
-                  <ArrowRight color="#ffffff" size={22} />
+                  <ArrowRight color={Colors.white} size={22} />
                 </View>
               </LinearGradient>
             </Pressable>
