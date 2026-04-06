@@ -6,6 +6,7 @@ const common = {
   },
   branding: {
     mark: 'Esco Beach',
+    wordmark: 'Esco Beach Club 워드마크',
     markHint: 'Esco Beach Club 브랜딩',
   },
   validation: {

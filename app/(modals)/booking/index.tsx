@@ -54,13 +54,15 @@ export default function BookingModalScreen(): React.JSX.Element {
   );
 
   useEffect(() => {
+    const todayKey = toLocalDateString(new Date());
+    const refreshAfterMs =
+      selectedDateKey === todayKey ? 60_000 : getMillisecondsUntilMidnight();
     const timeout = setTimeout(() => {
-      const nextNow = new Date();
-      setNow(nextNow);
-    }, getMillisecondsUntilMidnight());
+      setNow(new Date());
+    }, refreshAfterMs);
 
     return () => clearTimeout(timeout);
-  }, [now]);
+  }, [now, selectedDateKey]);
 
   const availableTimeSlots = useMemo(
     () =>
@@ -95,7 +97,11 @@ export default function BookingModalScreen(): React.JSX.Element {
     () => dates.some((date) => date.dateKey === selectedDateKey),
     [dates, selectedDateKey]
   );
-  const canConfirm = Boolean(userId);
+  const canConfirm = canSubmitReservation({
+    isContactEmailValid,
+    isSelectedTimeValid,
+    userId,
+  });
 
   useEffect(() => {
     if (isSelectedDateValid) return;
@@ -148,10 +154,10 @@ export default function BookingModalScreen(): React.JSX.Element {
   }
 
   async function handleConfirm(): Promise<void> {
-    if (isSubmittingRef.current || !canConfirm || !userId) return;
+    if (isSubmittingRef.current || !userId) return;
     setHasAttemptedSubmit(true);
 
-    if (!selectedTime) {
+    if (!isSelectedTimeValid) {
       Alert.alert(
         t('booking:reservationFailedTitle'),
         t('booking:selectTimeRequired')
@@ -291,6 +297,18 @@ function getMillisecondsUntilMidnight(): number {
 
 function canChangeGuestCount(nextPax: number): boolean {
   return nextPax >= 1 && nextPax <= 20;
+}
+
+function canSubmitReservation({
+  isContactEmailValid,
+  isSelectedTimeValid,
+  userId,
+}: {
+  isContactEmailValid: boolean;
+  isSelectedTimeValid: boolean;
+  userId?: string;
+}): boolean {
+  return Boolean(userId) && isSelectedTimeValid && isContactEmailValid;
 }
 
 function isEmailValid(email: string): boolean {

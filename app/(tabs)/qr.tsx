@@ -174,6 +174,7 @@ export default function QrTabScreen(): React.JSX.Element {
 
   const framePulse = useSharedValue(0.82);
   const scanLineProgress = useSharedValue(0);
+  const scanLineOpacity = useSharedValue(1);
 
   useEffect(() => {
     framePulse.set(
@@ -216,6 +217,15 @@ export default function QrTabScreen(): React.JSX.Element {
   }, [framePulse, scanLineProgress]);
 
   useEffect(() => {
+    scanLineOpacity.set(
+      withTiming(isScanLocked ? 0 : 1, {
+        duration: 150,
+        reduceMotion: ReduceMotion.System,
+      })
+    );
+  }, [isScanLocked, scanLineOpacity]);
+
+  useEffect(() => {
     if (!isFocused || permission === null || permission.granted) return;
     if (!permission.canAskAgain) return;
 
@@ -228,7 +238,7 @@ export default function QrTabScreen(): React.JSX.Element {
   }));
 
   const scanLineStyle = useAnimatedStyle(() => ({
-    opacity: isScanLocked ? 0 : 1,
+    opacity: scanLineOpacity.get(),
     transform: [{ translateY: scanLineProgress.get() * (frameSize - 32) }],
   }));
 

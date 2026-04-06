@@ -293,7 +293,7 @@ export async function POST(request: Request): Promise<Response> {
     })
   );
 
-  const upserted = upsertedCounts.reduce((a, b) => a + b, 0);
+  const upserted = upsertedCounts.reduce<number>((a, b) => a + b, 0);
 
   return jsonResponse(
     {

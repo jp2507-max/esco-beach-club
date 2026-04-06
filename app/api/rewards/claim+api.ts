@@ -144,7 +144,8 @@ function buildPosBillEntryKey(params: {
   posBillId: string;
   restaurantId: string;
 }): string {
-  return `pos-bill:${params.restaurantId}:${params.posBillId}`;
+  const normalizedRestaurantId = params.restaurantId.trim().toUpperCase();
+  return `pos-bill:${normalizedRestaurantId}:${params.posBillId}`;
 }
 
 function getPosBillQrSecret(): string | null {

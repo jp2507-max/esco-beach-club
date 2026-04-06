@@ -114,8 +114,7 @@ const rules = {
         "request.modifiedFields.all(field, field in ['avatar_url', 'bio', 'cashback_points_balance', 'cashback_points_lifetime_earned', 'created_at', 'date_of_birth', 'full_name', 'has_seen_welcome_voucher', 'lifetime_tier_key', 'location_permission_status', 'member_id', 'member_segment', 'member_since', 'next_tier_key', 'nights_left', 'onboarding_completed_at', 'push_notification_permission_status', 'referral_code', 'saved', 'tier_progress_expires_at', 'tier_progress_points', 'tier_progress_started_at', 'tier_progress_target_points', 'updated_at'])",
       onlySafeProfileUpdateFields:
         "request.modifiedFields.all(field, field in ['auth_provider', 'full_name', 'avatar_url', 'has_seen_welcome_voucher', 'bio', 'member_since', 'member_segment', 'nights_left', 'date_of_birth', 'location_permission_status', 'push_notification_permission_status', 'onboarding_completed_at', 'updated_at'])",
-      canCreateOwnedProfile:
-        "auth.id != null && (auth.id == data.id || auth.id in data.ref('user.id'))",
+      canCreateOwnedProfile: 'isOwner',
     },
     allow: {
       view: 'isOwnerOrLinkedProfile',

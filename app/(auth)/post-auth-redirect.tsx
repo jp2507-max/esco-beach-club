@@ -76,10 +76,15 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
       try {
         await retryProfileProvision();
       } catch (error: unknown) {
-        console.error('[PostAuthRedirect] Profile provisioning retry failed', {
-          error,
-          userId: retryUserId,
-        });
+        if (__DEV__) {
+          console.error(
+            '[PostAuthRedirect] Profile provisioning retry failed',
+            {
+              error,
+              userId: retryUserId,
+            }
+          );
+        }
       } finally {
         setRetriedProvisionUserId(retryUserId);
         setIsRetryingProvision(false);
