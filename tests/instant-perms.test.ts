@@ -37,7 +37,7 @@ describe('profiles permissions', () => {
     expect(rules.profiles.allow.create).toContain(
       'hasValidProfileCreateValues'
     );
-    expect(rules.profiles.allow.create).not.toContain(
+    expect(rules.profiles.allow.create).toContain(
       'onlySafeProfileCreateFields'
     );
   });
@@ -79,6 +79,18 @@ describe('owner-scoped create permissions', () => {
     expect(rules.table_reservations.bind.hasPendingStatusOnly).toContain(
       "data.status == 'pending'"
     );
+    expect(
+      rules.table_reservations.bind.hasValidReservationContactEmail
+    ).toContain('contact_email.matches');
+    expect(
+      rules.table_reservations.bind.hasValidReservationContactEmail
+    ).toContain('data.contact_email.size() <= 254');
+    expect(
+      rules.table_reservations.bind.hasValidReservationSpecialRequest
+    ).toContain('special_request.matches');
+    expect(
+      rules.table_reservations.bind.hasValidReservationSpecialRequest
+    ).toContain('data.special_request.size() <= 500');
   });
 
   test('validates review ratings in permissions', () => {

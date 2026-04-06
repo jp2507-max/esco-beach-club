@@ -94,6 +94,8 @@ const profile = {
       invalidBillQr: 'Mã QR này không phải mã hóa đơn hợp lệ của Esco.',
       invalidRewardServiceResponse:
         'Dịch vụ điểm thưởng trả về phản hồi không hợp lệ. Vui lòng thử lại.',
+      unsupportedCurrency:
+        'Hóa đơn này dùng loại tiền tệ chưa được hỗ trợ. Chỉ hóa đơn VND mới được nhận điểm.',
       networkUnavailable:
         'Không thể kết nối đến dịch vụ điểm thưởng. Vui lòng kiểm tra kết nối và thử lại.',
       receiptAlreadyClaimed: 'Hóa đơn này đã được dùng để nhận điểm trước đó.',

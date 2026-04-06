@@ -20,22 +20,28 @@ const POS_SYNC_TIMESTAMP_MAX_SKEW_MS = 5 * 60 * 1000;
  * cannot interleave read-then-write for the same bill. (Multiple server
  * instances would still need a distributed lock or DB-native CAS if required.)
  */
-const posBillUpsertChainByCanonicalId = new Map<string, Promise<unknown>>();
+const posBillUpsertChainByCanonicalId = new Map<string, Promise<void>>();
 
 function runSerializedPosBillUpsert<T>(
   canonicalBillId: string,
   fn: () => Promise<T>
 ): Promise<T> {
   const prior =
-    posBillUpsertChainByCanonicalId.get(canonicalBillId) ?? Promise.resolve();
-  const current = prior.then(fn);
-  posBillUpsertChainByCanonicalId.set(
-    canonicalBillId,
-    current.then(
+    posBillUpsertChainByCanonicalId.get(canonicalBillId) ??
+    Promise.resolve<void>(undefined);
+  const current = prior.then(() => fn());
+  let tail: Promise<void>;
+  tail = current
+    .then(
       () => undefined,
       () => undefined
     )
-  );
+    .finally(() => {
+      if (posBillUpsertChainByCanonicalId.get(canonicalBillId) === tail) {
+        posBillUpsertChainByCanonicalId.delete(canonicalBillId);
+      }
+    });
+  posBillUpsertChainByCanonicalId.set(canonicalBillId, tail);
   return current;
 }
 

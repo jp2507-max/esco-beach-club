@@ -139,8 +139,12 @@ export function AppLaunchScreen({
       <LinearGradient
         colors={
           isDark
-            ? [Colors.black, '#09070D', Colors.darkBg]
-            : [Colors.background, '#FFF7F0', '#F8EEE7']
+            ? [Colors.black, Colors.appLaunchGradientDarkMiddle, Colors.darkBg]
+            : [
+                Colors.background,
+                Colors.appLaunchGradientLightMiddle,
+                Colors.appLaunchGradientLightEnd,
+              ]
         }
         end={{ x: 1, y: 1 }}
         start={{ x: 0.05, y: 0 }}
@@ -178,8 +182,8 @@ export function AppLaunchScreen({
               glowStyle,
               {
                 backgroundColor: isDark
-                  ? 'rgba(255,255,255,0.08)'
-                  : 'rgba(255,255,255,0.7)',
+                  ? Colors.appLaunchGlowDark
+                  : Colors.appLaunchGlowLight,
               },
             ]}
           />
@@ -190,11 +194,11 @@ export function AppLaunchScreen({
               isDark ? shadows.level5 : shadows.level3,
               {
                 backgroundColor: isDark
-                  ? 'rgba(255,255,255,0.04)'
-                  : 'rgba(255,255,255,0.82)',
+                  ? Colors.appLaunchCardBackgroundDark
+                  : Colors.appLaunchCardBackgroundLight,
                 borderColor: isDark
-                  ? 'rgba(255,255,255,0.08)'
-                  : 'rgba(13,11,20,0.06)',
+                  ? Colors.appLaunchCardBorderDark
+                  : Colors.appLaunchCardBorderLight,
               },
             ]}
           >
@@ -214,10 +218,10 @@ export function AppLaunchScreen({
           className="mt-9 items-center"
           entering={withRM(FadeInUp.delay(70).duration(motion.dur.md))}
         >
-          <Text className="text-[11px] font-bold uppercase tracking-[3.2px] text-text-secondary dark:text-white/70">
+          <Text className="text-[11px] font-bold uppercase tracking-[3.2px] text-text-secondary dark:text-text-secondary-dark">
             {t('launch.eyebrow')}
           </Text>
-          <Text className="mt-3 max-w-72 text-center text-[15px] font-semibold leading-6 text-text dark:text-white/88">
+          <Text className="mt-3 max-w-72 text-center text-[15px] font-semibold leading-6 text-text dark:text-text-primary-dark">
             {t('launch.loading')}
           </Text>
         </Animated.View>

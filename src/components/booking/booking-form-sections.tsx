@@ -14,6 +14,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Modal, type StyleProp, type ViewStyle } from 'react-native';
 import type { AnimatedStyle } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { accentOnDarkBackground, Colors } from '@/constants/colors';
 import { Button } from '@/src/components/ui';
@@ -86,6 +87,7 @@ export function BookingFormContent({
   onSpecialRequestChange,
 }: BookingFormContentProps): React.JSX.Element {
   const { t: tCommon } = useTranslation('common');
+  const { bottom: insetBottom } = useSafeAreaInsets();
   const accentColor = accentOnDarkBackground(Colors.primary, isDark);
   const minusDisabled = !canChangeGuestCount(pax - 1) || isSubmitting;
   const plusDisabled = !canChangeGuestCount(pax + 1) || isSubmitting;
@@ -97,21 +99,24 @@ export function BookingFormContent({
     useState<boolean>(false);
 
   useEffect(() => {
-    const isSelectedMonthValid = monthOptions.some(
-      (option) => option.key === selectedMonthKey
-    );
-    if (isSelectedMonthValid) {
-      setActiveMonthKey(selectedMonthKey);
-      return;
-    }
+    setActiveMonthKey((currentMonthKey) => {
+      const isCurrentValid = monthOptions.some(
+        (option) => option.key === currentMonthKey
+      );
+      if (isCurrentValid) {
+        return currentMonthKey;
+      }
 
-    const isActiveMonthValid = monthOptions.some(
-      (option) => option.key === activeMonthKey
-    );
-    if (!isActiveMonthValid) {
-      setActiveMonthKey(monthOptions[0]?.key ?? selectedMonthKey);
-    }
-  }, [activeMonthKey, monthOptions, selectedMonthKey]);
+      const isSelectedValid = monthOptions.some(
+        (option) => option.key === selectedMonthKey
+      );
+      if (isSelectedValid) {
+        return selectedMonthKey;
+      }
+
+      return monthOptions[0]?.key ?? selectedMonthKey;
+    });
+  }, [monthOptions, selectedMonthKey]);
 
   const activeMonthIndex = Math.max(
     monthOptions.findIndex((option) => option.key === activeMonthKey),
@@ -148,6 +153,11 @@ export function BookingFormContent({
         weekday: t(getDayTranslationKey(selectedDateText.dayNameKey)),
       })
     : t('selectDate');
+
+  const displayedSelectedTime =
+    selectedTime !== null && availableTimeSlots.includes(selectedTime)
+      ? selectedTime
+      : null;
 
   return (
     <ScrollView
@@ -335,7 +345,7 @@ export function BookingFormContent({
             accessibilityHint={t('openTimePickerHint')}
             accessibilityLabel={t('openTimePickerLabel', {
               date: selectedDateLabel,
-              time: selectedTime ?? t('noTimeSelected'),
+              time: displayedSelectedTime ?? t('noTimeSelected'),
             })}
             accessibilityRole="button"
             accessibilityState={{ disabled: isSubmitting }}
@@ -349,7 +359,7 @@ export function BookingFormContent({
                 {selectedDateLabel}
               </Text>
               <Text className="text-base font-bold text-text dark:text-text-primary-dark">
-                {selectedTime ?? t('timePickerPlaceholder')}
+                {displayedSelectedTime ?? t('timePickerPlaceholder')}
               </Text>
             </View>
             <Sparkles color={accentColor} size={18} />
@@ -372,7 +382,10 @@ export function BookingFormContent({
                 className="flex-1"
                 onPress={() => setIsTimePickerVisible(false)}
               />
-              <View className="max-h-[78%] rounded-t-3xl border-t border-border bg-card pb-8 dark:border-dark-border dark:bg-dark-bg-card">
+              <View
+                className="max-h-[78%] rounded-t-3xl border-t border-border bg-card dark:border-dark-border dark:bg-dark-bg-card"
+                style={{ paddingBottom: insetBottom + 16 }}
+              >
                 <View className="flex-row items-center justify-between border-b border-border/60 px-5 py-3 dark:border-dark-border/60">
                   <Text className="text-[17px] font-bold text-text dark:text-text-primary-dark">
                     {t('pickTime')}
@@ -408,7 +421,7 @@ export function BookingFormContent({
                   showsVerticalScrollIndicator={false}
                 >
                   {availableTimeSlots.map((time) => {
-                    const active = selectedTime === time;
+                    const active = displayedSelectedTime === time;
                     return (
                       <View key={time} style={{ width: '33.333%' }}>
                         <Pressable

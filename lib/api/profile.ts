@@ -30,7 +30,7 @@ async function waitForProvisionRetryDelay(attempt: number): Promise<void> {
     PROFILE_PROVISION_RETRY_DELAYS_MS[
       Math.max(
         0,
-        Math.min(attempt - 1, PROFILE_PROVISION_RETRY_DELAYS_MS.length - 1)
+        Math.min(attempt, PROFILE_PROVISION_RETRY_DELAYS_MS.length - 1)
       )
     ];
 
@@ -111,10 +111,10 @@ export async function ensureProfile(params: {
   const current = await fetchProfile(params.userId);
   if (current) return current;
 
-  const maxRetries = 3;
+  const maxAttempts = PROFILE_PROVISION_RETRY_DELAYS_MS.length + 1;
   let attempt = 0;
 
-  while (attempt < maxRetries) {
+  while (attempt < maxAttempts) {
     attempt++;
 
     const profileId = buildProfileId(params.userId);
@@ -163,7 +163,7 @@ export async function ensureProfile(params: {
         if (__DEV__) {
           console.error('[ensureProfile] Profile create permission denied', {
             attempt,
-            maxRetries,
+            maxAttempts,
             payloadKeys: Object.keys(payload),
             profileId,
             userId: params.userId,
@@ -174,7 +174,7 @@ export async function ensureProfile(params: {
           return existingProfile;
         }
 
-        if (attempt < maxRetries) {
+        if (attempt < maxAttempts) {
           await waitForProvisionRetryDelay(attempt);
           continue;
         }

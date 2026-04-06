@@ -600,7 +600,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   if (posBill.currency.trim().toUpperCase() !== 'VND') {
-    return jsonResponse({ error: 'invalidRewardServiceResponse' }, 409);
+    return jsonResponse({ error: 'unsupported_currency' }, 409);
   }
 
   if (posBill.status !== posBillStatuses.paid || !posBill.paid_at) {

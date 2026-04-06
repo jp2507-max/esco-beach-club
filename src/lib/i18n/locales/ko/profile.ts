@@ -94,6 +94,8 @@ const profile = {
       invalidBillQr: '이 QR 코드는 유효한 Esco 영수증 코드가 아닙니다.',
       invalidRewardServiceResponse:
         '리워드 서비스 응답이 올바르지 않습니다. 다시 시도해 주세요.',
+      unsupportedCurrency:
+        '이 영수증의 통화는 지원되지 않습니다. VND 영수증만 포인트 적립이 가능합니다.',
       networkUnavailable:
         '리워드 서비스에 연결할 수 없습니다. 연결 상태를 확인한 뒤 다시 시도해 주세요.',
       receiptAlreadyClaimed: '이 영수증은 이미 포인트 적립에 사용되었습니다.',

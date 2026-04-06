@@ -113,7 +113,14 @@ export default function BookingModalScreen(): React.JSX.Element {
   function handleSelectDate(dateKey: string): void {
     if (isSubmittingRef.current || isSubmitting) return;
     hapticSelection();
+    const nextSlots = getBookableTimeSlots({
+      now,
+      selectedDateKey: dateKey,
+    });
     setSelectedDateKey(dateKey);
+    setSelectedTime((current) =>
+      current !== null && !nextSlots.includes(current) ? null : current
+    );
   }
 
   function handleSelectTime(time: string): void {

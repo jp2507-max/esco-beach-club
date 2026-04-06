@@ -51,8 +51,8 @@ import {
 } from '@/src/lib/loyalty';
 import { captureHandledError } from '@/src/lib/monitoring';
 import { getTierQrGradient } from '@/src/lib/profile/membership-screen';
-import { tryAcquireScanLock } from '@/src/lib/rewards/scan-lock';
 import { postClaimRewardBill } from '@/src/lib/reward-claim-api';
+import { tryAcquireScanLock } from '@/src/lib/rewards/scan-lock';
 import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
 import { Pressable, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
@@ -77,6 +77,7 @@ type ScanErrorMessageKey =
   | 'billScanner.errors.billNotSynced'
   | 'billScanner.errors.invalidRewardServiceResponse'
   | 'billScanner.errors.invalidBillQr'
+  | 'billScanner.errors.unsupportedCurrency'
   | 'billScanner.errors.receiptAlreadyClaimed'
   | 'billScanner.errors.rewardServiceUnavailable'
   | 'billScanner.errors.sessionExpired'
@@ -104,6 +105,9 @@ function resolveScanErrorKey(
   }
   if (code === 'bill_data_corrupt') {
     return 'billScanner.errors.billDataCorrupt';
+  }
+  if (code === 'unsupported_currency') {
+    return 'billScanner.errors.unsupportedCurrency';
   }
   if (code === 'invalidRewardServiceResponse') {
     return 'billScanner.errors.invalidRewardServiceResponse';
@@ -256,7 +260,7 @@ export default function QrTabScreen(): React.JSX.Element {
         refreshToken,
       });
     },
-    onSuccess: (result, qrData) => {
+    onSuccess: (result, _qrData) => {
       if (result.ok) {
         hapticSuccess();
         setScanFeedback({

@@ -21,7 +21,12 @@ function toOptionalUrl(value: string | undefined): string | null {
   if (!trimmedValue) return null;
 
   try {
-    return new URL(trimmedValue).toString();
+    const parsedUrl = new URL(trimmedValue);
+    if (parsedUrl.protocol !== 'https:' && parsedUrl.protocol !== 'http:') {
+      return null;
+    }
+
+    return parsedUrl.toString();
   } catch {
     return null;
   }

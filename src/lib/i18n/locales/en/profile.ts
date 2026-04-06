@@ -95,6 +95,8 @@ const profile = {
       invalidBillQr: 'This QR code is not a valid Esco bill code.',
       invalidRewardServiceResponse:
         'The reward service returned an invalid response. Please try again.',
+      unsupportedCurrency:
+        'This bill uses an unsupported currency. Only VND bills can earn points.',
       networkUnavailable:
         'Could not reach the reward service. Check your connection and try again.',
       receiptAlreadyClaimed:
