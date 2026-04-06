@@ -22,6 +22,7 @@ import {
   reconcileTierProgressSnapshot,
 } from '@/src/lib/loyalty';
 import { type InstantRecord, mapProfile } from '@/src/lib/mappers';
+import { buildPosBillEntryKey } from '@/src/lib/pos/build-pos-bill-entry-key';
 import {
   createInstantCreateStep,
   createInstantLinkStep,
@@ -140,12 +141,25 @@ async function resolveProfileForUser(
   return linkedProfile ? mapProfile(linkedProfile) : null;
 }
 
-function buildPosBillEntryKey(params: {
-  posBillId: string;
-  restaurantId: string;
-}): string {
-  const normalizedRestaurantId = params.restaurantId.trim().toUpperCase();
-  return `pos-bill:${normalizedRestaurantId}:${params.posBillId}`;
+const profileClaimLockQueue = new Map<string, Promise<unknown>>();
+
+export async function runWithProfileClaimLock<TResult>(
+  profileId: string,
+  task: () => Promise<TResult>
+): Promise<TResult> {
+  const previousTask =
+    profileClaimLockQueue.get(profileId) ?? Promise.resolve();
+  const nextTask = previousTask.catch(() => undefined).then(task);
+
+  profileClaimLockQueue.set(profileId, nextTask);
+
+  try {
+    return await nextTask;
+  } finally {
+    if (profileClaimLockQueue.get(profileId) === nextTask) {
+      profileClaimLockQueue.delete(profileId);
+    }
+  }
 }
 
 function getPosBillQrSecret(): string | null {
@@ -579,149 +593,157 @@ export async function POST(request: Request): Promise<Response> {
     return jsonResponse({ error: 'unauthorized' }, 401);
   }
 
-  const profile = await resolveProfileForUser(adminDb, authUser.userId);
-  if (!profile) {
+  const initialProfile = await resolveProfileForUser(adminDb, authUser.userId);
+  if (!initialProfile) {
     return jsonResponse({ error: 'member_profile_not_found' }, 404);
   }
 
-  const posBillResult = await resolvePosBill({
-    adminDb,
-    posBillId: billQr.posBillId,
-    restaurantId: billQr.restaurantId,
-  });
+  return runWithProfileClaimLock(initialProfile.id, async () => {
+    const profile = await resolveProfileForUser(adminDb, authUser.userId);
+    if (!profile) {
+      return jsonResponse({ error: 'member_profile_not_found' }, 404);
+    }
 
-  if (!posBillResult.exists) {
-    return jsonResponse({ error: 'bill_not_synced' }, 409);
-  }
+    const posBillResult = await resolvePosBill({
+      adminDb,
+      posBillId: billQr.posBillId,
+      restaurantId: billQr.restaurantId,
+    });
 
-  const posBill = posBillResult.bill;
-  // exists=true but bill=null: POS row present but mapping/normalization failed (data integrity).
-  if (!posBill) {
-    return jsonResponse({ error: 'bill_data_corrupt' }, 409);
-  }
+    if (!posBillResult.exists) {
+      return jsonResponse({ error: 'bill_not_synced' }, 409);
+    }
 
-  if (posBill.currency.trim().toUpperCase() !== 'VND') {
-    return jsonResponse({ error: 'unsupported_currency' }, 409);
-  }
+    const posBill = posBillResult.bill;
+    // exists=true but bill=null: POS row present but mapping/normalization failed (data integrity).
+    if (!posBill) {
+      return jsonResponse({ error: 'bill_data_corrupt' }, 409);
+    }
 
-  if (posBill.status !== posBillStatuses.paid || !posBill.paid_at) {
-    return jsonResponse({ error: 'bill_not_paid' }, 409);
-  }
+    if (posBill.currency.trim().toUpperCase() !== 'VND') {
+      return jsonResponse({ error: 'unsupported_currency' }, 409);
+    }
 
-  if (posBill.claimed_at || posBill.claimed_reward_transaction_id) {
-    return jsonResponse({ error: 'receipt_already_claimed' }, 409);
-  }
+    if (posBill.status !== posBillStatuses.paid || !posBill.paid_at) {
+      return jsonResponse({ error: 'bill_not_paid' }, 409);
+    }
 
-  const cashbackPointsDelta = calculateCashbackPointsForAmountVnd(
-    posBill.amount_vnd
-  );
-  if (cashbackPointsDelta <= 0) {
-    return jsonResponse({ error: 'bill_below_minimum_spend' }, 400);
-  }
-
-  const duplicateTransactions = await adminDb.query<{
-    reward_transactions?: RewardTransactionRecord[];
-  }>({
-    reward_transactions: {
-      $: {
-        where: {
-          external_event_id: posBill.entry_key,
-        },
-      },
-    },
-  });
-
-  const hasClaimedReceipt = (
-    duplicateTransactions.reward_transactions ?? []
-  ).some(
-    (transaction) =>
-      transaction.external_event_id === posBill.entry_key &&
-      (transaction.status === rewardTransactionStatuses.pending ||
-        transaction.status === rewardTransactionStatuses.posted)
-  );
-
-  if (hasClaimedReceipt) {
-    return jsonResponse({ error: 'receipt_already_claimed' }, 409);
-  }
-
-  const now = new Date();
-  const claimedAt = now.toISOString();
-  const occurredAt = normalizeOccurredAtTimestamp(posBill.paid_at, claimedAt);
-  const { nextProfile, tierProgressPointsDelta } = buildUpdatedProfile(
-    profile,
-    cashbackPointsDelta,
-    now
-  );
-  const transaction = toRewardServiceTransaction({
-    amountVnd: posBill.amount_vnd,
-    cashbackPointsDelta,
-    externalEventId: posBill.entry_key,
-    memberId: profile.member_id,
-    memberProfileId: profile.id,
-    occurredAt,
-    receiptReference: posBill.receipt_reference ?? posBill.pos_bill_id,
-    tierProgressPointsDelta,
-  });
-
-  try {
-    await adminDb.transact([
-      createInstantUpdateStep('profiles', profile.id, {
-        cashback_points_balance: nextProfile.cashback_points_balance,
-        cashback_points_lifetime_earned:
-          nextProfile.cashback_points_lifetime_earned,
-        lifetime_tier_key: nextProfile.lifetime_tier_key,
-        next_tier_key: nextProfile.next_tier_key,
-        tier_progress_expires_at: nextProfile.tier_progress_expires_at,
-        tier_progress_points: nextProfile.tier_progress_points,
-        tier_progress_started_at: nextProfile.tier_progress_started_at,
-        tier_progress_target_points: nextProfile.tier_progress_target_points,
-        updated_at: nextProfile.updated_at,
-      }),
-      createInstantUpdateStep('pos_bills', posBill.id, {
-        claimed_at: claimedAt,
-        claimed_by_profile_id: profile.id,
-        claimed_reward_transaction_id: transaction.id,
-        updated_at: claimedAt,
-      }),
-      createInstantCreateStep('reward_transactions', transaction.id, {
-        amount_vnd: transaction.amount_vnd,
-        cashback_points_delta: transaction.cashback_points_delta,
-        created_at: transaction.created_at,
-        entry_key: transaction.entry_key,
-        event_type: transaction.event_type,
-        external_event_id: transaction.external_event_id,
-        member_id: transaction.member_id,
-        occurred_at: transaction.occurred_at,
-        reference: transaction.reference,
-        source: transaction.source,
-        status: transaction.status,
-        tier_progress_points_delta: transaction.tier_progress_points_delta,
-        updated_at: transaction.updated_at,
-      }),
-      createInstantLinkStep('reward_transactions', transaction.id, {
-        member: profile.id,
-      }),
-    ]);
-  } catch (error) {
-    if (
-      typeof error === 'object' &&
-      error !== null &&
-      'body' in error &&
-      (error as { body?: { type?: string } }).body?.type === 'record-not-unique'
-    ) {
+    if (posBill.claimed_at || posBill.claimed_reward_transaction_id) {
       return jsonResponse({ error: 'receipt_already_claimed' }, 409);
     }
 
-    throw error;
-  }
+    const cashbackPointsDelta = calculateCashbackPointsForAmountVnd(
+      posBill.amount_vnd
+    );
+    if (cashbackPointsDelta <= 0) {
+      return jsonResponse({ error: 'bill_below_minimum_spend' }, 400);
+    }
 
-  return jsonResponse(
-    {
+    const duplicateTransactions = await adminDb.query<{
+      reward_transactions?: RewardTransactionRecord[];
+    }>({
+      reward_transactions: {
+        $: {
+          where: {
+            external_event_id: posBill.entry_key,
+          },
+        },
+      },
+    });
+
+    const hasClaimedReceipt = (
+      duplicateTransactions.reward_transactions ?? []
+    ).some(
+      (transaction) =>
+        transaction.external_event_id === posBill.entry_key &&
+        (transaction.status === rewardTransactionStatuses.pending ||
+          transaction.status === rewardTransactionStatuses.posted)
+    );
+
+    if (hasClaimedReceipt) {
+      return jsonResponse({ error: 'receipt_already_claimed' }, 409);
+    }
+
+    const now = new Date();
+    const claimedAt = now.toISOString();
+    const occurredAt = normalizeOccurredAtTimestamp(posBill.paid_at, claimedAt);
+    const { nextProfile, tierProgressPointsDelta } = buildUpdatedProfile(
+      profile,
       cashbackPointsDelta,
-      member: toRewardServiceMember(nextProfile),
+      now
+    );
+    const transaction = toRewardServiceTransaction({
+      amountVnd: posBill.amount_vnd,
+      cashbackPointsDelta,
+      externalEventId: posBill.entry_key,
+      memberId: profile.member_id,
+      memberProfileId: profile.id,
+      occurredAt,
+      receiptReference: posBill.receipt_reference ?? posBill.pos_bill_id,
       tierProgressPointsDelta,
-      transaction,
-    } satisfies RewardServiceResponse,
-    200
-  );
+    });
+
+    try {
+      await adminDb.transact([
+        createInstantUpdateStep('profiles', profile.id, {
+          cashback_points_balance: nextProfile.cashback_points_balance,
+          cashback_points_lifetime_earned:
+            nextProfile.cashback_points_lifetime_earned,
+          lifetime_tier_key: nextProfile.lifetime_tier_key,
+          next_tier_key: nextProfile.next_tier_key,
+          tier_progress_expires_at: nextProfile.tier_progress_expires_at,
+          tier_progress_points: nextProfile.tier_progress_points,
+          tier_progress_started_at: nextProfile.tier_progress_started_at,
+          tier_progress_target_points: nextProfile.tier_progress_target_points,
+          updated_at: nextProfile.updated_at,
+        }),
+        createInstantUpdateStep('pos_bills', posBill.id, {
+          claimed_at: claimedAt,
+          claimed_by_profile_id: profile.id,
+          claimed_reward_transaction_id: transaction.id,
+          updated_at: claimedAt,
+        }),
+        createInstantCreateStep('reward_transactions', transaction.id, {
+          amount_vnd: transaction.amount_vnd,
+          cashback_points_delta: transaction.cashback_points_delta,
+          created_at: transaction.created_at,
+          entry_key: transaction.entry_key,
+          event_type: transaction.event_type,
+          external_event_id: transaction.external_event_id,
+          member_id: transaction.member_id,
+          occurred_at: transaction.occurred_at,
+          reference: transaction.reference,
+          source: transaction.source,
+          status: transaction.status,
+          tier_progress_points_delta: transaction.tier_progress_points_delta,
+          updated_at: transaction.updated_at,
+        }),
+        createInstantLinkStep('reward_transactions', transaction.id, {
+          member: profile.id,
+        }),
+      ]);
+    } catch (error) {
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'body' in error &&
+        (error as { body?: { type?: string } }).body?.type ===
+          'record-not-unique'
+      ) {
+        return jsonResponse({ error: 'receipt_already_claimed' }, 409);
+      }
+
+      throw error;
+    }
+
+    return jsonResponse(
+      {
+        cashbackPointsDelta,
+        member: toRewardServiceMember(nextProfile),
+        tierProgressPointsDelta,
+        transaction,
+      } satisfies RewardServiceResponse,
+      200
+    );
+  });
 }

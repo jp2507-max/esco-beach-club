@@ -18,6 +18,8 @@ import type {
 export type ProfileData = {
   dismissVoucher: () => void;
   profile: Profile | null;
+  /** True when `profileProvisionError` is set and another `ensureProfile` attempt may succeed (e.g. transient failure). */
+  isRetryable: boolean;
   profileProvisionError: Error | null;
   profileLoading: boolean;
   retryProfileProvision: () => Promise<void>;
@@ -126,6 +128,7 @@ export const EMPTY_PRIVATE_EVENT_TYPES: PrivateEventTypeOption[] = [];
 const FALLBACK_PROFILE: ProfileData = {
   dismissVoucher: () => {},
   profile: null,
+  isRetryable: false,
   profileProvisionError: null,
   profileLoading: false,
   retryProfileProvision: async () => {},

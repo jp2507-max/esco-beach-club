@@ -129,9 +129,9 @@ const rules = {
     bind: {
       hasPendingStatusOnly: "data.status == 'pending'",
       hasValidReservationContactEmail:
-        "!('contact_email' in request.modifiedFields) || (data.contact_email == null || (data.contact_email.size() >= 3 && data.contact_email.size() <= 254 && data.contact_email.matches('^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$')))",
+        "!('contact_email' in request.modifiedFields) || (data.contact_email != null && data.contact_email.size() >= 3 && data.contact_email.size() <= 254 && data.contact_email.matches('^[^ @]+@[^ @]+[.][^ @]+$'))",
       hasValidReservationSpecialRequest:
-        "!('special_request' in request.modifiedFields) || (data.special_request == null || (data.special_request.size() <= 500 && data.special_request.matches('^\\S(?:[\\s\\S]*\\S)?$|^$')))",
+        "!('special_request' in request.modifiedFields) || (data.special_request == null || (data.special_request.size() <= 500 && data.special_request.matches('^$|^[^ ].*[^ ]$|^[^ ]$')))",
       onlySafeTableReservationFields:
         "request.modifiedFields.all(field, field in ['contact_email', 'created_at', 'entry_key', 'event_id', 'event_title', 'occasion', 'party_size', 'reservation_date', 'reservation_time', 'source', 'special_request', 'status', 'updated_at'])",
     },

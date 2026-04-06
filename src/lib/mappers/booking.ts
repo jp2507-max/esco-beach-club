@@ -29,7 +29,7 @@ export function mapPrivateEventType(
 export function mapTableReservation(record: InstantRecord): TableReservation {
   return {
     id: record.id,
-    contact_email: toNullableString(record.contact_email),
+    contact_email: toStringOr(record.contact_email),
     created_at: toIsoString(record.created_at),
     entry_key: toStringOr(record.entry_key),
     event_id: toNullableString(record.event_id),

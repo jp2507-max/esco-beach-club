@@ -24,7 +24,6 @@ import {
 } from 'react-native';
 import {
   cancelAnimation,
-  ReduceMotion,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -37,6 +36,7 @@ import { Colors } from '@/constants/colors';
 import { useAuth } from '@/providers/AuthProvider';
 import { useMemberSummary } from '@/providers/DataProvider';
 import { MemberQrAccessCard } from '@/src/components/ui';
+import { motion, rmTiming } from '@/src/lib/animations/motion';
 import {
   hapticError,
   hapticLight,
@@ -180,14 +180,8 @@ export default function QrTabScreen(): React.JSX.Element {
     framePulse.set(
       withRepeat(
         withSequence(
-          withTiming(1, {
-            duration: 1700,
-            reduceMotion: ReduceMotion.System,
-          }),
-          withTiming(0.82, {
-            duration: 1700,
-            reduceMotion: ReduceMotion.System,
-          })
+          withTiming(1, rmTiming(motion.dur.qrFramePulseHalf)),
+          withTiming(0.82, rmTiming(motion.dur.qrFramePulseHalf))
         ),
         -1,
         true
@@ -196,14 +190,8 @@ export default function QrTabScreen(): React.JSX.Element {
     scanLineProgress.set(
       withRepeat(
         withSequence(
-          withTiming(1, {
-            duration: 2000,
-            reduceMotion: ReduceMotion.System,
-          }),
-          withTiming(0, {
-            duration: 0,
-            reduceMotion: ReduceMotion.System,
-          })
+          withTiming(1, rmTiming(motion.dur.qrScanLineSweep)),
+          withTiming(0, rmTiming(0))
         ),
         -1,
         false
@@ -218,10 +206,7 @@ export default function QrTabScreen(): React.JSX.Element {
 
   useEffect(() => {
     scanLineOpacity.set(
-      withTiming(isScanLocked ? 0 : 1, {
-        duration: 150,
-        reduceMotion: ReduceMotion.System,
-      })
+      withTiming(isScanLocked ? 0 : 1, rmTiming(motion.dur.qrScanLockOpacity))
     );
   }, [isScanLocked, scanLineOpacity]);
 
@@ -569,13 +554,14 @@ export default function QrTabScreen(): React.JSX.Element {
             width: frameSize,
           }}
         >
-          <CameraView
-            barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
-            onBarcodeScanned={
-              isScannerActive ? handleBarcodeScanned : undefined
-            }
-            style={StyleSheet.absoluteFillObject}
-          />
+          {isScannerActive && (
+            <CameraView
+              barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
+              active={Platform.OS === 'ios' ? isScannerActive : undefined}
+              onBarcodeScanned={handleBarcodeScanned}
+              style={StyleSheet.absoluteFillObject}
+            />
+          )}
 
           {/* Subtle vignette for bracket/hint contrast */}
           <LinearGradient

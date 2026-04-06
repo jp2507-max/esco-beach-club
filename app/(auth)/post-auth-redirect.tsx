@@ -12,6 +12,7 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
   const {
     profile,
     profileLoading,
+    isRetryable,
     profileProvisionError,
     retryProfileProvision,
     userId,
@@ -26,6 +27,7 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
 
   const shouldRetryProvision =
     Boolean(profileProvisionError) &&
+    isRetryable &&
     !profileLoading &&
     !isRetryingProvision &&
     Boolean(userId) &&
@@ -33,8 +35,8 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
 
   const needsProvisionRecovery =
     Boolean(profileProvisionError) &&
+    !isRetryable &&
     !profileLoading &&
-    !shouldRetryProvision &&
     !isRetryingProvision;
 
   React.useEffect(() => {
@@ -46,6 +48,7 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
     void (async (): Promise<void> => {
       try {
         await signOut();
+        router.replace('/(auth)/login');
       } catch (error: unknown) {
         if (__DEV__) {
           console.error(
@@ -53,8 +56,6 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
             { error }
           );
         }
-      } finally {
-        router.replace('/(auth)/login');
       }
     })();
   }, [needsProvisionRecovery, router, signOut]);

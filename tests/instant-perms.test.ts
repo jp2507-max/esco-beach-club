@@ -27,12 +27,7 @@ describe('profiles permissions', () => {
   });
 
   test('creates profiles only for the authenticated user id', () => {
-    expect(rules.profiles.bind.canCreateOwnedProfile).toContain(
-      'auth.id == data.id'
-    );
-    expect(rules.profiles.bind.canCreateOwnedProfile).toContain(
-      "auth.id in data.ref('user.id')"
-    );
+    expect(rules.profiles.bind.canCreateOwnedProfile).toBe('isOwner');
     expect(rules.profiles.allow.create).toContain('canCreateOwnedProfile');
     expect(rules.profiles.allow.create).toContain(
       'hasValidProfileCreateValues'
@@ -85,6 +80,9 @@ describe('owner-scoped create permissions', () => {
     expect(
       rules.table_reservations.bind.hasValidReservationContactEmail
     ).toContain('data.contact_email.size() <= 254');
+    expect(
+      rules.table_reservations.bind.hasValidReservationContactEmail
+    ).not.toContain('data.contact_email == null');
     expect(
       rules.table_reservations.bind.hasValidReservationSpecialRequest
     ).toContain('special_request.matches');

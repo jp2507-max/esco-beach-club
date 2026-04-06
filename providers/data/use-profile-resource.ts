@@ -292,10 +292,16 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
       });
   }, [profile]);
 
+  const isRetryable = Boolean(
+    profileProvisionError &&
+    profileProvisionError.message !== PROFILE_PROVISION_FAILURE_KEY
+  );
+
   return useMemo(
     () => ({
       dismissVoucher,
       profile,
+      isRetryable,
       profileProvisionError,
       profileLoading:
         Boolean(userId) &&
@@ -308,6 +314,7 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
     [
       dismissVoucher,
       isProvisioningProfile,
+      isRetryable,
       profile,
       profileProvisionError,
       profileQuery.isLoading,

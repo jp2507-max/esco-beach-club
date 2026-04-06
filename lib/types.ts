@@ -253,7 +253,7 @@ export type PrivateEventInquiry = {
 
 export type TableReservation = {
   id: string;
-  contact_email: string | null;
+  contact_email: string;
   created_at: string;
   entry_key: string;
   event_id: string | null;

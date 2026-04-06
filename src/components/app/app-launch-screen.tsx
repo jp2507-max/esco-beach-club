@@ -203,6 +203,7 @@ export function AppLaunchScreen({
             ]}
           >
             <Image
+              accessibilityHint={t('branding.markHint')}
               accessibilityLabel={t('branding.wordmark')}
               cachePolicy="memory-disk"
               contentFit="contain"

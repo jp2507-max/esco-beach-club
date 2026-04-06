@@ -220,7 +220,7 @@ const _schema = i.schema({
       value: i.string().unique().indexed(),
     }),
     table_reservations: i.entity({
-      contact_email: i.string().indexed().optional(),
+      contact_email: i.string().indexed(),
       created_at: i.date().indexed().optional(),
       entry_key: i.string().unique().indexed(),
       event_id: i.string().indexed().optional(),

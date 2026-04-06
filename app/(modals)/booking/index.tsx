@@ -157,7 +157,7 @@ export default function BookingModalScreen(): React.JSX.Element {
     if (isSubmittingRef.current || !userId) return;
     setHasAttemptedSubmit(true);
 
-    if (!isSelectedTimeValid) {
+    if (!isSelectedTimeValid || selectedTime === null) {
       Alert.alert(
         t('booking:reservationFailedTitle'),
         t('booking:selectTimeRequired')
@@ -172,6 +172,8 @@ export default function BookingModalScreen(): React.JSX.Element {
       );
       return;
     }
+
+    if (selectedTime === null) return;
 
     hapticMedium();
     isSubmittingRef.current = true;

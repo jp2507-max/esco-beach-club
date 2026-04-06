@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 
 import { jsonResponse } from '@/src/lib/api/route-helpers';
 import type { InstantRecord } from '@/src/lib/mappers';
+import { buildPosBillEntryKey } from '@/src/lib/pos/build-pos-bill-entry-key';
 import {
   createInstantUpdateStep,
   getInstantAdminDb,
@@ -13,6 +14,7 @@ import {
 } from '@/src/lib/reward-backend-contract';
 
 const POS_SYNC_TIMESTAMP_MAX_SKEW_MS = 5 * 60 * 1000;
+const POS_BILL_UPSERT_CONCURRENCY_LIMIT = 16;
 
 /**
  * Admin HTTP transact steps do not expose compare-and-swap on `source_updated_at`.
@@ -55,14 +57,6 @@ type PosBillRecord = InstantRecord & {
 function getPosSyncSharedSecret(): string | null {
   const secret = process.env.POS_SYNC_SHARED_SECRET?.trim();
   return secret ? secret : null;
-}
-
-function buildPosBillEntryKey(params: {
-  posBillId: string;
-  restaurantId: string;
-}): string {
-  const normalizedRestaurantId = params.restaurantId.trim().toUpperCase();
-  return `pos-bill:${normalizedRestaurantId}:${params.posBillId}`;
 }
 
 function parseTimestampMs(value: unknown): number | null {
@@ -127,6 +121,19 @@ function selectLatestBills(bills: PosBillSyncItem[]): PosBillSyncItem[] {
   }
 
   return [...latestBills.values()];
+}
+
+function chunkPosBillSyncItems<T>(
+  items: readonly T[],
+  chunkSize: number
+): T[][] {
+  const chunks: T[][] = [];
+
+  for (let index = 0; index < items.length; index += chunkSize) {
+    chunks.push(items.slice(index, index + chunkSize));
+  }
+
+  return chunks;
 }
 
 function verifyPosSyncSignature(params: {
@@ -250,48 +257,60 @@ export async function POST(request: Request): Promise<Response> {
 
   const latestBills = selectLatestBills(parsedRequest.data.bills);
   const nowIso = new Date().toISOString();
+  const billChunks = chunkPosBillSyncItems(
+    latestBills,
+    POS_BILL_UPSERT_CONCURRENCY_LIMIT
+  );
 
-  const upsertedCounts = await Promise.all(
-    latestBills.map((bill) => {
-      const entryKey = buildPosBillEntryKey({
-        posBillId: bill.posBillId,
-        restaurantId: bill.restaurantId,
-      });
+  const upsertedCounts: number[] = [];
 
-      return runSerializedPosBillUpsert(entryKey, async () => {
-        const freshResult = await adminDb.query<{
-          pos_bills?: PosBillRecord[];
-        }>({
-          pos_bills: {
-            $: {
-              where: {
-                canonical_bill_id: entryKey,
-              },
-            },
-          },
+  for (const chunk of billChunks) {
+    const chunkUpsertedCounts = await Promise.all(
+      chunk.map((bill) => {
+        const entryKey = buildPosBillEntryKey({
+          posBillId: bill.posBillId,
+          restaurantId: bill.restaurantId,
         });
 
-        const rows = freshResult.pos_bills ?? [];
-        const existingBill =
-          rows.find((r) => r.canonical_bill_id === entryKey) ?? rows[0] ?? null;
+        return runSerializedPosBillUpsert(entryKey, async () => {
+          const freshResult = await adminDb.query<{
+            pos_bills?: PosBillRecord[];
+          }>({
+            pos_bills: {
+              $: {
+                where: {
+                  canonical_bill_id: entryKey,
+                },
+              },
+            },
+          });
 
-        if (isIncomingBillStale(existingBill, bill)) {
-          return 0;
-        }
+          const rows = freshResult.pos_bills ?? [];
+          const existingBill =
+            rows.find((r) => r.canonical_bill_id === entryKey) ??
+            rows[0] ??
+            null;
 
-        await adminDb.transact([
-          createInstantUpdateStep(
-            'pos_bills',
-            entryKey,
-            toPosBillRecord({ bill, existingBill, nowIso }),
-            { upsert: true }
-          ),
-        ]);
+          if (isIncomingBillStale(existingBill, bill)) {
+            return 0;
+          }
 
-        return 1;
-      });
-    })
-  );
+          await adminDb.transact([
+            createInstantUpdateStep(
+              'pos_bills',
+              entryKey,
+              toPosBillRecord({ bill, existingBill, nowIso }),
+              { upsert: true }
+            ),
+          ]);
+
+          return 1;
+        });
+      })
+    );
+
+    upsertedCounts.push(...chunkUpsertedCounts);
+  }
 
   const upserted = upsertedCounts.reduce<number>((a, b) => a + b, 0);
 
