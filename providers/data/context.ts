@@ -2,8 +2,6 @@ import type React from 'react';
 import { createContext, useContext } from 'react';
 
 import type {
-  BookingOccasionOption,
-  BookingTimeSlotOption,
   Event,
   MemberOffer,
   MenuCategoryContent,
@@ -20,7 +18,9 @@ import type {
 export type ProfileData = {
   dismissVoucher: () => void;
   profile: Profile | null;
+  profileProvisionError: Error | null;
   profileLoading: boolean;
+  retryProfileProvision: () => Promise<void>;
   userId: string;
 };
 
@@ -59,8 +59,6 @@ export type SavedEventsData = {
 
 export type BookingContentData = {
   bookingContentLoading: boolean;
-  bookingOccasions: BookingOccasionOption[];
-  bookingTimeSlots: BookingTimeSlotOption[];
   privateEventTypes: PrivateEventTypeOption[];
 };
 
@@ -120,8 +118,6 @@ export const EMPTY_PARTNERS: Partner[] = [];
 export const EMPTY_PARTNER_REDEMPTIONS: PartnerRedemption[] = [];
 export const EMPTY_REFERRALS: Referral[] = [];
 export const EMPTY_SAVED_EVENTS: SavedEvent[] = [];
-export const EMPTY_BOOKING_OCCASIONS: BookingOccasionOption[] = [];
-export const EMPTY_BOOKING_TIME_SLOTS: BookingTimeSlotOption[] = [];
 export const EMPTY_MEMBER_OFFERS: MemberOffer[] = [];
 export const EMPTY_MENU_CATEGORIES: MenuCategoryContent[] = [];
 export const EMPTY_MENU_ITEMS: MenuItemContent[] = [];
@@ -130,7 +126,9 @@ export const EMPTY_PRIVATE_EVENT_TYPES: PrivateEventTypeOption[] = [];
 const FALLBACK_PROFILE: ProfileData = {
   dismissVoucher: () => {},
   profile: null,
+  profileProvisionError: null,
   profileLoading: false,
+  retryProfileProvision: async () => {},
   userId: '',
 };
 const FALLBACK_EVENTS: EventsData = {
@@ -159,8 +157,6 @@ const FALLBACK_SAVED_EVENTS: SavedEventsData = {
 };
 const FALLBACK_BOOKING_CONTENT: BookingContentData = {
   bookingContentLoading: false,
-  bookingOccasions: EMPTY_BOOKING_OCCASIONS,
-  bookingTimeSlots: EMPTY_BOOKING_TIME_SLOTS,
   privateEventTypes: EMPTY_PRIVATE_EVENT_TYPES,
 };
 const FALLBACK_MEMBER_OFFERS: MemberOffersData = {

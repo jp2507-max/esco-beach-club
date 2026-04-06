@@ -52,13 +52,37 @@ const common = {
   bookingSuccess: {
     backHome: 'Back to Home',
     guest: 'Guest',
-    subtitle: 'Your reservation has been confirmed.',
+    subtitle:
+      'Your reservation request has been received. You will receive confirmation within one hour.',
     title: "You're all set, {{name}}!",
+  },
+  bookingContact: {
+    chatPrompt:
+      'Prefer a faster reply? Chat with us directly on Instagram or Facebook.',
+    inlinePrompt: 'Need help right now?',
+    instagramInlineCta: 'Write us on Instagram',
+    facebookInlineCta: 'Write us on Facebook',
+    emailInlineCta: 'or send us an email',
+    emailButton: 'Email Us',
+    emailHint: 'Opens your mail app to contact our booking team',
+    instagramButton: 'Instagram',
+    instagramHint: 'Opens our Instagram page for direct chat',
+    facebookButton: 'Facebook',
+    facebookHint: 'Opens our Facebook page for direct chat',
+    openLinkError: 'Could not open this contact option right now.',
   },
   appError: {
     title: 'We hit an unexpected issue',
     description:
       'Please reopen the app or try again in a moment. Our team has been notified.',
+  },
+  launch: {
+    eyebrow: 'Member launch',
+    loading: 'Preparing your club access, perks, and latest updates.',
+  },
+  searchInput: {
+    clearLabel: 'Clear search',
+    clearHint: 'Clears the current search text',
   },
   menu: 'Menu',
   privateEvent: {
@@ -91,7 +115,7 @@ const common = {
     additionalNotesPlaceholder:
       'Theme, dietary requirements, special requests...',
     sendInquiry: 'Send Inquiry',
-    teamResponse: 'Our team will get back to you within 24 hours.',
+    teamResponse: 'You will receive confirmation by email within one hour.',
     submissionFailed: 'Submission Failed',
     submitError: 'Could not send your inquiry right now.',
     missingInfo: 'Missing Info',
@@ -99,13 +123,14 @@ const common = {
       'Please fill in the event type, date, and estimated guests.',
     inquirySent: 'Inquiry Sent!',
     inquirySentMessage:
-      'Our events team will review your request and reach out within 24 hours. Get ready for an unforgettable event!',
+      'Your request has been received. You will receive confirmation by email within one hour.',
     backToEvents: 'Back to Events',
   },
   tabs: {
     home: 'Home',
     events: 'Events',
     qr: 'QR',
+    scan: 'Scan',
     perks: 'Perks',
     profile: 'Profile',
   },

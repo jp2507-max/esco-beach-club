@@ -46,12 +46,35 @@ const booking = {
   dateLabel: '{{month}} {{day}}일 {{weekday}}',
   selectDateHint: '테이블 예약에 이 날짜를 선택합니다',
   selectTimeHint: '이용 가능할 때 이 시간대를 선택합니다',
+  monthYearLabel: '{{year}}년 {{month}}',
+  previousMonth: '이전 달',
+  previousMonthHint: '예약 달력에서 이전 달을 표시합니다',
+  nextMonth: '다음 달',
+  nextMonthHint: '예약 달력에서 다음 달을 표시합니다',
+  calendarDateLabel: '{{date}}일 선택',
+  openTimePickerHint: '15분 단위 시간 선택기를 엽니다',
+  openTimePickerLabel: '{{date}} 예약 시간을 선택합니다. 현재 선택: {{time}}',
+  noTimeSelected: '시간 미선택',
+  timePickerPlaceholder: '시간 선택',
+  timePickerHint: '{{start}}부터 {{end}}까지 15분 단위로 예약 가능합니다.',
+  timePickerDismissHint: '시간 선택기를 닫습니다',
+  noBookableTimes:
+    '이 날짜에는 예약 가능한 시간이 없습니다. 다른 날짜를 선택해 주세요.',
+  contactEmailTitle: '연락용 이메일',
+  contactEmailHint: '예약 요청 확인을 받을 이메일을 입력해 주세요',
+  contactEmailPlaceholder: 'you@example.com',
+  contactEmailRequired: '계속하려면 유효한 연락용 이메일을 입력해 주세요.',
+  specialRequestTitle: '특별 요청',
+  specialRequestHint: '테이블 요청에 대한 추가 메모를 입력하세요 (선택 사항)',
+  specialRequestPlaceholder: '좌석 선호나 특별 요청 사항을 남겨 주세요',
+  selectTimeRequired: '확정 전에 예약 시간을 선택해 주세요.',
   available: '예약 가능',
   full: '만석',
-  confirmationMessage: '{{date}} {{time}}에 테이블이 예약되었습니다.',
+  followUpMessage:
+    '{{date}} {{time}} 예약 요청이 접수되었습니다. 1시간 이내에 확인 안내를 보내드리겠습니다.',
   reservationFailedTitle: '예약 실패',
   reservationFailedMessage:
-    '지금은 예약을 확정할 수 없습니다. 다시 시도해 주세요.',
+    '지금은 예약 요청을 제출할 수 없습니다. 다시 시도해 주세요.',
 } as const;
 
 export default booking;

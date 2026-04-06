@@ -5,7 +5,7 @@ import { ArrowRight, CalendarDays, UserRound } from 'lucide-react-native';
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { Alert, Platform, useColorScheme } from 'react-native';
+import { Alert, Platform } from 'react-native';
 import { FadeIn, FadeInUp } from 'react-native-reanimated';
 
 import { Colors } from '@/constants/colors';
@@ -20,6 +20,7 @@ import {
 } from '@/src/lib/forms/schemas';
 import { hapticLight } from '@/src/lib/haptics/haptics';
 import { shadows } from '@/src/lib/styles/shadows';
+import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
 import {
   KeyboardAvoidingView,
   Pressable,
@@ -36,8 +37,7 @@ const CTA_DELAY = 420;
 export default function OnboardingProfileBasicsScreen(): React.JSX.Element {
   const router = useRouter();
   const { t } = useTranslation('auth');
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const isDark = useAppIsDark();
   const ctaButton = useButtonPress();
 
   const { control, handleSubmit } = useForm<OnboardingBasicsFormValues>({
@@ -70,16 +70,22 @@ export default function OnboardingProfileBasicsScreen(): React.JSX.Element {
 
   return (
     <View className="flex-1 bg-background dark:bg-dark-bg">
-      {!isDark ? (
-        <LinearGradient
-          colors={[
-            Colors.onboardingBasicsGradientStart,
-            Colors.onboardingBasicsGradientMiddle,
-            Colors.onboardingBasicsGradientEnd,
-          ]}
-          style={{ bottom: 0, left: 0, position: 'absolute', right: 0, top: 0 }}
-        />
-      ) : null}
+      <LinearGradient
+        colors={
+          isDark
+            ? [
+                Colors.onboardingBasicsGradientDarkStart,
+                Colors.onboardingBasicsGradientDarkMiddle,
+                Colors.onboardingBasicsGradientDarkEnd,
+              ]
+            : [
+                Colors.onboardingBasicsGradientStart,
+                Colors.onboardingBasicsGradientMiddle,
+                Colors.onboardingBasicsGradientEnd,
+              ]
+        }
+        style={{ bottom: 0, left: 0, position: 'absolute', right: 0, top: 0 }}
+      />
 
       <OnboardingHeader
         onBack={() => router.back()}

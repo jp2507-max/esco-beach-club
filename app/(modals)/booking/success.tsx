@@ -14,6 +14,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
+import { BookingContactActions } from '@/src/components/booking/booking-contact-actions';
 import { rmTiming } from '@/src/lib/animations/motion';
 import { hapticSuccess } from '@/src/lib/haptics/haptics';
 import { shadows } from '@/src/lib/styles/shadows';
@@ -135,7 +136,7 @@ export default function SuccessScreen(): React.JSX.Element {
           </View>
         </Animated.View>
 
-        <Animated.View className="items-center" style={contentStyle}>
+        <Animated.View className="w-full items-center" style={contentStyle}>
           <Text className="mb-3 text-center text-[28px] font-extrabold text-text dark:text-text-primary-dark">
             {t('bookingSuccess.title', {
               name: name ?? t('bookingSuccess.guest'),
@@ -144,6 +145,14 @@ export default function SuccessScreen(): React.JSX.Element {
           <Text className="max-w-70 text-center text-base leading-6 text-text-secondary dark:text-text-secondary-dark">
             {subtitle ?? t('bookingSuccess.subtitle')}
           </Text>
+
+          <Text className="mt-3 max-w-75 text-center text-sm leading-5 text-text-muted dark:text-text-muted-dark">
+            {t('bookingContact.chatPrompt')}
+          </Text>
+
+          <View className="mt-5 w-full px-5">
+            <BookingContactActions />
+          </View>
         </Animated.View>
       </View>
 

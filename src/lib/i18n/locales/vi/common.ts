@@ -51,13 +51,38 @@ const common = {
   bookingSuccess: {
     backHome: 'Quay về trang chủ',
     guest: 'Khách',
-    subtitle: 'Đặt chỗ của bạn đã được xác nhận.',
+    subtitle:
+      'Yêu cầu đặt chỗ của bạn đã được ghi nhận. Bạn sẽ nhận được xác nhận trong vòng một giờ.',
     title: 'Mọi thứ đã sẵn sàng, {{name}}!',
+  },
+  bookingContact: {
+    chatPrompt:
+      'Muốn phản hồi nhanh hơn? Nhắn trực tiếp với chúng tôi qua Instagram hoặc Facebook.',
+    inlinePrompt: 'Cần hỗ trợ ngay?',
+    instagramInlineCta: 'Nhắn chúng tôi trên Instagram',
+    facebookInlineCta: 'Nhắn chúng tôi trên Facebook',
+    emailInlineCta: 'hoặc gửi email cho chúng tôi',
+    emailButton: 'Gửi email',
+    emailHint: 'Mở ứng dụng email để liên hệ đội đặt chỗ',
+    instagramButton: 'Instagram',
+    instagramHint: 'Mở trang Instagram của chúng tôi để nhắn trực tiếp',
+    facebookButton: 'Facebook',
+    facebookHint: 'Mở trang Facebook của chúng tôi để nhắn trực tiếp',
+    openLinkError: 'Hiện không thể mở kênh liên hệ này.',
   },
   appError: {
     title: 'Đã xảy ra sự cố ngoài dự kiến',
     description:
       'Vui lòng mở lại ứng dụng hoặc thử lại sau ít phút. Đội ngũ của chúng tôi đã được thông báo.',
+  },
+  launch: {
+    eyebrow: 'Khởi động thành viên',
+    loading:
+      'Đang chuẩn bị quyền truy cập câu lạc bộ, ưu đãi và các cập nhật mới nhất cho bạn.',
+  },
+  searchInput: {
+    clearLabel: 'Xóa tìm kiếm',
+    clearHint: 'Xóa nội dung tìm kiếm hiện tại',
   },
   menu: 'Thực đơn',
   privateEvent: {
@@ -89,7 +114,7 @@ const common = {
     additionalNotes: 'Ghi chú thêm',
     additionalNotesPlaceholder: 'Chủ đề, yêu cầu ăn uống, yêu cầu đặc biệt...',
     sendInquiry: 'Gửi yêu cầu',
-    teamResponse: 'Đội ngũ sẽ phản hồi trong vòng 24 giờ.',
+    teamResponse: 'Bạn sẽ nhận được xác nhận qua email trong vòng một giờ.',
     submissionFailed: 'Gửi thất bại',
     submitError: 'Không thể gửi yêu cầu ngay bây giờ.',
     missingInfo: 'Thiếu thông tin',
@@ -97,13 +122,14 @@ const common = {
       'Vui lòng điền loại sự kiện, ngày và số khách ước tính.',
     inquirySent: 'Đã gửi yêu cầu!',
     inquirySentMessage:
-      'Đội ngũ sự kiện sẽ xem xét và liên hệ trong vòng 24 giờ. Hãy chuẩn bị cho một sự kiện đáng nhớ!',
+      'Yêu cầu của bạn đã được ghi nhận. Bạn sẽ nhận được xác nhận qua email trong vòng một giờ.',
     backToEvents: 'Quay lại Sự kiện',
   },
   tabs: {
     home: 'Trang chủ',
     events: 'Sự kiện',
     qr: 'QR',
+    scan: 'Quét',
     perks: 'Ưu đãi',
     profile: 'Hồ sơ',
   },

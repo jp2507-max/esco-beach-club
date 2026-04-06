@@ -27,6 +27,7 @@ import { motion, withRM } from '@/src/lib/animations/motion';
 import { useButtonPress } from '@/src/lib/animations/use-button-press';
 import { config } from '@/src/lib/config';
 import { hapticLight } from '@/src/lib/haptics/haptics';
+import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
 import { parseOnboardingMemberSegmentSearchParam } from '@/src/lib/utils/member-segment';
 import {
   parseOnboardingPermissionStatusSearchParam,
@@ -139,6 +140,7 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
   const { isAuthenticated, isLoading: isAuthLoading, user } = useAuth();
   const { profile } = useProfileData();
   const { t } = useTranslation('auth');
+  const isDark = useAppIsDark();
   const searchParams = useLocalSearchParams<OnboardingLocalIdentityParams>();
   const ctaButton = useButtonPress();
 
@@ -335,13 +337,21 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
 
   return (
     <View className="flex-1 bg-background dark:bg-dark-bg">
-      <View className="absolute inset-0 dark:hidden">
+      <View className="absolute inset-0">
         <LinearGradient
-          colors={[
-            Colors.onboardingFinalGradientBase,
-            Colors.onboardingFinalGradientBase,
-            Colors.onboardingFinalGradientAccent,
-          ]}
+          colors={
+            isDark
+              ? [
+                  Colors.onboardingFinalGradientDarkBase,
+                  Colors.onboardingFinalGradientDarkBase,
+                  Colors.onboardingFinalGradientDarkAccent,
+                ]
+              : [
+                  Colors.onboardingFinalGradientBase,
+                  Colors.onboardingFinalGradientBase,
+                  Colors.onboardingFinalGradientAccent,
+                ]
+          }
           style={{ bottom: 0, left: 0, position: 'absolute', right: 0, top: 0 }}
         />
       </View>

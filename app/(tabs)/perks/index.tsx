@@ -1,7 +1,7 @@
 import { FlashList, type ListRenderItemInfo } from '@shopify/flash-list';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Compass, ExternalLink } from 'lucide-react-native';
+import { Compass, ExternalLink, History } from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Linking, useWindowDimensions } from 'react-native';
@@ -10,7 +10,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { accentOnDarkBackground, Colors } from '@/constants/colors';
 import type { Partner } from '@/lib/types';
 import { useFilteredPartners, usePartnersData } from '@/providers/DataProvider';
-import { CategoryChip, SkeletonCard } from '@/src/components/ui';
+import { CategoryChip, ScreenHeader, SkeletonCard } from '@/src/components/ui';
+import { HeaderGlassButton } from '@/src/components/ui/header-glass-button';
 import { useButtonPress } from '@/src/lib/animations/use-button-press';
 import { useScreenEntry } from '@/src/lib/animations/use-screen-entry';
 import { useStaggeredListEntering } from '@/src/lib/animations/use-staggered-entry';
@@ -180,15 +181,17 @@ const MemoizedPartnerGridCard = React.memo(PartnerGridCard);
 export default function PerksScreen(): React.JSX.Element {
   const router = useRouter();
   const { t } = useTranslation('perks');
+  const isDark = useAppIsDark();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const cardWidth = (width - 52) / 2;
+  const headerAccent = accentOnDarkBackground(Colors.primary, isDark);
   const listContentContainerStyle = useMemo(
     () => ({
       paddingBottom: 20 + insets.bottom,
       paddingHorizontal: 16,
-      paddingTop: 16,
+      paddingTop: 12,
     }),
     [insets.bottom]
   );
@@ -225,10 +228,33 @@ export default function PerksScreen(): React.JSX.Element {
     [cardWidth, handlePartnerPress]
   );
 
+  const historyButton = useMemo(
+    () => (
+      <HeaderGlassButton
+        accessibilityHint={t('history.openHint')}
+        accessibilityLabel={t('history.openAction')}
+        onPress={() => router.push('/perks/history')}
+        testID="perks-history-link"
+      >
+        <History color={headerAccent} size={20} />
+      </HeaderGlassButton>
+    ),
+    [headerAccent, router, t]
+  );
+
   return (
-    <View className="flex-1 bg-background dark:bg-dark-bg">
+    <View
+      collapsable={false}
+      className="flex-1 bg-background dark:bg-dark-bg"
+      style={{ paddingTop: insets.top }}
+    >
+      <ScreenHeader
+        rightAction={historyButton}
+        testID="perks-screen-header"
+        title={t('title')}
+      />
+
       <FlashList
-        contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={listContentContainerStyle}
         data={filtered}
         keyExtractor={(item) => item.id}

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import {
   memberSegments,
   onboardingPermissionStatuses,
+  posBillStatuses,
   rewardTierKeys,
   rewardTransactionEventTypes,
   rewardTransactionSources,
@@ -37,6 +38,7 @@ const sqlPollerRewardEventTypeValues = [
 const rewardTransactionSourceValues = [
   rewardTransactionSources.localPosPoller,
   rewardTransactionSources.manualStaffEntry,
+  rewardTransactionSources.memberBillQr,
   rewardTransactionSources.systemReconcile,
 ] as const;
 const rewardTransactionStatusValues = [
@@ -44,6 +46,21 @@ const rewardTransactionStatusValues = [
   rewardTransactionStatuses.posted,
   rewardTransactionStatuses.rejected,
 ] as const;
+const posBillStatusValues = [
+  posBillStatuses.open,
+  posBillStatuses.paid,
+  posBillStatuses.refunded,
+  posBillStatuses.voided,
+] as const;
+const posBillIdPattern = /^[A-Za-z0-9._-]{1,128}$/;
+
+const isoDateTimeLikeSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .refine((value) => value.includes('T') && !Number.isNaN(Date.parse(value)), {
+    message: 'Invalid ISO datetime string',
+  });
 
 export const sqlPollerRewardEventSchema = z.object({
   amountVnd: z.number().int().nonnegative(),
@@ -67,6 +84,48 @@ export const manualRewardAdjustmentRequestSchema = z.object({
 export type ManualRewardAdjustmentRequest = z.infer<
   typeof manualRewardAdjustmentRequestSchema
 >;
+
+export const posBillSyncItemSchema = z
+  .object({
+    amountVnd: z.number().int().nonnegative(),
+    closedAt: isoDateTimeLikeSchema.nullable().optional(),
+    currency: z.string().trim().toUpperCase().pipe(z.literal('VND')),
+    paidAt: isoDateTimeLikeSchema.nullable().optional(),
+    posBillId: z.string().trim().regex(posBillIdPattern),
+    receiptReference: z.string().trim().min(1).nullable().optional(),
+    restaurantId: z
+      .string()
+      .trim()
+      .toUpperCase()
+      .regex(/^[A-Z0-9_-]{2,64}$/),
+    sourceUpdatedAt: isoDateTimeLikeSchema,
+    status: z.enum(posBillStatusValues),
+    terminalId: z.string().trim().min(1).nullable().optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.status === posBillStatuses.paid && !value.paidAt) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'paidAt is required when status is PAID',
+        path: ['paidAt'],
+      });
+    }
+  });
+
+export type PosBillSyncItem = z.infer<typeof posBillSyncItemSchema>;
+
+export const posBillSyncRequestSchema = z.object({
+  bills: z.array(posBillSyncItemSchema).min(1).max(100),
+});
+
+export type PosBillSyncRequest = z.infer<typeof posBillSyncRequestSchema>;
+
+export const posBillSyncResponseSchema = z.object({
+  processed: z.number().int().nonnegative(),
+  upserted: z.number().int().nonnegative(),
+});
+
+export type PosBillSyncResponse = z.infer<typeof posBillSyncResponseSchema>;
 
 export const rewardProfilePayloadSchema = z.object({
   avatar_url: z.string().nullable(),

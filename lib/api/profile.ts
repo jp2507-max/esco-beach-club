@@ -23,6 +23,22 @@ import {
   withoutUndefined,
 } from './shared';
 
+const PROFILE_PROVISION_RETRY_DELAYS_MS = [50, 150, 300] as const;
+
+async function waitForProvisionRetryDelay(attempt: number): Promise<void> {
+  const delay =
+    PROFILE_PROVISION_RETRY_DELAYS_MS[
+      Math.max(
+        0,
+        Math.min(attempt - 1, PROFILE_PROVISION_RETRY_DELAYS_MS.length - 1)
+      )
+    ];
+
+  await new Promise<void>((resolve) => {
+    setTimeout(resolve, delay);
+  });
+}
+
 async function fetchProfileViaUserLink(
   userId: string
 ): Promise<Profile | null> {
@@ -144,9 +160,24 @@ export async function ensureProfile(params: {
       }
 
       if (error.message.toLowerCase().includes('permission denied')) {
+        if (__DEV__) {
+          console.error('[ensureProfile] Profile create permission denied', {
+            attempt,
+            maxRetries,
+            payload,
+            payloadKeys: Object.keys(payload),
+            profileId,
+            userId: params.userId,
+          });
+        }
         const existingProfile = await fetchProfile(params.userId);
         if (existingProfile) {
           return existingProfile;
+        }
+
+        if (attempt < maxRetries) {
+          await waitForProvisionRetryDelay(attempt);
+          continue;
         }
       }
 

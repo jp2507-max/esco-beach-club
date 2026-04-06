@@ -54,6 +54,14 @@ const rules = {
       update: 'false',
     },
   },
+  pos_bills: {
+    allow: {
+      view: 'false',
+      create: 'false',
+      delete: 'false',
+      update: 'false',
+    },
+  },
   reviews: {
     bind: {
       hasValidRating: 'data.rating >= 1 && data.rating <= 5',
@@ -93,7 +101,8 @@ const rules = {
     bind: {
       isLinkedProfile:
         "auth.id != null && data.id in auth.ref('$user.profile.id')",
-      isOwner: "auth.id != null && auth.id in data.ref('user.id')",
+      isOwner:
+        "auth.id != null && (auth.id == data.id || auth.id in data.ref('user.id'))",
       isOwnerOrLinkedProfile: 'isOwner || isLinkedProfile',
       canSetAuthProviderOnce:
         "!('auth_provider' in request.modifiedFields) || (data.auth_provider == null && newData.auth_provider in ['apple', 'google', 'magic_code'])",
@@ -106,12 +115,12 @@ const rules = {
       onlySafeProfileUpdateFields:
         "request.modifiedFields.all(field, field in ['auth_provider', 'full_name', 'avatar_url', 'has_seen_welcome_voucher', 'bio', 'member_since', 'member_segment', 'nights_left', 'date_of_birth', 'location_permission_status', 'push_notification_permission_status', 'onboarding_completed_at', 'updated_at'])",
       canCreateOwnedProfile:
-        "auth.id != null && auth.id in data.ref('user.id')",
+        "auth.id != null && (auth.id == data.id || auth.id in data.ref('user.id'))",
     },
     allow: {
       view: 'isOwnerOrLinkedProfile',
       create:
-        'canCreateOwnedProfile && onlySafeProfileCreateFields && hasValidProfileCreateValues',
+        "canCreateOwnedProfile && hasValidProfileCreateValues && !('auth_provider' in request.modifiedFields)",
       delete: 'false',
       update:
         'isOwnerOrLinkedProfile && onlySafeProfileUpdateFields && hasValidProfileUpdates',
@@ -121,7 +130,7 @@ const rules = {
     bind: {
       hasPendingStatusOnly: "data.status == 'pending'",
       onlySafeTableReservationFields:
-        "request.modifiedFields.all(field, field in ['created_at', 'entry_key', 'event_id', 'event_title', 'occasion', 'party_size', 'reservation_date', 'reservation_time', 'source', 'status', 'updated_at'])",
+        "request.modifiedFields.all(field, field in ['contact_email', 'created_at', 'entry_key', 'event_id', 'event_title', 'occasion', 'party_size', 'reservation_date', 'reservation_time', 'source', 'special_request', 'status', 'updated_at'])",
     },
     allow: {
       view: "auth.id != null && auth.id in data.ref('owner.id')",

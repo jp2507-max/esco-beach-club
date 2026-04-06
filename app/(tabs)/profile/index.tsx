@@ -294,6 +294,7 @@ function ProfileScreenContent(): React.JSX.Element {
     : Colors.profileOrbSmall;
   return (
     <View
+      collapsable={false}
       className="flex-1"
       style={{ backgroundColor: profileCanvasBg, paddingTop: insets.top }}
     >

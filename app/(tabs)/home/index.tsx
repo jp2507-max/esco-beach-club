@@ -339,6 +339,7 @@ function HomeScreenContent(): React.JSX.Element {
 
   return (
     <View
+      collapsable={false}
       className="flex-1 bg-background dark:bg-dark-bg"
       style={{ paddingTop: insets.top }}
     >

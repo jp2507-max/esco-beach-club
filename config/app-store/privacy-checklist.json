@@ -24,11 +24,7 @@
       "linkedToUser": true,
       "tracking": false,
       "purposes": ["app_functionality"],
-      "evidence": [
-        "$users.email",
-        "profiles.email",
-        "account_deletion_requests.email"
-      ]
+      "evidence": ["$users.email", "account_deletion_requests.email"]
     },
     {
       "type": "name",

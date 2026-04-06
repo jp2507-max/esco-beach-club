@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Appearance, type ColorSchemeName, useColorScheme } from 'react-native';
 
 import { useThemePreferenceStore } from '@/src/stores/theme-preference-store';
@@ -12,26 +12,63 @@ function resolveColorScheme(
   return null;
 }
 
-let lastKnownSystemColorScheme: ResolvedColorScheme =
-  resolveColorScheme(Appearance.getColorScheme()) ?? 'light';
+function getCurrentSystemColorScheme(): ResolvedColorScheme | null {
+  return resolveColorScheme(Appearance.getColorScheme());
+}
+
+let lastKnownSystemColorScheme: ResolvedColorScheme | null = null;
 
 export function useAppIsDark(): boolean {
   const colorScheme = useColorScheme();
   const preference = useThemePreferenceStore((state) => state.preference);
   const resolvedColorScheme = resolveColorScheme(colorScheme);
+  const [resolvedSystemColorScheme, setResolvedSystemColorScheme] =
+    useState<ResolvedColorScheme | null>(() => getCurrentSystemColorScheme());
 
   useEffect(() => {
-    if (preference === 'system' && resolvedColorScheme) {
-      lastKnownSystemColorScheme = resolvedColorScheme;
+    const nextSystemColorScheme = getCurrentSystemColorScheme();
+
+    if (nextSystemColorScheme) {
+      setResolvedSystemColorScheme((currentSystemColorScheme) =>
+        currentSystemColorScheme === nextSystemColorScheme
+          ? currentSystemColorScheme
+          : nextSystemColorScheme
+      );
     }
-  }, [preference, resolvedColorScheme]);
+
+    const subscription = Appearance.addChangeListener(({ colorScheme }) => {
+      const nextResolvedColorScheme = resolveColorScheme(colorScheme);
+      if (!nextResolvedColorScheme) return;
+
+      setResolvedSystemColorScheme((currentSystemColorScheme) =>
+        currentSystemColorScheme === nextResolvedColorScheme
+          ? currentSystemColorScheme
+          : nextResolvedColorScheme
+      );
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (resolvedColorScheme) {
+      lastKnownSystemColorScheme = resolvedColorScheme;
+      return;
+    }
+
+    if (preference === 'system' && resolvedSystemColorScheme) {
+      lastKnownSystemColorScheme = resolvedSystemColorScheme;
+    }
+  }, [preference, resolvedColorScheme, resolvedSystemColorScheme]);
 
   if (preference === 'system') {
     const effectiveScheme =
       resolvedColorScheme ??
-      resolveColorScheme(Appearance.getColorScheme()) ??
+      resolvedSystemColorScheme ??
       lastKnownSystemColorScheme;
-    return effectiveScheme === 'dark';
+    return (effectiveScheme ?? 'light') === 'dark';
   }
 
   return preference === 'dark';

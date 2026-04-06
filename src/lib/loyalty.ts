@@ -80,6 +80,15 @@ export type MemberQrPayload = {
   version: (typeof SUPPORTED_MEMBER_QR_VERSIONS)[number];
 };
 
+export const SUPPORTED_BILL_QR_VERSIONS = ['v1'] as const;
+
+export type BillQrPayload = {
+  posBillId: string;
+  restaurantId: string;
+  signature: string;
+  version: (typeof SUPPORTED_BILL_QR_VERSIONS)[number];
+};
+
 type TierProgressSnapshot = Pick<
   Profile,
   | 'next_tier_key'
@@ -151,6 +160,173 @@ export function parseMemberQrValue(value: string): MemberQrPayload | null {
 
   return {
     memberId,
+    version: supportedVersion,
+  };
+}
+
+function normalizeBillQrVersion(
+  value: unknown
+): BillQrPayload['version'] | null {
+  if (typeof value !== 'string') return null;
+
+  const normalized = value.trim();
+  const supportedVersion = SUPPORTED_BILL_QR_VERSIONS.find(
+    (current) => current === normalized
+  );
+
+  return supportedVersion ?? null;
+}
+
+function normalizeReceiptReference(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+
+  const normalized = value.trim();
+  return normalized ? normalized.toUpperCase() : null;
+}
+
+function normalizeRestaurantId(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+
+  const normalized = value.trim().toUpperCase();
+  if (!/^[A-Z0-9_-]{2,64}$/.test(normalized)) {
+    return null;
+  }
+
+  return normalized;
+}
+
+function normalizePosBillId(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+
+  const normalized = value.trim();
+  if (!/^[A-Za-z0-9._-]{1,128}$/.test(normalized)) {
+    return null;
+  }
+
+  return normalized;
+}
+
+function normalizeBillQrSignature(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+
+  const normalized = value.trim();
+  if (!/^[A-Za-z0-9_-]{16,256}$/.test(normalized)) {
+    return null;
+  }
+
+  return normalized;
+}
+
+function normalizeBillAmountVnd(value: unknown): number | null {
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value) || !Number.isInteger(value) || value <= 0) {
+      return null;
+    }
+
+    return value;
+  }
+
+  if (typeof value !== 'string') return null;
+
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) return null;
+
+  const parsed = Number.parseInt(normalized, 10);
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
+export function buildBillQrSigningPayload(payload: {
+  posBillId: string;
+  restaurantId: string;
+  version?: BillQrPayload['version'];
+}): string {
+  const version = payload.version ?? SUPPORTED_BILL_QR_VERSIONS[0];
+  const restaurantId = normalizeRestaurantId(payload.restaurantId);
+  const posBillId = normalizePosBillId(payload.posBillId);
+
+  if (!restaurantId || !posBillId) return '';
+
+  return `esco:bill:${version}:${restaurantId}:${posBillId}`;
+}
+
+export function buildBillQrValue(payload: {
+  posBillId: string;
+  restaurantId: string;
+  signature: string;
+  version?: BillQrPayload['version'];
+}): string {
+  const signingPayload = buildBillQrSigningPayload(payload);
+  const signature = normalizeBillQrSignature(payload.signature);
+
+  if (!signingPayload || !signature) return '';
+
+  return `${signingPayload}:${signature}`;
+}
+
+function parseBillQrJson(value: string): BillQrPayload | null {
+  let parsed: unknown;
+
+  try {
+    parsed = JSON.parse(value);
+  } catch {
+    return null;
+  }
+
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+    return null;
+  }
+
+  const record = parsed as Record<string, unknown>;
+  const type =
+    typeof record.type === 'string' ? record.type.trim().toLowerCase() : '';
+
+  if (type !== 'esco_bill' && type !== 'esco:bill') return null;
+
+  const version = normalizeBillQrVersion(record.version);
+  const restaurantId = normalizeRestaurantId(record.restaurantId);
+  const posBillId = normalizePosBillId(record.posBillId);
+  const signature = normalizeBillQrSignature(record.signature);
+
+  if (!version || !restaurantId || !posBillId || !signature) {
+    return null;
+  }
+
+  return {
+    posBillId,
+    restaurantId,
+    signature,
+    version,
+  };
+}
+
+export function parseBillQrValue(value: string): BillQrPayload | null {
+  const trimmedValue = value.trim();
+  if (!trimmedValue) return null;
+
+  if (trimmedValue.startsWith('{')) {
+    const parsedJson = parseBillQrJson(trimmedValue);
+    if (parsedJson) return parsedJson;
+  }
+
+  const [prefix, kind, version, ...rest] = trimmedValue.split(':');
+  if (prefix !== 'esco' || kind !== 'bill' || !version || rest.length !== 3) {
+    return null;
+  }
+
+  const supportedVersion = normalizeBillQrVersion(version);
+  if (!supportedVersion) return null;
+
+  const restaurantId = normalizeRestaurantId(rest[0]);
+  const posBillId = normalizePosBillId(rest[1]);
+  const signatureSegment = rest.at(-1);
+  const signature = normalizeBillQrSignature(signatureSegment);
+
+  if (!restaurantId || !posBillId || !signature) return null;
+
+  return {
+    posBillId,
+    restaurantId,
+    signature,
     version: supportedVersion,
   };
 }

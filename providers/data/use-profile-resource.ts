@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ensureProfile } from '@/lib/api';
+import type { Profile } from '@/lib/types';
 import { db } from '@/src/lib/instant';
 import { type InstantRecord, mapProfile } from '@/src/lib/mappers';
 import { captureHandledError } from '@/src/lib/monitoring';
@@ -8,6 +9,7 @@ import { captureHandledError } from '@/src/lib/monitoring';
 import type { ProfileData } from './context';
 
 const MAX_PROFILE_PROVISION_ATTEMPTS = 2;
+const PROFILE_PROVISION_FAILURE_KEY = 'unableToCompleteProfileSetup';
 
 type ProfileResourceParams = {
   authEmail?: string;
@@ -32,12 +34,21 @@ function firstInstantRecord(value: unknown): InstantRecord | null {
   return isInstantRecord(value) ? value : null;
 }
 
+function normalizeProvisionError(error: unknown): Error {
+  if (error instanceof Error) return error;
+  return new Error(PROFILE_PROVISION_FAILURE_KEY);
+}
+
 export function useProfileResource(params: ProfileResourceParams): ProfileData {
   const { authEmail, isAuthLoading, userId } = params;
   const [isProvisioningProfile, setIsProvisioningProfile] =
     useState<boolean>(false);
+  const [profileProvisionError, setProfileProvisionError] =
+    useState<Error | null>(null);
   const isDismissingRef = useRef(false);
   const isProvisioningProfileRef = useRef<Map<string, boolean>>(new Map());
+  const lastResolvedProfileRef = useRef<Profile | null>(null);
+  const lastResolvedProfileUserIdRef = useRef<string>('');
   const latestUserIdRef = useRef<string>(userId);
   latestUserIdRef.current = userId;
   const profileProvisionAttemptsRef = useRef<Map<string, number>>(new Map());
@@ -66,7 +77,7 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
       : null
   );
 
-  const profile = useMemo(() => {
+  const liveProfile = useMemo(() => {
     if (!userId) return null;
 
     const directRecord = firstInstantRecord(profileQuery.data?.profiles);
@@ -79,6 +90,48 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
     return record ? mapProfile(record) : null;
   }, [profileQuery.data, profileViaUserQuery.data, userId]);
 
+  const isProfilePending =
+    isAuthLoading ||
+    profileQuery.isLoading ||
+    profileViaUserQuery.isLoading ||
+    isProvisioningProfile;
+
+  useEffect(() => {
+    if (!userId) {
+      lastResolvedProfileRef.current = null;
+      lastResolvedProfileUserIdRef.current = '';
+      return;
+    }
+
+    if (lastResolvedProfileUserIdRef.current !== userId) {
+      lastResolvedProfileUserIdRef.current = userId;
+      lastResolvedProfileRef.current = liveProfile;
+      return;
+    }
+
+    if (liveProfile) {
+      lastResolvedProfileRef.current = liveProfile;
+      return;
+    }
+
+    if (!isProfilePending) {
+      lastResolvedProfileRef.current = null;
+    }
+  }, [isProfilePending, liveProfile, userId]);
+
+  const profile = useMemo(() => {
+    if (!userId) return null;
+    if (liveProfile) return liveProfile;
+
+    // Keep the last settled profile during transient auth/query gaps so
+    // member-facing UI does not flicker back to guest state mid-session.
+    if (isProfilePending && lastResolvedProfileUserIdRef.current === userId) {
+      return lastResolvedProfileRef.current;
+    }
+
+    return null;
+  }, [isProfilePending, liveProfile, userId]);
+
   useEffect(() => {
     if (isAuthLoading) {
       return;
@@ -88,12 +141,14 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
       profileProvisionAttemptsRef.current.clear();
       isProvisioningProfileRef.current.clear();
       setIsProvisioningProfile(false);
+      setProfileProvisionError(null);
       return;
     }
 
     if (profile) {
       profileProvisionAttemptsRef.current.delete(userId);
       isProvisioningProfileRef.current.delete(userId);
+      setProfileProvisionError(null);
       return;
     }
 
@@ -102,10 +157,14 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
 
     const attemptCount = profileProvisionAttemptsRef.current.get(userId) ?? 0;
     if (attemptCount >= MAX_PROFILE_PROVISION_ATTEMPTS) {
+      if (!profileProvisionError) {
+        setProfileProvisionError(new Error(PROFILE_PROVISION_FAILURE_KEY));
+      }
       return;
     }
 
-    profileProvisionAttemptsRef.current.set(userId, attemptCount + 1);
+    const nextAttempt = attemptCount + 1;
+    profileProvisionAttemptsRef.current.set(userId, nextAttempt);
 
     isProvisioningProfileRef.current.set(userId, true);
     setIsProvisioningProfile(true);
@@ -116,18 +175,29 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
         if (!isMounted) return;
         if (nextProfile) {
           profileProvisionAttemptsRef.current.delete(userId);
+          setProfileProvisionError(null);
+          return;
+        }
+
+        if (nextAttempt >= MAX_PROFILE_PROVISION_ATTEMPTS) {
+          setProfileProvisionError(new Error(PROFILE_PROVISION_FAILURE_KEY));
         }
       })
       .catch((error: unknown) => {
         if (!isMounted) return;
+        const normalizedError = normalizeProvisionError(error);
         captureHandledError(error, {
           tags: {
             area: 'profile',
             operation: 'ensure_profile',
           },
         });
+        if (nextAttempt >= MAX_PROFILE_PROVISION_ATTEMPTS) {
+          setProfileProvisionError(normalizedError);
+        }
         console.error('[DataProvider] Failed to provision profile:', {
           error,
+          nextAttempt,
           isAuthLoading,
           profileQueryLoading: profileQuery.isLoading,
           profileViaUserQueryLoading: profileViaUserQuery.isLoading,
@@ -148,9 +218,51 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
     isAuthLoading,
     profile,
     profileQuery.isLoading,
+    profileProvisionError,
     profileViaUserQuery.isLoading,
     userId,
   ]);
+
+  const retryProfileProvision = useCallback(async (): Promise<void> => {
+    if (!userId || isProvisioningProfileRef.current.get(userId)) return;
+
+    profileProvisionAttemptsRef.current.set(userId, 0);
+    setProfileProvisionError(null);
+    isProvisioningProfileRef.current.set(userId, true);
+    setIsProvisioningProfile(true);
+
+    try {
+      const nextProfile = await ensureProfile({ email: authEmail, userId });
+      if (!nextProfile) {
+        throw new Error(PROFILE_PROVISION_FAILURE_KEY);
+      }
+
+      profileProvisionAttemptsRef.current.delete(userId);
+      setProfileProvisionError(null);
+    } catch (error: unknown) {
+      const normalizedError = normalizeProvisionError(error);
+      setProfileProvisionError(normalizedError);
+
+      captureHandledError(error, {
+        tags: {
+          area: 'profile',
+          operation: 'retry_profile_provision',
+        },
+      });
+
+      if (__DEV__) {
+        console.error('[DataProvider] Profile provisioning retry failed', {
+          error,
+          userId,
+        });
+      }
+    } finally {
+      isProvisioningProfileRef.current.delete(userId);
+      setIsProvisioningProfile(
+        Boolean(isProvisioningProfileRef.current.get(latestUserIdRef.current))
+      );
+    }
+  }, [authEmail, userId]);
 
   const dismissVoucher = useCallback((): void => {
     if (!profile || profile.has_seen_welcome_voucher) return;
@@ -184,19 +296,23 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
     () => ({
       dismissVoucher,
       profile,
+      profileProvisionError,
       profileLoading:
         Boolean(userId) &&
         (profileQuery.isLoading ||
           profileViaUserQuery.isLoading ||
           isProvisioningProfile),
+      retryProfileProvision,
       userId,
     }),
     [
       dismissVoucher,
       isProvisioningProfile,
       profile,
+      profileProvisionError,
       profileQuery.isLoading,
       profileViaUserQuery.isLoading,
+      retryProfileProvision,
       userId,
     ]
   );

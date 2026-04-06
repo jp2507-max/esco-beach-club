@@ -2,24 +2,11 @@ import type { TFunction } from 'i18next';
 
 import { Colors } from '@/constants/colors';
 
-export const FALLBACK_TIME_SLOTS = [
-  { time: '18:00', available: true },
-  { time: '18:30', available: true },
-  { time: '19:00', available: true },
-  { time: '19:30', available: false },
-  { time: '20:00', available: true },
-  { time: '20:30', available: false },
-  { time: '21:00', available: true },
-  { time: '21:30', available: true },
-] as const;
-
-export const FALLBACK_OCCASIONS = [
-  'dateNight',
-  'birthday',
-  'business',
-  'casual',
-  'celebration',
-] as const;
+export const BOOKING_WINDOW_DAYS = 30;
+export const BOOKING_SLOT_START_HOUR = 8;
+export const BOOKING_SLOT_END_HOUR = 23;
+export const BOOKING_SLOT_INTERVAL_MINUTES = 15;
+export const BOOKING_SAME_DAY_BUFFER_MINUTES = 30;
 
 const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
 const MONTH_KEYS = [
@@ -39,12 +26,9 @@ const MONTH_KEYS = [
 
 export type BookingDayKey = (typeof DAY_KEYS)[number];
 export type BookingMonthKey = (typeof MONTH_KEYS)[number];
-export type BookingOccasionKey = (typeof FALLBACK_OCCASIONS)[number];
 export type BookingDayLabelKey = 'today' | BookingDayKey;
-export type BookingOccasionTranslationKey = `occasions.${BookingOccasionKey}`;
 export type BookingDayTranslationKey = `days.${BookingDayLabelKey}`;
 export type BookingMonthTranslationKey = `months.${BookingMonthKey}`;
-type BookingOccasionTranslationKeyFromApi = `occasions.${string}`;
 
 export type SlotColors = {
   backgroundColor: string;
@@ -61,14 +45,18 @@ export type BookingDateOption = {
   dayNameKey: BookingDayKey;
 };
 
-export type ResolvedOccasion = {
-  label: string;
-  value: string;
+export type BookingMonthOption = {
+  key: string;
+  monthIndex: number;
+  monthKey: BookingMonthKey;
+  year: number;
 };
 
-export type ResolvedTimeSlot = {
-  available: boolean;
-  time: string;
+export type BookingCalendarCell = {
+  dateKey: string | null;
+  day: number | null;
+  isSelectable: boolean;
+  isToday: boolean;
 };
 
 export function getSlotColors(params: {
@@ -101,10 +89,13 @@ export function getSlotColors(params: {
   };
 }
 
-export function getNext7Days(baseDate: Date): BookingDateOption[] {
+export function getNextBookingDays(
+  baseDate: Date,
+  totalDays: number = BOOKING_WINDOW_DAYS
+): BookingDateOption[] {
   const days: BookingDateOption[] = [];
 
-  for (let index = 0; index < 7; index += 1) {
+  for (let index = 0; index < totalDays; index += 1) {
     const date = new Date(baseDate);
     date.setDate(baseDate.getDate() + index);
 
@@ -121,16 +112,8 @@ export function getNext7Days(baseDate: Date): BookingDateOption[] {
   return days;
 }
 
-export function getOccasionTranslationKey(
-  value: BookingOccasionKey
-): BookingOccasionTranslationKey {
-  return `occasions.${value}`;
-}
-
-export function isBookingOccasionTranslationKeyFromApi(
-  key: unknown
-): key is BookingOccasionTranslationKeyFromApi {
-  return typeof key === 'string' && key.startsWith('occasions.');
+export function getNext7Days(baseDate: Date): BookingDateOption[] {
+  return getNextBookingDays(baseDate, 7);
 }
 
 export function getDayTranslationKey(
@@ -174,6 +157,131 @@ export function getBookingConfirmationDate(params: {
     ' ' +
     currentDate.day
   );
+}
+
+export function getBookingMonthOptions(
+  dates: readonly BookingDateOption[]
+): BookingMonthOption[] {
+  const monthMap = new Map<string, BookingMonthOption>();
+
+  for (const date of dates) {
+    const year = date.date.getFullYear();
+    const monthIndex = date.date.getMonth();
+    const key = `${year}-${String(monthIndex + 1).padStart(2, '0')}`;
+
+    if (monthMap.has(key)) continue;
+
+    monthMap.set(key, {
+      key,
+      monthIndex,
+      monthKey: MONTH_KEYS[monthIndex],
+      year,
+    });
+  }
+
+  return Array.from(monthMap.values());
+}
+
+export function buildBookingCalendarCells(params: {
+  dateOptions: readonly BookingDateOption[];
+  monthOption: BookingMonthOption;
+  now: Date;
+}): BookingCalendarCell[] {
+  const { dateOptions, monthOption, now } = params;
+  const dateMap = new Map(dateOptions.map((date) => [date.dateKey, date]));
+  const firstDayOfMonth = new Date(monthOption.year, monthOption.monthIndex, 1);
+  const daysInMonth = new Date(
+    monthOption.year,
+    monthOption.monthIndex + 1,
+    0
+  ).getDate();
+  const leadingEmptyCells = firstDayOfMonth.getDay();
+  const todayKey = toLocalDateString(now);
+  const cells: BookingCalendarCell[] = [];
+
+  for (let index = 0; index < leadingEmptyCells; index += 1) {
+    cells.push({
+      dateKey: null,
+      day: null,
+      isSelectable: false,
+      isToday: false,
+    });
+  }
+
+  for (let day = 1; day <= daysInMonth; day += 1) {
+    const date = new Date(monthOption.year, monthOption.monthIndex, day);
+    const dateKey = toLocalDateString(date);
+    const option = dateMap.get(dateKey);
+
+    cells.push({
+      dateKey,
+      day,
+      isSelectable: option !== undefined,
+      isToday: dateKey === todayKey,
+    });
+  }
+
+  return cells;
+}
+
+export function getBookableTimeSlots(params: {
+  now: Date;
+  selectedDateKey: string;
+  bufferMinutes?: number;
+  intervalMinutes?: number;
+  startHour?: number;
+  endHour?: number;
+}): string[] {
+  const {
+    now,
+    selectedDateKey,
+    bufferMinutes = BOOKING_SAME_DAY_BUFFER_MINUTES,
+    endHour = BOOKING_SLOT_END_HOUR,
+    intervalMinutes = BOOKING_SLOT_INTERVAL_MINUTES,
+    startHour = BOOKING_SLOT_START_HOUR,
+  } = params;
+
+  if (!Number.isFinite(intervalMinutes) || intervalMinutes <= 0) return [];
+
+  const startMinutes = startHour * 60;
+  const endMinutes = endHour * 60;
+  let minimumMinutes = startMinutes;
+  const safeBufferMinutes = Number.isFinite(bufferMinutes) ? bufferMinutes : 0;
+
+  if (selectedDateKey === toLocalDateString(now)) {
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+    minimumMinutes = Math.max(
+      startMinutes,
+      roundMinutesUpToInterval(nowMinutes + safeBufferMinutes, intervalMinutes)
+    );
+  }
+
+  if (minimumMinutes > endMinutes) return [];
+
+  const slots: string[] = [];
+  for (
+    let totalMinutes = minimumMinutes;
+    totalMinutes <= endMinutes;
+    totalMinutes += intervalMinutes
+  ) {
+    slots.push(formatMinutesAsTime(totalMinutes));
+  }
+
+  return slots;
+}
+
+function roundMinutesUpToInterval(
+  totalMinutes: number,
+  interval: number
+): number {
+  if (interval <= 1) return totalMinutes;
+  return Math.ceil(totalMinutes / interval) * interval;
+}
+
+function formatMinutesAsTime(totalMinutes: number): string {
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 }
 
 function getBookingDateOptionFromKey(

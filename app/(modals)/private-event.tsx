@@ -28,6 +28,10 @@ import {
   useBookingContentData,
   useUserId,
 } from '@/providers/DataProvider';
+import {
+  BookingContactActions,
+  BookingContactInlineLinks,
+} from '@/src/components/booking/booking-contact-actions';
 import { Button, ModalHeader } from '@/src/components/ui';
 import { motion, withRM } from '@/src/lib/animations/motion';
 import { ControlledTextInput } from '@/src/lib/forms/controlled-text-input';
@@ -590,6 +594,8 @@ function PrivateEventScreenContent(): React.JSX.Element {
                 testID="email-input"
               />
 
+              <BookingContactInlineLinks />
+
               <ControlledTextInput<PrivateEventFormInput>
                 className="min-h-15"
                 containerClassName="min-h-[100px] items-start pt-[14px]"
@@ -625,7 +631,10 @@ function PrivateEventScreenContent(): React.JSX.Element {
               </Text>
             </>
           ) : (
-            <Animated.View className="items-center pt-15" style={successStyle}>
+            <Animated.View
+              className="w-full items-center pt-15"
+              style={successStyle}
+            >
               <Text className="mb-5 text-[64px]">🎊</Text>
               <Text className="mb-2.5 text-[28px] font-extrabold text-text dark:text-text-primary-dark">
                 {t('privateEvent.inquirySent')}
@@ -633,6 +642,15 @@ function PrivateEventScreenContent(): React.JSX.Element {
               <Text className="mb-9 px-5 text-center text-[15px] leading-5.5 text-text-secondary dark:text-text-secondary-dark">
                 {t('privateEvent.inquirySentMessage')}
               </Text>
+
+              <Text className="mb-4 px-5 text-center text-sm leading-5 text-text-muted dark:text-text-muted-dark">
+                {t('bookingContact.chatPrompt')}
+              </Text>
+
+              <View className="mb-8 w-full px-5">
+                <BookingContactActions />
+              </View>
+
               <Button
                 className="px-12"
                 onPress={() => router.back()}

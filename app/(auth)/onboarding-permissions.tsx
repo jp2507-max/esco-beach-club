@@ -18,6 +18,7 @@ import { InfoDot } from '@/src/components/ui';
 import { motion, withRM } from '@/src/lib/animations/motion';
 import { useButtonPress } from '@/src/lib/animations/use-button-press';
 import { hapticLight, hapticSuccess } from '@/src/lib/haptics/haptics';
+import { toOnboardingPermissionStatus } from '@/src/lib/mappers';
 import { ensureVenueUpsellNotificationChannel } from '@/src/lib/notifications';
 import { shadows } from '@/src/lib/styles/shadows';
 import {
@@ -40,17 +41,35 @@ type OnboardingPermissionsSearchParams = {
 function mapExpoPermissionStatus(
   status: string | null | undefined
 ): OnboardingPermissionStatus {
-  const normalized = status?.trim().toLowerCase();
+  return toOnboardingPermissionStatus(status);
+}
 
-  if (normalized === 'granted') {
+function mapPushPermissionStatus(
+  permission: Notifications.NotificationPermissionsStatus
+): OnboardingPermissionStatus {
+  const iosStatus = permission.ios?.status;
+
+  if (iosStatus === Notifications.IosAuthorizationStatus.AUTHORIZED) {
     return onboardingPermissionStatuses.granted;
   }
 
-  if (normalized === 'denied') {
+  if (iosStatus === Notifications.IosAuthorizationStatus.PROVISIONAL) {
+    return onboardingPermissionStatuses.granted;
+  }
+
+  if (iosStatus === Notifications.IosAuthorizationStatus.EPHEMERAL) {
+    return onboardingPermissionStatuses.granted;
+  }
+
+  if (iosStatus === Notifications.IosAuthorizationStatus.DENIED) {
     return onboardingPermissionStatuses.denied;
   }
 
-  return onboardingPermissionStatuses.undetermined;
+  if (iosStatus === Notifications.IosAuthorizationStatus.NOT_DETERMINED) {
+    return onboardingPermissionStatuses.undetermined;
+  }
+
+  return mapExpoPermissionStatus(permission.status);
 }
 
 const TITLE_DELAY = 80;
@@ -100,7 +119,7 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
         setLocationStatus(
           mapExpoPermissionStatus(foregroundLocationPermission.status)
         );
-        setPushStatus(mapExpoPermissionStatus(notificationsPermission.status));
+        setPushStatus(mapPushPermissionStatus(notificationsPermission));
       } catch {
         // Keep the search-param defaults when the current device state
         // cannot be read yet.
@@ -114,6 +133,23 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
 
   function showInfoAlert(title: string, message: string): void {
     Alert.alert(title, message);
+  }
+
+  function showPushSettingsFallbackAlert(): void {
+    Alert.alert(
+      t('onboardingPermissionsErrorTitle'),
+      t('onboardingPermissionsErrorMessage'),
+      [
+        {
+          text: t('onboardingPermissionsNotNow'),
+          style: 'cancel',
+        },
+        {
+          text: t('onboardingPermissionsOpenSettings'),
+          onPress: () => void Linking.openSettings(),
+        },
+      ]
+    );
   }
 
   const baseParams = React.useMemo(
@@ -245,25 +281,62 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
     try {
       await ensureVenueUpsellNotificationChannel();
       const currentPermission = await Notifications.getPermissionsAsync();
+      const currentPushStatus = mapPushPermissionStatus(currentPermission);
 
-      if (currentPermission.status === 'granted') {
-        setPushStatus(onboardingPermissionStatuses.granted);
+      if (__DEV__) {
+        console.info('[OnboardingPermissions] Current push permission:', {
+          canAskAgain: currentPermission.canAskAgain,
+          granted: currentPermission.granted,
+          iosStatus: currentPermission.ios?.status,
+          status: currentPermission.status,
+        });
+      }
+
+      setPushStatus(currentPushStatus);
+
+      if (currentPushStatus === onboardingPermissionStatuses.granted) {
         hapticSuccess();
         return;
       }
 
-      const requestedPermission = await Notifications.requestPermissionsAsync({
-        ios: {
-          allowAlert: true,
-          allowBadge: true,
-          allowSound: true,
-        },
-      });
+      if (!currentPermission.canAskAgain) {
+        setPushStatus(onboardingPermissionStatuses.denied);
+        showPushSettingsFallbackAlert();
+        return;
+      }
 
-      const mappedPush = mapExpoPermissionStatus(requestedPermission.status);
+      await Notifications.requestPermissionsAsync();
+
+      const refreshedPermission = await Notifications.getPermissionsAsync();
+
+      if (__DEV__) {
+        console.info('[OnboardingPermissions] Refreshed push permission:', {
+          canAskAgain: refreshedPermission.canAskAgain,
+          granted: refreshedPermission.granted,
+          iosStatus: refreshedPermission.ios?.status,
+          status: refreshedPermission.status,
+        });
+      }
+
+      const mappedPush = mapPushPermissionStatus(refreshedPermission);
+
+      if (
+        mappedPush === onboardingPermissionStatuses.undetermined &&
+        !refreshedPermission.canAskAgain
+      ) {
+        setPushStatus(onboardingPermissionStatuses.denied);
+        showPushSettingsFallbackAlert();
+        return;
+      }
+
       setPushStatus(mappedPush);
       if (mappedPush === onboardingPermissionStatuses.granted) {
         hapticSuccess();
+        return;
+      }
+
+      if (mappedPush === onboardingPermissionStatuses.undetermined) {
+        showPushSettingsFallbackAlert();
       }
     } catch {
       Alert.alert(

@@ -46,12 +46,39 @@ const booking = {
   dateLabel: '{{weekday}}, {{month}} {{day}}',
   selectDateHint: 'Selects this day for your table reservation',
   selectTimeHint: 'Selects this time slot when available',
+  monthYearLabel: '{{month}} {{year}}',
+  previousMonth: 'Previous month',
+  previousMonthHint: 'Shows the previous month in the booking calendar',
+  nextMonth: 'Next month',
+  nextMonthHint: 'Shows the next month in the booking calendar',
+  calendarDateLabel: 'Select day {{date}}',
+  openTimePickerHint: 'Opens time picker with 15-minute slots',
+  openTimePickerLabel:
+    'Pick a reservation time for {{date}}. Current selection: {{time}}',
+  noTimeSelected: 'No time selected',
+  timePickerPlaceholder: 'Select a time',
+  timePickerHint:
+    'Available booking slots from {{start}} to {{end}} in 15-minute intervals.',
+  timePickerDismissHint: 'Closes the time picker',
+  noBookableTimes:
+    'No bookable times are left for this date. Please choose another date.',
+  contactEmailTitle: 'Contact Email',
+  contactEmailHint:
+    'Enter the email we should use to confirm your reservation request',
+  contactEmailPlaceholder: 'you@example.com',
+  contactEmailRequired: 'Please enter a valid contact email to continue.',
+  specialRequestTitle: 'Special Request',
+  specialRequestHint: 'Add optional notes for your table request',
+  specialRequestPlaceholder:
+    'Tell us any seating preferences or special details',
+  selectTimeRequired: 'Please select a booking time before confirming.',
   available: 'Available',
   full: 'Full',
-  confirmationMessage: 'Your table is reserved for {{date}} at {{time}}.',
+  followUpMessage:
+    'We received your reservation request for {{date}} at {{time}}. You will receive confirmation within one hour.',
   reservationFailedTitle: 'Reservation Failed',
   reservationFailedMessage:
-    'Could not confirm your reservation right now. Please try again.',
+    'Could not submit your reservation request right now. Please try again.',
 } as const;
 
 export default booking;

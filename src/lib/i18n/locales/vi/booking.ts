@@ -46,12 +46,38 @@ const booking = {
   dateLabel: '{{weekday}}, ngày {{day}} {{month}}',
   selectDateHint: 'Chọn ngày này cho đặt bàn của bạn',
   selectTimeHint: 'Chọn khung giờ này khi còn chỗ',
+  monthYearLabel: '{{month}} {{year}}',
+  previousMonth: 'Tháng trước',
+  previousMonthHint: 'Hiển thị tháng trước trong lịch đặt bàn',
+  nextMonth: 'Tháng sau',
+  nextMonthHint: 'Hiển thị tháng sau trong lịch đặt bàn',
+  calendarDateLabel: 'Chọn ngày {{date}}',
+  openTimePickerHint: 'Mở bộ chọn giờ với các khung 15 phút',
+  openTimePickerLabel:
+    'Chọn giờ đặt bàn cho {{date}}. Lựa chọn hiện tại: {{time}}',
+  noTimeSelected: 'Chưa chọn giờ',
+  timePickerPlaceholder: 'Chọn giờ',
+  timePickerHint:
+    'Khung giờ đặt bàn từ {{start}} đến {{end}}, chia theo mỗi 15 phút.',
+  timePickerDismissHint: 'Đóng bộ chọn giờ',
+  noBookableTimes:
+    'Không còn khung giờ khả dụng cho ngày này. Vui lòng chọn ngày khác.',
+  contactEmailTitle: 'Email liên hệ',
+  contactEmailHint: 'Nhập email để chúng tôi xác nhận yêu cầu đặt bàn',
+  contactEmailPlaceholder: 'you@example.com',
+  contactEmailRequired: 'Vui lòng nhập email liên hệ hợp lệ để tiếp tục.',
+  specialRequestTitle: 'Yêu cầu đặc biệt',
+  specialRequestHint: 'Thêm ghi chú tùy chọn cho yêu cầu đặt bàn của bạn',
+  specialRequestPlaceholder:
+    'Cho chúng tôi biết vị trí ngồi mong muốn hoặc chi tiết đặc biệt',
+  selectTimeRequired: 'Vui lòng chọn giờ đặt bàn trước khi xác nhận.',
   available: 'Còn chỗ',
   full: 'Đầy',
-  confirmationMessage: 'Bàn của bạn đã được đặt vào {{date}} lúc {{time}}.',
+  followUpMessage:
+    'Chúng tôi đã nhận yêu cầu đặt bàn của bạn cho {{date}} lúc {{time}}. Bạn sẽ nhận được xác nhận trong vòng một giờ.',
   reservationFailedTitle: 'Đặt chỗ thất bại',
   reservationFailedMessage:
-    'Hiện không thể xác nhận đặt chỗ của bạn. Vui lòng thử lại.',
+    'Hiện không thể gửi yêu cầu đặt chỗ của bạn. Vui lòng thử lại.',
 } as const;
 
 export default booking;

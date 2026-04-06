@@ -50,13 +50,37 @@ const common = {
   bookingSuccess: {
     backHome: '홈으로 돌아가기',
     guest: '게스트',
-    subtitle: '예약이 확인되었습니다.',
+    subtitle:
+      '예약 요청이 접수되었습니다. 1시간 이내에 확인 안내를 보내드리겠습니다.',
     title: '{{name}}님, 준비가 완료되었습니다!',
+  },
+  bookingContact: {
+    chatPrompt:
+      '더 빠른 답변이 필요하면 Instagram 또는 Facebook에서 바로 채팅해 주세요.',
+    inlinePrompt: '지금 바로 문의가 필요하신가요?',
+    instagramInlineCta: 'Instagram으로 문의하기',
+    facebookInlineCta: 'Facebook으로 문의하기',
+    emailInlineCta: '또는 이메일 보내기',
+    emailButton: '이메일 보내기',
+    emailHint: '예약팀에 연락할 수 있도록 메일 앱을 엽니다',
+    instagramButton: 'Instagram',
+    instagramHint: '직접 채팅을 위해 Instagram 페이지를 엽니다',
+    facebookButton: 'Facebook',
+    facebookHint: '직접 채팅을 위해 Facebook 페이지를 엽니다',
+    openLinkError: '지금은 이 연락 수단을 열 수 없습니다.',
   },
   appError: {
     title: '예기치 않은 문제가 발생했습니다',
     description:
       '앱을 다시 열거나 잠시 후 다시 시도해 주세요. 팀에서 이미 확인할 수 있도록 기록했습니다.',
+  },
+  launch: {
+    eyebrow: '멤버 시작',
+    loading: '클럽 이용 권한, 혜택, 최신 소식을 준비하고 있습니다.',
+  },
+  searchInput: {
+    clearLabel: '검색 지우기',
+    clearHint: '현재 검색어를 지웁니다',
   },
   menu: '메뉴',
   privateEvent: {
@@ -88,20 +112,21 @@ const common = {
     additionalNotes: '추가 요청사항',
     additionalNotesPlaceholder: '테마, 식이 요구사항, 특별 요청사항...',
     sendInquiry: '문의 보내기',
-    teamResponse: '24시간 이내에 연락드리겠습니다.',
+    teamResponse: '1시간 이내에 이메일로 확인 안내를 보내드리겠습니다.',
     submissionFailed: '제출 실패',
     submitError: '지금은 문의를 보낼 수 없습니다.',
     missingInfo: '정보 누락',
     missingInfoMessage: '이벤트 유형, 날짜, 예상 인원을 입력해 주세요.',
     inquirySent: '문의가 전송되었습니다!',
     inquirySentMessage:
-      '이벤트 팀이 요청을 검토하고 24시간 이내에 연락드립니다. 잊지 못할 이벤트를 준비하세요!',
+      '요청이 접수되었습니다. 1시간 이내에 이메일로 확인 안내를 보내드리겠습니다.',
     backToEvents: '이벤트로 돌아가기',
   },
   tabs: {
     home: '홈',
     events: '이벤트',
     qr: 'QR',
+    scan: '스캔',
     perks: '혜택',
     profile: '프로필',
   },

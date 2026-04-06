@@ -50,6 +50,12 @@ export const config = {
     conciergeBase: process.env.EXPO_PUBLIC_CONCIERGE_PHONE
       ? `https://wa.me/${process.env.EXPO_PUBLIC_CONCIERGE_PHONE}`
       : null,
+    facebookUrl:
+      process.env.EXPO_PUBLIC_FACEBOOK_URL?.trim() ||
+      'https://www.facebook.com/escobeachdanang/',
+    instagramUrl:
+      process.env.EXPO_PUBLIC_INSTAGRAM_URL?.trim() ||
+      'https://www.instagram.com/escobeachdanang/',
     supportEmail:
       process.env.EXPO_PUBLIC_SUPPORT_EMAIL?.trim() ||
       'booking@escobeach-danang.com',

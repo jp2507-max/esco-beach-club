@@ -1,7 +1,6 @@
 import { ArrowLeft } from 'lucide-react-native';
 import { type ReactNode, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useColorScheme } from 'react-native';
 import {
   FadeIn,
   FadeInUp,
@@ -14,6 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
 import { motion, withRM } from '@/src/lib/animations/motion';
+import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
 import { Pressable, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 
@@ -71,8 +71,7 @@ export function OnboardingHeader({
   const { t } = useTranslation('auth');
   const { t: tCommon } = useTranslation('common');
   const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const isDark = useAppIsDark();
 
   return (
     <View className="px-5 pb-3" style={{ paddingTop: insets.top + 6 }}>

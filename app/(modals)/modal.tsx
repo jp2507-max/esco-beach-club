@@ -17,7 +17,7 @@ export default function ModalScreen(): React.JSX.Element {
         className="absolute inset-0 bg-black/50"
         onPress={() => router.back()}
       />
-      <View className="relative z-10 mx-5 min-w-[300px] items-center rounded-[20px] bg-card p-6 dark:bg-dark-bg-card">
+      <View className="relative z-10 mx-5 min-w-75 items-center rounded-[20px] bg-card p-6 dark:bg-dark-bg-card">
         <Text className="mb-4 text-xl font-bold text-text dark:text-text-primary-dark">
           {t('modal.title')}
         </Text>
@@ -26,7 +26,7 @@ export default function ModalScreen(): React.JSX.Element {
         </Text>
         <Pressable
           accessibilityRole="button"
-          className="min-w-[100px] rounded-xl bg-primary px-6 py-3"
+          className="min-w-25 rounded-xl bg-primary px-6 py-3"
           onPress={() => router.back()}
         >
           <Text className="text-center font-semibold text-white">

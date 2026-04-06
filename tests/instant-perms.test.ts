@@ -25,6 +25,29 @@ describe('profiles permissions', () => {
     expect(rules.profiles.allow.view).toBe('isOwnerOrLinkedProfile');
     expect(rules.reward_transactions.allow.view).toBe('isMemberOwner');
   });
+
+  test('creates profiles only for the authenticated user id', () => {
+    expect(rules.profiles.bind.canCreateOwnedProfile).toContain(
+      'auth.id == data.id'
+    );
+    expect(rules.profiles.bind.canCreateOwnedProfile).toContain(
+      "auth.id in data.ref('user.id')"
+    );
+    expect(rules.profiles.allow.create).toContain('canCreateOwnedProfile');
+    expect(rules.profiles.allow.create).toContain(
+      'hasValidProfileCreateValues'
+    );
+    expect(rules.profiles.allow.create).not.toContain(
+      'onlySafeProfileCreateFields'
+    );
+  });
+
+  test('keeps owner checks compatible with linked and deterministic profile ids', () => {
+    expect(rules.profiles.bind.isOwner).toContain('auth.id == data.id');
+    expect(rules.profiles.bind.isOwner).toContain(
+      "auth.id in data.ref('user.id')"
+    );
+  });
 });
 
 describe('owner-scoped create permissions', () => {

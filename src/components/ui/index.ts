@@ -11,6 +11,8 @@ export { MemberQrAccessCard } from './member-qr-access-card';
 export { MemberQrCode } from './member-qr-code';
 export { ModalHeader } from './modal-header';
 export { ProfileSubScreenHeader } from './profile-sub-screen-header';
+export { ScreenHeader } from './screen-header';
+export { SearchInput } from './search-input';
 export { SectionHeader } from './section-header';
 export {
   Skeleton,

@@ -37,6 +37,72 @@ const profile = {
   accessPass: 'ACCESS PASS',
   scanAtTable: 'Scan at checkout to link your member ID',
   refPrefix: 'Ref: {{memberId}}',
+  billScanner: {
+    balanceLabel: 'Points',
+    cameraPermissionDescription:
+      'Allow camera access so your bill QR can be scanned the moment this tab opens.',
+    cameraPermissionTitle: 'Camera access unlocks instant points',
+    errorEyebrow: 'Try another scan',
+    errorTitle: 'That bill QR could not be processed',
+    eyebrow: 'LIVE REWARD SCAN',
+    fallbackCta: 'Show my member QR instead',
+    fallbackDescription:
+      'Use your member QR only if the venue still needs to link points manually.',
+    fallbackEyebrow: 'Fallback access',
+    fallbackHint: 'Opens your member QR card as a fallback',
+    fallbackTitle: 'Member QR fallback',
+    frameHint: 'Place the bill QR inside the frame',
+    grantPermission: 'Enable camera',
+    grantPermissionHint:
+      'Requests camera access, or opens settings if access was previously denied',
+    liveBadge: 'Scanner live',
+    loadingDescription:
+      'Preparing the camera and your reward scanner settings.',
+    loadingTitle: 'Starting the scanner',
+    memberQrUnavailable: 'Your member QR is unavailable right now.',
+    permissionEyebrow: 'Camera required',
+    pointsRuleLabel: 'Earn rate',
+    pointsRuleValue: '{{points}} pt / {{amount}}',
+    processingDescription:
+      'Hold steady while we validate the bill and update your balance.',
+    processingEyebrow: 'Verifying bill',
+    processingTitle: 'Adding points to your account',
+    readyDescription:
+      'The scanner is already live. Aim at the QR printed on the bill to claim your points.',
+    readyTitle: 'Scan the bill QR to earn points',
+    scanAgain: 'Scan another bill',
+    scanAgainHint: 'Resets the scanner so you can scan another bill',
+    securityNote:
+      'Each receipt reference can only be claimed once for your account.',
+    subtitle:
+      'This tab now opens straight into the camera so members can claim bill points themselves.',
+    successDescription:
+      '{{amount}} from bill {{reference}} has been posted to your reward balance.',
+    successEyebrow: 'Points added',
+    successTitle: '{{points}} points secured',
+    title: 'Scan the bill. Keep the points.',
+    errors: {
+      billBelowMinimumSpend:
+        'This bill does not meet the minimum spend threshold for points.',
+      billNotPaid:
+        'This bill is not marked as paid yet. Please settle it first and retry.',
+      billNotSynced:
+        'This bill has not synced from the restaurant POS yet. Please retry in a few seconds.',
+      generic:
+        'Something went wrong while processing this bill. Please try again.',
+      invalidBillQr: 'This QR code is not a valid Esco bill code.',
+      invalidRewardServiceResponse:
+        'The reward service returned an invalid response. Please try again.',
+      networkUnavailable:
+        'Could not reach the reward service. Check your connection and try again.',
+      receiptAlreadyClaimed:
+        'This receipt has already been used to claim points.',
+      rewardServiceUnavailable:
+        'The reward service is currently unavailable. Please try again shortly.',
+      sessionExpired:
+        'Your secure session expired. Please sign in again and retry.',
+    },
+  },
   earned: 'POINTS EARNED',
   saved: 'SAVED',
   profileDetails: 'Profile details',
