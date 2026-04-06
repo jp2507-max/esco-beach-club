@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 
-import { onboardingPermissionStatuses } from '../lib/types';
-import { toOnboardingPermissionStatus } from '../src/lib/mappers/shared';
+import { onboardingPermissionStatuses } from '@/lib/types';
+import { toOnboardingPermissionStatus } from '@/src/lib/mappers/shared';
 
 describe('toOnboardingPermissionStatus', () => {
   test('normalizes whitespace and mixed casing', () => {

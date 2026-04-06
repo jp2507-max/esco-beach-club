@@ -88,6 +88,8 @@ const profile = {
         'This bill is not marked as paid yet. Please settle it first and retry.',
       billNotSynced:
         'This bill has not synced from the restaurant POS yet. Please retry in a few seconds.',
+      billDataCorrupt:
+        'This bill record could not be read correctly. Please ask staff to verify the receipt or try again shortly.',
       generic:
         'Something went wrong while processing this bill. Please try again.',
       invalidBillQr: 'This QR code is not a valid Esco bill code.',

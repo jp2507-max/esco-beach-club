@@ -13,7 +13,7 @@ import {
   Sparkles,
   X,
 } from 'lucide-react-native';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Linking,
@@ -51,6 +51,7 @@ import {
 } from '@/src/lib/loyalty';
 import { captureHandledError } from '@/src/lib/monitoring';
 import { getTierQrGradient } from '@/src/lib/profile/membership-screen';
+import { tryAcquireScanLock } from '@/src/lib/rewards/scan-lock';
 import { postClaimRewardBill } from '@/src/lib/reward-claim-api';
 import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
 import { Pressable, Text, View } from '@/src/tw';
@@ -71,6 +72,7 @@ type ScanFeedback =
 
 type ScanErrorMessageKey =
   | 'billScanner.errors.billBelowMinimumSpend'
+  | 'billScanner.errors.billDataCorrupt'
   | 'billScanner.errors.billNotPaid'
   | 'billScanner.errors.billNotSynced'
   | 'billScanner.errors.invalidRewardServiceResponse'
@@ -100,6 +102,9 @@ function resolveScanErrorKey(
   if (code === 'bill_not_synced') {
     return 'billScanner.errors.billNotSynced';
   }
+  if (code === 'bill_data_corrupt') {
+    return 'billScanner.errors.billDataCorrupt';
+  }
   if (code === 'invalidRewardServiceResponse') {
     return 'billScanner.errors.invalidRewardServiceResponse';
   }
@@ -124,6 +129,9 @@ function resolveScanErrorKey(
   if (reason === 'network' || reason === 'no_endpoint') {
     return 'billScanner.errors.networkUnavailable';
   }
+  if (reason === 'parse_error') {
+    return 'billScanner.errors.invalidRewardServiceResponse';
+  }
 
   return 'billScanner.errors.generic';
 }
@@ -141,6 +149,7 @@ export default function QrTabScreen(): React.JSX.Element {
   const [scanFeedback, setScanFeedback] = useState<ScanFeedback>(null);
   const [isMemberCardOpen, setIsMemberCardOpen] = useState(false);
   const [isScanLocked, setIsScanLocked] = useState(false);
+  const scanLockRef = useRef(false);
 
   const frameSize = useMemo((): number => {
     const nextSize = Math.floor(width - 56);
@@ -259,16 +268,6 @@ export default function QrTabScreen(): React.JSX.Element {
         return;
       }
 
-      const parsedBillQr = parseBillQrValue(qrData);
-      if (!parsedBillQr) {
-        hapticError();
-        setScanFeedback({
-          messageKey: 'billScanner.errors.invalidBillQr',
-          type: 'error',
-        });
-        return;
-      }
-
       hapticError();
       setScanFeedback({
         messageKey: resolveScanErrorKey(result.code, result.reason),
@@ -299,23 +298,28 @@ export default function QrTabScreen(): React.JSX.Element {
 
   /* ── Handlers ── */
 
+  function setScannerLock(isLocked: boolean): void {
+    scanLockRef.current = isLocked;
+    setIsScanLocked(isLocked);
+  }
+
   function handleOpenMemberCard(): void {
     hapticLight();
     setIsMemberCardOpen(true);
-    setIsScanLocked(true);
+    setScannerLock(true);
   }
 
   function handleCloseMemberCard(): void {
     setIsMemberCardOpen(false);
     if (!scanFeedback) {
-      setIsScanLocked(false);
+      setScannerLock(false);
     }
   }
 
   function resetScanner(): void {
     hapticLight();
     setScanFeedback(null);
-    setIsScanLocked(false);
+    setScannerLock(false);
   }
 
   function handlePermissionCta(): void {
@@ -329,10 +333,12 @@ export default function QrTabScreen(): React.JSX.Element {
 
   function handleBarcodeScanned(event: BarcodeScanningResult): void {
     if (isScanLocked || claimMutation.isPending) return;
+    if (!tryAcquireScanLock(scanLockRef)) return;
+
+    setIsScanLocked(true);
 
     const scannedData = event.data.trim();
     const parsedBillQr = parseBillQrValue(scannedData);
-    setIsScanLocked(true);
 
     if (!parsedBillQr) {
       hapticError();

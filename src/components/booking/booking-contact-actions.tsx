@@ -10,22 +10,24 @@ import { config } from '@/src/lib/config';
 import { hapticLight } from '@/src/lib/haptics/haptics';
 import { Pressable, Text, View } from '@/src/tw';
 
+function openContactUrl(
+  url: string,
+  errorMessage: string,
+  logPrefix: string
+): void {
+  hapticLight();
+  Linking.openURL(url).catch((error: unknown) => {
+    console.error(`[${logPrefix}] Failed to open contact URL:`, error);
+    Alert.alert(errorMessage);
+  });
+}
+
 export function BookingContactActions(): React.JSX.Element {
   const { t } = useTranslation('common');
   const isDark = useColorScheme() === 'dark';
 
   const iconColor = isDark ? Colors.textPrimaryDark : Colors.text;
-
-  function openContactUrl(url: string): void {
-    hapticLight();
-    Linking.openURL(url).catch((error: unknown) => {
-      console.error(
-        '[BookingContactActions] Failed to open contact URL:',
-        error
-      );
-      Alert.alert(t('bookingContact.openLinkError'));
-    });
-  }
+  const openLinkError = t('bookingContact.openLinkError');
 
   return (
     <View className="w-full gap-2.5">
@@ -34,7 +36,13 @@ export function BookingContactActions(): React.JSX.Element {
         accessibilityLabel={t('bookingContact.emailButton')}
         className="w-full"
         leftIcon={<Mail color={iconColor} size={18} />}
-        onPress={() => openContactUrl(`mailto:${config.contact.supportEmail}`)}
+        onPress={() =>
+          openContactUrl(
+            `mailto:${config.contact.supportEmail}`,
+            openLinkError,
+            'BookingContactActions'
+          )
+        }
         testID="booking-contact-email-action"
         variant="outline"
       >
@@ -47,7 +55,13 @@ export function BookingContactActions(): React.JSX.Element {
           accessibilityLabel={t('bookingContact.instagramButton')}
           className="flex-1"
           leftIcon={<Instagram color={iconColor} size={18} />}
-          onPress={() => openContactUrl(config.contact.instagramUrl)}
+          onPress={() =>
+            openContactUrl(
+              config.contact.instagramUrl,
+              openLinkError,
+              'BookingContactActions'
+            )
+          }
           testID="booking-contact-instagram"
           variant="outline"
         >
@@ -59,7 +73,13 @@ export function BookingContactActions(): React.JSX.Element {
           accessibilityLabel={t('bookingContact.facebookButton')}
           className="flex-1"
           leftIcon={<Facebook color={iconColor} size={18} />}
-          onPress={() => openContactUrl(config.contact.facebookUrl)}
+          onPress={() =>
+            openContactUrl(
+              config.contact.facebookUrl,
+              openLinkError,
+              'BookingContactActions'
+            )
+          }
           testID="booking-contact-facebook"
           variant="outline"
         >
@@ -72,17 +92,7 @@ export function BookingContactActions(): React.JSX.Element {
 
 export function BookingContactInlineLinks(): React.JSX.Element {
   const { t } = useTranslation('common');
-
-  function openContactUrl(url: string): void {
-    hapticLight();
-    Linking.openURL(url).catch((error: unknown) => {
-      console.error(
-        '[BookingContactInlineLinks] Failed to open contact URL:',
-        error
-      );
-      Alert.alert(t('bookingContact.openLinkError'));
-    });
-  }
+  const openLinkError = t('bookingContact.openLinkError');
 
   return (
     <View className="mb-3 mt-2">
@@ -96,11 +106,17 @@ export function BookingContactInlineLinks(): React.JSX.Element {
           accessibilityHint={t('bookingContact.instagramHint')}
           accessibilityLabel={t('bookingContact.instagramInlineCta')}
           className="w-full overflow-hidden rounded-full active:opacity-90"
-          onPress={() => openContactUrl(config.contact.instagramUrl)}
+          onPress={() =>
+            openContactUrl(
+              config.contact.instagramUrl,
+              openLinkError,
+              'BookingContactInlineLinks'
+            )
+          }
           testID="booking-inline-instagram"
         >
           <LinearGradient
-            colors={[...Colors.brandInstagramGradient]}
+            colors={Colors.brandInstagramGradient}
             end={{ x: 1, y: 0.5 }}
             start={{ x: 0, y: 0.5 }}
             style={{ width: '100%' }}
@@ -123,7 +139,13 @@ export function BookingContactInlineLinks(): React.JSX.Element {
           accessibilityLabel={t('bookingContact.facebookInlineCta')}
           className="min-h-11 w-full flex-row items-center justify-center rounded-full px-3 py-2.5 active:opacity-90"
           style={{ backgroundColor: Colors.brandFacebookBlue }}
-          onPress={() => openContactUrl(config.contact.facebookUrl)}
+          onPress={() =>
+            openContactUrl(
+              config.contact.facebookUrl,
+              openLinkError,
+              'BookingContactInlineLinks'
+            )
+          }
           testID="booking-inline-facebook"
         >
           <Facebook color={Colors.white} size={18} />

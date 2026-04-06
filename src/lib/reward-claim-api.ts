@@ -49,7 +49,7 @@ export async function postClaimRewardBill(params: {
       if (!parsed) {
         return {
           ok: false,
-          reason: 'http_error',
+          reason: 'parse_error',
           status: response.status,
           code: 'invalidRewardServiceResponse',
           message: 'invalidRewardServiceResponse',

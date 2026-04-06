@@ -148,7 +148,7 @@ async function finalizeSignIn(params: {
       extras: {
         hasOnboardingData: params.onboardingData !== null,
         signInCreatedUser: signInUser.created,
-        signInUserEmail: signInUser.email,
+        hasSignInUserEmail: Boolean(signInUser.email),
         signInUserId: signInUser.id,
       },
     });

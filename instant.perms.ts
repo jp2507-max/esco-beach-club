@@ -120,7 +120,7 @@ const rules = {
     allow: {
       view: 'isOwnerOrLinkedProfile',
       create:
-        "canCreateOwnedProfile && hasValidProfileCreateValues && !('auth_provider' in request.modifiedFields)",
+        "canCreateOwnedProfile && onlySafeProfileCreateFields && hasValidProfileCreateValues && !('auth_provider' in request.modifiedFields)",
       delete: 'false',
       update:
         'isOwnerOrLinkedProfile && onlySafeProfileUpdateFields && hasValidProfileUpdates',

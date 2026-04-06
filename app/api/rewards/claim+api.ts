@@ -1,4 +1,4 @@
-import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
+import { createHmac, timingSafeEqual } from 'node:crypto';
 
 import type { PosBill, Profile, RewardTransaction } from '@/lib/types';
 import {
@@ -30,6 +30,7 @@ import {
 } from '@/src/lib/referral/instant-admin-server';
 import { verifyInstantRefreshToken } from '@/src/lib/referral/instant-runtime-server';
 import type { RewardServiceResponse } from '@/src/lib/reward-backend-contract';
+import { buildRewardTransactionId } from '@/src/lib/rewards/reward-transaction-id';
 
 type ProfileRecord = InstantRecord & {
   profile?: InstantRecord | InstantRecord[] | null;
@@ -139,12 +140,6 @@ async function resolveProfileForUser(
   return linkedProfile ? mapProfile(linkedProfile) : null;
 }
 
-function buildRewardTransactionId(reference: string): string {
-  const normalized = reference.trim().toUpperCase();
-  const digest = createHash('sha256').update(normalized, 'utf8').digest('hex');
-  return `reward-bill-${digest}`;
-}
-
 function buildPosBillEntryKey(params: {
   posBillId: string;
   restaurantId: string;
@@ -205,6 +200,31 @@ function toNullableString(value: unknown): string | null {
   return normalized.length > 0 ? normalized : null;
 }
 
+function toRequiredIsoString(value: unknown): string | null {
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value)) return null;
+    const parsedFromNumber = new Date(value);
+    return Number.isNaN(parsedFromNumber.getTime())
+      ? null
+      : parsedFromNumber.toISOString();
+  }
+
+  if (typeof value !== 'string') return null;
+
+  const normalized = value.trim();
+  if (!normalized) return null;
+
+  const parsedFromString = new Date(normalized);
+  return Number.isNaN(parsedFromString.getTime())
+    ? null
+    : parsedFromString.toISOString();
+}
+
+function toNullableIsoString(value: unknown): string | null {
+  if (value === null || value === undefined) return null;
+  return toRequiredIsoString(value);
+}
+
 function toRequiredAmountVnd(value: unknown): number | null {
   if (typeof value !== 'number') return null;
   if (!Number.isFinite(value) || !Number.isInteger(value) || value < 0) {
@@ -227,12 +247,12 @@ function mapPosBill(record: PosBillRecord): PosBill | null {
   const id = toRequiredString(record.id);
   const amountVnd = toRequiredAmountVnd(record.amount_vnd);
   const canonicalBillId = toRequiredString(record.canonical_bill_id);
-  const createdAt = toRequiredString(record.created_at);
+  const createdAt = toRequiredIsoString(record.created_at);
   const currency = toRequiredString(record.currency);
   const entryKey = toRequiredString(record.entry_key);
   const posBillId = toRequiredString(record.pos_bill_id);
   const restaurantId = toRequiredString(record.restaurant_id);
-  const updatedAt = toRequiredString(record.updated_at);
+  const updatedAt = toRequiredIsoString(record.updated_at);
   const status = toPosBillStatus(record.status);
 
   if (
@@ -254,21 +274,21 @@ function mapPosBill(record: PosBillRecord): PosBill | null {
     id,
     amount_vnd: amountVnd,
     canonical_bill_id: canonicalBillId,
-    claimed_at: toNullableString(record.claimed_at),
+    claimed_at: toNullableIsoString(record.claimed_at),
     claimed_by_profile_id: toNullableString(record.claimed_by_profile_id),
     claimed_reward_transaction_id: toNullableString(
       record.claimed_reward_transaction_id
     ),
-    closed_at: toNullableString(record.closed_at),
+    closed_at: toNullableIsoString(record.closed_at),
     created_at: createdAt,
     currency,
     entry_key: entryKey,
-    last_synced_at: toNullableString(record.last_synced_at),
-    paid_at: toNullableString(record.paid_at),
+    last_synced_at: toNullableIsoString(record.last_synced_at),
+    paid_at: toNullableIsoString(record.paid_at),
     pos_bill_id: posBillId,
     receipt_reference: toNullableString(record.receipt_reference),
     restaurant_id: restaurantId,
-    source_updated_at: toNullableString(record.source_updated_at),
+    source_updated_at: toNullableIsoString(record.source_updated_at),
     status,
     terminal_id: toNullableString(record.terminal_id),
     updated_at: updatedAt,
@@ -560,7 +580,7 @@ export async function POST(request: Request): Promise<Response> {
 
   const profile = await resolveProfileForUser(adminDb, authUser.userId);
   if (!profile) {
-    return jsonResponse({ error: 'member_profile_not_found' }, 409);
+    return jsonResponse({ error: 'member_profile_not_found' }, 404);
   }
 
   const posBillResult = await resolvePosBill({
@@ -574,8 +594,9 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const posBill = posBillResult.bill;
+  // exists=true but bill=null: POS row present but mapping/normalization failed (data integrity).
   if (!posBill) {
-    return jsonResponse({ error: 'invalidRewardServiceResponse' }, 409);
+    return jsonResponse({ error: 'bill_data_corrupt' }, 409);
   }
 
   if (posBill.currency.trim().toUpperCase() !== 'VND') {

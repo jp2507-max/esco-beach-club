@@ -16,6 +16,17 @@ function toOptionalUrlOrigin(value: string | undefined): string | null {
   }
 }
 
+function toOptionalUrl(value: string | undefined): string | null {
+  const trimmedValue = value?.trim();
+  if (!trimmedValue) return null;
+
+  try {
+    return new URL(trimmedValue).toString();
+  } catch {
+    return null;
+  }
+}
+
 const restaurantLatitude = toOptionalNumber(
   process.env.EXPO_PUBLIC_RESTAURANT_LATITUDE
 );
@@ -51,10 +62,10 @@ export const config = {
       ? `https://wa.me/${process.env.EXPO_PUBLIC_CONCIERGE_PHONE}`
       : null,
     facebookUrl:
-      process.env.EXPO_PUBLIC_FACEBOOK_URL?.trim() ||
+      toOptionalUrl(process.env.EXPO_PUBLIC_FACEBOOK_URL) ||
       'https://www.facebook.com/escobeachdanang/',
     instagramUrl:
-      process.env.EXPO_PUBLIC_INSTAGRAM_URL?.trim() ||
+      toOptionalUrl(process.env.EXPO_PUBLIC_INSTAGRAM_URL) ||
       'https://www.instagram.com/escobeachdanang/',
     supportEmail:
       process.env.EXPO_PUBLIC_SUPPORT_EMAIL?.trim() ||

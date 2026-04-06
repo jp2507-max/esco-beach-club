@@ -30,6 +30,7 @@ describe('pos bill sync contract', () => {
         {
           amountVnd: 450000,
           currency: 'VND',
+          paidAt: '2026-04-06T14:03:11.000Z',
           posBillId: 'BILL-1001',
           restaurantId: 'ESCO_DANANG',
           sourceUpdatedAt: 'not-a-date',
@@ -65,6 +66,7 @@ describe('pos bill sync contract', () => {
         {
           amountVnd: 450000,
           currency: 'USD',
+          paidAt: '2026-04-06T14:03:11.000Z',
           posBillId: 'BILL-1001',
           restaurantId: 'ESCO_DANANG',
           sourceUpdatedAt: '2026-04-06T14:03:11.000Z',
@@ -82,6 +84,7 @@ describe('pos bill sync contract', () => {
         {
           amountVnd: 450000,
           currency: 'VND',
+          paidAt: '2026-04-06T14:03:11.000Z',
           posBillId: 'BILL-1001',
           restaurantId: 'esco danang',
           sourceUpdatedAt: '2026-04-06T14:03:11.000Z',

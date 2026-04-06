@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { LayoutChangeEvent, ViewStyle } from 'react-native';
 import type { AnimatedStyle } from 'react-native-reanimated';
@@ -115,6 +115,7 @@ export function AppLaunchScreen({
   onReady,
 }: AppLaunchScreenProps): React.JSX.Element {
   const { t } = useTranslation('common');
+  const hasReportedReady = useRef(false);
   const glowStyle = useLaunchGlowStyle(isDark);
   const orbTopStyle = useLaunchAmbientStyle({
     baseOpacity: isDark ? 0.24 : 0.16,
@@ -128,6 +129,8 @@ export function AppLaunchScreen({
   });
 
   function handleLayout(_: LayoutChangeEvent): void {
+    if (hasReportedReady.current) return;
+    hasReportedReady.current = true;
     onReady();
   }
 
@@ -211,18 +214,10 @@ export function AppLaunchScreen({
           className="mt-9 items-center"
           entering={withRM(FadeInUp.delay(70).duration(motion.dur.md))}
         >
-          <Text
-            className={`text-[11px] font-bold uppercase tracking-[3.2px] ${
-              isDark ? 'text-white/70' : 'text-text-secondary'
-            }`}
-          >
+          <Text className="text-[11px] font-bold uppercase tracking-[3.2px] text-text-secondary dark:text-white/70">
             {t('launch.eyebrow')}
           </Text>
-          <Text
-            className={`mt-3 max-w-72 text-center text-[15px] font-semibold leading-6 ${
-              isDark ? 'text-white/88' : 'text-text'
-            }`}
-          >
+          <Text className="mt-3 max-w-72 text-center text-[15px] font-semibold leading-6 text-text dark:text-white/88">
             {t('launch.loading')}
           </Text>
         </Animated.View>

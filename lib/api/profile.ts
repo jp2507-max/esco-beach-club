@@ -164,7 +164,6 @@ export async function ensureProfile(params: {
           console.error('[ensureProfile] Profile create permission denied', {
             attempt,
             maxRetries,
-            payload,
             payloadKeys: Object.keys(payload),
             profileId,
             userId: params.userId,

@@ -14,7 +14,33 @@ import {
 
 const POS_SYNC_TIMESTAMP_MAX_SKEW_MS = 5 * 60 * 1000;
 
+/**
+ * Admin HTTP transact steps do not expose compare-and-swap on `source_updated_at`.
+ * Queue upserts per `canonical_bill_id` so concurrent handlers on this process
+ * cannot interleave read-then-write for the same bill. (Multiple server
+ * instances would still need a distributed lock or DB-native CAS if required.)
+ */
+const posBillUpsertChainByCanonicalId = new Map<string, Promise<unknown>>();
+
+function runSerializedPosBillUpsert<T>(
+  canonicalBillId: string,
+  fn: () => Promise<T>
+): Promise<T> {
+  const prior =
+    posBillUpsertChainByCanonicalId.get(canonicalBillId) ?? Promise.resolve();
+  const current = prior.then(fn);
+  posBillUpsertChainByCanonicalId.set(
+    canonicalBillId,
+    current.then(
+      () => undefined,
+      () => undefined
+    )
+  );
+  return current;
+}
+
 type PosBillRecord = InstantRecord & {
+  canonical_bill_id?: unknown;
   created_at?: unknown;
   id: string;
   source_updated_at?: unknown;
@@ -33,28 +59,23 @@ function buildPosBillEntryKey(params: {
   return `pos-bill:${normalizedRestaurantId}:${params.posBillId}`;
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
-
-function firstInstantRecord(value: unknown): PosBillRecord | null {
-  if (Array.isArray(value)) {
-    const [first] = value;
-    return isRecord(first) && typeof first.id === 'string'
-      ? (first as PosBillRecord)
-      : null;
+function parseTimestampMs(value: unknown): number | null {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : null;
   }
 
-  return isRecord(value) && typeof value.id === 'string'
-    ? (value as PosBillRecord)
-    : null;
-}
-
-function parseTimestampMs(value: unknown): number | null {
   if (typeof value !== 'string') return null;
 
   const timestamp = Date.parse(value);
   return Number.isNaN(timestamp) ? null : timestamp;
+}
+
+function toIsoDateString(value: unknown): string | null {
+  const timestamp = parseTimestampMs(value);
+  if (timestamp === null) return null;
+
+  const parsed = new Date(timestamp);
+  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
 }
 
 function isIncomingBillStale(
@@ -140,9 +161,7 @@ function toPosBillRecord(params: {
     restaurantId: bill.restaurantId,
   });
   const createdAt =
-    typeof existingBill?.created_at === 'string'
-      ? existingBill.created_at
-      : bill.sourceUpdatedAt;
+    toIsoDateString(existingBill?.created_at) ?? bill.sourceUpdatedAt;
 
   return {
     amount_vnd: bill.amountVnd,
@@ -225,52 +244,55 @@ export async function POST(request: Request): Promise<Response> {
 
   const latestBills = selectLatestBills(parsedRequest.data.bills);
   const nowIso = new Date().toISOString();
-  const existingBills = await Promise.all(
-    latestBills.map(async (bill) => {
+
+  const upsertedCounts = await Promise.all(
+    latestBills.map((bill) => {
       const entryKey = buildPosBillEntryKey({
         posBillId: bill.posBillId,
         restaurantId: bill.restaurantId,
       });
-      const result = await adminDb.query<{
-        pos_bills?: PosBillRecord[];
-      }>({
-        pos_bills: {
-          $: {
-            where: {
-              canonical_bill_id: entryKey,
+
+      return runSerializedPosBillUpsert(entryKey, async () => {
+        const freshResult = await adminDb.query<{
+          pos_bills?: PosBillRecord[];
+        }>({
+          pos_bills: {
+            $: {
+              where: {
+                canonical_bill_id: entryKey,
+              },
             },
           },
-        },
-      });
+        });
 
-      return firstInstantRecord(result.pos_bills);
+        const rows = freshResult.pos_bills ?? [];
+        const existingBill =
+          rows.find((r) => r.canonical_bill_id === entryKey) ?? rows[0] ?? null;
+
+        if (isIncomingBillStale(existingBill, bill)) {
+          return 0;
+        }
+
+        await adminDb.transact([
+          createInstantUpdateStep(
+            'pos_bills',
+            entryKey,
+            toPosBillRecord({ bill, existingBill, nowIso }),
+            { upsert: true }
+          ),
+        ]);
+
+        return 1;
+      });
     })
   );
-  const steps = latestBills.flatMap((bill, index) => {
-    const existingBill = existingBills[index] ?? null;
-    if (isIncomingBillStale(existingBill, bill)) {
-      return [];
-    }
 
-    return [
-      createInstantUpdateStep(
-        'pos_bills',
-        buildPosBillEntryKey({
-          posBillId: bill.posBillId,
-          restaurantId: bill.restaurantId,
-        }),
-        toPosBillRecord({ bill, existingBill, nowIso }),
-        { upsert: true }
-      ),
-    ];
-  });
-
-  await adminDb.transact(steps);
+  const upserted = upsertedCounts.reduce((a, b) => a + b, 0);
 
   return jsonResponse(
     {
       processed: parsedRequest.data.bills.length,
-      upserted: steps.length,
+      upserted,
     } satisfies PosBillSyncResponse,
     200
   );

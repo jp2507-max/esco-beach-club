@@ -97,16 +97,21 @@ export function BookingFormContent({
     useState<boolean>(false);
 
   useEffect(() => {
-    if (!monthOptions.some((option) => option.key === activeMonthKey)) {
+    const isSelectedMonthValid = monthOptions.some(
+      (option) => option.key === selectedMonthKey
+    );
+    if (isSelectedMonthValid) {
+      setActiveMonthKey(selectedMonthKey);
+      return;
+    }
+
+    const isActiveMonthValid = monthOptions.some(
+      (option) => option.key === activeMonthKey
+    );
+    if (!isActiveMonthValid) {
       setActiveMonthKey(monthOptions[0]?.key ?? selectedMonthKey);
     }
   }, [activeMonthKey, monthOptions, selectedMonthKey]);
-
-  useEffect(() => {
-    if (monthOptions.some((option) => option.key === selectedMonthKey)) {
-      setActiveMonthKey(selectedMonthKey);
-    }
-  }, [monthOptions, selectedMonthKey]);
 
   const activeMonthIndex = Math.max(
     monthOptions.findIndex((option) => option.key === activeMonthKey),

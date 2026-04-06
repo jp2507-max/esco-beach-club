@@ -45,7 +45,6 @@ export async function submitTableReservation(params: {
   const entryKey = [
     params.user_id,
     params.event_id ?? 'general',
-    contactEmail,
     params.reservation_date,
     params.reservation_time,
     params.party_size,

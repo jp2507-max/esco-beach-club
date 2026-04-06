@@ -13,6 +13,7 @@ export type SearchInputProps = {
   onChangeText: (text: string) => void;
   placeholder?: string;
   testID?: string;
+  value?: string;
 };
 
 /**
@@ -24,26 +25,32 @@ export function SearchInput({
   onChangeText,
   placeholder,
   testID = 'search-input',
+  value: controlledValue,
 }: SearchInputProps): React.JSX.Element {
   const { t } = useTranslation('common');
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const inputRef = useRef<RNTextInputType>(null);
-  const [value, setValue] = useState('');
+  const [internalValue, setInternalValue] = useState('');
+  const value = controlledValue ?? internalValue;
 
   const handleChangeText = useCallback(
     (text: string): void => {
-      setValue(text);
+      if (controlledValue === undefined) {
+        setInternalValue(text);
+      }
       onChangeText(text);
     },
-    [onChangeText]
+    [controlledValue, onChangeText]
   );
 
   const handleClear = useCallback((): void => {
-    setValue('');
+    if (controlledValue === undefined) {
+      setInternalValue('');
+    }
     onChangeText('');
     inputRef.current?.blur();
-  }, [onChangeText]);
+  }, [controlledValue, onChangeText]);
 
   return (
     <View

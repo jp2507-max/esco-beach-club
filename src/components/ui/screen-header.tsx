@@ -30,7 +30,10 @@ export function ScreenHeader({
     <View className={cn('px-5 pb-2 pt-3', className)} testID={testID}>
       <View className="flex-row items-center justify-between">
         <View className="flex-1">
-          <Text className="text-[34px] font-extrabold tracking-tight text-primary dark:text-primary-bright">
+          <Text
+            accessibilityRole="header"
+            className="text-[34px] font-extrabold tracking-tight text-primary dark:text-primary-bright"
+          >
             {title}
           </Text>
           {subtitle ? (

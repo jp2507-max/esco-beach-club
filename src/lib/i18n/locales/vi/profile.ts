@@ -88,6 +88,8 @@ const profile = {
         'Hóa đơn này chưa được đánh dấu là đã thanh toán. Vui lòng thanh toán trước rồi thử lại.',
       billNotSynced:
         'Hóa đơn này chưa được đồng bộ từ POS của nhà hàng. Vui lòng thử lại sau vài giây.',
+      billDataCorrupt:
+        'Không thể đọc đúng dữ liệu hóa đơn này. Vui lòng nhờ nhân viên xác minh hoặc thử lại sau.',
       generic: 'Đã có lỗi khi xử lý hóa đơn này. Vui lòng thử lại.',
       invalidBillQr: 'Mã QR này không phải mã hóa đơn hợp lệ của Esco.',
       invalidRewardServiceResponse:

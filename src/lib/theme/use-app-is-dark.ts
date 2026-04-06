@@ -16,6 +16,10 @@ function getCurrentSystemColorScheme(): ResolvedColorScheme | null {
   return resolveColorScheme(Appearance.getColorScheme());
 }
 
+// Intentionally module-scoped: this persists the last known system scheme across
+// hook unmount/remount cycles so hydration edge cases can still resolve a stable
+// fallback; the effect below (watching preference/resolvedColorScheme/
+// resolvedSystemColorScheme) keeps it synchronized between mounts.
 let lastKnownSystemColorScheme: ResolvedColorScheme | null = null;
 
 export function useAppIsDark(): boolean {

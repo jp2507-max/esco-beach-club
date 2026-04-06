@@ -177,13 +177,6 @@ function normalizeBillQrVersion(
   return supportedVersion ?? null;
 }
 
-function normalizeReceiptReference(value: unknown): string | null {
-  if (typeof value !== 'string') return null;
-
-  const normalized = value.trim();
-  return normalized ? normalized.toUpperCase() : null;
-}
-
 function normalizeRestaurantId(value: unknown): string | null {
   if (typeof value !== 'string') return null;
 
@@ -215,24 +208,6 @@ function normalizeBillQrSignature(value: unknown): string | null {
   }
 
   return normalized;
-}
-
-function normalizeBillAmountVnd(value: unknown): number | null {
-  if (typeof value === 'number') {
-    if (!Number.isFinite(value) || !Number.isInteger(value) || value <= 0) {
-      return null;
-    }
-
-    return value;
-  }
-
-  if (typeof value !== 'string') return null;
-
-  const normalized = value.trim();
-  if (!/^\d+$/.test(normalized)) return null;
-
-  const parsed = Number.parseInt(normalized, 10);
-  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
 export function buildBillQrSigningPayload(payload: {

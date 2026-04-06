@@ -334,10 +334,6 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
         hapticSuccess();
         return;
       }
-
-      if (mappedPush === onboardingPermissionStatuses.undetermined) {
-        showPushSettingsFallbackAlert();
-      }
     } catch {
       Alert.alert(
         t('onboardingPermissionsErrorTitle'),
