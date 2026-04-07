@@ -2,11 +2,19 @@ import { Easing, ReduceMotion } from 'react-native-reanimated';
 
 export const motion = {
   dur: {
+    /** Stagger delay for launch/intro copy reveal (ms) */
+    staggerLaunchCopy: 70,
     xs: 120,
     sm: 180,
     md: 260,
     lg: 360,
     xl: 600,
+    /** Bill QR scanner: frame glow pulse half-cycle (ms) */
+    qrFramePulseHalf: 1700,
+    /** Bill QR scanner: scan line sweep (ms) */
+    qrScanLineSweep: 2000,
+    /** Bill QR scanner: opacity when scan lock toggles (ms) */
+    qrScanLockOpacity: 150,
   },
   ease: {
     standard: Easing.bezier(0.2, 0, 0, 1),

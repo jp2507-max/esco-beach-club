@@ -1,6 +1,6 @@
 import type { TFunction } from 'i18next';
 
-import { setProfileAuthProvider } from '@/lib/api';
+import { ensureProfile, setProfileAuthProvider } from '@/lib/api';
 import { type AuthProviderType, authProviderTypes } from '@/lib/types';
 import {
   getIdTokenAudienceClaim,
@@ -103,17 +103,77 @@ async function finalizeSignIn(params: {
   providerType: AuthProviderType;
   signInResult: unknown;
 }): Promise<void> {
+  const signInUser = extractSignInUser(params.signInResult);
+
+  if (!signInUser.id) {
+    captureHandledError(new Error('missingSignInUserId'), {
+      tags: {
+        area: 'auth',
+        auth_phase: 'profile_provision',
+        operation: 'ensure_profile_after_sign_in',
+        provider: params.providerType,
+      },
+      extras: {
+        hasOnboardingData: params.onboardingData !== null,
+        signInCreatedUser: signInUser.created,
+      },
+    });
+
+    throw new Error('unableToCompleteProfileSetup');
+  }
+
+  try {
+    const profile = await ensureProfile({
+      userId: signInUser.id,
+      ...(signInUser.email ? { email: signInUser.email } : {}),
+      ...(params.onboardingData?.displayName
+        ? { displayName: params.onboardingData.displayName }
+        : {}),
+      ...(params.onboardingData?.dateOfBirth
+        ? { dateOfBirth: params.onboardingData.dateOfBirth }
+        : {}),
+    });
+
+    if (!profile) {
+      throw new Error('profileMissingAfterSignIn');
+    }
+  } catch (error: unknown) {
+    captureHandledError(error, {
+      tags: {
+        area: 'auth',
+        auth_phase: 'profile_provision',
+        operation: 'ensure_profile_after_sign_in',
+        provider: params.providerType,
+      },
+      extras: {
+        hasOnboardingData: params.onboardingData !== null,
+        signInCreatedUser: signInUser.created,
+        hasSignInUserEmail: Boolean(signInUser.email),
+        signInUserId: signInUser.id,
+      },
+    });
+
+    if (__DEV__) {
+      console.error('[AuthProvider] Failed to ensure profile after sign-in', {
+        error,
+        providerType: params.providerType,
+        signInUser,
+      });
+    }
+
+    throw new Error('unableToCompleteProfileSetup');
+  }
+
   try {
     await applyOnboardingProfileDataForNewUser({
       onboardingData: params.onboardingData,
       signInResult: params.signInResult,
     });
   } catch (error: unknown) {
-    const signInUser = extractSignInUser(params.signInResult);
-
     captureHandledError(error, {
       tags: {
         area: 'auth',
+        auth_phase: 'profile_provision',
         operation: 'apply_onboarding_profile_data',
         provider: params.providerType,
       },
@@ -132,7 +192,7 @@ async function finalizeSignIn(params: {
       });
     }
 
-    throw error;
+    throw new Error('unableToCompleteProfileSetup');
   }
 
   await persistProfileAuthProvider({
@@ -300,13 +360,6 @@ export async function signInWithGoogleFlow(params: {
         ...(fallbackTokenNonce ? { nonce: fallbackTokenNonce } : {}),
         extraFields: fallbackCreateFields,
       });
-
-      await finalizeSignIn({
-        onboardingData,
-        providerType: authProviderTypes.google,
-        signInResult,
-      });
-      return;
     } else {
       throw error;
     }

@@ -15,6 +15,7 @@ export const AUTH_ERROR_KEYS = [
   'unableToSendCode',
   'unableToSignInWithApple',
   'unableToSignInWithGoogle',
+  'unableToCompleteProfileSetup',
   'unableToVerifyCode',
   'unableToSignOut',
   'genericError',

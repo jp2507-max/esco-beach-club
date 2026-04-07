@@ -22,6 +22,7 @@ export type RewardTransactionEventType =
 export const rewardTransactionSources = {
   localPosPoller: 'local_pos_poller',
   manualStaffEntry: 'manual_staff_entry',
+  memberBillQr: 'member_bill_qr',
   systemReconcile: 'system_reconcile',
 } as const;
 
@@ -36,6 +37,16 @@ export const rewardTransactionStatuses = {
 
 export type RewardTransactionStatus =
   (typeof rewardTransactionStatuses)[keyof typeof rewardTransactionStatuses];
+
+export const posBillStatuses = {
+  open: 'OPEN',
+  paid: 'PAID',
+  refunded: 'REFUNDED',
+  voided: 'VOIDED',
+} as const;
+
+export type PosBillStatus =
+  (typeof posBillStatuses)[keyof typeof posBillStatuses];
 
 export const onboardingPermissionStatuses = {
   denied: 'DENIED',
@@ -149,23 +160,6 @@ export type NewsItem = {
   created_at: string;
 };
 
-export type BookingOccasionOption = {
-  id: string;
-  created_at: string;
-  is_active: boolean;
-  label_key: string;
-  sort_order: number;
-  value: string;
-};
-
-export type BookingTimeSlotOption = {
-  id: string;
-  available: boolean;
-  created_at: string;
-  sort_order: number;
-  time: string;
-};
-
 export type MemberOffer = {
   id: string;
   badge_key: string;
@@ -259,6 +253,7 @@ export type PrivateEventInquiry = {
 
 export type TableReservation = {
   id: string;
+  contact_email: string;
   created_at: string;
   entry_key: string;
   event_id: string | null;
@@ -267,8 +262,31 @@ export type TableReservation = {
   party_size: number;
   reservation_date: string;
   reservation_time: string;
+  special_request: string | null;
   source: string;
   status: string;
+  updated_at: string;
+};
+
+export type PosBill = {
+  id: string;
+  amount_vnd: number;
+  canonical_bill_id: string;
+  claimed_at: string | null;
+  claimed_by_profile_id: string | null;
+  claimed_reward_transaction_id: string | null;
+  closed_at: string | null;
+  created_at: string;
+  currency: string;
+  entry_key: string;
+  last_synced_at: string | null;
+  paid_at: string | null;
+  pos_bill_id: string;
+  receipt_reference: string | null;
+  restaurant_id: string;
+  source_updated_at: string | null;
+  status: PosBillStatus | null;
+  terminal_id: string | null;
   updated_at: string;
 };
 

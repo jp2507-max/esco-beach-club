@@ -13,11 +13,6 @@
     "icon": "assets/images/icon.png",
     "scheme": "esco-beach-club",
     "userInterfaceStyle": "automatic",
-    "splash": {
-      "image": "assets/images/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
     "ios": {
       "icon": "assets/app-icon.icon",
       "supportsTablet": false,
@@ -49,6 +44,19 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#FFFDF5",
+          "image": "./assets/images/launch-wordmark-light.png",
+          "imageWidth": 240,
+          "resizeMode": "contain",
+          "dark": {
+            "backgroundColor": "#000000",
+            "image": "./assets/images/launch-wordmark-dark.png"
+          }
+        }
+      ],
       "expo-font",
       "expo-image",
       "./plugins/with-apple-privacy-manifest",

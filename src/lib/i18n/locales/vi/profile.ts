@@ -37,6 +37,74 @@ const profile = {
   accessPass: 'THẺ TRUY CẬP',
   scanAtTable: 'Quét tại quầy thanh toán để liên kết mã thành viên của bạn',
   refPrefix: 'Mã: {{memberId}}',
+  billScanner: {
+    balanceLabel: 'Điểm',
+    cameraPermissionDescription:
+      'Cho phép truy cập camera để mã QR trên hóa đơn có thể được quét ngay khi mở tab này.',
+    cameraPermissionTitle: 'Mở camera để nhận điểm ngay',
+    errorEyebrow: 'Thử quét lại',
+    errorTitle: 'Không thể xử lý mã QR hóa đơn này',
+    eyebrow: 'QUÉT THƯỞNG TRỰC TIẾP',
+    fallbackCta: 'Hiển thị QR thành viên của tôi',
+    fallbackDescription:
+      'Chỉ dùng mã QR thành viên nếu địa điểm vẫn cần liên kết điểm thủ công.',
+    fallbackEyebrow: 'Phương án dự phòng',
+    fallbackHint: 'Mở thẻ QR thành viên làm phương án dự phòng',
+    fallbackTitle: 'QR thành viên dự phòng',
+    frameHint: 'Đặt mã QR hóa đơn vào trong khung',
+    grantPermission: 'Bật camera',
+    grantPermissionHint:
+      'Yêu cầu quyền camera hoặc mở cài đặt nếu trước đó đã bị từ chối',
+    liveBadge: 'Máy quét đang hoạt động',
+    loadingDescription:
+      'Đang chuẩn bị camera và cấu hình máy quét điểm thưởng của bạn.',
+    loadingTitle: 'Đang khởi động máy quét',
+    memberQrUnavailable: 'Mã QR thành viên của bạn hiện chưa khả dụng.',
+    permissionEyebrow: 'Cần camera',
+    pointsRuleLabel: 'Tỷ lệ nhận điểm',
+    pointsRuleValue: '{{points}} điểm / {{amount}}',
+    processingDescription:
+      'Giữ yên trong khi chúng tôi xác minh hóa đơn và cập nhật số dư của bạn.',
+    processingEyebrow: 'Đang xác minh hóa đơn',
+    processingTitle: 'Đang cộng điểm vào tài khoản của bạn',
+    readyDescription:
+      'Máy quét đã sẵn sàng. Hướng camera vào mã QR in trên hóa đơn để nhận điểm.',
+    readyTitle: 'Quét mã QR hóa đơn để nhận điểm',
+    scanAgain: 'Quét hóa đơn khác',
+    scanAgainHint: 'Đặt lại máy quét để bạn có thể quét hóa đơn khác',
+    securityNote:
+      'Mỗi mã tham chiếu hóa đơn chỉ có thể được dùng để nhận điểm một lần.',
+    subtitle:
+      'Tab này giờ mở thẳng vào camera để hội viên có thể tự quét hóa đơn và nhận điểm.',
+    successDescription:
+      '{{amount}} từ hóa đơn {{reference}} đã được cộng vào số dư điểm thưởng của bạn.',
+    successEyebrow: 'Đã cộng điểm',
+    successTitle: 'Đã nhận {{points}} điểm',
+    title: 'Quét hóa đơn. Giữ lại điểm thưởng.',
+    errors: {
+      billBelowMinimumSpend:
+        'Hóa đơn này chưa đạt mức chi tiêu tối thiểu để nhận điểm.',
+      billNotPaid:
+        'Hóa đơn này chưa được đánh dấu là đã thanh toán. Vui lòng thanh toán trước rồi thử lại.',
+      billNotSynced:
+        'Hóa đơn này chưa được đồng bộ từ POS của nhà hàng. Vui lòng thử lại sau vài giây.',
+      billDataCorrupt:
+        'Không thể đọc đúng dữ liệu hóa đơn này. Vui lòng nhờ nhân viên xác minh hoặc thử lại sau.',
+      generic: 'Đã có lỗi khi xử lý hóa đơn này. Vui lòng thử lại.',
+      invalidBillQr: 'Mã QR này không phải mã hóa đơn hợp lệ của Esco.',
+      invalidRewardServiceResponse:
+        'Dịch vụ điểm thưởng trả về phản hồi không hợp lệ. Vui lòng thử lại.',
+      unsupportedCurrency:
+        'Hóa đơn này dùng loại tiền tệ chưa được hỗ trợ. Chỉ hóa đơn VND mới được nhận điểm.',
+      networkUnavailable:
+        'Không thể kết nối đến dịch vụ điểm thưởng. Vui lòng kiểm tra kết nối và thử lại.',
+      receiptAlreadyClaimed: 'Hóa đơn này đã được dùng để nhận điểm trước đó.',
+      rewardServiceUnavailable:
+        'Dịch vụ điểm thưởng hiện không khả dụng. Vui lòng thử lại sau.',
+      sessionExpired:
+        'Phiên đăng nhập an toàn của bạn đã hết hạn. Vui lòng đăng nhập lại và thử lại.',
+    },
+  },
   earned: 'ĐIỂM THƯỞNG ĐÃ NHẬN',
   saved: 'ĐÃ TIẾT KIỆM',
   profileDetails: 'Chi tiết hồ sơ',

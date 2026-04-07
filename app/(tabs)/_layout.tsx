@@ -1,6 +1,7 @@
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { DynamicColorIOS, Platform } from 'react-native';
 
 import { Colors } from '@/constants/colors';
 import { triggerTabPressHapticFeedback } from '@/src/lib/haptics/tab-press-feedback';
@@ -11,8 +12,24 @@ export default function TabLayout(): React.JSX.Element {
   const isDark = useAppIsDark();
 
   const tabBarBackground = isDark ? Colors.darkBgCard : Colors.background;
-  const inactiveTint = isDark ? Colors.textMutedDark : Colors.textSecondary;
-  const activeTint = isDark ? Colors.primaryBright : Colors.primary;
+  const iOSInactiveTint =
+    Platform.OS === 'ios'
+      ? DynamicColorIOS({
+          dark: Colors.textMutedDark,
+          light: Colors.textSecondary,
+        })
+      : null;
+  const iOSActiveTint =
+    Platform.OS === 'ios'
+      ? DynamicColorIOS({
+          dark: Colors.primaryBright,
+          light: Colors.primary,
+        })
+      : null;
+  const inactiveTint =
+    iOSInactiveTint ?? (isDark ? Colors.textMutedDark : Colors.textSecondary);
+  const activeTint =
+    iOSActiveTint ?? (isDark ? Colors.primaryBright : Colors.primary);
   const handleTabPress = React.useCallback((): void => {
     triggerTabPressHapticFeedback();
   }, []);
@@ -20,11 +37,13 @@ export default function TabLayout(): React.JSX.Element {
   return (
     <NativeTabs
       backBehavior="history"
+      disableTransparentOnScrollEdge
       screenListeners={{ tabPress: handleTabPress }}
       backgroundColor={tabBarBackground}
       badgeBackgroundColor={activeTint}
       badgeTextColor={Colors.white}
       iconColor={{ default: inactiveTint, selected: activeTint }}
+      tintColor={activeTint}
       labelStyle={{
         default: { color: inactiveTint, fontSize: 12, fontWeight: '600' },
         selected: { color: activeTint, fontSize: 12, fontWeight: '700' },
@@ -45,7 +64,7 @@ export default function TabLayout(): React.JSX.Element {
           selectedColor={activeTint}
         />
         <NativeTabs.Trigger.Label selectedStyle={{ color: activeTint }}>
-          {t('tabs.qr')}
+          {t('tabs.scan')}
         </NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="perks">

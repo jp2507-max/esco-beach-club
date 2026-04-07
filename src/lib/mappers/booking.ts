@@ -1,6 +1,4 @@
 import type {
-  BookingOccasionOption,
-  BookingTimeSlotOption,
   PrivateEventInquiry,
   PrivateEventTypeOption,
   TableReservation,
@@ -14,31 +12,6 @@ import {
   toNumber,
   toStringOr,
 } from './shared';
-
-export function mapBookingOccasion(
-  record: InstantRecord
-): BookingOccasionOption {
-  return {
-    id: record.id,
-    created_at: toIsoString(record.created_at),
-    is_active: toBoolean(record.is_active, true),
-    label_key: toStringOr(record.label_key),
-    sort_order: toNumber(record.sort_order),
-    value: toStringOr(record.value),
-  };
-}
-
-export function mapBookingTimeSlot(
-  record: InstantRecord
-): BookingTimeSlotOption {
-  return {
-    id: record.id,
-    available: toBoolean(record.available, true),
-    created_at: toIsoString(record.created_at),
-    sort_order: toNumber(record.sort_order),
-    time: toStringOr(record.time),
-  };
-}
 
 export function mapPrivateEventType(
   record: InstantRecord
@@ -56,6 +29,7 @@ export function mapPrivateEventType(
 export function mapTableReservation(record: InstantRecord): TableReservation {
   return {
     id: record.id,
+    contact_email: toStringOr(record.contact_email),
     created_at: toIsoString(record.created_at),
     entry_key: toStringOr(record.entry_key),
     event_id: toNullableString(record.event_id),
@@ -64,6 +38,7 @@ export function mapTableReservation(record: InstantRecord): TableReservation {
     party_size: toNumber(record.party_size),
     reservation_date: toStringOr(record.reservation_date),
     reservation_time: toStringOr(record.reservation_time),
+    special_request: toNullableString(record.special_request),
     source: toStringOr(record.source),
     status: toStringOr(record.status),
     updated_at: toIsoString(record.updated_at),

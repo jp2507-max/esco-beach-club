@@ -3,7 +3,11 @@ function normalizeBaseUrl(value: string | null | undefined): string | null {
   return trimmed ? trimmed.replace(/\/+$/, '') : null;
 }
 
-export type ClientApiFailureReason = 'http_error' | 'network' | 'no_endpoint';
+export type ClientApiFailureReason =
+  | 'http_error'
+  | 'network'
+  | 'no_endpoint'
+  | 'parse_error';
 
 export type ClientApiFailure = {
   ok: false;

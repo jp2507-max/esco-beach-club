@@ -23,6 +23,22 @@ import {
   withoutUndefined,
 } from './shared';
 
+const PROFILE_PROVISION_RETRY_DELAYS_MS = [50, 150, 300] as const;
+
+async function waitForProvisionRetryDelay(attempt: number): Promise<void> {
+  const delay =
+    PROFILE_PROVISION_RETRY_DELAYS_MS[
+      Math.max(
+        0,
+        Math.min(attempt, PROFILE_PROVISION_RETRY_DELAYS_MS.length - 1)
+      )
+    ];
+
+  await new Promise<void>((resolve) => {
+    setTimeout(resolve, delay);
+  });
+}
+
 async function fetchProfileViaUserLink(
   userId: string
 ): Promise<Profile | null> {
@@ -95,10 +111,10 @@ export async function ensureProfile(params: {
   const current = await fetchProfile(params.userId);
   if (current) return current;
 
-  const maxRetries = 3;
+  const maxAttempts = PROFILE_PROVISION_RETRY_DELAYS_MS.length + 1;
   let attempt = 0;
 
-  while (attempt < maxRetries) {
+  while (attempt < maxAttempts) {
     attempt++;
 
     const profileId = buildProfileId(params.userId);
@@ -144,9 +160,23 @@ export async function ensureProfile(params: {
       }
 
       if (error.message.toLowerCase().includes('permission denied')) {
+        if (__DEV__) {
+          console.error('[ensureProfile] Profile create permission denied', {
+            attempt,
+            maxAttempts,
+            payloadKeys: Object.keys(payload),
+            profileId,
+            userId: params.userId,
+          });
+        }
         const existingProfile = await fetchProfile(params.userId);
         if (existingProfile) {
           return existingProfile;
+        }
+
+        if (attempt < maxAttempts) {
+          await waitForProvisionRetryDelay(attempt);
+          continue;
         }
       }
 

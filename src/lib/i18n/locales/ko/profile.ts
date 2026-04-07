@@ -37,6 +37,74 @@ const profile = {
   accessPass: '액세스 패스',
   scanAtTable: '체크아웃 시 스캔하여 회원 ID를 연결하세요',
   refPrefix: '참조: {{memberId}}',
+  billScanner: {
+    balanceLabel: '포인트',
+    cameraPermissionDescription:
+      '이 탭을 열자마자 영수증 QR을 스캔할 수 있도록 카메라 접근을 허용해 주세요.',
+    cameraPermissionTitle: '즉시 포인트 적립을 위해 카메라가 필요합니다',
+    errorEyebrow: '다시 스캔해 주세요',
+    errorTitle: '이 영수증 QR을 처리할 수 없습니다',
+    eyebrow: '실시간 리워드 스캔',
+    fallbackCta: '내 멤버 QR 보기',
+    fallbackDescription:
+      '매장에서 여전히 수동으로 포인트를 연결해야 할 때만 멤버 QR을 사용하세요.',
+    fallbackEyebrow: '대체 수단',
+    fallbackHint: '대체 수단으로 멤버 QR 카드를 엽니다',
+    fallbackTitle: '멤버 QR 대체 화면',
+    frameHint: '영수증 QR을 프레임 안에 맞춰 주세요',
+    grantPermission: '카메라 활성화',
+    grantPermissionHint:
+      '카메라 권한을 요청하거나, 이전에 거부한 경우 설정을 엽니다',
+    liveBadge: '스캐너 실행 중',
+    loadingDescription: '카메라와 리워드 스캐너 설정을 준비하고 있습니다.',
+    loadingTitle: '스캐너 시작 중',
+    memberQrUnavailable: '현재 멤버 QR을 불러올 수 없습니다.',
+    permissionEyebrow: '카메라 필요',
+    pointsRuleLabel: '적립 비율',
+    pointsRuleValue: '{{amount}}당 {{points}}pt',
+    processingDescription:
+      '영수증을 확인하고 잔액을 업데이트하는 동안 잠시만 기다려 주세요.',
+    processingEyebrow: '영수증 확인 중',
+    processingTitle: '계정에 포인트를 적립하고 있습니다',
+    readyDescription:
+      '스캐너가 이미 켜져 있습니다. 영수증에 인쇄된 QR을 비추면 포인트가 적립됩니다.',
+    readyTitle: '영수증 QR을 스캔해 포인트를 적립하세요',
+    scanAgain: '다른 영수증 스캔',
+    scanAgainHint: '다른 영수증을 스캔할 수 있도록 스캐너를 초기화합니다',
+    securityNote:
+      '각 영수증 참조값은 한 번만 포인트 적립에 사용할 수 있습니다.',
+    subtitle:
+      '이제 이 탭은 카메라로 바로 열리므로 회원이 직접 영수증을 스캔해 포인트를 받을 수 있습니다.',
+    successDescription:
+      '영수증 {{reference}}의 {{amount}}이(가) 리워드 잔액에 반영되었습니다.',
+    successEyebrow: '포인트 적립 완료',
+    successTitle: '{{points}}포인트 적립 완료',
+    title: '영수증을 스캔하고 포인트를 지키세요.',
+    errors: {
+      billBelowMinimumSpend:
+        '이 영수증은 포인트 적립 최소 결제 금액에 미달합니다.',
+      billNotPaid:
+        '이 영수증은 아직 결제 완료 상태가 아닙니다. 결제 후 다시 시도해 주세요.',
+      billNotSynced:
+        '이 영수증은 아직 매장 POS에서 동기화되지 않았습니다. 잠시 후 다시 시도해 주세요.',
+      billDataCorrupt:
+        '이 영수증 정보를 올바르게 읽을 수 없습니다. 직원에게 확인을 요청하거나 잠시 후 다시 시도해 주세요.',
+      generic:
+        '이 영수증을 처리하는 중 문제가 발생했습니다. 다시 시도해 주세요.',
+      invalidBillQr: '이 QR 코드는 유효한 Esco 영수증 코드가 아닙니다.',
+      invalidRewardServiceResponse:
+        '리워드 서비스 응답이 올바르지 않습니다. 다시 시도해 주세요.',
+      unsupportedCurrency:
+        '이 영수증의 통화는 지원되지 않습니다. VND 영수증만 포인트 적립이 가능합니다.',
+      networkUnavailable:
+        '리워드 서비스에 연결할 수 없습니다. 연결 상태를 확인한 뒤 다시 시도해 주세요.',
+      receiptAlreadyClaimed: '이 영수증은 이미 포인트 적립에 사용되었습니다.',
+      rewardServiceUnavailable:
+        '리워드 서비스를 현재 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.',
+      sessionExpired:
+        '보안 세션이 만료되었습니다. 다시 로그인한 뒤 재시도해 주세요.',
+    },
+  },
   earned: '적립된 포인트',
   saved: '절약',
   profileDetails: '프로필 정보',

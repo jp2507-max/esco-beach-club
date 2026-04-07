@@ -25,6 +25,24 @@ describe('profiles permissions', () => {
     expect(rules.profiles.allow.view).toBe('isOwnerOrLinkedProfile');
     expect(rules.reward_transactions.allow.view).toBe('isMemberOwner');
   });
+
+  test('creates profiles only for the authenticated user id', () => {
+    expect(rules.profiles.bind.canCreateOwnedProfile).toBe('isOwner');
+    expect(rules.profiles.allow.create).toContain('canCreateOwnedProfile');
+    expect(rules.profiles.allow.create).toContain(
+      'hasValidProfileCreateValues'
+    );
+    expect(rules.profiles.allow.create).toContain(
+      'onlySafeProfileCreateFields'
+    );
+  });
+
+  test('keeps owner checks compatible with linked and deterministic profile ids', () => {
+    expect(rules.profiles.bind.isOwner).toContain('auth.id == data.id');
+    expect(rules.profiles.bind.isOwner).toContain(
+      "auth.id in data.ref('user.id')"
+    );
+  });
 });
 
 describe('owner-scoped create permissions', () => {
@@ -56,6 +74,21 @@ describe('owner-scoped create permissions', () => {
     expect(rules.table_reservations.bind.hasPendingStatusOnly).toContain(
       "data.status == 'pending'"
     );
+    expect(
+      rules.table_reservations.bind.hasValidReservationContactEmail
+    ).toContain('contact_email.matches');
+    expect(
+      rules.table_reservations.bind.hasValidReservationContactEmail
+    ).toContain('data.contact_email.size() <= 254');
+    expect(
+      rules.table_reservations.bind.hasValidReservationContactEmail
+    ).not.toContain('data.contact_email == null');
+    expect(
+      rules.table_reservations.bind.hasValidReservationSpecialRequest
+    ).toContain('special_request.matches');
+    expect(
+      rules.table_reservations.bind.hasValidReservationSpecialRequest
+    ).toContain('data.special_request.size() <= 500');
   });
 
   test('validates review ratings in permissions', () => {

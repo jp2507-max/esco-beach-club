@@ -111,7 +111,12 @@ export const useThemePreferenceStore = create<ThemePreferenceState>()(
         () =>
         (state, error): void => {
           if (error != null || state == null) return;
-          applyThemePreference(state.preference, { allowSystemReset: true });
+          applyThemePreference(state.preference, {
+            // RN 0.83 can transiently report an unstable scheme after forcing
+            // `unspecified` during startup rehydrate. Keep startup in-place for
+            // `system`; explicit user preference changes still apply immediately.
+            allowSystemReset: state.preference !== 'system',
+          });
         },
     }
   )

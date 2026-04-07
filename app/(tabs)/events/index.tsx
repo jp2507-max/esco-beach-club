@@ -1,10 +1,9 @@
 import { FlashList, type ListRenderItemInfo } from '@shopify/flash-list';
-import { Stack, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Colors } from '@/constants/colors';
 import type { Event } from '@/lib/types';
 import { useEventsData, useSavedEventsData } from '@/providers/DataProvider';
 import {
@@ -12,6 +11,7 @@ import {
   EventsListFooter,
   EventsListHeader,
 } from '@/src/components/events/events-screen-sections';
+import { ScreenHeader, SearchInput } from '@/src/components/ui';
 import { useEventsScreenData } from '@/src/lib/events/use-events-screen-data';
 import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
 import { View } from '@/src/tw';
@@ -20,6 +20,7 @@ export default function EventsScreen(): React.JSX.Element {
   const router = useRouter();
   const { i18n, t } = useTranslation('events');
   const isDark = useAppIsDark();
+  const insets = useSafeAreaInsets();
   const { events, eventsLoading } = useEventsData();
   const { isEventSaved, toggleSavedEvent } = useSavedEventsData();
   const {
@@ -60,36 +61,31 @@ export default function EventsScreen(): React.JSX.Element {
     [isEventSaved, openEvent, t, toggleSavedEvent]
   );
 
-  const eventsSearchBarProps = useMemo(
+  const contentContainerStyle = useMemo(
     () => ({
-      barTintColor: isDark ? Colors.darkBgElevated : Colors.surfaceContainerLow,
-      textColor: isDark ? Colors.textPrimaryDark : Colors.text,
-      tintColor: isDark ? Colors.primaryBright : Colors.primary,
-      ...(Platform.OS === 'android'
-        ? {
-            headerIconColor: isDark
-              ? Colors.textMutedDark
-              : Colors.textSecondary,
-            hintTextColor: isDark ? Colors.textMutedDark : Colors.textMuted,
-          }
-        : {}),
+      ...listContentContainerStyle,
+      paddingTop: 12,
     }),
-    [isDark]
+    [listContentContainerStyle]
   );
 
   return (
-    <View className="flex-1 bg-background dark:bg-dark-bg">
-      <Stack.SearchBar
-        {...eventsSearchBarProps}
-        onChangeText={(event) => {
-          setSearchQuery(event.nativeEvent.text);
-        }}
+    <View
+      collapsable={false}
+      className="flex-1 bg-background dark:bg-dark-bg"
+      style={{ paddingTop: insets.top }}
+    >
+      <ScreenHeader testID="events-screen-header" title={t('title')} />
+
+      <SearchInput
+        className="mb-3"
+        onChangeText={setSearchQuery}
         placeholder={t('searchPlaceholder')}
+        testID="events-search"
       />
 
       <FlashList
-        contentContainerStyle={listContentContainerStyle}
-        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={contentContainerStyle}
         data={listEvents}
         keyExtractor={(item) => item.id}
         ListFooterComponent={

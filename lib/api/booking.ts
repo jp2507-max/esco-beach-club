@@ -22,15 +22,24 @@ export async function submitTableReservation(params: {
   user_id: string;
   event_id?: string;
   event_title?: string;
-  occasion: string;
+  contact_email: string;
+  occasion?: string;
   party_size: number;
   reservation_date: string;
   reservation_time: string;
+  special_request?: string;
   source: string;
 }): Promise<TableReservation> {
   if (params.party_size < 1 || !Number.isInteger(params.party_size)) {
     throw new Error('Party size must be a positive integer');
   }
+  const contactEmail = normalizedOptionalString(params.contact_email);
+  if (!contactEmail) {
+    throw new Error('Contact email is required');
+  }
+  const occasion = normalizedOptionalString(params.occasion);
+  const specialRequest = normalizedOptionalString(params.special_request);
+
   const createdAt = nowIso();
   const reservationId = id();
   const entryKey = [
@@ -42,15 +51,19 @@ export async function submitTableReservation(params: {
   ].join(':');
 
   const payload = {
+    contact_email: contactEmail,
     created_at: createdAt,
     entry_key: entryKey,
-    occasion: params.occasion,
     party_size: params.party_size,
     reservation_date: params.reservation_date,
     reservation_time: params.reservation_time,
     source: params.source,
     status: 'pending',
     updated_at: createdAt,
+    ...(occasion !== undefined ? { occasion } : {}),
+    ...(specialRequest !== undefined
+      ? { special_request: specialRequest }
+      : {}),
     ...(params.event_id ? { event_id: params.event_id } : {}),
     ...(params.event_title ? { event_title: params.event_title } : {}),
   };
@@ -66,14 +79,16 @@ export async function submitTableReservation(params: {
 
     return {
       id: reservationId,
+      contact_email: contactEmail,
       created_at: createdAt,
       entry_key: entryKey,
       event_id: params.event_id ?? null,
       event_title: params.event_title ?? null,
-      occasion: params.occasion,
+      occasion: occasion ?? null,
       party_size: params.party_size,
       reservation_date: params.reservation_date,
       reservation_time: params.reservation_time,
+      special_request: specialRequest ?? null,
       source: params.source,
       status: 'pending',
       updated_at: createdAt,

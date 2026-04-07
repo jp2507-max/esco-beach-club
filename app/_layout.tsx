@@ -16,16 +16,17 @@ import * as Linking from 'expo-linking';
 import { Stack, useNavigationContainerRef } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Updates from 'expo-updates';
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AppState, type AppStateStatus, Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { Colors } from '@/constants/colors';
 import { AuthProvider, useAuth } from '@/providers/AuthProvider';
 import { DataProvider } from '@/providers/DataProvider';
 import { RestaurantPresenceProvider } from '@/providers/RestaurantPresenceProvider';
+import { AppLaunchScreen } from '@/src/components/app/app-launch-screen';
 import { ReferralClaimEffect } from '@/src/components/referral/referral-claim-effect';
+import { motion } from '@/src/lib/animations/motion';
 import { configureGoogleSignIn } from '@/src/lib/auth/social-auth';
 import { getEscoNavigationTheme } from '@/src/lib/navigation/app-navigation-theme';
 import { createNativeHeaderOptions } from '@/src/lib/navigation/stack-header-options';
@@ -39,7 +40,7 @@ import {
   applyThemePreference,
   useThemePreferenceStore,
 } from '@/src/stores/theme-preference-store';
-import { ActivityIndicator, Text, View } from '@/src/tw';
+import { Text, View } from '@/src/tw';
 
 const navigationIntegration = Sentry.reactNavigationIntegration({
   enableTimeToInitialDisplay: !isRunningInExpoGo(),
@@ -137,6 +138,10 @@ Sentry.init({
 
 setExpoUpdateSentryTags();
 
+SplashScreen.setOptions({
+  duration: motion.dur.md,
+  fade: true,
+});
 void SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient({
@@ -169,14 +174,6 @@ if (Platform.OS !== 'web') {
 export const unstable_settings = {
   anchor: '(tabs)',
 };
-
-function AppLoadingScreen() {
-  return (
-    <View className="flex-1 items-center justify-center bg-background dark:bg-dark-bg">
-      <ActivityIndicator size="large" color={Colors.primary} />
-    </View>
-  );
-}
 
 function AppErrorFallback(): React.JSX.Element {
   const { t } = useTranslation('common');
@@ -285,15 +282,20 @@ function RootLayoutNav() {
   const { isAuthenticated, isLoading } = useAuth();
   const { t } = useTranslation('common');
   const isDark = useAppIsDark();
+  const hasHiddenNativeSplashRef = useRef(false);
+
+  const hideNativeSplash = useCallback((): void => {
+    if (hasHiddenNativeSplashRef.current) return;
+    hasHiddenNativeSplashRef.current = true;
+    SplashScreen.hide();
+  }, []);
 
   useEffect(() => {
-    if (!isLoading) {
-      void SplashScreen.hideAsync();
-    }
-  }, [isLoading]);
+    if (!isLoading) hideNativeSplash();
+  }, [hideNativeSplash, isLoading]);
 
   if (isLoading) {
-    return <AppLoadingScreen />;
+    return <AppLaunchScreen isDark={isDark} onReady={hideNativeSplash} />;
   }
 
   return (

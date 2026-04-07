@@ -54,6 +54,14 @@ const rules = {
       update: 'false',
     },
   },
+  pos_bills: {
+    allow: {
+      view: 'false',
+      create: 'false',
+      delete: 'false',
+      update: 'false',
+    },
+  },
   reviews: {
     bind: {
       hasValidRating: 'data.rating >= 1 && data.rating <= 5',
@@ -93,7 +101,8 @@ const rules = {
     bind: {
       isLinkedProfile:
         "auth.id != null && data.id in auth.ref('$user.profile.id')",
-      isOwner: "auth.id != null && auth.id in data.ref('user.id')",
+      isOwner:
+        "auth.id != null && (auth.id == data.id || auth.id in data.ref('user.id'))",
       isOwnerOrLinkedProfile: 'isOwner || isLinkedProfile',
       canSetAuthProviderOnce:
         "!('auth_provider' in request.modifiedFields) || (data.auth_provider == null && newData.auth_provider in ['apple', 'google', 'magic_code'])",
@@ -105,13 +114,12 @@ const rules = {
         "request.modifiedFields.all(field, field in ['avatar_url', 'bio', 'cashback_points_balance', 'cashback_points_lifetime_earned', 'created_at', 'date_of_birth', 'full_name', 'has_seen_welcome_voucher', 'lifetime_tier_key', 'location_permission_status', 'member_id', 'member_segment', 'member_since', 'next_tier_key', 'nights_left', 'onboarding_completed_at', 'push_notification_permission_status', 'referral_code', 'saved', 'tier_progress_expires_at', 'tier_progress_points', 'tier_progress_started_at', 'tier_progress_target_points', 'updated_at'])",
       onlySafeProfileUpdateFields:
         "request.modifiedFields.all(field, field in ['auth_provider', 'full_name', 'avatar_url', 'has_seen_welcome_voucher', 'bio', 'member_since', 'member_segment', 'nights_left', 'date_of_birth', 'location_permission_status', 'push_notification_permission_status', 'onboarding_completed_at', 'updated_at'])",
-      canCreateOwnedProfile:
-        "auth.id != null && auth.id in data.ref('user.id')",
+      canCreateOwnedProfile: 'isOwner',
     },
     allow: {
       view: 'isOwnerOrLinkedProfile',
       create:
-        'canCreateOwnedProfile && onlySafeProfileCreateFields && hasValidProfileCreateValues',
+        "canCreateOwnedProfile && onlySafeProfileCreateFields && hasValidProfileCreateValues && !('auth_provider' in request.modifiedFields)",
       delete: 'false',
       update:
         'isOwnerOrLinkedProfile && onlySafeProfileUpdateFields && hasValidProfileUpdates',
@@ -120,13 +128,17 @@ const rules = {
   table_reservations: {
     bind: {
       hasPendingStatusOnly: "data.status == 'pending'",
+      hasValidReservationContactEmail:
+        "!('contact_email' in request.modifiedFields) || (data.contact_email != null && data.contact_email.size() >= 3 && data.contact_email.size() <= 254 && data.contact_email.matches('^[^ @]+@[^ @]+[.][^ @]+$'))",
+      hasValidReservationSpecialRequest:
+        "!('special_request' in request.modifiedFields) || (data.special_request == null || (data.special_request.size() <= 500 && data.special_request.matches('^$|^[^ ].*[^ ]$|^[^ ]$')))",
       onlySafeTableReservationFields:
-        "request.modifiedFields.all(field, field in ['created_at', 'entry_key', 'event_id', 'event_title', 'occasion', 'party_size', 'reservation_date', 'reservation_time', 'source', 'status', 'updated_at'])",
+        "request.modifiedFields.all(field, field in ['contact_email', 'created_at', 'entry_key', 'event_id', 'event_title', 'occasion', 'party_size', 'reservation_date', 'reservation_time', 'source', 'special_request', 'status', 'updated_at'])",
     },
     allow: {
       view: "auth.id != null && auth.id in data.ref('owner.id')",
       create:
-        "auth.id != null && auth.id in data.ref('owner.id') && onlySafeTableReservationFields && hasPendingStatusOnly",
+        "auth.id != null && auth.id in data.ref('owner.id') && onlySafeTableReservationFields && hasPendingStatusOnly && hasValidReservationContactEmail && hasValidReservationSpecialRequest",
       delete: 'false',
       update: 'false',
     },

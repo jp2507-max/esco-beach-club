@@ -60,6 +60,49 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     setVerifyCodeError(null);
   }
 
+  function resolveAuthPhase(
+    errorKey: string
+  ): 'oauth_exchange' | 'profile_provision' {
+    return errorKey === 'unableToCompleteProfileSetup'
+      ? 'profile_provision'
+      : 'oauth_exchange';
+  }
+
+  async function recoverProvisioningSessionIfNeeded(params: {
+    errorKey: string;
+    sourceOperation:
+      | 'sign_in_with_apple'
+      | 'sign_in_with_google'
+      | 'verify_magic_code';
+  }): Promise<void> {
+    if (params.errorKey !== 'unableToCompleteProfileSetup') return;
+
+    try {
+      await signOutFlow();
+    } catch (error: unknown) {
+      captureHandledError(error, {
+        tags: {
+          area: 'auth',
+          auth_phase: 'profile_provision',
+          operation: 'revert_orphaned_auth_session',
+        },
+        extras: {
+          sourceOperation: params.sourceOperation,
+        },
+      });
+
+      if (__DEV__) {
+        console.error(
+          '[AuthProvider] Failed to recover orphaned auth session',
+          {
+            error,
+            sourceOperation: params.sourceOperation,
+          }
+        );
+      }
+    }
+  }
+
   async function signInWithApple(params?: SignInProviderParams): Promise<void> {
     setAppleSignInLoading(true);
     setAppleSignInError(null);
@@ -80,7 +123,15 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
           mappedErrorKey: nextError.message,
           rawAuthErrorMessage: extractAuthErrorMessage(error),
         },
-        tags: { area: 'auth', operation: 'sign_in_with_apple' },
+        tags: {
+          area: 'auth',
+          auth_phase: resolveAuthPhase(nextError.message),
+          operation: 'sign_in_with_apple',
+        },
+      });
+      await recoverProvisioningSessionIfNeeded({
+        errorKey: nextError.message,
+        sourceOperation: 'sign_in_with_apple',
       });
       setAppleSignInError(nextError);
       throw nextError;
@@ -112,8 +163,20 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       const nextError = toError(error, 'unableToSignInWithGoogle', {
         oauthProvider: 'google',
       });
-      captureHandledError(nextError, {
-        tags: { area: 'auth', operation: 'sign_in_with_google' },
+      captureHandledError(error, {
+        extras: {
+          mappedErrorKey: nextError.message,
+          rawAuthErrorMessage: extractAuthErrorMessage(error),
+        },
+        tags: {
+          area: 'auth',
+          auth_phase: resolveAuthPhase(nextError.message),
+          operation: 'sign_in_with_google',
+        },
+      });
+      await recoverProvisioningSessionIfNeeded({
+        errorKey: nextError.message,
+        sourceOperation: 'sign_in_with_google',
       });
       setGoogleSignInError(nextError);
       throw nextError;
@@ -159,8 +222,20 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       });
     } catch (error: unknown) {
       const nextError = toError(error, 'unableToVerifyCode');
-      captureHandledError(nextError, {
-        tags: { area: 'auth', operation: 'verify_magic_code' },
+      captureHandledError(error, {
+        extras: {
+          mappedErrorKey: nextError.message,
+          rawAuthErrorMessage: extractAuthErrorMessage(error),
+        },
+        tags: {
+          area: 'auth',
+          auth_phase: resolveAuthPhase(nextError.message),
+          operation: 'verify_magic_code',
+        },
+      });
+      await recoverProvisioningSessionIfNeeded({
+        errorKey: nextError.message,
+        sourceOperation: 'verify_magic_code',
       });
       setVerifyCodeError(nextError);
       throw nextError;

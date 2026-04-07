@@ -16,6 +16,22 @@ function toOptionalUrlOrigin(value: string | undefined): string | null {
   }
 }
 
+function toOptionalUrl(value: string | undefined): string | null {
+  const trimmedValue = value?.trim();
+  if (!trimmedValue) return null;
+
+  try {
+    const parsedUrl = new URL(trimmedValue);
+    if (parsedUrl.protocol !== 'https:' && parsedUrl.protocol !== 'http:') {
+      return null;
+    }
+
+    return parsedUrl.toString();
+  } catch {
+    return null;
+  }
+}
+
 const restaurantLatitude = toOptionalNumber(
   process.env.EXPO_PUBLIC_RESTAURANT_LATITUDE
 );
@@ -50,6 +66,12 @@ export const config = {
     conciergeBase: process.env.EXPO_PUBLIC_CONCIERGE_PHONE
       ? `https://wa.me/${process.env.EXPO_PUBLIC_CONCIERGE_PHONE}`
       : null,
+    facebookUrl:
+      toOptionalUrl(process.env.EXPO_PUBLIC_FACEBOOK_URL) ||
+      'https://www.facebook.com/escobeachdanang/',
+    instagramUrl:
+      toOptionalUrl(process.env.EXPO_PUBLIC_INSTAGRAM_URL) ||
+      'https://www.instagram.com/escobeachdanang/',
     supportEmail:
       process.env.EXPO_PUBLIC_SUPPORT_EMAIL?.trim() ||
       'booking@escobeach-danang.com',

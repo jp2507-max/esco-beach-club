@@ -70,8 +70,22 @@ export const Colors = {
   onboardingBasicsGradientStart: 'rgba(251,236,243,0.9)',
   onboardingBasicsGradientMiddle: 'rgba(251,249,241,0.95)',
   onboardingBasicsGradientEnd: 'rgba(232,246,241,0.88)',
+  onboardingBasicsGradientDarkStart: 'rgba(13,11,20,0.98)',
+  onboardingBasicsGradientDarkMiddle: 'rgba(26,22,34,0.96)',
+  onboardingBasicsGradientDarkEnd: 'rgba(39,34,48,0.92)',
   onboardingFinalGradientBase: 'rgba(251,249,241,0.98)',
   onboardingFinalGradientAccent: 'rgba(117,87,0,0.05)',
+  onboardingFinalGradientDarkBase: 'rgba(13,11,20,0.98)',
+  onboardingFinalGradientDarkAccent: 'rgba(255,107,157,0.08)',
+  appLaunchGradientDarkMiddle: '#09070D',
+  appLaunchGradientLightMiddle: '#FFF7F0',
+  appLaunchGradientLightEnd: '#F8EEE7',
+  appLaunchGlowDark: 'rgba(255,255,255,0.08)',
+  appLaunchGlowLight: 'rgba(255,255,255,0.7)',
+  appLaunchCardBackgroundDark: 'rgba(255,255,255,0.04)',
+  appLaunchCardBackgroundLight: 'rgba(255,255,255,0.82)',
+  appLaunchCardBorderDark: 'rgba(255,255,255,0.08)',
+  appLaunchCardBorderLight: 'rgba(13,11,20,0.06)',
   helpCenterOverlayDarkStart: 'rgba(13,11,20,0)',
   helpCenterOverlayDarkEnd: 'rgba(13,11,20,0.92)',
   helpCenterOverlayLightStart: 'rgba(255,255,255,0)',
@@ -139,6 +153,13 @@ export const Colors = {
   memberCardAmbientSoft: 'rgba(255,255,255,0.08)',
   memberCardAmbientSofter: 'rgba(255,255,255,0.06)',
   brandGoogleBlue: '#4285F4',
+  /** Meta Facebook primary blue (logo / “f” on blue). */
+  brandFacebookBlue: '#1877F2',
+  /**
+   * Instagram gradient approximation (Meta brand palette) for small UI chips.
+   * Official assets: https://about.meta.com/brand/resources/instagram/icons
+   */
+  brandInstagramGradient: ['#833AB4', '#E1306C', '#F77737'] as const,
   qrOrbPrimaryDark: 'rgba(233,30,99,0.05)',
   qrOrbPrimaryLight: 'rgba(233,30,99,0.03)',
   qrOrbGoldDark: 'rgba(200,162,77,0.04)',
