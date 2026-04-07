@@ -22,6 +22,7 @@ import {
   toLocalDateString,
 } from '@/src/lib/booking/booking-screen';
 import { hapticMedium, hapticSelection } from '@/src/lib/haptics/haptics';
+import { isEmailValid } from '@/src/lib/validation/email';
 import { ActivityIndicator, View } from '@/src/tw';
 
 export default function BookingModalScreen(): React.JSX.Element {
@@ -311,9 +312,4 @@ function canSubmitReservation({
   userId?: string;
 }): boolean {
   return Boolean(userId) && isSelectedTimeValid && isContactEmailValid;
-}
-
-function isEmailValid(email: string): boolean {
-  if (!email) return false;
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }

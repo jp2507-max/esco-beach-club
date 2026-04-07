@@ -216,7 +216,9 @@ export function AppLaunchScreen({
 
         <Animated.View
           className="mt-9 items-center"
-          entering={withRM(FadeInUp.delay(70).duration(motion.dur.md))}
+          entering={withRM(
+            FadeInUp.delay(motion.dur.staggerLaunchCopy).duration(motion.dur.md)
+          )}
         >
           <Text className="text-[11px] font-bold uppercase tracking-[3.2px] text-text-secondary dark:text-text-secondary-dark">
             {t('launch.eyebrow')}

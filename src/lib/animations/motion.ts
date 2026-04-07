@@ -2,6 +2,8 @@ import { Easing, ReduceMotion } from 'react-native-reanimated';
 
 export const motion = {
   dur: {
+    /** Stagger delay for launch/intro copy reveal (ms) */
+    staggerLaunchCopy: 70,
     xs: 120,
     sm: 180,
     md: 260,

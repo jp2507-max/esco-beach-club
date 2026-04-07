@@ -292,6 +292,7 @@ export default function QrTabScreen(): React.JSX.Element {
     Boolean(permission?.granted) &&
     isFocused &&
     !isMemberCardOpen &&
+    !scanFeedback &&
     !isScanLocked &&
     !claimMutation.isPending;
 
@@ -310,7 +311,7 @@ export default function QrTabScreen(): React.JSX.Element {
 
   function handleCloseMemberCard(): void {
     setIsMemberCardOpen(false);
-    if (!scanFeedback) {
+    if (!scanFeedback && !claimMutation.isPending) {
       setScannerLock(false);
     }
   }
@@ -371,6 +372,35 @@ export default function QrTabScreen(): React.JSX.Element {
     }
 
     if (!scanFeedback) {
+      if (permission === null) {
+        return (
+          <View className="rounded-[20px] border border-border bg-card px-5 py-4 dark:border-dark-border dark:bg-dark-bg-card">
+            <Text className="text-base font-bold text-text dark:text-text-primary-dark">
+              {t('billScanner.loadingTitle')}
+            </Text>
+            <Text className="mt-1 text-[13px] leading-5 text-text-secondary dark:text-text-secondary-dark">
+              {t('billScanner.loadingDescription')}
+            </Text>
+          </View>
+        );
+      }
+
+      if (!permission.granted) {
+        return (
+          <View className="rounded-[20px] border border-border bg-card px-5 py-4 dark:border-dark-border dark:bg-dark-bg-card">
+            <Text className="text-[11px] font-extrabold uppercase tracking-[2.8px] text-primary dark:text-primary-bright">
+              {t('billScanner.permissionEyebrow')}
+            </Text>
+            <Text className="mt-1.5 text-base font-bold text-text dark:text-text-primary-dark">
+              {t('billScanner.cameraPermissionTitle')}
+            </Text>
+            <Text className="mt-1 text-[13px] leading-5 text-text-secondary dark:text-text-secondary-dark">
+              {t('billScanner.cameraPermissionDescription')}
+            </Text>
+          </View>
+        );
+      }
+
       return (
         <View className="rounded-[20px] border border-border bg-card px-5 py-4 dark:border-dark-border dark:bg-dark-bg-card">
           <View className="flex-row items-center justify-between gap-3">

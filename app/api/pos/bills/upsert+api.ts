@@ -295,14 +295,23 @@ export async function POST(request: Request): Promise<Response> {
             return 0;
           }
 
-          await adminDb.transact([
-            createInstantUpdateStep(
-              'pos_bills',
+          try {
+            await adminDb.transact([
+              createInstantUpdateStep(
+                'pos_bills',
+                entryKey,
+                toPosBillRecord({ bill, existingBill, nowIso }),
+                { upsert: true }
+              ),
+            ]);
+          } catch (error: unknown) {
+            console.error('[POS Upsert] Transaction failed', {
               entryKey,
-              toPosBillRecord({ bill, existingBill, nowIso }),
-              { upsert: true }
-            ),
-          ]);
+              posBillId: bill.posBillId,
+              restaurantId: bill.restaurantId,
+            });
+            throw error;
+          }
 
           return 1;
         });

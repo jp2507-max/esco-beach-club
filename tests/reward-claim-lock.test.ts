@@ -37,6 +37,7 @@ describe('reward claim profile lock', () => {
       return 'second';
     });
 
+    // Flush microtask queue to let first task start.
     await Promise.resolve();
     expect(secondStarted).toBe(false);
 

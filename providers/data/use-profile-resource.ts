@@ -11,6 +11,29 @@ import type { ProfileData } from './context';
 const MAX_PROFILE_PROVISION_ATTEMPTS = 2;
 const PROFILE_PROVISION_FAILURE_KEY = 'unableToCompleteProfileSetup';
 
+type ErrorWithTerminalProvisionFlag = Error & {
+  terminalProvisionFailure?: boolean;
+};
+
+function createTerminalProvisionError(
+  message: string = PROFILE_PROVISION_FAILURE_KEY
+): Error & { terminalProvisionFailure: true } {
+  const err = new Error(message);
+  Object.defineProperty(err, 'terminalProvisionFailure', {
+    value: true,
+    writable: false,
+    enumerable: false,
+    configurable: false,
+  });
+  return err as Error & { terminalProvisionFailure: true };
+}
+
+function isTerminalProfileProvisionError(error: Error): boolean {
+  return (
+    (error as ErrorWithTerminalProvisionFlag).terminalProvisionFailure === true
+  );
+}
+
 type ProfileResourceParams = {
   authEmail?: string;
   isAuthLoading: boolean;
@@ -36,7 +59,7 @@ function firstInstantRecord(value: unknown): InstantRecord | null {
 
 function normalizeProvisionError(error: unknown): Error {
   if (error instanceof Error) return error;
-  return new Error(PROFILE_PROVISION_FAILURE_KEY);
+  return createTerminalProvisionError();
 }
 
 export function useProfileResource(params: ProfileResourceParams): ProfileData {
@@ -158,7 +181,7 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
     const attemptCount = profileProvisionAttemptsRef.current.get(userId) ?? 0;
     if (attemptCount >= MAX_PROFILE_PROVISION_ATTEMPTS) {
       if (!profileProvisionError) {
-        setProfileProvisionError(new Error(PROFILE_PROVISION_FAILURE_KEY));
+        setProfileProvisionError(createTerminalProvisionError());
       }
       return;
     }
@@ -180,7 +203,7 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
         }
 
         if (nextAttempt >= MAX_PROFILE_PROVISION_ATTEMPTS) {
-          setProfileProvisionError(new Error(PROFILE_PROVISION_FAILURE_KEY));
+          setProfileProvisionError(createTerminalProvisionError());
         }
       })
       .catch((error: unknown) => {
@@ -234,7 +257,7 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
     try {
       const nextProfile = await ensureProfile({ email: authEmail, userId });
       if (!nextProfile) {
-        throw new Error(PROFILE_PROVISION_FAILURE_KEY);
+        throw createTerminalProvisionError();
       }
 
       profileProvisionAttemptsRef.current.delete(userId);
@@ -294,7 +317,7 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
 
   const isRetryable = Boolean(
     profileProvisionError &&
-    profileProvisionError.message !== PROFILE_PROVISION_FAILURE_KEY
+    !isTerminalProfileProvisionError(profileProvisionError)
   );
 
   return useMemo(
