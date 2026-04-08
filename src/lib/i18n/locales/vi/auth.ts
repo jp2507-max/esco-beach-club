@@ -214,6 +214,14 @@ const auth = {
   onboardingWelcomePointGlobalTitle: 'Mạng lưới toàn cầu',
   onboardingWelcomePointGlobalDescription:
     'Truy cập ưu đãi tại hơn 40 quốc gia và 6 châu lục.',
+  profileBootstrapLoadingMessage:
+    'Đang chuẩn bị hồ sơ thành viên và kiểm tra quyền truy cập của bạn.',
+  profileBootstrapErrorTitle: 'Hoàn tất thiết lập hồ sơ',
+  profileBootstrapErrorMessage:
+    'Phiên đăng nhập đã hoạt động nhưng chúng tôi chưa thể tải xong hồ sơ thành viên của bạn. Vui lòng chờ trong giây lát hoặc đăng xuất an toàn.',
+  profileBootstrapTerminalTitle: 'Không thể tải hồ sơ thành viên',
+  profileBootstrapSignOutAction: 'Đăng xuất',
+  profileBootstrapBackToSignInAction: 'Quay lại đăng nhập',
   genericError: 'Đã có lỗi xảy ra. Vui lòng thử lại hoặc liên hệ hỗ trợ.',
   member: 'Thành viên',
 } as const;

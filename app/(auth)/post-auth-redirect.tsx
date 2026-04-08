@@ -1,19 +1,77 @@
 import { Redirect, useRouter } from 'expo-router';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
+import { Alert } from 'react-native';
 
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/providers/AuthProvider';
-import { useProfileData } from '@/providers/DataProvider';
-import { ActivityIndicator, View } from '@/src/tw';
+import {
+  profileBootstrapStates,
+  useProfileData,
+} from '@/providers/DataProvider';
+import { ActivityIndicator, Pressable, Text, View } from '@/src/tw';
+
+function BootstrapRecoveryCard(props: {
+  errorMessage: string;
+  isWorking: boolean;
+  onBackToSignIn: () => Promise<void>;
+  onSignOut: () => Promise<boolean>;
+  title: string;
+}): React.JSX.Element {
+  const { t } = useTranslation('auth');
+
+  return (
+    <View className="flex-1 items-center justify-center bg-background px-6 dark:bg-dark-bg">
+      <View className="w-full max-w-110 rounded-[28px] border border-border bg-card p-6 dark:border-dark-border dark:bg-dark-bg-card">
+        <Text className="text-center text-2xl font-extrabold text-text dark:text-text-primary-dark">
+          {props.title}
+        </Text>
+        <Text className="mt-3 text-center text-sm leading-6 text-text-secondary dark:text-text-secondary-dark">
+          {props.errorMessage}
+        </Text>
+
+        <View className="mt-6 gap-3">
+          <Pressable
+            accessibilityRole="button"
+            className="h-13 items-center justify-center rounded-full border border-border bg-white px-5 dark:border-dark-border dark:bg-dark-bg-elevated"
+            disabled={props.isWorking}
+            onPress={() => {
+              void props.onSignOut();
+            }}
+            testID="auth-bootstrap-sign-out"
+          >
+            <Text className="text-sm font-semibold text-text dark:text-text-primary-dark">
+              {t('profileBootstrapSignOutAction')}
+            </Text>
+          </Pressable>
+
+          <Pressable
+            accessibilityRole="button"
+            className="h-13 items-center justify-center rounded-full"
+            disabled={props.isWorking}
+            onPress={() => {
+              void props.onBackToSignIn();
+            }}
+            testID="auth-bootstrap-back-to-sign-in"
+          >
+            <Text className="text-sm font-semibold text-text-secondary dark:text-text-secondary-dark">
+              {t('profileBootstrapBackToSignInAction')}
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+    </View>
+  );
+}
 
 export default function PostAuthRedirectScreen(): React.JSX.Element {
+  const { t } = useTranslation('auth');
   const { signOut } = useAuth();
   const router = useRouter();
   const {
+    bootstrapError,
+    bootstrapState,
     profile,
-    profileLoading,
-    isRetryable,
-    profileProvisionError,
     retryProfileProvision,
     userId,
   } = useProfileData();
@@ -21,56 +79,18 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
     string | null
   >(null);
   const [isRetryingProvision, setIsRetryingProvision] = React.useState(false);
-  const [provisionFailureRecoveryActive, setProvisionFailureRecoveryActive] =
-    React.useState(false);
-  const provisionRecoveryStartedRef = React.useRef(false);
+  const [isSigningOut, setIsSigningOut] = React.useState(false);
 
   const shouldRetryProvision =
-    Boolean(profileProvisionError) &&
-    isRetryable &&
-    !profileLoading &&
+    bootstrapState === profileBootstrapStates.recoverableError &&
     !isRetryingProvision &&
     Boolean(userId) &&
     retriedProvisionUserId !== userId;
-
-  const needsProvisionRecovery =
-    Boolean(profileProvisionError) &&
-    !isRetryable &&
-    !profileLoading &&
-    !isRetryingProvision;
-
-  React.useEffect(() => {
-    if (!needsProvisionRecovery) return;
-    if (provisionRecoveryStartedRef.current) return;
-    provisionRecoveryStartedRef.current = true;
-    setProvisionFailureRecoveryActive(true);
-
-    void (async (): Promise<void> => {
-      try {
-        await signOut();
-        router.replace('/(auth)/login');
-      } catch (error: unknown) {
-        if (__DEV__) {
-          console.error(
-            '[PostAuthRedirect] Provision recovery sign-out failed',
-            { error }
-          );
-        }
-      }
-    })();
-  }, [needsProvisionRecovery, router, signOut]);
-
-  React.useEffect(() => {
-    if (profileProvisionError) return;
-    if (provisionRecoveryStartedRef.current) return;
-    setProvisionFailureRecoveryActive(false);
-  }, [profileProvisionError]);
 
   React.useEffect(() => {
     if (!shouldRetryProvision || !userId) return;
 
     const retryUserId = userId;
-
     setIsRetryingProvision(true);
 
     void (async (): Promise<void> => {
@@ -93,18 +113,80 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
     })();
   }, [retryProfileProvision, shouldRetryProvision, userId]);
 
-  const showAuthSpinner =
-    profileLoading ||
-    shouldRetryProvision ||
-    isRetryingProvision ||
-    needsProvisionRecovery ||
-    provisionFailureRecoveryActive;
+  async function handleSignOut(): Promise<boolean> {
+    setIsSigningOut(true);
 
-  if (showAuthSpinner) {
+    try {
+      await signOut();
+      return true;
+    } catch (error: unknown) {
+      Alert.alert(t('verificationFailedTitle'), t('unableToSignOut'));
+
+      if (__DEV__) {
+        console.error('[PostAuthRedirect] Sign-out failed during recovery', {
+          error,
+        });
+      }
+
+      return false;
+    } finally {
+      setIsSigningOut(false);
+    }
+  }
+
+  async function handleBackToSignIn(): Promise<void> {
+    const didSignOut = await handleSignOut();
+    if (didSignOut) router.replace('/(auth)/login');
+  }
+
+  const isWorking = isRetryingProvision || isSigningOut;
+  const errorMessage =
+    bootstrapError?.message &&
+    bootstrapError.message !== 'unableToCompleteProfileSetup'
+      ? bootstrapError.message
+      : t('profileBootstrapErrorMessage');
+
+  if (bootstrapState === profileBootstrapStates.signedOut) {
+    return <Redirect href="/(auth)/login" />;
+  }
+
+  if (
+    bootstrapState === profileBootstrapStates.authenticating ||
+    bootstrapState === profileBootstrapStates.bootstrappingProfile ||
+    shouldRetryProvision ||
+    isRetryingProvision
+  ) {
     return (
       <View className="flex-1 items-center justify-center bg-background dark:bg-dark-bg">
         <ActivityIndicator size="large" color={Colors.primary} />
+        <Text className="mt-4 px-8 text-center text-sm text-text-secondary dark:text-text-secondary-dark">
+          {t('profileBootstrapLoadingMessage')}
+        </Text>
       </View>
+    );
+  }
+
+  if (bootstrapState === profileBootstrapStates.recoverableError) {
+    return (
+      <BootstrapRecoveryCard
+        errorMessage={errorMessage}
+        isWorking={isWorking}
+        title={t('profileBootstrapErrorTitle')}
+        onBackToSignIn={handleBackToSignIn}
+        onSignOut={handleSignOut}
+      />
+    );
+  }
+
+  if (bootstrapState === profileBootstrapStates.terminalError) {
+    return (
+      <BootstrapRecoveryCard
+        errorMessage={errorMessage}
+        isWorking={isWorking}
+        title={t('profileBootstrapTerminalTitle')}
+        onBackToSignIn={handleBackToSignIn}
+        onSignOut={handleSignOut}
+      />
     );
   }
 

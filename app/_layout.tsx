@@ -22,7 +22,11 @@ import { AppState, type AppStateStatus, Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { AuthProvider, useAuth } from '@/providers/AuthProvider';
-import { DataProvider } from '@/providers/DataProvider';
+import {
+  DataProvider,
+  profileBootstrapStates,
+  useProfileData,
+} from '@/providers/DataProvider';
 import { RestaurantPresenceProvider } from '@/providers/RestaurantPresenceProvider';
 import { AppLaunchScreen } from '@/src/components/app/app-launch-screen';
 import { ReferralClaimEffect } from '@/src/components/referral/referral-claim-effect';
@@ -280,9 +284,14 @@ function AuthenticatedDataProvider({
 
 function RootLayoutNav() {
   const { isAuthenticated, isLoading } = useAuth();
+  const { bootstrapState, isAuthenticatedButNotReady } = useProfileData();
   const { t } = useTranslation('common');
   const isDark = useAppIsDark();
   const hasHiddenNativeSplashRef = useRef(false);
+  const canAccessAuthenticatedRoutes =
+    isAuthenticated &&
+    (!isAuthenticatedButNotReady ||
+      bootstrapState === profileBootstrapStates.ready);
 
   const hideNativeSplash = useCallback((): void => {
     if (hasHiddenNativeSplashRef.current) return;
@@ -315,7 +324,7 @@ function RootLayoutNav() {
       <Stack.Screen name="privacy" />
       <Stack.Screen name="support" />
       <Stack.Screen name="terms" />
-      <Stack.Protected guard={isAuthenticated}>
+      <Stack.Protected guard={canAccessAuthenticatedRoutes}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen
           name="(shared)"

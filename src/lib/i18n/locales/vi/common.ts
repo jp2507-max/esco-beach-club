@@ -30,6 +30,7 @@ const common = {
   },
   back: 'Quay lại',
   backHint: 'Quay về màn hình trước',
+  valueUnavailable: '—',
   rateUs: {
     title: 'Đánh giá trải nghiệm của bạn',
     howWasVisit: 'Chuyến thăm của bạn thế nào?',

@@ -1,14 +1,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { ensureProfile } from '@/lib/api';
+import {
+  ensureProfile,
+  ProfileBootstrapError,
+  type ProfileBootstrapStage,
+  profileBootstrapStages,
+} from '@/lib/api';
 import type { Profile } from '@/lib/types';
 import { db } from '@/src/lib/instant';
 import { type InstantRecord, mapProfile } from '@/src/lib/mappers';
 import { captureHandledError } from '@/src/lib/monitoring';
 
-import type { ProfileData } from './context';
+import { profileBootstrapStates, type ProfileData } from './context';
 
-const MAX_PROFILE_PROVISION_ATTEMPTS = 2;
+const MAX_PROFILE_PROVISION_ATTEMPTS = 1;
 const PROFILE_PROVISION_FAILURE_KEY = 'unableToCompleteProfileSetup';
 
 type ErrorWithTerminalProvisionFlag = Error & {
@@ -58,7 +63,26 @@ function firstInstantRecord(value: unknown): InstantRecord | null {
 }
 
 function normalizeProvisionError(error: unknown): Error {
-  if (error instanceof Error) return error;
+  if (error instanceof ProfileBootstrapError) return error;
+
+  if (error instanceof Error && isTerminalProfileProvisionError(error)) {
+    return error;
+  }
+
+  if (error instanceof Error) {
+    if (error.message.toLowerCase().includes('permission denied')) {
+      return new ProfileBootstrapError(PROFILE_PROVISION_FAILURE_KEY, {
+        isRetryable: false,
+        stage: profileBootstrapStages.ensureProfile,
+      });
+    }
+
+    return new ProfileBootstrapError(PROFILE_PROVISION_FAILURE_KEY, {
+      isRetryable: true,
+      stage: profileBootstrapStages.ensureProfile,
+    });
+  }
+
   return createTerminalProvisionError();
 }
 
@@ -68,6 +92,8 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
     useState<boolean>(false);
   const [profileProvisionError, setProfileProvisionError] =
     useState<Error | null>(null);
+  const [bootstrapStage, setBootstrapStage] =
+    useState<ProfileBootstrapStage | null>(null);
   const isDismissingRef = useRef(false);
   const isProvisioningProfileRef = useRef<Map<string, boolean>>(new Map());
   const lastResolvedProfileRef = useRef<Profile | null>(null);
@@ -76,12 +102,12 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
   latestUserIdRef.current = userId;
   const profileProvisionAttemptsRef = useRef<Map<string, number>>(new Map());
 
-  const profileQuery = db.useQuery(
+  const canonicalProfileQuery = db.useQuery(
     userId
       ? {
           profiles: {
             $: {
-              where: { 'user.id': userId },
+              where: { id: userId },
             },
           },
         }
@@ -103,7 +129,9 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
   const liveProfile = useMemo(() => {
     if (!userId) return null;
 
-    const directRecord = firstInstantRecord(profileQuery.data?.profiles);
+    const directRecord = firstInstantRecord(
+      canonicalProfileQuery.data?.profiles
+    );
     const userRecord = firstInstantRecord(profileViaUserQuery.data?.$users);
     const linkedRecord = firstInstantRecord(
       (userRecord as Record<string, unknown> | null)?.profile
@@ -111,11 +139,11 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
     const record = directRecord ?? linkedRecord;
 
     return record ? mapProfile(record) : null;
-  }, [profileQuery.data, profileViaUserQuery.data, userId]);
+  }, [canonicalProfileQuery.data, profileViaUserQuery.data, userId]);
 
   const isProfilePending =
     isAuthLoading ||
-    profileQuery.isLoading ||
+    canonicalProfileQuery.isLoading ||
     profileViaUserQuery.isLoading ||
     isProvisioningProfile;
 
@@ -136,18 +164,15 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
       lastResolvedProfileRef.current = liveProfile;
       return;
     }
-
-    if (!isProfilePending) {
-      lastResolvedProfileRef.current = null;
-    }
   }, [isProfilePending, liveProfile, userId]);
 
   const profile = useMemo(() => {
     if (!userId) return null;
     if (liveProfile) return liveProfile;
 
-    // Keep the last settled profile during transient auth/query gaps so
-    // member-facing UI does not flicker back to guest state mid-session.
+    // Keep the last settled profile for the same authenticated user so
+    // member-facing UI does not flicker back to guest state during bootstrap,
+    // query churn, or retry recovery.
     if (isProfilePending && lastResolvedProfileUserIdRef.current === userId) {
       return lastResolvedProfileRef.current;
     }
@@ -157,6 +182,7 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
 
   useEffect(() => {
     if (isAuthLoading) {
+      setBootstrapStage(profileBootstrapStages.loadProfile);
       return;
     }
 
@@ -165,6 +191,7 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
       isProvisioningProfileRef.current.clear();
       setIsProvisioningProfile(false);
       setProfileProvisionError(null);
+      setBootstrapStage(null);
       return;
     }
 
@@ -172,10 +199,14 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
       profileProvisionAttemptsRef.current.delete(userId);
       isProvisioningProfileRef.current.delete(userId);
       setProfileProvisionError(null);
+      setBootstrapStage(null);
       return;
     }
 
-    if (profileQuery.isLoading || profileViaUserQuery.isLoading) return;
+    if (canonicalProfileQuery.isLoading || profileViaUserQuery.isLoading) {
+      setBootstrapStage(profileBootstrapStages.loadProfile);
+      return;
+    }
     if (isProvisioningProfileRef.current.get(userId)) return;
 
     const attemptCount = profileProvisionAttemptsRef.current.get(userId) ?? 0;
@@ -183,6 +214,7 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
       if (!profileProvisionError) {
         setProfileProvisionError(createTerminalProvisionError());
       }
+      setBootstrapStage(profileBootstrapStages.ensureProfile);
       return;
     }
 
@@ -191,6 +223,7 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
 
     isProvisioningProfileRef.current.set(userId, true);
     setIsProvisioningProfile(true);
+    setBootstrapStage(profileBootstrapStages.ensureProfile);
     let isMounted = true;
 
     void ensureProfile({ email: authEmail, userId })
@@ -204,11 +237,13 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
 
         if (nextAttempt >= MAX_PROFILE_PROVISION_ATTEMPTS) {
           setProfileProvisionError(createTerminalProvisionError());
+          setBootstrapStage(profileBootstrapStages.ensureProfile);
         }
       })
       .catch((error: unknown) => {
         if (!isMounted) return;
         const normalizedError = normalizeProvisionError(error);
+        setBootstrapStage(resolveBootstrapStage(normalizedError));
         captureHandledError(error, {
           tags: {
             area: 'profile',
@@ -222,7 +257,7 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
           error,
           nextAttempt,
           isAuthLoading,
-          profileQueryLoading: profileQuery.isLoading,
+          profileQueryLoading: canonicalProfileQuery.isLoading,
           profileViaUserQueryLoading: profileViaUserQuery.isLoading,
         });
       })
@@ -238,9 +273,9 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
     };
   }, [
     authEmail,
+    canonicalProfileQuery.isLoading,
     isAuthLoading,
     profile,
-    profileQuery.isLoading,
     profileProvisionError,
     profileViaUserQuery.isLoading,
     userId,
@@ -249,10 +284,17 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
   const retryProfileProvision = useCallback(async (): Promise<void> => {
     if (!userId || isProvisioningProfileRef.current.get(userId)) return;
 
-    profileProvisionAttemptsRef.current.set(userId, 0);
+    // A manual retry is the terminal bootstrap attempt for this user in the
+    // current session. Keep the counter at the cap so the effect does not
+    // immediately schedule a second automatic retry after a failed manual one.
+    profileProvisionAttemptsRef.current.set(
+      userId,
+      MAX_PROFILE_PROVISION_ATTEMPTS
+    );
     setProfileProvisionError(null);
     isProvisioningProfileRef.current.set(userId, true);
     setIsProvisioningProfile(true);
+    setBootstrapStage(profileBootstrapStages.ensureProfile);
 
     try {
       const nextProfile = await ensureProfile({ email: authEmail, userId });
@@ -264,6 +306,7 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
       setProfileProvisionError(null);
     } catch (error: unknown) {
       const normalizedError = normalizeProvisionError(error);
+      setBootstrapStage(resolveBootstrapStage(normalizedError));
       setProfileProvisionError(normalizedError);
 
       captureHandledError(error, {
@@ -317,33 +360,81 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
 
   const isRetryable = Boolean(
     profileProvisionError &&
-    !isTerminalProfileProvisionError(profileProvisionError)
+    !isTerminalProfileProvisionError(profileProvisionError) &&
+    (!(profileProvisionError instanceof ProfileBootstrapError) ||
+      profileProvisionError.isRetryable)
   );
+
+  const bootstrapState = useMemo(() => {
+    if (!userId) return profileBootstrapStates.signedOut;
+    if (isAuthLoading) return profileBootstrapStates.authenticating;
+
+    if (!isProfilePending && profileProvisionError) {
+      return isRetryable
+        ? profileBootstrapStates.recoverableError
+        : profileBootstrapStates.terminalError;
+    }
+
+    if (profile) {
+      return profile.onboarding_completed_at
+        ? profileBootstrapStates.ready
+        : profileBootstrapStates.needsOnboarding;
+    }
+
+    return profileBootstrapStates.bootstrappingProfile;
+  }, [
+    isAuthLoading,
+    isProfilePending,
+    isRetryable,
+    profile,
+    profileProvisionError,
+    userId,
+  ]);
+
+  const isAuthenticatedButNotReady =
+    Boolean(userId) && bootstrapState !== profileBootstrapStates.ready;
 
   return useMemo(
     () => ({
+      bootstrapError: profileProvisionError,
+      bootstrapStage,
+      bootstrapState,
       dismissVoucher,
+      isAuthenticatedButNotReady,
       profile,
       isRetryable,
       profileProvisionError,
       profileLoading:
         Boolean(userId) &&
-        (profileQuery.isLoading ||
+        (canonicalProfileQuery.isLoading ||
           profileViaUserQuery.isLoading ||
           isProvisioningProfile),
       retryProfileProvision,
       userId,
     }),
     [
+      bootstrapStage,
+      bootstrapState,
+      canonicalProfileQuery.isLoading,
       dismissVoucher,
+      isAuthenticatedButNotReady,
       isProvisioningProfile,
       isRetryable,
       profile,
       profileProvisionError,
-      profileQuery.isLoading,
       profileViaUserQuery.isLoading,
       retryProfileProvision,
       userId,
     ]
   );
+}
+
+function resolveBootstrapStage(
+  error: Error | null
+): ProfileBootstrapStage | null {
+  if (error instanceof ProfileBootstrapError) {
+    return error.stage;
+  }
+
+  return null;
 }

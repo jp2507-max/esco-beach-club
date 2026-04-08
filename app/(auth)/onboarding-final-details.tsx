@@ -137,7 +137,12 @@ function FloatingDot({
 
 export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
   const router = useRouter();
-  const { isAuthenticated, isLoading: isAuthLoading, user } = useAuth();
+  const {
+    isAuthenticated,
+    isLoading: isAuthLoading,
+    signOut,
+    user,
+  } = useAuth();
   const { profile } = useProfileData();
   const { t } = useTranslation('auth');
   const isDark = useAppIsDark();
@@ -170,9 +175,7 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
     transform: [{ scale: sparkleScale.get() }],
   }));
 
-  async function persistAuthenticatedOnboardingChoices(
-    isSetupCompleted: boolean
-  ): Promise<void> {
+  async function persistAuthenticatedOnboardingChoices(): Promise<void> {
     if (!user?.id) return;
 
     const onboardingDisplayName = readSingleSearchParam(
@@ -221,13 +224,11 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
       ...(memberSegment ? { member_segment: memberSegment } : {}),
       location_permission_status: resolvedLocationPermissionStatus,
       push_notification_permission_status: resolvedPushPermissionStatus,
-      ...(isSetupCompleted
-        ? { onboarding_completed_at: new Date().toISOString() }
-        : {}),
+      onboarding_completed_at: new Date().toISOString(),
     });
   }
 
-  async function navigateToSignup(isSetupCompleted: boolean): Promise<void> {
+  function buildSignupParams(): Record<string, string> {
     const onboardingDateOfBirth = readSingleSearchParam(
       searchParams.onboardingDateOfBirth
     );
@@ -251,88 +252,103 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
       searchParams.onboardingPushPermissionStatus
     );
 
-    if (isAuthLoading) {
+    return {
+      ...(onboardingDateOfBirth ? { onboardingDateOfBirth } : {}),
+      ...(onboardingDisplayName ? { onboardingDisplayName } : {}),
+      ...(onboardingPrivacyAccepted
+        ? { onboardingPrivacyAccepted }
+        : { onboardingPrivacyAccepted: '0' }),
+      ...(onboardingSegment ? { onboardingSegment } : {}),
+      ...(onboardingTermsAccepted
+        ? { onboardingTermsAccepted }
+        : { onboardingTermsAccepted: '0' }),
+      ...(onboardingLocationPermissionStatus
+        ? {
+            onboardingLocationPermissionStatus,
+          }
+        : {
+            onboardingLocationPermissionStatus:
+              onboardingPermissionStatuses.undetermined,
+          }),
+      ...(onboardingPushPermissionStatus
+        ? {
+            onboardingPushPermissionStatus,
+          }
+        : {
+            onboardingPushPermissionStatus:
+              onboardingPermissionStatuses.undetermined,
+          }),
+      onboardingCompletedSetup: '1',
+    };
+  }
+
+  async function handleAuthenticatedSignupFallback(
+    signupParams: Record<string, string>
+  ): Promise<void> {
+    try {
+      await signOut();
+    } catch (error: unknown) {
+      console.error(
+        '[OnboardingFinalDetails] Failed to sign out before auth fallback:',
+        {
+          error,
+        }
+      );
+      Alert.alert(t('verificationFailedTitle'), t('unableToSignOut'));
       return;
     }
 
-    if (isAuthenticated && user?.id) {
-      let shouldFallbackToSignup = false;
+    router.replace({
+      pathname: '/signup',
+      params: signupParams,
+    });
+  }
 
+  async function navigateToSignup(): Promise<void> {
+    if (isAuthLoading) return;
+
+    const signupParams = buildSignupParams();
+
+    if (isAuthenticated && user?.id) {
       try {
-        await persistAuthenticatedOnboardingChoices(isSetupCompleted);
+        await persistAuthenticatedOnboardingChoices();
       } catch (error: unknown) {
         if (isPermissionDeniedError(error)) {
-          shouldFallbackToSignup = true;
           console.warn(
-            '[OnboardingFinalDetails] Skipping authenticated profile update after auth became unavailable:',
+            '[OnboardingFinalDetails] Authenticated onboarding update lost permissions; recovering through auth flow.',
             {
               error,
             }
           );
-        } else {
-          console.error(
-            '[OnboardingFinalDetails] Failed to persist onboarding updates:',
-            {
-              error,
-            }
-          );
-          Alert.alert(
-            t('onboardingSaveErrorTitle'),
-            t('onboardingSaveErrorMessage')
-          );
+          await handleAuthenticatedSignupFallback(signupParams);
           return;
         }
-      }
 
-      if (!shouldFallbackToSignup) {
-        router.replace('/profile');
+        console.error(
+          '[OnboardingFinalDetails] Failed to persist onboarding updates:',
+          {
+            error,
+          }
+        );
+        Alert.alert(
+          t('onboardingSaveErrorTitle'),
+          t('onboardingSaveErrorMessage')
+        );
         return;
       }
+
+      router.replace('/(auth)/post-auth-redirect');
+      return;
     }
 
     router.push({
       pathname: '/signup',
-      params: {
-        ...(onboardingDateOfBirth ? { onboardingDateOfBirth } : {}),
-        ...(onboardingDisplayName ? { onboardingDisplayName } : {}),
-        ...(onboardingPrivacyAccepted
-          ? { onboardingPrivacyAccepted }
-          : { onboardingPrivacyAccepted: '0' }),
-        ...(onboardingSegment ? { onboardingSegment } : {}),
-        ...(onboardingTermsAccepted
-          ? { onboardingTermsAccepted }
-          : { onboardingTermsAccepted: '0' }),
-        ...(onboardingLocationPermissionStatus
-          ? {
-              onboardingLocationPermissionStatus,
-            }
-          : {
-              onboardingLocationPermissionStatus:
-                onboardingPermissionStatuses.undetermined,
-            }),
-        ...(onboardingPushPermissionStatus
-          ? {
-              onboardingPushPermissionStatus,
-            }
-          : {
-              onboardingPushPermissionStatus:
-                onboardingPermissionStatuses.undetermined,
-            }),
-        ...(isSetupCompleted
-          ? {
-              onboardingCompletedSetup: '1',
-            }
-          : { onboardingCompletedSetup: '0' }),
-      },
+      params: signupParams,
     });
   }
 
   function handleCompleteSetup(): void {
-    void navigateToSignup(true);
-  }
-
-  function handleDoThisLater(): void {
-    void navigateToSignup(false);
+    void navigateToSignup();
   }
 
   return (
@@ -548,26 +564,6 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
               </LinearGradient>
             </Pressable>
           </Animated.View>
-        </Animated.View>
-
-        <Animated.View
-          entering={withRM(
-            FadeIn.duration(motion.dur.md).delay(CTA_DELAY + 100)
-          )}
-        >
-          <Pressable
-            accessibilityRole="button"
-            className="mt-5 items-center"
-            onPress={() => {
-              hapticLight();
-              handleDoThisLater();
-            }}
-            testID="onboarding-final-details-later"
-          >
-            <Text className="text-[16px] font-bold text-secondary dark:text-secondary-fixed">
-              {t('onboardingClubSecondaryCta')}
-            </Text>
-          </Pressable>
         </Animated.View>
       </View>
     </View>

@@ -15,16 +15,8 @@ const profile = {
     savedEvents: '저장한 이벤트',
     settings: '설정',
     helpSupport: '도움말 및 지원',
-    restartOnboarding: '온보딩 다시 시작',
     logOut: '로그아웃',
     deleteAccount: '계정 삭제',
-  },
-  restartOnboarding: {
-    confirmTitle: '온보딩을 다시 시작할까요?',
-    confirmMessage:
-      '설정 선택을 업데이트할 수 있도록 온보딩 흐름으로 다시 이동합니다.',
-    cancel: '취소',
-    start: '시작',
   },
   notifications: {
     title: '알림',

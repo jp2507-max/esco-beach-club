@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 
+import { toError } from '@/src/lib/auth/provider-error-mapping';
 import { AUTH_ERROR_KEYS, isAuthErrorKey } from '@/src/lib/auth-errors';
 
 describe('auth error keys', () => {
@@ -17,5 +18,38 @@ describe('auth error keys', () => {
     expect(isAuthErrorKey('profileMissingAfterSignIn')).toBe(false);
     expect(isAuthErrorKey('')).toBe(false);
     expect(isAuthErrorKey(null)).toBe(false);
+  });
+
+  test('maps oauth-client-not-found errors to provider-specific auth keys', () => {
+    const mappedGoogleError = toError(
+      {
+        body: {
+          message: 'record not found: oauth-client',
+        },
+      },
+      'unableToSignInWithGoogle',
+      { oauthProvider: 'google' }
+    );
+
+    expect(mappedGoogleError.message).toBe('googleOauthClientNotConfigured');
+  });
+
+  test('preserves known auth key messages from providers', () => {
+    const mappedError = toError(
+      {
+        body: {
+          message: 'unableToCompleteProfileSetup',
+        },
+      },
+      'unableToSignInWithGoogle'
+    );
+
+    expect(mappedError.message).toBe('unableToCompleteProfileSetup');
+  });
+
+  test('falls back when error payload has no usable message', () => {
+    const mappedError = toError({}, 'unableToVerifyCode');
+
+    expect(mappedError.message).toBe('unableToVerifyCode');
   });
 });

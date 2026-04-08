@@ -31,6 +31,7 @@ const common = {
   },
   back: 'Back',
   backHint: 'Returns to the previous screen',
+  valueUnavailable: '—',
   rateUs: {
     title: 'Rate Your Experience',
     howWasVisit: 'How was your visit?',

@@ -212,6 +212,14 @@ const auth = {
   onboardingWelcomePointGlobalTitle: 'Global Network',
   onboardingWelcomePointGlobalDescription:
     'Access rewards across 40+ countries and 6 continents.',
+  profileBootstrapLoadingMessage:
+    'Preparing your member profile and checking your access.',
+  profileBootstrapErrorTitle: 'Finish setting up your profile',
+  profileBootstrapErrorMessage:
+    'Your session is active, but we could not finish loading your member profile. Please wait a moment or sign out safely.',
+  profileBootstrapTerminalTitle: 'We could not load your member profile',
+  profileBootstrapSignOutAction: 'Sign out',
+  profileBootstrapBackToSignInAction: 'Back to sign in',
   genericError: 'Something went wrong. Please try again or contact support.',
   member: 'Member',
 } as const;

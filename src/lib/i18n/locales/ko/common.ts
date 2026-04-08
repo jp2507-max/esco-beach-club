@@ -30,6 +30,7 @@ const common = {
   },
   back: '뒤로',
   backHint: '이전 화면으로 돌아갑니다',
+  valueUnavailable: '—',
   rateUs: {
     title: '경험을 평가해 주세요',
     howWasVisit: '방문은 어떠셨나요?',
