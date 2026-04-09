@@ -28,20 +28,35 @@ describe('profiles permissions', () => {
 
   test('creates profiles only for the authenticated user id', () => {
     expect(rules.profiles.bind.canCreateOwnedProfile).toBe('isSelfProfileId');
-    expect(rules.profiles.bind.onlySafeProfileCreateFields).toContain('user');
-    expect(rules.profiles.bind.canSetSelfUserLink).toContain(
-      "!('user' in request.modifiedFields)"
+    expect(rules.profiles.bind.onlySafeProfileCreateFields).toContain('userId');
+    expect(rules.profiles.bind.onlySafeProfileCreateFields).not.toContain(
+      'onboarding_completed_at'
     );
     expect(rules.profiles.bind.canSetSelfUserLink).toContain(
-      "auth.id in data.ref('user.id')"
+      "!('userId' in request.modifiedFields)"
+    );
+    expect(rules.profiles.bind.canSetSelfUserLink).toContain(
+      'auth.id == newData.userId'
+    );
+    expect(rules.profiles.bind.canSetSelfUserIdOnCreate).toContain(
+      'auth.id == data.userId'
     );
     expect(rules.profiles.allow.create).toContain('canCreateOwnedProfile');
-    expect(rules.profiles.allow.create).toContain('canSetSelfUserLink');
+    expect(rules.profiles.allow.create).toContain('canSetSelfUserIdOnCreate');
     expect(rules.profiles.allow.create).toContain(
       'hasValidProfileCreateValues'
     );
     expect(rules.profiles.allow.create).toContain(
       'onlySafeProfileCreateFields'
+    );
+    expect(rules.profiles.bind.hasValidProfileCreateValues).toContain(
+      'data.userId == data.id'
+    );
+    expect(rules.profiles.bind.hasValidProfileCreateValues).toContain(
+      "!('onboarding_completed_at' in request.modifiedFields)"
+    );
+    expect(rules.profiles.bind.hasValidProfileCreateValues).toContain(
+      'data.onboarding_completed_at == null'
     );
   });
 
@@ -50,7 +65,7 @@ describe('profiles permissions', () => {
     expect(rules.profiles.bind.isOwner).toContain(
       "auth.id in data.ref('user.id')"
     );
-    expect(rules.profiles.bind.onlySafeProfileUpdateFields).toContain('user');
+    expect(rules.profiles.bind.onlySafeProfileUpdateFields).toContain('userId');
     expect(rules.profiles.bind.hasValidProfileUpdates).toContain(
       'canSetSelfUserLink'
     );

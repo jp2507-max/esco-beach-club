@@ -32,6 +32,18 @@ describe('auth error keys', () => {
     );
 
     expect(mappedGoogleError.message).toBe('googleOauthClientNotConfigured');
+
+    const mappedAppleError = toError(
+      {
+        body: {
+          message: 'record not found: oauth-client',
+        },
+      },
+      'unableToSignInWithApple',
+      { oauthProvider: 'apple' }
+    );
+
+    expect(mappedAppleError.message).toBe('appleOauthClientNotConfigured');
   });
 
   test('preserves known auth key messages from providers', () => {

@@ -257,18 +257,26 @@ const profile = {
       'Need help first? Contact support before deleting your account.',
     loadingState: 'Checking account deletion status...',
     errors: {
+      appleRevocationFailed:
+        'We could not verify your Apple account for deletion. Please try again.',
       appleVerificationCanceled:
         'Apple verification was canceled, so deletion was not scheduled.',
       apiUnavailable:
         'Account deletion is not configured for this build yet. Start the Expo dev server with API routes or set EXPO_PUBLIC_ACCOUNT_API_BASE_URL.',
+      authProviderUnresolved:
+        'We could not determine how this account signs in. Contact support to finish deletion.',
       instantAuthUnavailable:
         'Account deletion is temporarily unavailable because the local API server cannot reach InstantDB. Check this machine’s DNS or internet connection and try again.',
       networkUnavailable:
         'Could not reach the account deletion service. Check your connection and try again.',
       restoreFailed: 'Could not restore your account. Please try again.',
       scheduleFailed: 'Could not schedule account deletion. Please try again.',
+      serverSchemaMisconfigured:
+        'Account deletion is temporarily unavailable because the server schema is outdated.',
       serverMisconfigured:
         'Account deletion is temporarily unavailable because the server is missing Instant admin credentials.',
+      serverUnexpected:
+        'Account deletion hit a server error. Please try again shortly.',
       sessionExpired:
         'Your secure session expired. Please sign in again and retry.',
     },

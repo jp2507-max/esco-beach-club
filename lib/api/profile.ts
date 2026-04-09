@@ -10,9 +10,7 @@ import { captureHandledError } from '@/src/lib/monitoring';
 import { normalizeMemberSegment } from '@/src/lib/utils/member-segment';
 
 import {
-  buildMemberId,
   buildProfileId,
-  buildReferralCode,
   firstInstantRecord,
   getDefaultProfileValues,
   isMemberIdConflict,
@@ -27,7 +25,6 @@ import {
 } from './shared';
 
 const PROFILE_PROVISION_RETRY_DELAYS_MS = [50, 150, 300] as const;
-const failedIdentifierRepairUserIds = new Set<string>();
 
 function getErrorMonitoringExtras(error: unknown): Record<string, unknown> {
   if (error instanceof Error) {
@@ -43,10 +40,8 @@ function getErrorMonitoringExtras(error: unknown): Record<string, unknown> {
 }
 
 export const profileBootstrapStages = {
-  applyOnboarding: 'apply_onboarding',
   ensureProfile: 'ensure_profile',
   loadProfile: 'load_profile',
-  persistAuthProvider: 'persist_auth_provider',
 } as const;
 
 export type ProfileBootstrapStage =
@@ -76,7 +71,7 @@ async function waitForProvisionRetryDelay(attempt: number): Promise<void> {
     PROFILE_PROVISION_RETRY_DELAYS_MS[
       Math.max(
         0,
-        Math.min(attempt, PROFILE_PROVISION_RETRY_DELAYS_MS.length - 1)
+        Math.min(attempt - 1, PROFILE_PROVISION_RETRY_DELAYS_MS.length - 1)
       )
     ];
 
@@ -193,7 +188,12 @@ async function linkCanonicalProfileIfMissing(params: {
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     try {
       await db.transact(
-        db.tx.profiles[params.profileId].link({ user: params.userId })
+        db.tx.profiles[params.profileId]
+          .update({
+            updated_at: nowIso(),
+            userId: params.userId,
+          })
+          .link({ user: params.userId })
       );
 
       const refreshedLinkedProfileId = await fetchLinkedProfileIdForUser(
@@ -270,64 +270,6 @@ export async function fetchProfile(userId: string): Promise<Profile | null> {
   return fetchProfileViaUserLink(userId);
 }
 
-async function repairMissingProfileIdentifiers(params: {
-  profile: Profile;
-  userId: string;
-}): Promise<Profile | null> {
-  const hasMemberId = params.profile.member_id.trim().length > 0;
-  const hasReferralCode = params.profile.referral_code.trim().length > 0;
-
-  if (hasMemberId && hasReferralCode) {
-    failedIdentifierRepairUserIds.delete(params.userId);
-    return params.profile;
-  }
-
-  if (failedIdentifierRepairUserIds.has(params.userId)) {
-    return params.profile;
-  }
-
-  try {
-    await db.transact(
-      db.tx.profiles[params.profile.id].update({
-        ...(!hasMemberId ? { member_id: buildMemberId(params.userId) } : {}),
-        ...(!hasReferralCode
-          ? { referral_code: buildReferralCode(params.userId) }
-          : {}),
-        updated_at: nowIso(),
-      })
-    );
-  } catch (error: unknown) {
-    failedIdentifierRepairUserIds.add(params.userId);
-    captureHandledError(error, {
-      tags: {
-        area: 'profile',
-        operation: 'repair_missing_profile_identifiers',
-      },
-      extras: {
-        hasMemberId,
-        hasReferralCode,
-        profileId: params.profile.id,
-        userId: params.userId,
-      },
-    });
-
-    if (__DEV__) {
-      console.warn(
-        '[ProfileAPI] Failed to repair legacy profile identifiers; continuing with existing profile.',
-        {
-          error,
-          profileId: params.profile.id,
-          userId: params.userId,
-        }
-      );
-    }
-
-    return params.profile;
-  }
-
-  return fetchProfile(params.userId);
-}
-
 export async function fetchProfileByMemberId(
   memberId: string
 ): Promise<Profile | null> {
@@ -360,11 +302,7 @@ export async function ensureProfile(params: {
       profileId: current.id,
       userId: params.userId,
     });
-
-    return repairMissingProfileIdentifiers({
-      profile: current,
-      userId: params.userId,
-    });
+    return current;
   }
 
   const maxAttempts = PROFILE_PROVISION_RETRY_DELAYS_MS.length + 1;
@@ -383,7 +321,7 @@ export async function ensureProfile(params: {
 
     try {
       await db.transact(
-        db.tx.profiles[profileId].create(payload).link({ user: params.userId })
+        db.tx.profiles[profileId].update(payload).link({ user: params.userId })
       );
       await linkCanonicalProfileIfMissing({
         profileId,
@@ -391,35 +329,6 @@ export async function ensureProfile(params: {
       });
       return fetchProfile(params.userId);
     } catch (error) {
-      if (
-        error instanceof Error &&
-        error.message.toLowerCase().includes('permission denied')
-      ) {
-        captureHandledError(error, {
-          tags: {
-            area: 'profile',
-            operation: 'create_profile_with_link',
-          },
-          extras: {
-            ...getErrorMonitoringExtras(error),
-            payloadKeys: Object.keys(payload),
-            profileId,
-            userId: params.userId,
-          },
-        });
-
-        try {
-          await db.transact(db.tx.profiles[profileId].create(payload));
-          await linkCanonicalProfileIfMissing({
-            profileId,
-            userId: params.userId,
-          });
-          return fetchProfile(params.userId);
-        } catch (fallbackError) {
-          error = fallbackError;
-        }
-      }
-
       if (!(error instanceof Error))
         throw new ProfileBootstrapError('unableToCompleteProfileSetup', {
           isRetryable: false,
@@ -451,8 +360,21 @@ export async function ensureProfile(params: {
       }
 
       if (error.message.toLowerCase().includes('permission denied')) {
+        captureHandledError(error, {
+          tags: {
+            area: 'profile',
+            operation: 'upsert_profile_with_link',
+          },
+          extras: {
+            ...getErrorMonitoringExtras(error),
+            payloadKeys: Object.keys(payload),
+            profileId,
+            userId: params.userId,
+          },
+        });
+
         if (__DEV__) {
-          console.error('[ensureProfile] Profile create permission denied', {
+          console.error('[ensureProfile] Profile upsert permission denied', {
             attempt,
             maxAttempts,
             payloadKeys: Object.keys(payload),

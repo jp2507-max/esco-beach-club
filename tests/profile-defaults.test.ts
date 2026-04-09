@@ -13,6 +13,9 @@ const TEST_USER_ID = '123e4567-e89b-12d3-a456-426614174000';
 describe('default profile values', () => {
   test('uses deterministic profile id strategy tied to auth user id', () => {
     expect(buildProfileId(TEST_USER_ID)).toBe(TEST_USER_ID);
+
+    const values = getDefaultProfileValues({ userId: TEST_USER_ID });
+    expect(values.userId).toBe(TEST_USER_ID);
   });
 
   test('derives deterministic and distinct member/referral identifiers', () => {
@@ -22,8 +25,8 @@ describe('default profile values', () => {
     expect(memberId.startsWith('ESCO-')).toBe(true);
     expect(referralCode.startsWith('ESCO-')).toBe(true);
     expect(memberId).not.toBe(referralCode);
-    expect(memberId.length).toBeGreaterThanOrEqual(6);
-    expect(referralCode.length).toBeGreaterThanOrEqual(4);
+    expect(memberId.length).toBeGreaterThan('ESCO-'.length);
+    expect(referralCode.length).toBeGreaterThan('ESCO-'.length);
   });
 
   test('uses a safe fallback full name when no display name or email are provided', () => {
@@ -63,6 +66,12 @@ describe('default profile values', () => {
     expect(values.push_notification_permission_status).toBe(
       onboardingPermissionStatuses.undetermined
     );
+  });
+
+  test('does not seed onboarding completion during profile provisioning', () => {
+    const values = getDefaultProfileValues({ userId: TEST_USER_ID });
+
+    expect('onboarding_completed_at' in values).toBe(false);
   });
 
   test('initializes loyalty progression defaults for new members', () => {

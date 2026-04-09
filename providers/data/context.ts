@@ -14,8 +14,6 @@ import type {
   Referral,
   SavedEvent,
 } from '@/lib/types';
-import type { ProfileBootstrapStage } from '@/lib/api/profile';
-
 export const profileBootstrapStates = {
   authenticating: 'authenticating',
   bootstrappingProfile: 'bootstrapping_profile',
@@ -31,7 +29,6 @@ export type ProfileBootstrapState =
 
 export type ProfileData = {
   bootstrapError: Error | null;
-  bootstrapStage: ProfileBootstrapStage | null;
   bootstrapState: ProfileBootstrapState;
   dismissVoucher: () => void;
   isAuthenticatedButNotReady: boolean;
@@ -145,7 +142,6 @@ export const EMPTY_PRIVATE_EVENT_TYPES: PrivateEventTypeOption[] = [];
 
 const FALLBACK_PROFILE: ProfileData = {
   bootstrapError: null,
-  bootstrapStage: null,
   bootstrapState: profileBootstrapStates.signedOut,
   dismissVoucher: () => {},
   isAuthenticatedButNotReady: false,

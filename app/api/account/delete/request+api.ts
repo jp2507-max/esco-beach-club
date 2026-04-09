@@ -3,6 +3,7 @@ import {
   type AuthProviderType,
   authProviderTypes,
 } from '@/lib/types';
+import { buildAccountDeletionAdminErrorResponse } from '@/src/lib/account-deletion/account-deletion-server-errors';
 import { revokeAppleAuthorizationCode } from '@/src/lib/account-deletion/apple-revoke-server';
 import {
   isRecord,
@@ -192,18 +193,33 @@ export async function POST(request: Request): Promise<Response> {
     typeof parsed.appleAuthorizationCode === 'string'
       ? parsed.appleAuthorizationCode.trim()
       : '';
+  const clientAuthProvider = toAuthProvider(parsed.authProvider);
 
   const recordId = `account-delete-${authUser.userId}`;
-  const existingResult = await adminDb.query<{
-    account_deletion_requests?: AccountDeletionRequestRecord[];
-  }>({
-    account_deletion_requests: {
-      $: { where: { auth_user_id: authUser.userId } },
-    },
-  });
-  const existingRequest = existingResult.account_deletion_requests?.[0] as
-    | AccountDeletionRequestRecord
-    | undefined;
+  let existingRequest: AccountDeletionRequestRecord | undefined;
+  try {
+    console.info('[account/delete/request] Checking for existing request', {
+      userId: authUser.userId,
+    });
+    const existingResult = await adminDb.query<{
+      account_deletion_requests?: AccountDeletionRequestRecord[];
+    }>({
+      account_deletion_requests: {
+        $: { where: { auth_user_id: authUser.userId } },
+      },
+    });
+    existingRequest = existingResult.account_deletion_requests?.[0] as
+      | AccountDeletionRequestRecord
+      | undefined;
+  } catch (error) {
+    const adminError = buildAccountDeletionAdminErrorResponse({
+      context: { recordId, userId: authUser.userId },
+      error,
+      failureCode: 'admin_query_failed',
+      operation: 'query_existing_deletion_request',
+    });
+    return jsonResponse(adminError.body, adminError.status);
+  }
 
   if (existingRequest?.status === accountDeletionStatuses.pending) {
     return jsonResponse(
@@ -222,15 +238,79 @@ export async function POST(request: Request): Promise<Response> {
 
   const nowIso = new Date().toISOString();
   const scheduledForAt = addGracePeriodDays(new Date(), 30);
-  const { authProvider: trustedAuthProvider, profileId } =
-    await resolveProfileContextForUser(adminDb, authUser.userId);
+  let trustedAuthProvider: AuthProviderType | null = null;
+  let profileId: string | null = null;
+
+  try {
+    console.info('[account/delete/request] Resolving profile context', {
+      userId: authUser.userId,
+    });
+    const resolvedProfileContext = await resolveProfileContextForUser(
+      adminDb,
+      authUser.userId
+    );
+    trustedAuthProvider = resolvedProfileContext.authProvider;
+    profileId = resolvedProfileContext.profileId;
+  } catch (error) {
+    const adminError = buildAccountDeletionAdminErrorResponse({
+      context: { recordId, userId: authUser.userId },
+      error,
+      failureCode: 'admin_query_failed',
+      operation: 'resolve_profile_context',
+    });
+    return jsonResponse(adminError.body, adminError.status);
+  }
+
+  const effectiveAuthProvider = trustedAuthProvider ?? clientAuthProvider;
+  if (
+    trustedAuthProvider &&
+    clientAuthProvider &&
+    trustedAuthProvider !== clientAuthProvider
+  ) {
+    console.warn('[account/delete/request] Auth provider mismatch', {
+      clientAuthProvider,
+      trustedAuthProvider,
+      userId: authUser.userId,
+    });
+  }
+
+  if (!effectiveAuthProvider) {
+    console.warn('[account/delete/request] Could not resolve auth provider', {
+      hasAppleAuthorizationCode: Boolean(appleAuthorizationCode),
+      userId: authUser.userId,
+    });
+    return jsonResponse(
+      {
+        error: 'auth_provider_unresolved',
+        message: 'Could not determine auth provider for account deletion',
+      },
+      409
+    );
+  }
 
   const requiresAppleRevocation =
-    trustedAuthProvider === authProviderTypes.apple;
+    effectiveAuthProvider === authProviderTypes.apple;
 
-  const revocation = requiresAppleRevocation
-    ? await revokeAppleAuthorizationCode(appleAuthorizationCode)
-    : { status: 'not_required' as const };
+  let revocation:
+    | Awaited<ReturnType<typeof revokeAppleAuthorizationCode>>
+    | { status: 'not_required' };
+  try {
+    revocation = requiresAppleRevocation
+      ? await revokeAppleAuthorizationCode(appleAuthorizationCode)
+      : { status: 'not_required' as const };
+  } catch (error) {
+    console.error('[account/delete/request] Apple revocation threw', {
+      error,
+      userId: authUser.userId,
+    });
+    return jsonResponse(
+      {
+        error: 'apple_revocation_failed',
+        message: error instanceof Error ? error.message : 'unknown_error',
+      },
+      502
+    );
+  }
 
   if (requiresAppleRevocation && revocation.status !== 'revoked') {
     if (revocation.status === 'not_required') {
@@ -254,11 +334,11 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const payload = {
-    ...(trustedAuthProvider === authProviderTypes.apple &&
+    ...(effectiveAuthProvider === authProviderTypes.apple &&
     revocation.status !== 'not_required'
       ? { apple_revocation_status: revocation.status }
       : {}),
-    ...(trustedAuthProvider ? { auth_provider: trustedAuthProvider } : {}),
+    auth_provider: effectiveAuthProvider,
     auth_user_id: authUser.userId,
     ...(typeof parsed.email === 'string' && parsed.email.trim().length > 0
       ? { email: parsed.email.trim() }
@@ -270,21 +350,44 @@ export async function POST(request: Request): Promise<Response> {
     updated_at: nowIso,
   };
 
-  await adminDb.transact(
-    existingRequest?.id
-      ? createInstantUpdateStep(
-          'account_deletion_requests',
-          existingRequest.id,
-          payload,
-          {
-            upsert: false,
-          }
-        )
-      : createInstantCreateStep('account_deletion_requests', recordId, {
-          created_at: nowIso,
-          ...payload,
-        })
-  );
+  try {
+    console.info('[account/delete/request] Writing deletion request', {
+      authProvider: effectiveAuthProvider,
+      hasExistingRequest: Boolean(existingRequest?.id),
+      profileId,
+      recordId,
+      userId: authUser.userId,
+    });
+    await adminDb.transact(
+      existingRequest?.id
+        ? createInstantUpdateStep(
+            'account_deletion_requests',
+            existingRequest.id,
+            payload,
+            {
+              upsert: false,
+            }
+          )
+        : createInstantCreateStep('account_deletion_requests', recordId, {
+            created_at: nowIso,
+            ...payload,
+          })
+    );
+  } catch (error) {
+    const adminError = buildAccountDeletionAdminErrorResponse({
+      context: {
+        authProvider: effectiveAuthProvider,
+        hasExistingRequest: Boolean(existingRequest?.id),
+        profileId,
+        recordId,
+        userId: authUser.userId,
+      },
+      error,
+      failureCode: 'admin_write_failed',
+      operation: 'persist_deletion_request',
+    });
+    return jsonResponse(adminError.body, adminError.status);
+  }
 
   try {
     await adminDb.signOut({ refresh_token: refreshToken });

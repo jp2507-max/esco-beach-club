@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { ArrowRight, Bell, Check, MapPin } from 'lucide-react-native';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -21,22 +21,9 @@ import { hapticLight, hapticSuccess } from '@/src/lib/haptics/haptics';
 import { toOnboardingPermissionStatus } from '@/src/lib/mappers';
 import { ensureVenueUpsellNotificationChannel } from '@/src/lib/notifications';
 import { shadows } from '@/src/lib/styles/shadows';
-import {
-  parseOnboardingPermissionStatusSearchParam,
-  readSingleSearchParam,
-} from '@/src/lib/utils/search-params';
+import { useSignupOnboardingDraftStore } from '@/src/stores/signup-onboarding-store';
 import { ActivityIndicator, Pressable, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
-
-type OnboardingPermissionsSearchParams = {
-  onboardingDateOfBirth?: string | string[];
-  onboardingDisplayName?: string | string[];
-  onboardingLocationPermissionStatus?: string | string[];
-  onboardingPrivacyAccepted?: string | string[];
-  onboardingPushPermissionStatus?: string | string[];
-  onboardingSegment?: string | string[];
-  onboardingTermsAccepted?: string | string[];
-};
 
 function mapExpoPermissionStatus(
   status: string | null | undefined
@@ -80,21 +67,21 @@ const CTA_DELAY = 540;
 export default function OnboardingPermissionsScreen(): React.JSX.Element {
   const router = useRouter();
   const { t } = useTranslation('auth');
-  const searchParams =
-    useLocalSearchParams<OnboardingPermissionsSearchParams>();
   const ctaButton = useButtonPress();
+  const signupDraft = useSignupOnboardingDraftStore((state) => state.draft);
+  const setSignupDraft = useSignupOnboardingDraftStore(
+    (state) => state.setDraft
+  );
 
   const [locationStatus, setLocationStatus] =
     React.useState<OnboardingPermissionStatus>(
-      parseOnboardingPermissionStatusSearchParam(
-        searchParams.onboardingLocationPermissionStatus
-      ) ?? onboardingPermissionStatuses.undetermined
+      signupDraft.locationPermissionStatus ??
+        onboardingPermissionStatuses.undetermined
     );
   const [pushStatus, setPushStatus] =
     React.useState<OnboardingPermissionStatus>(
-      parseOnboardingPermissionStatusSearchParam(
-        searchParams.onboardingPushPermissionStatus
-      ) ?? onboardingPermissionStatuses.undetermined
+      signupDraft.pushNotificationPermissionStatus ??
+        onboardingPermissionStatuses.undetermined
     );
   const [isRequestingLocation, setIsRequestingLocation] =
     React.useState<boolean>(false);
@@ -121,8 +108,8 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
         );
         setPushStatus(mapPushPermissionStatus(notificationsPermission));
       } catch {
-        // Keep the search-param defaults when the current device state
-        // cannot be read yet.
+        // Keep the in-memory onboarding draft values when the current device
+        // state cannot be read yet.
       }
     })();
 
@@ -151,28 +138,6 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
       ]
     );
   }
-
-  const baseParams = React.useMemo(
-    () => ({
-      onboardingDateOfBirth:
-        readSingleSearchParam(searchParams.onboardingDateOfBirth) ?? '',
-      onboardingDisplayName:
-        readSingleSearchParam(searchParams.onboardingDisplayName) ?? '',
-      onboardingPrivacyAccepted:
-        readSingleSearchParam(searchParams.onboardingPrivacyAccepted) ?? '0',
-      onboardingSegment:
-        readSingleSearchParam(searchParams.onboardingSegment) ?? '',
-      onboardingTermsAccepted:
-        readSingleSearchParam(searchParams.onboardingTermsAccepted) ?? '0',
-    }),
-    [
-      searchParams.onboardingDateOfBirth,
-      searchParams.onboardingDisplayName,
-      searchParams.onboardingPrivacyAccepted,
-      searchParams.onboardingSegment,
-      searchParams.onboardingTermsAccepted,
-    ]
-  );
 
   function statusLabel(status: OnboardingPermissionStatus): string {
     if (status === onboardingPermissionStatuses.granted) {
@@ -348,14 +313,11 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
     location: OnboardingPermissionStatus;
     push: OnboardingPermissionStatus;
   }): void {
-    router.push({
-      pathname: './onboarding-final-details',
-      params: {
-        ...baseParams,
-        onboardingLocationPermissionStatus: params.location,
-        onboardingPushPermissionStatus: params.push,
-      },
+    setSignupDraft({
+      locationPermissionStatus: params.location,
+      pushNotificationPermissionStatus: params.push,
     });
+    router.push('./onboarding-final-details');
   }
 
   function handleNavigateNext(): void {

@@ -1,7 +1,8 @@
-import { ensureProfile, updateProfile } from '@/lib/api';
+import { updateProfile } from '@/lib/api';
 import {
   type MemberSegment,
   type OnboardingPermissionStatus,
+  type Profile,
   onboardingPermissionStatuses,
 } from '@/lib/types';
 import { normalizeMemberSegment } from '@/src/lib/utils/member-segment';
@@ -153,19 +154,13 @@ export function extractSignInUser(result: unknown): {
 
 export async function applyOnboardingProfileDataForNewUser(params: {
   onboardingData: SignupOnboardingData | null;
-  signInResult: unknown;
+  profile: Profile | null;
+  signInUser: ReturnType<typeof extractSignInUser>;
 }): Promise<void> {
   if (!params.onboardingData) return;
 
-  const signInUser = extractSignInUser(params.signInResult);
+  const { profile, signInUser } = params;
   if (!signInUser.created || !signInUser.id) return;
-
-  const profile = await ensureProfile({
-    userId: signInUser.id,
-    email: signInUser.email ?? undefined,
-    displayName: params.onboardingData.displayName,
-    dateOfBirth: params.onboardingData.dateOfBirth,
-  });
 
   if (!profile) return;
 

@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { ArrowRight, Sparkles, Ticket } from 'lucide-react-native';
 import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -28,27 +28,13 @@ import { useButtonPress } from '@/src/lib/animations/use-button-press';
 import { config } from '@/src/lib/config';
 import { hapticLight } from '@/src/lib/haptics/haptics';
 import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
-import { parseOnboardingMemberSegmentSearchParam } from '@/src/lib/utils/member-segment';
-import {
-  parseOnboardingPermissionStatusSearchParam,
-  readSingleSearchParam,
-} from '@/src/lib/utils/search-params';
+import { useSignupOnboardingDraftStore } from '@/src/stores/signup-onboarding-store';
 import { Pressable, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 import { Image } from '@/src/tw/image';
 
 const WELCOME_COCKTAIL_IMAGE_URI =
   'https://lh3.googleusercontent.com/aida-public/AB6AXuB6oK4M5GAEAukmyL4P-fxWGcieV8vOhAhVYjyrF1Jr46L3mySepBDndcXRdhdc1tAzZ5WIxmdQJsAUBN2fGXSNBnd5SFLWdksutc6ObMR_yw_fuIjHEucVvyZErUVjOd0HRufWgBdDdaKejA8KX_eSNt_fxHrfF1waZijjj1Rx_OCJrX0uchXHN9J7zJ3ZoNr7vU-DZQlbsepHsxBTCz7WSQnczqLyGpH0p3IhVqSGo1FUYjKdyKPHdiRp8X1Bljuvhyuhv5K5Zv2e';
-
-type OnboardingLocalIdentityParams = {
-  onboardingDateOfBirth?: string | string[];
-  onboardingDisplayName?: string | string[];
-  onboardingLocationPermissionStatus?: string | string[];
-  onboardingPrivacyAccepted?: string | string[];
-  onboardingPushPermissionStatus?: string | string[];
-  onboardingSegment?: string | string[];
-  onboardingTermsAccepted?: string | string[];
-};
 
 const ICON_DELAY = 100;
 const TITLE_DELAY = 260;
@@ -146,8 +132,14 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
   const { profile } = useProfileData();
   const { t } = useTranslation('auth');
   const isDark = useAppIsDark();
-  const searchParams = useLocalSearchParams<OnboardingLocalIdentityParams>();
   const ctaButton = useButtonPress();
+  const signupDraft = useSignupOnboardingDraftStore((state) => state.draft);
+  const setSignupDraft = useSignupOnboardingDraftStore(
+    (state) => state.setDraft
+  );
+  const resetSignupDraft = useSignupOnboardingDraftStore(
+    (state) => state.resetDraft
+  );
 
   const sparkleScale = useSharedValue(1);
 
@@ -178,25 +170,17 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
   async function persistAuthenticatedOnboardingChoices(): Promise<void> {
     if (!user?.id) return;
 
-    const onboardingDisplayName = readSingleSearchParam(
-      searchParams.onboardingDisplayName
-    )
+    const onboardingDisplayName = signupDraft.displayName
       ?.trim()
       .replace(/\s+/g, ' ');
-    const onboardingDateOfBirth = readSingleSearchParam(
-      searchParams.onboardingDateOfBirth
-    )?.trim();
-    const memberSegment = parseOnboardingMemberSegmentSearchParam(
-      searchParams.onboardingSegment
-    );
+    const onboardingDateOfBirth = signupDraft.dateOfBirth?.trim();
+    const memberSegment = signupDraft.memberSegment;
     const locationPermissionStatus =
-      parseOnboardingPermissionStatusSearchParam(
-        searchParams.onboardingLocationPermissionStatus
-      ) ?? onboardingPermissionStatuses.undetermined;
+      signupDraft.locationPermissionStatus ??
+      onboardingPermissionStatuses.undetermined;
     const pushNotificationPermissionStatus =
-      parseOnboardingPermissionStatusSearchParam(
-        searchParams.onboardingPushPermissionStatus
-      ) ?? onboardingPermissionStatuses.undetermined;
+      signupDraft.pushNotificationPermissionStatus ??
+      onboardingPermissionStatuses.undetermined;
 
     const resolvedLocationPermissionStatus =
       locationPermissionStatus === onboardingPermissionStatuses.undetermined &&
@@ -228,63 +212,7 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
     });
   }
 
-  function buildSignupParams(): Record<string, string> {
-    const onboardingDateOfBirth = readSingleSearchParam(
-      searchParams.onboardingDateOfBirth
-    );
-    const onboardingDisplayName = readSingleSearchParam(
-      searchParams.onboardingDisplayName
-    );
-
-    const onboardingPrivacyAccepted = readSingleSearchParam(
-      searchParams.onboardingPrivacyAccepted
-    );
-    const onboardingSegment = readSingleSearchParam(
-      searchParams.onboardingSegment
-    );
-    const onboardingTermsAccepted = readSingleSearchParam(
-      searchParams.onboardingTermsAccepted
-    );
-    const onboardingLocationPermissionStatus = readSingleSearchParam(
-      searchParams.onboardingLocationPermissionStatus
-    );
-    const onboardingPushPermissionStatus = readSingleSearchParam(
-      searchParams.onboardingPushPermissionStatus
-    );
-
-    return {
-      ...(onboardingDateOfBirth ? { onboardingDateOfBirth } : {}),
-      ...(onboardingDisplayName ? { onboardingDisplayName } : {}),
-      ...(onboardingPrivacyAccepted
-        ? { onboardingPrivacyAccepted }
-        : { onboardingPrivacyAccepted: '0' }),
-      ...(onboardingSegment ? { onboardingSegment } : {}),
-      ...(onboardingTermsAccepted
-        ? { onboardingTermsAccepted }
-        : { onboardingTermsAccepted: '0' }),
-      ...(onboardingLocationPermissionStatus
-        ? {
-            onboardingLocationPermissionStatus,
-          }
-        : {
-            onboardingLocationPermissionStatus:
-              onboardingPermissionStatuses.undetermined,
-          }),
-      ...(onboardingPushPermissionStatus
-        ? {
-            onboardingPushPermissionStatus,
-          }
-        : {
-            onboardingPushPermissionStatus:
-              onboardingPermissionStatuses.undetermined,
-          }),
-      onboardingCompletedSetup: '1',
-    };
-  }
-
-  async function handleAuthenticatedSignupFallback(
-    signupParams: Record<string, string>
-  ): Promise<void> {
+  async function handleAuthenticatedSignupFallback(): Promise<void> {
     try {
       await signOut();
     } catch (error: unknown) {
@@ -299,15 +227,15 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
     }
 
     router.replace({
-      pathname: '/signup',
-      params: signupParams,
+      pathname: '/login',
+      params: { authFlow: 'signup' },
     });
   }
 
   async function navigateToSignup(): Promise<void> {
     if (isAuthLoading) return;
 
-    const signupParams = buildSignupParams();
+    setSignupDraft({ hasCompletedSetup: true });
 
     if (isAuthenticated && user?.id) {
       try {
@@ -320,7 +248,7 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
               error,
             }
           );
-          await handleAuthenticatedSignupFallback(signupParams);
+          await handleAuthenticatedSignupFallback();
           return;
         }
 
@@ -337,13 +265,14 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
         return;
       }
 
+      resetSignupDraft();
       router.replace('/(auth)/post-auth-redirect');
       return;
     }
 
     router.push({
-      pathname: '/signup',
-      params: signupParams,
+      pathname: '/login',
+      params: { authFlow: 'signup' },
     });
   }
 

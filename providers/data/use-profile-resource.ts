@@ -3,7 +3,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ensureProfile,
   ProfileBootstrapError,
-  type ProfileBootstrapStage,
   profileBootstrapStages,
 } from '@/lib/api';
 import type { Profile } from '@/lib/types';
@@ -92,8 +91,6 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
     useState<boolean>(false);
   const [profileProvisionError, setProfileProvisionError] =
     useState<Error | null>(null);
-  const [bootstrapStage, setBootstrapStage] =
-    useState<ProfileBootstrapStage | null>(null);
   const isDismissingRef = useRef(false);
   const isProvisioningProfileRef = useRef<Map<string, boolean>>(new Map());
   const lastResolvedProfileRef = useRef<Profile | null>(null);
@@ -182,7 +179,6 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
 
   useEffect(() => {
     if (isAuthLoading) {
-      setBootstrapStage(profileBootstrapStages.loadProfile);
       return;
     }
 
@@ -191,7 +187,6 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
       isProvisioningProfileRef.current.clear();
       setIsProvisioningProfile(false);
       setProfileProvisionError(null);
-      setBootstrapStage(null);
       return;
     }
 
@@ -199,12 +194,10 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
       profileProvisionAttemptsRef.current.delete(userId);
       isProvisioningProfileRef.current.delete(userId);
       setProfileProvisionError(null);
-      setBootstrapStage(null);
       return;
     }
 
     if (canonicalProfileQuery.isLoading || profileViaUserQuery.isLoading) {
-      setBootstrapStage(profileBootstrapStages.loadProfile);
       return;
     }
     if (isProvisioningProfileRef.current.get(userId)) return;
@@ -214,7 +207,6 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
       if (!profileProvisionError) {
         setProfileProvisionError(createTerminalProvisionError());
       }
-      setBootstrapStage(profileBootstrapStages.ensureProfile);
       return;
     }
 
@@ -223,7 +215,6 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
 
     isProvisioningProfileRef.current.set(userId, true);
     setIsProvisioningProfile(true);
-    setBootstrapStage(profileBootstrapStages.ensureProfile);
     let isMounted = true;
 
     void ensureProfile({ email: authEmail, userId })
@@ -237,13 +228,11 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
 
         if (nextAttempt >= MAX_PROFILE_PROVISION_ATTEMPTS) {
           setProfileProvisionError(createTerminalProvisionError());
-          setBootstrapStage(profileBootstrapStages.ensureProfile);
         }
       })
       .catch((error: unknown) => {
         if (!isMounted) return;
         const normalizedError = normalizeProvisionError(error);
-        setBootstrapStage(resolveBootstrapStage(normalizedError));
         captureHandledError(error, {
           tags: {
             area: 'profile',
@@ -294,7 +283,6 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
     setProfileProvisionError(null);
     isProvisioningProfileRef.current.set(userId, true);
     setIsProvisioningProfile(true);
-    setBootstrapStage(profileBootstrapStages.ensureProfile);
 
     try {
       const nextProfile = await ensureProfile({ email: authEmail, userId });
@@ -306,7 +294,6 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
       setProfileProvisionError(null);
     } catch (error: unknown) {
       const normalizedError = normalizeProvisionError(error);
-      setBootstrapStage(resolveBootstrapStage(normalizedError));
       setProfileProvisionError(normalizedError);
 
       captureHandledError(error, {
@@ -392,12 +379,11 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
   ]);
 
   const isAuthenticatedButNotReady =
-    Boolean(userId) && bootstrapState !== profileBootstrapStates.ready;
+    bootstrapState !== profileBootstrapStates.ready;
 
   return useMemo(
     () => ({
       bootstrapError: profileProvisionError,
-      bootstrapStage,
       bootstrapState,
       dismissVoucher,
       isAuthenticatedButNotReady,
@@ -413,7 +399,6 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
       userId,
     }),
     [
-      bootstrapStage,
       bootstrapState,
       canonicalProfileQuery.isLoading,
       dismissVoucher,
@@ -427,14 +412,4 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
       userId,
     ]
   );
-}
-
-function resolveBootstrapStage(
-  error: Error | null
-): ProfileBootstrapStage | null {
-  if (error instanceof ProfileBootstrapError) {
-    return error.stage;
-  }
-
-  return null;
 }

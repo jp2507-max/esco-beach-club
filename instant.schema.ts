@@ -185,6 +185,7 @@ const _schema = i.schema({
       tier_progress_started_at: i.date().indexed().optional(),
       tier_progress_target_points: i.number().optional(),
       updated_at: i.date().indexed().optional(),
+      userId: i.string().indexed().optional(),
     }),
     referrals: i.entity({
       created_at: i.date().indexed().optional(),

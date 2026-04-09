@@ -122,8 +122,10 @@ async function finalizeSignIn(params: {
     throw new Error('unableToCompleteProfileSetup');
   }
 
+  let profile: Awaited<ReturnType<typeof ensureProfile>> = null;
+
   try {
-    const profile = await ensureProfile({
+    profile = await ensureProfile({
       userId: signInUser.id,
       ...(signInUser.email ? { email: signInUser.email } : {}),
       ...(params.onboardingData?.displayName
@@ -167,7 +169,8 @@ async function finalizeSignIn(params: {
   try {
     await applyOnboardingProfileDataForNewUser({
       onboardingData: params.onboardingData,
-      signInResult: params.signInResult,
+      profile,
+      signInUser,
     });
   } catch (error: unknown) {
     captureHandledError(error, {

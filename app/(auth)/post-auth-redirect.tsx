@@ -9,7 +9,21 @@ import {
   profileBootstrapStates,
   useProfileData,
 } from '@/providers/DataProvider';
+import { isAuthErrorKey } from '@/src/lib/auth-errors';
 import { ActivityIndicator, Pressable, Text, View } from '@/src/tw';
+import type { TFunction } from 'i18next';
+
+function profileBootstrapErrorDescription(
+  t: TFunction<'auth'>,
+  bootstrapError: Error | null
+): string {
+  const code = bootstrapError?.message;
+  if (isAuthErrorKey(code)) {
+    return t(code);
+  }
+
+  return t('profileBootstrapErrorMessage');
+}
 
 function BootstrapRecoveryCard(props: {
   errorMessage: string;
@@ -140,11 +154,7 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
   }
 
   const isWorking = isRetryingProvision || isSigningOut;
-  const errorMessage =
-    bootstrapError?.message &&
-    bootstrapError.message !== 'unableToCompleteProfileSetup'
-      ? bootstrapError.message
-      : t('profileBootstrapErrorMessage');
+  const errorMessage = profileBootstrapErrorDescription(t, bootstrapError);
 
   if (bootstrapState === profileBootstrapStates.signedOut) {
     return <Redirect href="/(auth)/login" />;

@@ -32,12 +32,28 @@ export function getAccountDeletionErrorMessage(
     return t('deleteAccount.errors.instantAuthUnavailable');
   }
 
+  if (result.code === 'apple_revocation_failed') {
+    return t('deleteAccount.errors.appleRevocationFailed');
+  }
+
+  if (result.code === 'auth_provider_unresolved') {
+    return t('deleteAccount.errors.authProviderUnresolved');
+  }
+
+  if (result.code === 'server_schema_misconfigured') {
+    return t('deleteAccount.errors.serverSchemaMisconfigured');
+  }
+
   if (
     result.status === 503 &&
     (result.code === 'server_misconfigured' ||
       result.message === 'Missing admin or app id')
   ) {
     return t('deleteAccount.errors.serverMisconfigured');
+  }
+
+  if (typeof result.status === 'number' && result.status >= 500) {
+    return t('deleteAccount.errors.serverUnexpected');
   }
 
   return t(`deleteAccount.errors.${fallbackKey}`);

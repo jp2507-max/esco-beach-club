@@ -13,7 +13,12 @@ import {
 } from '@tanstack/react-query';
 import { isRunningInExpoGo } from 'expo';
 import * as Linking from 'expo-linking';
-import { Stack, useNavigationContainerRef } from 'expo-router';
+import {
+  Stack,
+  useNavigationContainerRef,
+  usePathname,
+  useRouter,
+} from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Updates from 'expo-updates';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
@@ -30,6 +35,8 @@ import {
 import { RestaurantPresenceProvider } from '@/providers/RestaurantPresenceProvider';
 import { AppLaunchScreen } from '@/src/components/app/app-launch-screen';
 import { ReferralClaimEffect } from '@/src/components/referral/referral-claim-effect';
+import { useAccountDeletionRequest } from '@/src/lib/account-deletion/use-account-deletion-request';
+import { isAllowedPendingDeletionPath } from '@/src/lib/account-deletion/pending-deletion-routing';
 import { motion } from '@/src/lib/animations/motion';
 import { configureGoogleSignIn } from '@/src/lib/auth/social-auth';
 import { getEscoNavigationTheme } from '@/src/lib/navigation/app-navigation-theme';
@@ -282,16 +289,40 @@ function AuthenticatedDataProvider({
   );
 }
 
+function PendingAccountDeletionGate(): null {
+  const pathname = usePathname();
+  const router = useRouter();
+  const { isAuthenticated, user } = useAuth();
+  const { bootstrapState } = useProfileData();
+  const { isDeletionPending, isLoading } = useAccountDeletionRequest(user?.id);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    if (bootstrapState !== profileBootstrapStates.ready) return;
+    if (isLoading || !isDeletionPending) return;
+    if (isAllowedPendingDeletionPath(pathname)) return;
+
+    router.replace('/profile/delete-account');
+  }, [
+    bootstrapState,
+    isAuthenticated,
+    isDeletionPending,
+    isLoading,
+    pathname,
+    router,
+  ]);
+
+  return null;
+}
+
 function RootLayoutNav() {
   const { isAuthenticated, isLoading } = useAuth();
-  const { bootstrapState, isAuthenticatedButNotReady } = useProfileData();
+  const { bootstrapState } = useProfileData();
   const { t } = useTranslation('common');
   const isDark = useAppIsDark();
   const hasHiddenNativeSplashRef = useRef(false);
   const canAccessAuthenticatedRoutes =
-    isAuthenticated &&
-    (!isAuthenticatedButNotReady ||
-      bootstrapState === profileBootstrapStates.ready);
+    isAuthenticated && bootstrapState === profileBootstrapStates.ready;
 
   const hideNativeSplash = useCallback((): void => {
     if (hasHiddenNativeSplashRef.current) return;
@@ -373,6 +404,7 @@ function RootLayout(): React.JSX.Element {
               fallback={<AppErrorFallback />}
             >
               <AuthenticatedDataProvider>
+                <PendingAccountDeletionGate />
                 <RootLayoutNav />
               </AuthenticatedDataProvider>
             </Sentry.ErrorBoundary>

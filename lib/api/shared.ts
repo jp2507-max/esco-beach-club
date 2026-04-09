@@ -300,7 +300,6 @@ export type DefaultProfileValues = {
   member_since: string;
   next_tier_key: Profile['next_tier_key'];
   nights_left: number;
-  onboarding_completed_at: string | null;
   push_notification_permission_status: OnboardingPermissionStatus;
   referral_code: string;
   saved: number;
@@ -309,6 +308,7 @@ export type DefaultProfileValues = {
   tier_progress_started_at: string | null;
   tier_progress_target_points: number;
   updated_at: string;
+  userId: string;
 };
 
 export function getDefaultProfileValues(options: {
@@ -347,7 +347,6 @@ export function getDefaultProfileValues(options: {
     member_since: createdAt,
     next_tier_key: defaultNextTier,
     nights_left: 0,
-    onboarding_completed_at: null,
     push_notification_permission_status:
       onboardingPermissionStatuses.undetermined,
     referral_code: referralCode?.trim() || buildReferralCode(userId),
@@ -358,5 +357,6 @@ export function getDefaultProfileValues(options: {
     tier_progress_target_points:
       defaultNextTier === null ? 0 : defaultTierDefinition.progressTargetPoints,
     updated_at: createdAt,
+    userId,
   };
 }

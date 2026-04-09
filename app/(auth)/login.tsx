@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Mail, ShieldCheck, Waves } from 'lucide-react-native';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -16,6 +16,7 @@ import { Colors } from '@/constants/colors';
 import { useAuth } from '@/providers/AuthProvider';
 import { ErrorBanner, SocialAuthButtons } from '@/src/components/ui';
 import { motion, withRM } from '@/src/lib/animations/motion';
+import type { SignupOnboardingData } from '@/src/lib/auth/signup-onboarding';
 import { useEmailCodeAuthFlow } from '@/src/lib/auth/use-email-code-auth-flow';
 import { isAuthErrorKey } from '@/src/lib/auth-errors';
 import { ControlledTextInput } from '@/src/lib/forms/controlled-text-input';
@@ -25,6 +26,7 @@ import {
 } from '@/src/lib/forms/schemas';
 import { hapticMedium } from '@/src/lib/haptics/haptics';
 import { shadows } from '@/src/lib/styles/shadows';
+import { useSignupOnboardingDraftStore } from '@/src/stores/signup-onboarding-store';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -38,6 +40,9 @@ import { Animated } from '@/src/tw/animated';
 export default function LoginScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const searchParams = useLocalSearchParams<{
+    authFlow?: string;
+  }>();
   const { t } = useTranslation('auth');
   const {
     appleSignInError,
@@ -53,9 +58,55 @@ export default function LoginScreen(): React.JSX.Element {
     verifyCodeError,
     verifyCodeLoading,
   } = useAuth();
+  const signupDraft = useSignupOnboardingDraftStore((state) => state.draft);
+  const resetSignupDraft = useSignupOnboardingDraftStore(
+    (state) => state.resetDraft
+  );
+  const isSignupAuthFlow = searchParams.authFlow === 'signup';
+  const onboardingData = React.useMemo<SignupOnboardingData | undefined>(() => {
+    if (
+      !isSignupAuthFlow ||
+      !signupDraft.displayName ||
+      !signupDraft.dateOfBirth ||
+      signupDraft.hasCompletedSetup !== true
+    ) {
+      return undefined;
+    }
+
+    return {
+      dateOfBirth: signupDraft.dateOfBirth,
+      displayName: signupDraft.displayName,
+      ...(signupDraft.hasCompletedSetup ? { hasCompletedSetup: true } : {}),
+      ...(signupDraft.hasAcceptedPrivacyPolicy
+        ? { hasAcceptedPrivacyPolicy: true }
+        : {}),
+      ...(signupDraft.hasAcceptedTerms ? { hasAcceptedTerms: true } : {}),
+      ...(signupDraft.memberSegment
+        ? { memberSegment: signupDraft.memberSegment }
+        : {}),
+      ...(signupDraft.locationPermissionStatus
+        ? { locationPermissionStatus: signupDraft.locationPermissionStatus }
+        : {}),
+      ...(signupDraft.pushNotificationPermissionStatus
+        ? {
+            pushNotificationPermissionStatus:
+              signupDraft.pushNotificationPermissionStatus,
+          }
+        : {}),
+    };
+  }, [isSignupAuthFlow, signupDraft]);
+  const isOnboardingAuthEntry =
+    isSignupAuthFlow && onboardingData !== undefined;
   const flow = useEmailCodeAuthFlow({
     sendCode,
-    verifyCode,
+    verifyCode: async ({ code, email }) => {
+      await verifyCode({
+        code,
+        email,
+        ...(onboardingData ? { onboardingData } : {}),
+      });
+      if (onboardingData) resetSignupDraft();
+    },
     sendCodeLoading,
     sendCodeError,
     verifyCodeLoading,
@@ -93,12 +144,20 @@ export default function LoginScreen(): React.JSX.Element {
 
   function handleApplePress(): void {
     if (isAuthBusy) return;
-    void signInWithApple().catch(() => undefined);
+    void signInWithApple(onboardingData ? { onboardingData } : undefined)
+      .then(() => {
+        if (onboardingData) resetSignupDraft();
+      })
+      .catch(() => undefined);
   }
 
   function handleGooglePress(): void {
     if (isAuthBusy) return;
-    void signInWithGoogle().catch(() => undefined);
+    void signInWithGoogle(onboardingData ? { onboardingData } : undefined)
+      .then(() => {
+        if (onboardingData) resetSignupDraft();
+      })
+      .catch(() => undefined);
   }
 
   const socialError = appleSignInError ?? googleSignInError;
@@ -173,7 +232,7 @@ export default function LoginScreen(): React.JSX.Element {
               {t('brandTitle')}
             </Text>
             <Text className="mt-1 text-sm font-medium text-white/75">
-              {t('loginTagline')}
+              {isOnboardingAuthEntry ? t('signupTagline') : t('loginTagline')}
             </Text>
           </Animated.View>
 
@@ -186,12 +245,22 @@ export default function LoginScreen(): React.JSX.Element {
               entering={withRM(FadeInUp.delay(0).duration(motion.dur.sm))}
             >
               <Text className="mb-1 text-2xl font-bold text-text dark:text-text-primary-dark">
-                {isCodeStep ? t('loginVerifyTitle') : t('loginTitle')}
+                {isCodeStep
+                  ? isOnboardingAuthEntry
+                    ? t('signupVerifyTitle')
+                    : t('loginVerifyTitle')
+                  : isOnboardingAuthEntry
+                    ? t('signupTitle')
+                    : t('loginTitle')}
               </Text>
               <Text className="mb-6 text-sm text-text-secondary dark:text-text-secondary-dark">
                 {isCodeStep
-                  ? t('loginVerifySubtitle', { email: sentEmail })
-                  : t('loginSubtitle')}
+                  ? isOnboardingAuthEntry
+                    ? t('signupVerifySubtitle', { email: sentEmail })
+                    : t('loginVerifySubtitle', { email: sentEmail })
+                  : isOnboardingAuthEntry
+                    ? t('signupSubtitle')
+                    : t('loginSubtitle')}
               </Text>
             </Animated.View>
 
@@ -281,8 +350,12 @@ export default function LoginScreen(): React.JSX.Element {
                     ) : (
                       <Text className="text-base font-bold tracking-[0.5px] text-white">
                         {isCodeStep
-                          ? t('verifyContinue')
-                          : t('sendVerificationCode')}
+                          ? isOnboardingAuthEntry
+                            ? t('verifyJoin')
+                            : t('verifyContinue')
+                          : isOnboardingAuthEntry
+                            ? t('sendJoinCode')
+                            : t('sendVerificationCode')}
                       </Text>
                     )}
                   </LinearGradient>
@@ -324,19 +397,21 @@ export default function LoginScreen(): React.JSX.Element {
               <View className="h-px flex-1 bg-border dark:bg-dark-border" />
             </View>
 
-            <Pressable
-              accessibilityRole="button"
-              className="items-center"
-              onPress={() => router.push('/onboarding-welcome')}
-              testID="login-go-signup"
-            >
-              <Text className="text-sm text-text-secondary dark:text-text-secondary-dark">
-                {t('needMemberAccount')}{' '}
-                <Text className="font-bold text-primary dark:text-primary-bright">
-                  {t('createOne')}
+            {!isOnboardingAuthEntry ? (
+              <Pressable
+                accessibilityRole="button"
+                className="items-center"
+                onPress={() => router.push('/onboarding-welcome')}
+                testID="login-go-signup"
+              >
+                <Text className="text-sm text-text-secondary dark:text-text-secondary-dark">
+                  {t('needMemberAccount')}{' '}
+                  <Text className="font-bold text-primary dark:text-primary-bright">
+                    {t('createOne')}
+                  </Text>
                 </Text>
-              </Text>
-            </Pressable>
+              </Pressable>
+            ) : null}
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
