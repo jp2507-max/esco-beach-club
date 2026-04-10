@@ -65,7 +65,9 @@ export default function LoginScreen(): React.JSX.Element {
       !isSignupAuthFlow ||
       !signupDraft.displayName ||
       !signupDraft.dateOfBirth ||
-      signupDraft.hasCompletedSetup !== true
+      signupDraft.hasCompletedSetup !== true ||
+      signupDraft.hasAcceptedPrivacyPolicy !== true ||
+      signupDraft.hasAcceptedTerms !== true
     ) {
       return undefined;
     }

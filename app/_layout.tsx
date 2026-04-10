@@ -77,6 +77,15 @@ function isBootstrapRenderable(bootstrapState: string): boolean {
   );
 }
 
+function canAccessAuthenticatedRoutesForBootstrapState(
+  bootstrapState: string
+): boolean {
+  return (
+    bootstrapState === profileBootstrapStates.ready ||
+    bootstrapState === profileBootstrapStates.needsOnboarding
+  );
+}
+
 function setExpoUpdateSentryTags(): void {
   const manifest = Updates.manifest;
 
@@ -329,7 +338,8 @@ function RootLayoutNav() {
   const isDark = useAppIsDark();
   const hasHiddenNativeSplashRef = useRef(false);
   const canAccessAuthenticatedRoutes =
-    isAuthenticated && bootstrapState === profileBootstrapStates.ready;
+    isAuthenticated &&
+    canAccessAuthenticatedRoutesForBootstrapState(bootstrapState);
   const shouldShowLaunchScreen =
     isLoading || (isAuthenticated && !isBootstrapRenderable(bootstrapState));
 

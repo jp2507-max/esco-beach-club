@@ -378,9 +378,16 @@ export function getDefaultProfileValues(options: {
   const defaultTierDefinition = getRewardTierDefinition(defaultLifetimeTier);
   const memberId = buildMemberId(userId);
   let resolvedReferralCode = referralCode?.trim() || buildReferralCode(userId);
+  let attempts = 0;
+  const maxAttempts = 5;
 
-  while (resolvedReferralCode === memberId) {
+  while (resolvedReferralCode === memberId && attempts < maxAttempts) {
     resolvedReferralCode = buildReferralCode(userId);
+    attempts += 1;
+  }
+
+  if (resolvedReferralCode === memberId) {
+    throw new Error('profileIdentifierGenerationFailed');
   }
 
   return {

@@ -13,14 +13,13 @@ export type AccountDeletionApiResult<T> =
 const DEFAULT_ACCOUNT_DELETION_TIMEOUT_MS = 15000;
 const SCHEDULE_ACCOUNT_DELETION_TIMEOUT_MS = 30000;
 
-async function postJson<T>(
-  path: string,
-  refreshToken: string,
-  body: Record<string, unknown>,
-  options?: {
-    timeoutMs?: number;
-  }
-): Promise<AccountDeletionApiResult<T>> {
+async function postJson<T>(params: {
+  body: Record<string, unknown>;
+  path: string;
+  refreshToken: string;
+  timeoutMs?: number;
+}): Promise<AccountDeletionApiResult<T>> {
+  const { body, path, refreshToken, timeoutMs } = params;
   const url = buildClientApiUrl(path, {
     explicitBaseUrl: process.env.EXPO_PUBLIC_ACCOUNT_API_BASE_URL,
     fallbackBaseUrl: process.env.EXPO_PUBLIC_REFERRAL_API_BASE_URL,
@@ -30,8 +29,8 @@ async function postJson<T>(
   }
 
   const controller = new AbortController();
-  const timeoutMs = options?.timeoutMs ?? DEFAULT_ACCOUNT_DELETION_TIMEOUT_MS;
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  const timeout = timeoutMs ?? DEFAULT_ACCOUNT_DELETION_TIMEOUT_MS;
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
 
   try {
     const response = await fetch(url, {
@@ -140,19 +139,17 @@ export function postScheduleAccountDeletion(params: {
   authProvider?: AuthProviderType | null;
   refreshToken: string;
 }): Promise<AccountDeletionApiResult<ScheduleAccountDeletionResponse>> {
-  return postJson<ScheduleAccountDeletionResponse>(
-    '/api/account/delete/request',
-    params.refreshToken,
-    {
+  return postJson<ScheduleAccountDeletionResponse>({
+    body: {
       ...(params.appleAuthorizationCode
         ? { appleAuthorizationCode: params.appleAuthorizationCode }
         : {}),
       ...(params.authProvider ? { authProvider: params.authProvider } : {}),
     },
-    {
-      timeoutMs: SCHEDULE_ACCOUNT_DELETION_TIMEOUT_MS,
-    }
-  );
+    path: '/api/account/delete/request',
+    refreshToken: params.refreshToken,
+    timeoutMs: SCHEDULE_ACCOUNT_DELETION_TIMEOUT_MS,
+  });
 }
 
 export type RestoreAccountDeletionResponse = {
@@ -167,9 +164,9 @@ export type RestoreAccountDeletionResponse = {
 export function postRestoreAccountDeletion(params: {
   refreshToken: string;
 }): Promise<AccountDeletionApiResult<RestoreAccountDeletionResponse>> {
-  return postJson<RestoreAccountDeletionResponse>(
-    '/api/account/delete/restore',
-    params.refreshToken,
-    {}
-  );
+  return postJson<RestoreAccountDeletionResponse>({
+    body: {},
+    path: '/api/account/delete/restore',
+    refreshToken: params.refreshToken,
+  });
 }

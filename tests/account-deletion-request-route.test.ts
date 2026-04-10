@@ -198,7 +198,7 @@ describe('account deletion request route', () => {
     });
   });
 
-  test('still hard-fails when the auth provider cannot be resolved', async () => {
+  test('schedules deletion when the auth provider cannot be resolved', async () => {
     queryMock
       .mockResolvedValueOnce({ account_deletion_requests: [] })
       .mockResolvedValueOnce({
@@ -213,10 +213,34 @@ describe('account deletion request route', () => {
     const response = await POST(createRequest());
     const body = await response.json();
 
+    expect(response.status).toBe(201);
+    expect(body.request.status).toBe(accountDeletionStatuses.pending);
+    expect(body.revocation).toBeUndefined();
+    expect(createInstantCreateStepMock.mock.calls[0]?.[2]).not.toHaveProperty(
+      'auth_provider'
+    );
+    expect(revokeAppleAuthorizationCodeMock).not.toHaveBeenCalled();
+  });
+
+  test('still hard-fails when the profile id cannot be resolved', async () => {
+    queryMock
+      .mockResolvedValueOnce({ account_deletion_requests: [] })
+      .mockResolvedValueOnce({
+        profiles: [
+          {
+            auth_provider: authProviderTypes.apple,
+            id: null,
+          },
+        ],
+      });
+
+    const response = await POST(createRequest());
+    const body = await response.json();
+
     expect(response.status).toBe(409);
     expect(body).toEqual({
-      error: 'auth_provider_unresolved',
-      message: 'Could not determine auth provider for account deletion',
+      error: 'profile_unresolved',
+      message: 'Could not determine profile for account deletion',
     });
     expect(transactMock).not.toHaveBeenCalled();
   });

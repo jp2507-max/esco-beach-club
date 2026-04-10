@@ -2,6 +2,8 @@ import { describe, expect, test } from 'bun:test';
 
 import rules from '../instant.perms';
 
+const canonicalProfileOwnerPredicate = 'auth.id != null && auth.id == data.id';
+
 describe('profiles permissions', () => {
   test('does not allow auth_provider on create', () => {
     expect(rules.profiles.bind.onlySafeProfileCreateFields).not.toContain(
@@ -73,9 +75,7 @@ describe('profiles permissions', () => {
   });
 
   test('keeps owner checks canonical to deterministic profile ids', () => {
-    expect(rules.profiles.bind.isOwner).toBe(
-      'auth.id != null && auth.id == data.id'
-    );
+    expect(rules.profiles.bind.isOwner).toBe(canonicalProfileOwnerPredicate);
     expect(rules.profiles.bind.onlySafeProfileUpdateFields).toContain('userId');
     expect(rules.profiles.bind.hasValidProfileUpdates).toContain(
       'canSetSelfUserIdOnUpdate'
@@ -84,9 +84,7 @@ describe('profiles permissions', () => {
 
   test('uses canonical profile ownership without profile links', () => {
     expect(rules.profiles.allow.view).toBe('isOwner');
-    expect(rules.profiles.bind.isOwner).toBe(
-      'auth.id != null && auth.id == data.id'
-    );
+    expect(rules.profiles.bind.isOwner).toBe(canonicalProfileOwnerPredicate);
     expect(rules.profiles.allow.create).not.toContain("data.ref('user.id')");
   });
 });

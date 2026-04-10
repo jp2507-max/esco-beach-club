@@ -122,16 +122,7 @@ async function fetchProfileByIdWithDb(
 }
 
 export async function fetchProfile(userId: string): Promise<Profile | null> {
-  return fetchProfileWithDb(db, userId);
-}
-
-async function fetchProfileWithDb(
-  database: ProfileDbClient,
-  userId: string
-): Promise<Profile | null> {
-  if (!userId) return null;
-
-  return fetchProfileByIdWithDb(database, userId);
+  return fetchProfileByIdWithDb(db, userId);
 }
 
 export async function fetchProfileByMemberId(
@@ -163,7 +154,7 @@ export async function ensureProfileWithDb(
 ): Promise<Profile | null> {
   if (!params.userId) return null;
 
-  const current = await fetchProfileWithDb(database, params.userId);
+  const current = await fetchProfileByIdWithDb(database, params.userId);
   if (current) {
     return current;
   }
@@ -184,7 +175,7 @@ export async function ensureProfileWithDb(
 
     try {
       await database.transact(database.tx.profiles[profileId].create(payload));
-      return fetchProfileWithDb(database, params.userId);
+      return fetchProfileByIdWithDb(database, params.userId);
     } catch (error) {
       if (!(error instanceof Error))
         throw new ProfileBootstrapError('unableToCompleteProfileSetup', {
@@ -194,7 +185,7 @@ export async function ensureProfileWithDb(
         });
 
       if (isProfileIdConflict(error)) {
-        const existingProfile = await fetchProfileWithDb(
+        const existingProfile = await fetchProfileByIdWithDb(
           database,
           params.userId
         );
@@ -205,7 +196,7 @@ export async function ensureProfileWithDb(
       }
 
       if (isMemberIdConflict(error)) {
-        const existingProfile = await fetchProfileWithDb(
+        const existingProfile = await fetchProfileByIdWithDb(
           database,
           params.userId
         );
@@ -220,7 +211,7 @@ export async function ensureProfileWithDb(
       }
 
       if (isReferralCodeConflict(error)) {
-        const existingProfile = await fetchProfileWithDb(
+        const existingProfile = await fetchProfileByIdWithDb(
           database,
           params.userId
         );
@@ -267,7 +258,7 @@ export async function ensureProfileWithDb(
 
         const existingProfile = existingCanonicalProfile
           ? existingCanonicalProfile
-          : await fetchProfileWithDb(database, params.userId);
+          : await fetchProfileByIdWithDb(database, params.userId);
         if (existingProfile) {
           return existingProfile;
         }
@@ -293,7 +284,7 @@ export async function ensureProfileWithDb(
     }
   }
 
-  return fetchProfileWithDb(database, params.userId);
+  return fetchProfileByIdWithDb(database, params.userId);
 }
 
 export async function ensureProfile(params: {

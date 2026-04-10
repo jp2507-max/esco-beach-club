@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+
 import {
   accountDeletionStatuses,
   type AuthProviderType,
@@ -15,13 +17,13 @@ import {
   jsonResponse,
   parseBearerRefreshToken,
 } from '@/src/lib/api/route-helpers';
+import { addMonitoringBreadcrumb } from '@/src/lib/monitoring';
 import {
   createInstantCreateStep,
   createInstantUpdateStep,
   getInstantAdminDb,
 } from '@/src/lib/referral/instant-admin-server';
 import { verifyInstantRefreshToken } from '@/src/lib/referral/instant-runtime-server';
-import { addMonitoringBreadcrumb } from '@/src/lib/monitoring';
 
 type AccountDeletionRequestRecord = {
   id?: string;
@@ -83,6 +85,10 @@ function addGracePeriodDays(from: Date, days: number): string {
   return new Date(from.getTime() + days * 24 * 60 * 60 * 1000).toISOString();
 }
 
+function hashIdentifier(value: string): string {
+  return createHash('sha256').update(value).digest('hex').slice(0, 12);
+}
+
 export async function POST(request: Request): Promise<Response> {
   const adminDb = getInstantAdminDb();
   if (!adminDb) {
@@ -136,10 +142,13 @@ export async function POST(request: Request): Promise<Response> {
       : '';
 
   const recordId = `account-delete-${authUser.userId}`;
+  const userRef = `user:${hashIdentifier(authUser.userId)}`;
+  const requestRef = `request:${hashIdentifier(recordId)}`;
   let existingRequest: AccountDeletionRequestRecord | undefined;
   try {
     console.info('[account/delete/request] Checking for existing request', {
-      userId: authUser.userId,
+      requestRef,
+      userRef,
     });
     const existingResult = await adminDb.query<{
       account_deletion_requests?: AccountDeletionRequestRecord[];
@@ -153,7 +162,7 @@ export async function POST(request: Request): Promise<Response> {
       | undefined;
   } catch (error) {
     const adminError = buildAccountDeletionAdminErrorResponse({
-      context: { recordId, userId: authUser.userId },
+      context: { requestRef, userRef },
       error,
       failureCode: 'admin_query_failed',
       operation: 'query_existing_deletion_request',
@@ -183,7 +192,8 @@ export async function POST(request: Request): Promise<Response> {
 
   try {
     console.info('[account/delete/request] Resolving profile context', {
-      userId: authUser.userId,
+      requestRef,
+      userRef,
     });
     const resolvedProfileContext = await resolveProfileContextForUser(
       adminDb,
@@ -193,7 +203,7 @@ export async function POST(request: Request): Promise<Response> {
     profileId = resolvedProfileContext.profileId;
   } catch (error) {
     const adminError = buildAccountDeletionAdminErrorResponse({
-      context: { recordId, userId: authUser.userId },
+      context: { requestRef, userRef },
       error,
       failureCode: 'admin_query_failed',
       operation: 'resolve_profile_context',
@@ -202,22 +212,30 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   if (!trustedAuthProvider) {
-    console.warn('[account/delete/request] Could not resolve auth provider', {
-      hasAppleAuthorizationCode: Boolean(appleAuthorizationCode),
-      userId: authUser.userId,
-    });
-    return jsonResponse(
+    console.warn(
+      '[account/delete/request] Could not resolve auth provider; continuing without provider-specific revocation',
       {
-        error: 'auth_provider_unresolved',
-        message: 'Could not determine auth provider for account deletion',
-      },
-      409
+        hasAppleAuthorizationCode: Boolean(appleAuthorizationCode),
+        requestRef,
+        userRef,
+      }
     );
+    addMonitoringBreadcrumb({
+      category: 'account-deletion',
+      data: {
+        hasAppleAuthorizationCode: Boolean(appleAuthorizationCode),
+        requestRef,
+        userRef,
+      },
+      level: 'warning',
+      message: 'account deletion auth provider unresolved',
+    });
   }
 
   if (!profileId) {
     console.warn('[account/delete/request] Could not resolve profile id', {
-      userId: authUser.userId,
+      requestRef,
+      userRef,
     });
     return jsonResponse(
       {
@@ -243,7 +261,8 @@ export async function POST(request: Request): Promise<Response> {
   } catch (error) {
     console.error('[account/delete/request] Apple revocation threw', {
       error,
-      userId: authUser.userId,
+      requestRef,
+      userRef,
     });
     revocation = {
       status: 'failed' as const,
@@ -258,25 +277,28 @@ export async function POST(request: Request): Promise<Response> {
     addMonitoringBreadcrumb({
       category: 'account-deletion',
       data: {
+        requestRef,
         revocationMessage:
           'message' in revocation ? revocation.message : revocation.status,
         revocationStatus: revocation.status,
-        userId: authUser.userId,
+        userRef,
       },
       level: 'warning',
       message: 'account deletion persisted with apple revocation warning',
     });
   }
 
-  const revocationResponse = getAccountDeletionRevocationResponse({
-    provider: effectiveAuthProvider,
-    revocation,
-  });
+  const revocationResponse = effectiveAuthProvider
+    ? getAccountDeletionRevocationResponse({
+        provider: effectiveAuthProvider,
+        revocation,
+      })
+    : undefined;
   const payload = {
     ...(effectiveAuthProvider === authProviderTypes.apple
       ? getAppleRevocationPersistenceFields(revocation)
       : {}),
-    auth_provider: effectiveAuthProvider,
+    ...(effectiveAuthProvider ? { auth_provider: effectiveAuthProvider } : {}),
     auth_user_id: authUser.userId,
     ...(typeof parsed.email === 'string' && parsed.email.trim().length > 0
       ? { email: parsed.email.trim() }
@@ -292,9 +314,9 @@ export async function POST(request: Request): Promise<Response> {
     console.info('[account/delete/request] Writing deletion request', {
       authProvider: effectiveAuthProvider,
       hasExistingRequest: Boolean(existingRequest?.id),
-      profileId,
-      recordId,
-      userId: authUser.userId,
+      hasProfileId: Boolean(profileId),
+      requestRef,
+      userRef,
     });
     await adminDb.transact(
       existingRequest?.id
@@ -316,9 +338,9 @@ export async function POST(request: Request): Promise<Response> {
       context: {
         authProvider: effectiveAuthProvider,
         hasExistingRequest: Boolean(existingRequest?.id),
-        profileId,
-        recordId,
-        userId: authUser.userId,
+        hasProfileId: Boolean(profileId),
+        requestRef,
+        userRef,
       },
       error,
       failureCode: 'admin_write_failed',

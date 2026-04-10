@@ -87,6 +87,9 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
     authFlow?: string | string[];
   }>();
   const signupDraft = useSignupOnboardingDraftStore((state) => state.draft);
+  const resetSignupDraft = useSignupOnboardingDraftStore(
+    (state) => state.resetDraft
+  );
   const {
     bootstrapError,
     bootstrapState,
@@ -114,6 +117,17 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
     }),
     [authFlow]
   );
+  const hasAnySignupDraft = React.useMemo(
+    () => Object.keys(signupDraft).length > 0,
+    [signupDraft]
+  );
+  const hasSignupFinalDetailsContext =
+    authFlow === 'signup' &&
+    signupDraft.hasCompletedSetup === true &&
+    signupDraft.hasAcceptedPrivacyPolicy === true &&
+    signupDraft.hasAcceptedTerms === true &&
+    Boolean(signupDraft.displayName) &&
+    Boolean(signupDraft.dateOfBirth);
 
   const shouldRetryProvision =
     bootstrapState === profileBootstrapStates.recoverableError &&
@@ -146,6 +160,12 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
       }
     })();
   }, [retryProfileProvision, shouldRetryProvision, userId]);
+
+  React.useEffect(() => {
+    if (authFlow === 'signup' || !hasAnySignupDraft) return;
+
+    resetSignupDraft();
+  }, [authFlow, hasAnySignupDraft, resetSignupDraft]);
 
   async function handleSignOut(): Promise<boolean> {
     setIsSigningOut(true);
@@ -223,11 +243,7 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
   }
 
   if (!profile?.onboarding_completed_at) {
-    if (
-      signupDraft.hasCompletedSetup === true &&
-      signupDraft.displayName &&
-      signupDraft.dateOfBirth
-    ) {
+    if (hasSignupFinalDetailsContext) {
       return <Redirect href="/(auth)/onboarding-final-details" />;
     }
 

@@ -28,14 +28,14 @@ import {
   postScheduleAccountDeletion,
 } from '@/src/lib/account-deletion/account-deletion-api';
 import { getAccountDeletionErrorMessage } from '@/src/lib/account-deletion/account-deletion-error-message';
-import { useAccountDeletionRequest } from '@/src/lib/account-deletion/use-account-deletion-request';
-import { useScreenEntry } from '@/src/lib/animations/use-screen-entry';
 import {
   isAppleDeletionWarningStatus,
   isProviderSignInCanceled,
   shouldAttemptGoogleProviderRevocation,
   shouldContinueAfterAppleVerificationError,
 } from '@/src/lib/account-deletion/account-deletion-flow';
+import { useAccountDeletionRequest } from '@/src/lib/account-deletion/use-account-deletion-request';
+import { useScreenEntry } from '@/src/lib/animations/use-screen-entry';
 import {
   configureGoogleSignIn,
   getAppleAuthorizationCode,

@@ -26,6 +26,7 @@ describe('default profile values', () => {
     expect(memberId).toMatch(/^ESCO-[A-F0-9]{16}$/);
     expect(referralCode).toMatch(/^ESCO-[A-F0-9]{16}$/);
     expect(memberId).not.toBe(profileId);
+    expect(referralCode).not.toBe(profileId);
     expect(memberId).not.toBe(referralCode);
   });
 
@@ -41,6 +42,8 @@ describe('default profile values', () => {
     expect(second.referral_code).toMatch(/^ESCO-[A-F0-9]{16}$/);
     expect(first.member_id).not.toBe(first.referral_code);
     expect(second.member_id).not.toBe(second.referral_code);
+    expect(first.member_id).not.toBe(second.member_id);
+    expect(first.referral_code).not.toBe(second.referral_code);
   });
 
   test('uses a safe fallback full name when no display name or email are provided', () => {
