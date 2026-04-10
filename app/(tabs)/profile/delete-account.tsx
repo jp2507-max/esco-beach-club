@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { type Href, useRouter } from 'expo-router';
 import {
   AlertTriangle,
@@ -29,13 +30,26 @@ import {
 import { getAccountDeletionErrorMessage } from '@/src/lib/account-deletion/account-deletion-error-message';
 import { useAccountDeletionRequest } from '@/src/lib/account-deletion/use-account-deletion-request';
 import { useScreenEntry } from '@/src/lib/animations/use-screen-entry';
-import { getAppleAuthorizationCode } from '@/src/lib/auth/social-auth';
+import {
+  isAppleDeletionWarningStatus,
+  isProviderSignInCanceled,
+  shouldAttemptGoogleProviderRevocation,
+  shouldContinueAfterAppleVerificationError,
+} from '@/src/lib/account-deletion/account-deletion-flow';
+import {
+  configureGoogleSignIn,
+  getAppleAuthorizationCode,
+} from '@/src/lib/auth/social-auth';
 import { ControlledTextInput } from '@/src/lib/forms/controlled-text-input';
 import {
   type AccountDeletionConfirmFormValues,
   accountDeletionConfirmSchema,
 } from '@/src/lib/forms/schemas';
 import { hapticError } from '@/src/lib/haptics/haptics';
+import {
+  addMonitoringBreadcrumb,
+  captureHandledError,
+} from '@/src/lib/monitoring';
 import { ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 
@@ -146,7 +160,45 @@ export default function DeleteAccountScreen(): React.JSX.Element {
       let appleAuthorizationCode: string | undefined;
 
       if (authProvider === authProviderTypes.apple && Platform.OS === 'ios') {
-        appleAuthorizationCode = await getAppleAuthorizationCode();
+        try {
+          appleAuthorizationCode = await getAppleAuthorizationCode();
+        } catch (error) {
+          if (isProviderSignInCanceled(error)) {
+            addMonitoringBreadcrumb({
+              category: 'account-deletion',
+              data: {
+                authProvider,
+              },
+              level: 'info',
+              message: 'apple deletion verification canceled by user',
+            });
+            hapticError();
+            Alert.alert(t('deleteAccount.errors.appleVerificationCanceled'));
+            return;
+          }
+
+          if (shouldContinueAfterAppleVerificationError(error)) {
+            addMonitoringBreadcrumb({
+              category: 'account-deletion',
+              data: {
+                authProvider,
+                errorMessage:
+                  error instanceof Error ? error.message : 'unknown_error',
+              },
+              level: 'warning',
+              message: 'apple deletion verification failed before scheduling',
+            });
+            captureHandledError(error, {
+              extras: {
+                authProvider,
+              },
+              tags: {
+                feature: 'account-deletion',
+                operation: 'apple_pre_delete_verification',
+              },
+            });
+          }
+        }
       }
 
       const result = await postScheduleAccountDeletion({
@@ -159,6 +211,52 @@ export default function DeleteAccountScreen(): React.JSX.Element {
         hapticError();
         Alert.alert(getAccountDeletionErrorMessage(result, t));
         return;
+      }
+
+      const revocationStatus = result.body?.revocation?.status;
+      if (isAppleDeletionWarningStatus(revocationStatus)) {
+        addMonitoringBreadcrumb({
+          category: 'account-deletion',
+          data: {
+            authProvider,
+            message: result.body?.revocation?.message ?? null,
+            revocationStatus,
+          },
+          level: 'warning',
+          message: 'account deletion scheduled with apple revocation warning',
+        });
+      }
+
+      if (shouldAttemptGoogleProviderRevocation(authProvider)) {
+        try {
+          configureGoogleSignIn();
+          await GoogleSignin.revokeAccess();
+        } catch (error) {
+          addMonitoringBreadcrumb({
+            category: 'account-deletion',
+            data: {
+              authProvider,
+              errorMessage:
+                error instanceof Error ? error.message : 'unknown_error',
+            },
+            level: 'warning',
+            message:
+              'google provider revocation failed after scheduling deletion',
+          });
+          captureHandledError(error, {
+            extras: {
+              authProvider,
+            },
+            tags: {
+              feature: 'account-deletion',
+              operation: 'google_post_delete_revoke_access',
+            },
+          });
+          console.error(
+            '[DeleteAccount] Google provider revocation failed after schedule',
+            error
+          );
+        }
       }
 
       reset({
@@ -181,11 +279,12 @@ export default function DeleteAccountScreen(): React.JSX.Element {
     } catch (error) {
       hapticError();
       console.error('[DeleteAccount] Schedule failed', error);
-      const message =
-        error instanceof Error && error.message === 'providerSignInCanceled'
-          ? t('deleteAccount.errors.appleVerificationCanceled')
-          : t('deleteAccount.errors.scheduleFailed');
-      Alert.alert(message);
+      if (isProviderSignInCanceled(error)) {
+        Alert.alert(t('deleteAccount.errors.appleVerificationCanceled'));
+        return;
+      }
+
+      Alert.alert(t('deleteAccount.errors.scheduleFailed'));
     } finally {
       setIsSubmitting(false);
     }

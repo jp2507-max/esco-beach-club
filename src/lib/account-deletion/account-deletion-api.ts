@@ -4,15 +4,22 @@ import {
   type ClientApiFailure,
   readApiErrorDetails,
 } from '@/src/lib/api/client-api';
+import { addMonitoringBreadcrumb } from '@/src/lib/monitoring';
 
 export type AccountDeletionApiResult<T> =
   | { ok: true; body: T | null; status: number }
   | ClientApiFailure;
 
+const DEFAULT_ACCOUNT_DELETION_TIMEOUT_MS = 15000;
+const SCHEDULE_ACCOUNT_DELETION_TIMEOUT_MS = 30000;
+
 async function postJson<T>(
   path: string,
   refreshToken: string,
-  body: Record<string, unknown>
+  body: Record<string, unknown>,
+  options?: {
+    timeoutMs?: number;
+  }
 ): Promise<AccountDeletionApiResult<T>> {
   const url = buildClientApiUrl(path, {
     explicitBaseUrl: process.env.EXPO_PUBLIC_ACCOUNT_API_BASE_URL,
@@ -23,7 +30,8 @@ async function postJson<T>(
   }
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 15000);
+  const timeoutMs = options?.timeoutMs ?? DEFAULT_ACCOUNT_DELETION_TIMEOUT_MS;
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     const response = await fetch(url, {
@@ -51,20 +59,52 @@ async function postJson<T>(
       };
     }
 
+    const errorDetails = readApiErrorDetails(responseBody, response.status);
+    addMonitoringBreadcrumb({
+      category: 'account-deletion',
+      data: {
+        code: errorDetails.code ?? null,
+        path,
+        status: response.status,
+      },
+      level: response.status >= 500 ? 'warning' : 'info',
+      message: 'account deletion api http error',
+    });
+
     return {
       ok: false,
       reason: 'http_error',
       status: response.status,
-      ...readApiErrorDetails(responseBody, response.status),
+      ...errorDetails,
     };
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
+      addMonitoringBreadcrumb({
+        category: 'account-deletion',
+        data: {
+          path,
+          timeoutMs,
+        },
+        level: 'warning',
+        message: 'account deletion api request timed out',
+      });
+
       return {
         ok: false,
-        reason: 'network',
+        reason: 'timeout',
         message: 'request timed out',
       };
     }
+
+    addMonitoringBreadcrumb({
+      category: 'account-deletion',
+      data: {
+        message: error instanceof Error ? error.message : 'fetch failed',
+        path,
+      },
+      level: 'error',
+      message: 'account deletion api network failure',
+    });
 
     return {
       ok: false,
@@ -85,8 +125,13 @@ export type ScheduleAccountDeletionResponse = {
     status: string;
   };
   revocation?: {
+    status:
+      | 'failed'
+      | 'missing_authorization_code'
+      | 'not_configured'
+      | 'not_required'
+      | 'revoked';
     message?: string;
-    status: string;
   };
 };
 
@@ -103,6 +148,9 @@ export function postScheduleAccountDeletion(params: {
         ? { appleAuthorizationCode: params.appleAuthorizationCode }
         : {}),
       ...(params.authProvider ? { authProvider: params.authProvider } : {}),
+    },
+    {
+      timeoutMs: SCHEDULE_ACCOUNT_DELETION_TIMEOUT_MS,
     }
   );
 }

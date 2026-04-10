@@ -10,9 +10,7 @@ import { captureHandledError } from '@/src/lib/monitoring';
 import { normalizeMemberSegment } from '@/src/lib/utils/member-segment';
 
 import {
-  buildMemberId,
   buildProfileId,
-  buildReferralCode,
   getDefaultProfileValues,
   isMemberIdConflict,
   isProfileIdConflict,
@@ -55,7 +53,6 @@ function getErrorMonitoringExtras(error: unknown): Record<string, unknown> {
 
 export const profileBootstrapStages = {
   ensureProfile: 'ensure_profile',
-  loadProfile: 'load_profile',
 } as const;
 
 export type ProfileBootstrapStage =
@@ -178,38 +175,12 @@ export async function ensureProfileWithDb(
     attempt++;
 
     const profileId = buildProfileId(params.userId);
-    const expectedMemberId = buildMemberId(params.userId);
-    const expectedReferralCode = buildReferralCode(params.userId);
-    const payload = {
-      ...getDefaultProfileValues({
-        userId: params.userId,
-        email: params.email,
-        displayName: params.displayName,
-        dateOfBirth: params.dateOfBirth,
-      }),
-      member_id: expectedMemberId,
-      referral_code: expectedReferralCode,
-    };
-
-    if (
-      payload.member_id !== expectedMemberId ||
-      payload.referral_code !== expectedReferralCode
-    ) {
-      captureHandledError(new Error('invalidCanonicalProfileIdentifiers'), {
-        tags: {
-          area: 'profile',
-          operation: 'create_profile',
-        },
-        extras: {
-          expectedMemberId,
-          expectedReferralCode,
-          payloadMemberId: payload.member_id,
-          payloadReferralCode: payload.referral_code,
-          profileId,
-          userId: params.userId,
-        },
-      });
-    }
+    const payload = getDefaultProfileValues({
+      userId: params.userId,
+      email: params.email,
+      displayName: params.displayName,
+      dateOfBirth: params.dateOfBirth,
+    });
 
     try {
       await database.transact(database.tx.profiles[profileId].create(payload));
@@ -241,6 +212,10 @@ export async function ensureProfileWithDb(
         if (existingProfile) {
           return existingProfile;
         }
+        if (attempt < maxAttempts) {
+          await waitForProvisionRetryDelay(attempt);
+          continue;
+        }
         throw error;
       }
 
@@ -251,6 +226,10 @@ export async function ensureProfileWithDb(
         );
         if (existingProfile) {
           return existingProfile;
+        }
+        if (attempt < maxAttempts) {
+          await waitForProvisionRetryDelay(attempt);
+          continue;
         }
         throw error;
       }

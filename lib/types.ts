@@ -85,11 +85,13 @@ export type AccountDeletionStatus =
   (typeof accountDeletionStatuses)[keyof typeof accountDeletionStatuses];
 
 export type Profile = {
+  /** Internal canonical profile entity id. This is the auth user id in Instant. */
   id: string;
   full_name: string;
   auth_provider: AuthProviderType | null;
   date_of_birth: string | null;
   bio: string;
+  /** Public member-facing identifier used for QR/staff lookup. */
   member_id: string;
   member_since: string;
   nights_left: number;

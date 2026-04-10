@@ -55,6 +55,19 @@ describe('getAccountDeletionErrorMessage', () => {
     expect(message).toBe('deleteAccount.errors.serverSchemaMisconfigured');
   });
 
+  test('maps timeout failures to a dedicated timeout message', () => {
+    const message = getAccountDeletionErrorMessage(
+      {
+        ok: false,
+        reason: 'timeout',
+        message: 'request timed out',
+      },
+      t
+    );
+
+    expect(message).toBe('deleteAccount.errors.requestTimedOut');
+  });
+
   test('maps unclassified 5xx failures to a generic server error message', () => {
     const message = getAccountDeletionErrorMessage(
       {

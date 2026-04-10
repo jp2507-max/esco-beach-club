@@ -1,9 +1,7 @@
-import { updateProfile } from '@/lib/api';
 import {
   type MemberSegment,
   type OnboardingPermissionStatus,
   onboardingPermissionStatuses,
-  type Profile,
 } from '@/lib/types';
 import { normalizeMemberSegment } from '@/src/lib/utils/member-segment';
 
@@ -33,10 +31,6 @@ function isValidCalendarDate(value: string): boolean {
     date.getUTCMonth() === month - 1 &&
     date.getUTCDate() === day
   );
-}
-
-function nowIso(): string {
-  return new Date().toISOString();
 }
 
 function normalizeOnboardingPermissionStatus(
@@ -150,79 +144,4 @@ export function extractSignInUser(result: unknown): {
     email,
     id,
   };
-}
-
-export async function applyOnboardingProfileDataForNewUser(params: {
-  onboardingData: SignupOnboardingData | null;
-  profile: Profile | null;
-  signInUser: ReturnType<typeof extractSignInUser>;
-}): Promise<void> {
-  if (!params.onboardingData) return;
-
-  const { profile, signInUser } = params;
-  if (!signInUser.created || !signInUser.id) return;
-
-  if (!profile) return;
-
-  const needsDateOfBirthUpdate =
-    profile.date_of_birth !== params.onboardingData.dateOfBirth;
-  const needsFullNameUpdate =
-    profile.full_name !== params.onboardingData.displayName;
-  const hasMemberSegmentData =
-    params.onboardingData.memberSegment !== undefined;
-  const needsMemberSegmentUpdate =
-    hasMemberSegmentData &&
-    profile.member_segment !== params.onboardingData.memberSegment;
-  const hasLocationPermissionStatus =
-    params.onboardingData.locationPermissionStatus !== undefined;
-  const needsLocationPermissionStatusUpdate =
-    hasLocationPermissionStatus &&
-    profile.location_permission_status !==
-      params.onboardingData.locationPermissionStatus;
-  const hasPushPermissionStatus =
-    params.onboardingData.pushNotificationPermissionStatus !== undefined;
-  const needsPushPermissionStatusUpdate =
-    hasPushPermissionStatus &&
-    profile.push_notification_permission_status !==
-      params.onboardingData.pushNotificationPermissionStatus;
-  const hasCompletedIdentityOnboarding =
-    params.onboardingData.hasCompletedSetup === true;
-  const needsCompletedAtUpdate =
-    hasCompletedIdentityOnboarding && !profile.onboarding_completed_at;
-
-  if (
-    !needsDateOfBirthUpdate &&
-    !needsFullNameUpdate &&
-    !needsMemberSegmentUpdate &&
-    !needsLocationPermissionStatusUpdate &&
-    !needsPushPermissionStatusUpdate &&
-    !needsCompletedAtUpdate
-  ) {
-    return;
-  }
-
-  await updateProfile(signInUser.id, {
-    ...(needsDateOfBirthUpdate
-      ? { date_of_birth: params.onboardingData.dateOfBirth }
-      : {}),
-    ...(needsFullNameUpdate
-      ? { full_name: params.onboardingData.displayName }
-      : {}),
-    ...(needsMemberSegmentUpdate
-      ? { member_segment: params.onboardingData.memberSegment }
-      : {}),
-    ...(needsLocationPermissionStatusUpdate
-      ? {
-          location_permission_status:
-            params.onboardingData.locationPermissionStatus,
-        }
-      : {}),
-    ...(needsPushPermissionStatusUpdate
-      ? {
-          push_notification_permission_status:
-            params.onboardingData.pushNotificationPermissionStatus,
-        }
-      : {}),
-    ...(needsCompletedAtUpdate ? { onboarding_completed_at: nowIso() } : {}),
-  });
 }

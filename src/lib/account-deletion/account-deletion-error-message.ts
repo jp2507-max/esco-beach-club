@@ -24,6 +24,10 @@ export function getAccountDeletionErrorMessage(
     return t('deleteAccount.errors.networkUnavailable');
   }
 
+  if (result.reason === 'timeout') {
+    return t('deleteAccount.errors.requestTimedOut');
+  }
+
   if (result.status === 401) {
     return t('deleteAccount.errors.sessionExpired');
   }

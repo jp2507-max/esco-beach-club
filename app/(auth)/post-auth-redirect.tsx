@@ -1,4 +1,4 @@
-import { Redirect, useRouter } from 'expo-router';
+import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import type { TFunction } from 'i18next';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -83,6 +83,9 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
   const { t } = useTranslation('auth');
   const { signOut } = useAuth();
   const router = useRouter();
+  const searchParams = useLocalSearchParams<{
+    authFlow?: string | string[];
+  }>();
   const signupDraft = useSignupOnboardingDraftStore((state) => state.draft);
   const {
     bootstrapError,
@@ -96,6 +99,21 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
   >(null);
   const [isRetryingProvision, setIsRetryingProvision] = React.useState(false);
   const [isSigningOut, setIsSigningOut] = React.useState(false);
+
+  const authFlow = React.useMemo(() => {
+    if (Array.isArray(searchParams.authFlow)) {
+      return searchParams.authFlow[0];
+    }
+
+    return searchParams.authFlow;
+  }, [searchParams.authFlow]);
+  const loginHref = React.useMemo(
+    () => ({
+      pathname: '/(auth)/login' as const,
+      params: authFlow ? { authFlow } : {},
+    }),
+    [authFlow]
+  );
 
   const shouldRetryProvision =
     bootstrapState === profileBootstrapStates.recoverableError &&
@@ -152,14 +170,16 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
 
   async function handleBackToSignIn(): Promise<void> {
     const didSignOut = await handleSignOut();
-    if (didSignOut) router.replace('/(auth)/login');
+    if (!didSignOut) return;
+
+    router.replace(loginHref);
   }
 
   const isWorking = isRetryingProvision || isSigningOut;
   const errorMessage = profileBootstrapErrorDescription(t, bootstrapError);
 
   if (bootstrapState === profileBootstrapStates.signedOut) {
-    return <Redirect href="/(auth)/login" />;
+    return <Redirect href={loginHref} />;
   }
 
   if (

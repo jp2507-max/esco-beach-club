@@ -7,7 +7,8 @@ export type ClientApiFailureReason =
   | 'http_error'
   | 'network'
   | 'no_endpoint'
-  | 'parse_error';
+  | 'parse_error'
+  | 'timeout';
 
 export type ClientApiFailure = {
   ok: false;

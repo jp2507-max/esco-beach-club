@@ -58,20 +58,17 @@ describe('profiles permissions', () => {
     expect(rules.profiles.bind.hasValidProfileCreateValues).toContain(
       'data.onboarding_completed_at == null'
     );
-    expect(rules.profiles.bind.canonicalProfileCreateUserIdHex).toContain(
-      "data.userId.replace('-', '')"
+    expect(rules.profiles.bind.hasValidPublicProfileIdentifiers).toContain(
+      "data.member_id.matches('^ESCO-[A-F0-9]{16}$')"
     );
-    expect(rules.profiles.bind.hasCanonicalProfileCreateIdentifiers).toContain(
-      'data.member_id =='
+    expect(rules.profiles.bind.hasValidPublicProfileIdentifiers).toContain(
+      "data.referral_code.matches('^ESCO-[A-F0-9]{16}$')"
     );
-    expect(rules.profiles.bind.hasCanonicalProfileCreateIdentifiers).toContain(
-      'data.referral_code =='
-    );
-    expect(rules.profiles.bind.hasCanonicalProfileCreateIdentifiers).toContain(
-      'upperAscii()'
+    expect(rules.profiles.bind.hasValidPublicProfileIdentifiers).toContain(
+      'data.member_id != data.referral_code'
     );
     expect(rules.profiles.bind.hasValidProfileCreateValues).toContain(
-      'hasCanonicalProfileCreateIdentifiers'
+      'hasValidPublicProfileIdentifiers'
     );
   });
 

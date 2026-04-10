@@ -245,13 +245,13 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
   async function navigateToSignup(): Promise<void> {
     if (isAuthLoading) return;
 
-    setSignupDraft({ hasCompletedSetup: true });
-
     if (isAuthenticated && user?.id) {
       try {
         await persistAuthenticatedOnboardingChoices();
+        setSignupDraft({ hasCompletedSetup: true });
       } catch (error: unknown) {
         if (isPermissionDeniedError(error)) {
+          setSignupDraft({ hasCompletedSetup: true });
           console.warn(
             '[OnboardingFinalDetails] Authenticated onboarding update lost permissions; recovering through auth flow.',
             {
@@ -280,6 +280,7 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
       return;
     }
 
+    setSignupDraft({ hasCompletedSetup: true });
     router.push({
       pathname: '/login',
       params: { authFlow: 'signup' },

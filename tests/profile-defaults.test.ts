@@ -18,15 +18,29 @@ describe('default profile values', () => {
     expect(values.userId).toBe(TEST_USER_ID);
   });
 
-  test('derives deterministic and distinct member/referral identifiers', () => {
+  test('derives public member/referral identifiers distinct from the profile id', () => {
+    const profileId = buildProfileId(TEST_USER_ID);
     const memberId = buildMemberId(TEST_USER_ID);
     const referralCode = buildReferralCode(TEST_USER_ID);
 
-    expect(memberId.startsWith('ESCO-')).toBe(true);
-    expect(referralCode.startsWith('ESCO-')).toBe(true);
+    expect(memberId).toMatch(/^ESCO-[A-F0-9]{16}$/);
+    expect(referralCode).toMatch(/^ESCO-[A-F0-9]{16}$/);
+    expect(memberId).not.toBe(profileId);
     expect(memberId).not.toBe(referralCode);
-    expect(memberId.length).toBeGreaterThan('ESCO-'.length);
-    expect(referralCode.length).toBeGreaterThan('ESCO-'.length);
+  });
+
+  test('generates fresh public identifiers per profile bootstrap attempt', () => {
+    const first = getDefaultProfileValues({ userId: TEST_USER_ID });
+    const second = getDefaultProfileValues({ userId: TEST_USER_ID });
+
+    expect(first.userId).toBe(TEST_USER_ID);
+    expect(second.userId).toBe(TEST_USER_ID);
+    expect(first.member_id).toMatch(/^ESCO-[A-F0-9]{16}$/);
+    expect(first.referral_code).toMatch(/^ESCO-[A-F0-9]{16}$/);
+    expect(second.member_id).toMatch(/^ESCO-[A-F0-9]{16}$/);
+    expect(second.referral_code).toMatch(/^ESCO-[A-F0-9]{16}$/);
+    expect(first.member_id).not.toBe(first.referral_code);
+    expect(second.member_id).not.toBe(second.referral_code);
   });
 
   test('uses a safe fallback full name when no display name or email are provided', () => {

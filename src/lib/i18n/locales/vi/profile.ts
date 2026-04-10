@@ -269,6 +269,8 @@ const profile = {
         'Tính năng xóa tài khoản tạm thời không khả dụng vì API cục bộ không thể kết nối tới InstantDB. Hãy kiểm tra DNS hoặc kết nối internet của máy này rồi thử lại.',
       networkUnavailable:
         'Không thể kết nối tới dịch vụ xóa tài khoản. Hãy kiểm tra kết nối rồi thử lại.',
+      requestTimedOut:
+        'Yêu cầu xóa tài khoản mất quá nhiều thời gian. Vui lòng thử lại.',
       restoreFailed: 'Không thể khôi phục tài khoản của bạn. Vui lòng thử lại.',
       scheduleFailed: 'Không thể lên lịch xóa tài khoản. Vui lòng thử lại.',
       serverSchemaMisconfigured:

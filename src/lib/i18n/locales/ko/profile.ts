@@ -266,6 +266,8 @@ const profile = {
         '로컬 API 서버가 InstantDB에 연결할 수 없어 계정 삭제를 일시적으로 사용할 수 없습니다. 이 기기의 DNS 또는 인터넷 연결을 확인한 뒤 다시 시도해 주세요.',
       networkUnavailable:
         '계정 삭제 서비스에 연결할 수 없습니다. 네트워크를 확인한 뒤 다시 시도해 주세요.',
+      requestTimedOut:
+        '계정 삭제 요청이 너무 오래 걸렸습니다. 다시 시도해 주세요.',
       restoreFailed: '계정을 복원할 수 없습니다. 다시 시도해 주세요.',
       scheduleFailed: '계정 삭제를 예약할 수 없습니다. 다시 시도해 주세요.',
       serverSchemaMisconfigured:

@@ -269,6 +269,8 @@ const profile = {
         'Account deletion is temporarily unavailable because the local API server cannot reach InstantDB. Check this machine’s DNS or internet connection and try again.',
       networkUnavailable:
         'Could not reach the account deletion service. Check your connection and try again.',
+      requestTimedOut:
+        'The account deletion request took too long. Please try again.',
       restoreFailed: 'Could not restore your account. Please try again.',
       scheduleFailed: 'Could not schedule account deletion. Please try again.',
       serverSchemaMisconfigured:

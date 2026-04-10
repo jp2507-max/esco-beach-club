@@ -3,6 +3,11 @@ import {
   type AuthProviderType,
   authProviderTypes,
 } from '@/lib/types';
+import {
+  getAccountDeletionRevocationResponse,
+  getAppleRevocationPersistenceFields,
+  isAppleDeletionWarningStatus,
+} from '@/src/lib/account-deletion/account-deletion-flow';
 import { buildAccountDeletionAdminErrorResponse } from '@/src/lib/account-deletion/account-deletion-server-errors';
 import { revokeAppleAuthorizationCode } from '@/src/lib/account-deletion/apple-revoke-server';
 import {
@@ -16,6 +21,7 @@ import {
   getInstantAdminDb,
 } from '@/src/lib/referral/instant-admin-server';
 import { verifyInstantRefreshToken } from '@/src/lib/referral/instant-runtime-server';
+import { addMonitoringBreadcrumb } from '@/src/lib/monitoring';
 
 type AccountDeletionRequestRecord = {
   id?: string;
@@ -77,23 +83,6 @@ function addGracePeriodDays(from: Date, days: number): string {
   return new Date(from.getTime() + days * 24 * 60 * 60 * 1000).toISOString();
 }
 
-function getAppleRevocationFailureStatus(
-  revocation: Exclude<
-    Awaited<ReturnType<typeof revokeAppleAuthorizationCode>>,
-    { status: 'not_required' | 'revoked' }
-  >
-): number {
-  if (revocation.status === 'missing_authorization_code') {
-    return 400;
-  }
-
-  if (revocation.status === 'not_configured') {
-    return 503;
-  }
-
-  return 502;
-}
-
 export async function POST(request: Request): Promise<Response> {
   const adminDb = getInstantAdminDb();
   if (!adminDb) {
@@ -145,7 +134,6 @@ export async function POST(request: Request): Promise<Response> {
     typeof parsed.appleAuthorizationCode === 'string'
       ? parsed.appleAuthorizationCode.trim()
       : '';
-  const clientAuthProvider = toAuthProvider(parsed.authProvider);
 
   const recordId = `account-delete-${authUser.userId}`;
   let existingRequest: AccountDeletionRequestRecord | undefined;
@@ -213,20 +201,7 @@ export async function POST(request: Request): Promise<Response> {
     return jsonResponse(adminError.body, adminError.status);
   }
 
-  const effectiveAuthProvider = trustedAuthProvider ?? clientAuthProvider;
-  if (
-    trustedAuthProvider &&
-    clientAuthProvider &&
-    trustedAuthProvider !== clientAuthProvider
-  ) {
-    console.warn('[account/delete/request] Auth provider mismatch', {
-      clientAuthProvider,
-      trustedAuthProvider,
-      userId: authUser.userId,
-    });
-  }
-
-  if (!effectiveAuthProvider) {
+  if (!trustedAuthProvider) {
     console.warn('[account/delete/request] Could not resolve auth provider', {
       hasAppleAuthorizationCode: Boolean(appleAuthorizationCode),
       userId: authUser.userId,
@@ -239,6 +214,21 @@ export async function POST(request: Request): Promise<Response> {
       409
     );
   }
+
+  if (!profileId) {
+    console.warn('[account/delete/request] Could not resolve profile id', {
+      userId: authUser.userId,
+    });
+    return jsonResponse(
+      {
+        error: 'profile_unresolved',
+        message: 'Could not determine profile for account deletion',
+      },
+      409
+    );
+  }
+
+  const effectiveAuthProvider = trustedAuthProvider;
 
   const requiresAppleRevocation =
     effectiveAuthProvider === authProviderTypes.apple;
@@ -255,47 +245,43 @@ export async function POST(request: Request): Promise<Response> {
       error,
       userId: authUser.userId,
     });
-    return jsonResponse(
-      {
-        error: 'apple_revocation_failed',
-        message: error instanceof Error ? error.message : 'unknown_error',
-      },
-      502
-    );
+    revocation = {
+      status: 'failed' as const,
+      message: error instanceof Error ? error.message : 'unknown_error',
+    };
   }
 
-  if (requiresAppleRevocation && revocation.status !== 'revoked') {
-    if (revocation.status === 'not_required') {
-      return jsonResponse(
-        {
-          error: 'apple_revocation_failed',
-          message: revocation.status,
-        },
-        502
-      );
-    }
-
-    return jsonResponse(
-      {
-        error: 'apple_revocation_failed',
-        message:
+  if (
+    requiresAppleRevocation &&
+    isAppleDeletionWarningStatus(revocation.status)
+  ) {
+    addMonitoringBreadcrumb({
+      category: 'account-deletion',
+      data: {
+        revocationMessage:
           'message' in revocation ? revocation.message : revocation.status,
+        revocationStatus: revocation.status,
+        userId: authUser.userId,
       },
-      getAppleRevocationFailureStatus(revocation)
-    );
+      level: 'warning',
+      message: 'account deletion persisted with apple revocation warning',
+    });
   }
 
+  const revocationResponse = getAccountDeletionRevocationResponse({
+    provider: effectiveAuthProvider,
+    revocation,
+  });
   const payload = {
-    ...(effectiveAuthProvider === authProviderTypes.apple &&
-    revocation.status !== 'not_required'
-      ? { apple_revocation_status: revocation.status }
+    ...(effectiveAuthProvider === authProviderTypes.apple
+      ? getAppleRevocationPersistenceFields(revocation)
       : {}),
     auth_provider: effectiveAuthProvider,
     auth_user_id: authUser.userId,
     ...(typeof parsed.email === 'string' && parsed.email.trim().length > 0
       ? { email: parsed.email.trim() }
       : {}),
-    ...(profileId ? { profile_id: profileId } : {}),
+    profile_id: profileId,
     requested_at: nowIso,
     scheduled_for_at: scheduledForAt,
     status: accountDeletionStatuses.pending,
@@ -355,15 +341,7 @@ export async function POST(request: Request): Promise<Response> {
         scheduledForAt,
         status: accountDeletionStatuses.pending,
       },
-      revocation:
-        revocation.status === 'not_required'
-          ? undefined
-          : {
-              ...(revocation.status === 'failed'
-                ? { message: revocation.message }
-                : {}),
-              status: revocation.status,
-            },
+      revocation: revocationResponse,
     },
     existingRequest ? 200 : 201
   );

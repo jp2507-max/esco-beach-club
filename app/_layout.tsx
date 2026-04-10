@@ -70,6 +70,13 @@ type ExpoManifestExtra = {
   };
 };
 
+function isBootstrapRenderable(bootstrapState: string): boolean {
+  return (
+    bootstrapState !== profileBootstrapStates.authenticating &&
+    bootstrapState !== profileBootstrapStates.bootstrappingProfile
+  );
+}
+
 function setExpoUpdateSentryTags(): void {
   const manifest = Updates.manifest;
 
@@ -323,6 +330,8 @@ function RootLayoutNav() {
   const hasHiddenNativeSplashRef = useRef(false);
   const canAccessAuthenticatedRoutes =
     isAuthenticated && bootstrapState === profileBootstrapStates.ready;
+  const shouldShowLaunchScreen =
+    isLoading || (isAuthenticated && !isBootstrapRenderable(bootstrapState));
 
   const hideNativeSplash = useCallback((): void => {
     if (hasHiddenNativeSplashRef.current) return;
@@ -334,7 +343,7 @@ function RootLayoutNav() {
     if (!isLoading) hideNativeSplash();
   }, [hideNativeSplash, isLoading]);
 
-  if (isLoading) {
+  if (shouldShowLaunchScreen) {
     return <AppLaunchScreen isDark={isDark} onReady={hideNativeSplash} />;
   }
 
