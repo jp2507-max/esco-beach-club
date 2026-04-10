@@ -20,8 +20,8 @@ import {
 } from '@/src/lib/forms/schemas';
 import { hapticLight } from '@/src/lib/haptics/haptics';
 import { shadows } from '@/src/lib/styles/shadows';
-import { useSignupOnboardingDraftStore } from '@/src/stores/signup-onboarding-store';
 import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
+import { useSignupOnboardingDraftStore } from '@/src/stores/signup-onboarding-store';
 import {
   KeyboardAvoidingView,
   Pressable,

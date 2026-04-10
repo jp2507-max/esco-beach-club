@@ -160,6 +160,8 @@ const auth = {
   unableToSendCode: 'Không thể gửi mã.',
   unableToSignInWithApple: 'Không thể đăng nhập bằng Apple.',
   unableToSignInWithGoogle: 'Không thể đăng nhập bằng Google.',
+  profilePermissionDenied:
+    'Đăng nhập đã thành công nhưng quyền hồ sơ đã chặn bước thiết lập. Vui lòng đăng xuất và thử lại.',
   unableToCompleteProfileSetup:
     'Đăng nhập đã thành công nhưng chưa thể hoàn tất thiết lập hồ sơ. Vui lòng thử lại.',
   unableToVerifyCode: 'Không thể xác minh mã.',

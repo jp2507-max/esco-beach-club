@@ -158,6 +158,8 @@ const auth = {
   unableToSendCode: '코드를 보낼 수 없습니다.',
   unableToSignInWithApple: 'Apple로 로그인할 수 없습니다.',
   unableToSignInWithGoogle: 'Google로 로그인할 수 없습니다.',
+  profilePermissionDenied:
+    '로그인은 완료되었지만 프로필 권한 때문에 설정을 마칠 수 없습니다. 로그아웃 후 다시 시도해 주세요.',
   unableToCompleteProfileSetup:
     '로그인은 완료되었지만 프로필 설정을 마무리하지 못했습니다. 다시 시도해 주세요.',
   unableToVerifyCode: '코드를 확인할 수 없습니다.',

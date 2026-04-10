@@ -40,6 +40,7 @@ const ICON_DELAY = 100;
 const TITLE_DELAY = 260;
 const CARD_DELAY = 440;
 const CTA_DELAY = 680;
+const PROFILE_PERMISSION_DENIED_ERROR_KEY = 'profilePermissionDenied';
 
 /**
  * Backend auth/profile permission errors currently surface as mixed shapes:
@@ -54,7 +55,10 @@ function isPermissionDeniedError(error: unknown): boolean {
   if (!error) return false;
 
   if (error instanceof Error) {
-    return error.message.toLowerCase().includes('permission denied');
+    return (
+      error.message === PROFILE_PERMISSION_DENIED_ERROR_KEY ||
+      error.message.toLowerCase().includes('permission denied')
+    );
   }
 
   if (typeof error !== 'object') return false;
@@ -68,10 +72,16 @@ function isPermissionDeniedError(error: unknown): boolean {
     typeof maybeError.message === 'string'
       ? maybeError.message.toLowerCase()
       : '';
+  const rawMessage =
+    typeof maybeError.message === 'string' ? maybeError.message : '';
   const type =
     typeof maybeError.type === 'string' ? maybeError.type.toLowerCase() : '';
 
-  return message.includes('permission denied') || type === 'permission-denied';
+  return (
+    rawMessage === PROFILE_PERMISSION_DENIED_ERROR_KEY ||
+    message.includes('permission denied') ||
+    type === 'permission-denied'
+  );
 }
 
 function FloatingDot({

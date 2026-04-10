@@ -6,6 +6,7 @@ import { AUTH_ERROR_KEYS, isAuthErrorKey } from '@/src/lib/auth-errors';
 describe('auth error keys', () => {
   test('includes profile provisioning failure key', () => {
     expect(AUTH_ERROR_KEYS).toContain('unableToCompleteProfileSetup');
+    expect(AUTH_ERROR_KEYS).toContain('profilePermissionDenied');
   });
 
   test('recognizes valid auth error keys', () => {
@@ -57,6 +58,19 @@ describe('auth error keys', () => {
     );
 
     expect(mappedError.message).toBe('unableToCompleteProfileSetup');
+  });
+
+  test('preserves permission-specific profile provisioning errors', () => {
+    const mappedError = toError(
+      {
+        body: {
+          message: 'profilePermissionDenied',
+        },
+      },
+      'unableToSignInWithGoogle'
+    );
+
+    expect(mappedError.message).toBe('profilePermissionDenied');
   });
 
   test('falls back when error payload has no usable message', () => {

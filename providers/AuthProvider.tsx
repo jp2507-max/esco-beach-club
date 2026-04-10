@@ -63,7 +63,8 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   function resolveAuthPhase(
     errorKey: string
   ): 'oauth_exchange' | 'profile_provision' {
-    return errorKey === 'unableToCompleteProfileSetup'
+    return errorKey === 'unableToCompleteProfileSetup' ||
+      errorKey === 'profilePermissionDenied'
       ? 'profile_provision'
       : 'oauth_exchange';
   }

@@ -157,6 +157,8 @@ const auth = {
   unableToSendCode: 'Unable to send code.',
   unableToSignInWithApple: 'Unable to sign in with Apple.',
   unableToSignInWithGoogle: 'Unable to sign in with Google.',
+  profilePermissionDenied:
+    'Signed in, but profile permissions blocked setup. Please sign out and try again.',
   unableToCompleteProfileSetup:
     'Signed in, but we could not complete your profile setup. Please try again.',
   unableToVerifyCode: 'Unable to verify code.',

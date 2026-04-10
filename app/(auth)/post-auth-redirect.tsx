@@ -1,4 +1,5 @@
 import { Redirect, useRouter } from 'expo-router';
+import type { TFunction } from 'i18next';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert } from 'react-native';
@@ -10,8 +11,8 @@ import {
   useProfileData,
 } from '@/providers/DataProvider';
 import { isAuthErrorKey } from '@/src/lib/auth-errors';
+import { useSignupOnboardingDraftStore } from '@/src/stores/signup-onboarding-store';
 import { ActivityIndicator, Pressable, Text, View } from '@/src/tw';
-import type { TFunction } from 'i18next';
 
 function profileBootstrapErrorDescription(
   t: TFunction<'auth'>,
@@ -82,6 +83,7 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
   const { t } = useTranslation('auth');
   const { signOut } = useAuth();
   const router = useRouter();
+  const signupDraft = useSignupOnboardingDraftStore((state) => state.draft);
   const {
     bootstrapError,
     bootstrapState,
@@ -201,6 +203,14 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
   }
 
   if (!profile?.onboarding_completed_at) {
+    if (
+      signupDraft.hasCompletedSetup === true &&
+      signupDraft.displayName &&
+      signupDraft.dateOfBirth
+    ) {
+      return <Redirect href="/(auth)/onboarding-final-details" />;
+    }
+
     return <Redirect href="/(auth)/onboarding-welcome" />;
   }
 

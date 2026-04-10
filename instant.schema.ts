@@ -301,19 +301,6 @@ const _schema = i.schema({
         label: 'private_event_inquiries',
       },
     },
-    profilesUser: {
-      forward: {
-        on: 'profiles',
-        has: 'one',
-        label: 'user',
-        onDelete: 'cascade',
-      },
-      reverse: {
-        on: '$users',
-        has: 'one',
-        label: 'profile',
-      },
-    },
     referralsReferrer: {
       forward: {
         on: 'referrals',

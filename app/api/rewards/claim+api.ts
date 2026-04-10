@@ -33,9 +33,7 @@ import { verifyInstantRefreshToken } from '@/src/lib/referral/instant-runtime-se
 import type { RewardServiceResponse } from '@/src/lib/reward-backend-contract';
 import { buildRewardTransactionId } from '@/src/lib/rewards/reward-transaction-id';
 
-type ProfileRecord = InstantRecord & {
-  profile?: InstantRecord | InstantRecord[] | null;
-};
+type ProfileRecord = InstantRecord;
 
 type RewardTransactionRecord = {
   external_event_id?: string | null;
@@ -86,59 +84,19 @@ function firstInstantRecord(value: unknown): InstantRecord | null {
     : null;
 }
 
-function firstProfileRecord(value: unknown): ProfileRecord | null {
-  if (Array.isArray(value)) {
-    const [first] = value;
-    return isRecord(first) && typeof first.id === 'string'
-      ? (first as ProfileRecord)
-      : null;
-  }
-
-  return isRecord(value) && typeof value.id === 'string'
-    ? (value as ProfileRecord)
-    : null;
-}
-
 async function resolveProfileForUser(
   adminDb: NonNullable<ReturnType<typeof getInstantAdminDb>>,
   userId: string
 ): Promise<Profile | null> {
-  const directResult = await adminDb.query<{
-    profiles?: InstantRecord[];
-  }>({
-    profiles: {
-      $: { where: { 'user.id': userId } },
-    },
-  });
-  const directProfile = firstInstantRecord(directResult.profiles);
-  if (directProfile) {
-    return mapProfile(directProfile);
-  }
-
-  const deterministicResult = await adminDb.query<{
-    profiles?: InstantRecord[];
+  const result = await adminDb.query<{
+    profiles?: ProfileRecord[];
   }>({
     profiles: {
       $: { where: { id: userId } },
     },
   });
-  const deterministicProfile = firstInstantRecord(deterministicResult.profiles);
-  if (deterministicProfile) {
-    return mapProfile(deterministicProfile);
-  }
-
-  const linkedResult = await adminDb.query<{
-    $users?: ProfileRecord[];
-  }>({
-    $users: {
-      $: { where: { id: userId } },
-      profile: {},
-    },
-  });
-  const linkedUser = firstProfileRecord(linkedResult.$users);
-  const linkedProfile = firstInstantRecord(linkedUser?.profile ?? null);
-
-  return linkedProfile ? mapProfile(linkedProfile) : null;
+  const profile = firstInstantRecord(result.profiles);
+  return profile ? mapProfile(profile) : null;
 }
 
 const profileClaimLockQueue = new Map<string, Promise<unknown>>();

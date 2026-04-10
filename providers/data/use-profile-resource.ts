@@ -110,39 +110,17 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
         }
       : null
   );
-  const profileViaUserQuery = db.useQuery(
-    userId
-      ? {
-          $users: {
-            $: {
-              where: { id: userId },
-            },
-            profile: {},
-          },
-        }
-      : null
-  );
 
   const liveProfile = useMemo(() => {
     if (!userId) return null;
 
-    const directRecord = firstInstantRecord(
-      canonicalProfileQuery.data?.profiles
-    );
-    const userRecord = firstInstantRecord(profileViaUserQuery.data?.$users);
-    const linkedRecord = firstInstantRecord(
-      (userRecord as Record<string, unknown> | null)?.profile
-    );
-    const record = directRecord ?? linkedRecord;
+    const record = firstInstantRecord(canonicalProfileQuery.data?.profiles);
 
     return record ? mapProfile(record) : null;
-  }, [canonicalProfileQuery.data, profileViaUserQuery.data, userId]);
+  }, [canonicalProfileQuery.data, userId]);
 
   const isProfilePending =
-    isAuthLoading ||
-    canonicalProfileQuery.isLoading ||
-    profileViaUserQuery.isLoading ||
-    isProvisioningProfile;
+    isAuthLoading || canonicalProfileQuery.isLoading || isProvisioningProfile;
 
   useEffect(() => {
     if (!userId) {
@@ -197,9 +175,7 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
       return;
     }
 
-    if (canonicalProfileQuery.isLoading || profileViaUserQuery.isLoading) {
-      return;
-    }
+    if (canonicalProfileQuery.isLoading) return;
     if (isProvisioningProfileRef.current.get(userId)) return;
 
     const attemptCount = profileProvisionAttemptsRef.current.get(userId) ?? 0;
@@ -247,7 +223,6 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
           nextAttempt,
           isAuthLoading,
           profileQueryLoading: canonicalProfileQuery.isLoading,
-          profileViaUserQueryLoading: profileViaUserQuery.isLoading,
         });
       })
       .finally(() => {
@@ -266,7 +241,6 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
     isAuthLoading,
     profile,
     profileProvisionError,
-    profileViaUserQuery.isLoading,
     userId,
   ]);
 
@@ -379,7 +353,7 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
   ]);
 
   const isAuthenticatedButNotReady =
-    bootstrapState !== profileBootstrapStates.ready;
+    Boolean(userId) && bootstrapState !== profileBootstrapStates.ready;
 
   return useMemo(
     () => ({
@@ -392,9 +366,7 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
       profileProvisionError,
       profileLoading:
         Boolean(userId) &&
-        (canonicalProfileQuery.isLoading ||
-          profileViaUserQuery.isLoading ||
-          isProvisioningProfile),
+        (canonicalProfileQuery.isLoading || isProvisioningProfile),
       retryProfileProvision,
       userId,
     }),
@@ -407,7 +379,6 @@ export function useProfileResource(params: ProfileResourceParams): ProfileData {
       isRetryable,
       profile,
       profileProvisionError,
-      profileViaUserQuery.isLoading,
       retryProfileProvision,
       userId,
     ]

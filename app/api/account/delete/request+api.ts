@@ -29,33 +29,10 @@ type LinkedProfileRecord = {
   id?: string;
 };
 
-type LinkedUserRecord = {
-  id?: string;
-  profile?: LinkedProfileRecord | LinkedProfileRecord[] | null;
-};
-
 type ResolvedProfileContext = {
   authProvider: AuthProviderType | null;
   profileId: string | null;
 };
-
-function firstLinkedProfileRecord(value: unknown): LinkedProfileRecord | null {
-  if (Array.isArray(value)) {
-    const [first] = value;
-    return isRecord(first) ? (first as LinkedProfileRecord) : null;
-  }
-
-  return isRecord(value) ? (value as LinkedProfileRecord) : null;
-}
-
-function firstLinkedUserRecord(value: unknown): LinkedUserRecord | null {
-  if (Array.isArray(value)) {
-    const [first] = value;
-    return isRecord(first) ? (first as LinkedUserRecord) : null;
-  }
-
-  return isRecord(value) ? (value as LinkedUserRecord) : null;
-}
 
 function toAuthProvider(value: unknown): AuthProviderType | null {
   const normalized =
@@ -80,44 +57,19 @@ async function resolveProfileContextForUser(
   adminDb: NonNullable<ReturnType<typeof getInstantAdminDb>>,
   userId: string
 ): Promise<ResolvedProfileContext> {
-  const directResult = await adminDb.query<{
+  const result = await adminDb.query<{
     profiles?: LinkedProfileRecord[];
   }>({
     profiles: {
-      $: { where: { 'user.id': userId } },
-    },
-  });
-  const directProfile = directResult.profiles?.[0] as
-    | LinkedProfileRecord
-    | undefined;
-
-  if (directProfile) {
-    return {
-      authProvider: toAuthProvider(directProfile.auth_provider),
-      profileId:
-        typeof directProfile.id === 'string' && directProfile.id
-          ? directProfile.id
-          : null,
-    };
-  }
-
-  const linkedResult = await adminDb.query<{
-    $users?: LinkedUserRecord[];
-  }>({
-    $users: {
       $: { where: { id: userId } },
-      profile: {},
     },
   });
-  const linkedUser = firstLinkedUserRecord(linkedResult.$users);
-  const linkedProfile = firstLinkedProfileRecord(linkedUser?.profile ?? null);
+  const profile = result.profiles?.[0] as LinkedProfileRecord | undefined;
 
   return {
-    authProvider: toAuthProvider(linkedProfile?.auth_provider),
+    authProvider: toAuthProvider(profile?.auth_provider),
     profileId:
-      typeof linkedProfile?.id === 'string' && linkedProfile.id
-        ? linkedProfile.id
-        : null,
+      typeof profile?.id === 'string' && profile.id ? profile.id : null,
   };
 }
 

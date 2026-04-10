@@ -22,7 +22,7 @@ describe('profiles permissions', () => {
   });
 
   test('removes broad reads from profiles and reward transactions', () => {
-    expect(rules.profiles.allow.view).toBe('isOwnerOrLinkedProfile');
+    expect(rules.profiles.allow.view).toBe('isOwner');
     expect(rules.reward_transactions.allow.view).toBe('isMemberOwner');
   });
 
@@ -32,10 +32,10 @@ describe('profiles permissions', () => {
     expect(rules.profiles.bind.onlySafeProfileCreateFields).not.toContain(
       'onboarding_completed_at'
     );
-    expect(rules.profiles.bind.canSetSelfUserLink).toContain(
+    expect(rules.profiles.bind.canSetSelfUserIdOnUpdate).toContain(
       "!('userId' in request.modifiedFields)"
     );
-    expect(rules.profiles.bind.canSetSelfUserLink).toContain(
+    expect(rules.profiles.bind.canSetSelfUserIdOnUpdate).toContain(
       'auth.id == newData.userId'
     );
     expect(rules.profiles.bind.canSetSelfUserIdOnCreate).toContain(
@@ -58,17 +58,39 @@ describe('profiles permissions', () => {
     expect(rules.profiles.bind.hasValidProfileCreateValues).toContain(
       'data.onboarding_completed_at == null'
     );
+    expect(rules.profiles.bind.canonicalProfileCreateUserIdHex).toContain(
+      "data.userId.replace('-', '')"
+    );
+    expect(rules.profiles.bind.hasCanonicalProfileCreateIdentifiers).toContain(
+      'data.member_id =='
+    );
+    expect(rules.profiles.bind.hasCanonicalProfileCreateIdentifiers).toContain(
+      'data.referral_code =='
+    );
+    expect(rules.profiles.bind.hasCanonicalProfileCreateIdentifiers).toContain(
+      'upperAscii()'
+    );
+    expect(rules.profiles.bind.hasValidProfileCreateValues).toContain(
+      'hasCanonicalProfileCreateIdentifiers'
+    );
   });
 
-  test('keeps owner checks compatible with linked and deterministic profile ids', () => {
-    expect(rules.profiles.bind.isOwner).toContain('auth.id == data.id');
-    expect(rules.profiles.bind.isOwner).toContain(
-      "auth.id in data.ref('user.id')"
+  test('keeps owner checks canonical to deterministic profile ids', () => {
+    expect(rules.profiles.bind.isOwner).toBe(
+      'auth.id != null && auth.id == data.id'
     );
     expect(rules.profiles.bind.onlySafeProfileUpdateFields).toContain('userId');
     expect(rules.profiles.bind.hasValidProfileUpdates).toContain(
-      'canSetSelfUserLink'
+      'canSetSelfUserIdOnUpdate'
     );
+  });
+
+  test('uses canonical profile ownership without profile links', () => {
+    expect(rules.profiles.allow.view).toBe('isOwner');
+    expect(rules.profiles.bind.isOwner).toBe(
+      'auth.id != null && auth.id == data.id'
+    );
+    expect(rules.profiles.allow.create).not.toContain("data.ref('user.id')");
   });
 });
 
@@ -170,17 +192,17 @@ describe('owner-scoped create permissions', () => {
   });
 });
 
-describe('linked ownership read gates', () => {
-  test('protects reward transactions behind member->user ownership', () => {
+describe('canonical ownership read gates', () => {
+  test('protects reward transactions behind member profile ownership', () => {
     expect(rules.reward_transactions.allow.view).toBe('isMemberOwner');
     expect(rules.reward_transactions.bind.isMemberOwner).toContain(
-      "auth.id in data.ref('member.user.id')"
+      "auth.id in data.ref('member.id')"
     );
   });
 
-  test('protects referrals behind referrer->user ownership', () => {
+  test('protects referrals behind referrer profile ownership', () => {
     expect(rules.referrals.allow.view).toContain(
-      "auth.id in data.ref('referrer.user.id')"
+      "auth.id in data.ref('referrer.id')"
     );
     expect(rules.referrals.allow.view).toContain('auth.id != null');
   });

@@ -10,8 +10,9 @@ import { captureHandledError } from '@/src/lib/monitoring';
 import { normalizeMemberSegment } from '@/src/lib/utils/member-segment';
 
 import {
+  buildMemberId,
   buildProfileId,
-  firstInstantRecord,
+  buildReferralCode,
   getDefaultProfileValues,
   isMemberIdConflict,
   isProfileIdConflict,
@@ -25,6 +26,19 @@ import {
 } from './shared';
 
 const PROFILE_PROVISION_RETRY_DELAYS_MS = [50, 150, 300] as const;
+export const PROFILE_PERMISSION_DENIED_ERROR_KEY = 'profilePermissionDenied';
+
+type ProfileBootstrapOperation =
+  | 'create_profile'
+  | 'load_profile'
+  | 'set_auth_provider'
+  | 'update_profile';
+
+type ProfileDbClient = {
+  queryOnce: typeof db.queryOnce;
+  transact: typeof db.transact;
+  tx: typeof db.tx;
+};
 
 function getErrorMonitoringExtras(error: unknown): Record<string, unknown> {
   if (error instanceof Error) {
@@ -49,19 +63,25 @@ export type ProfileBootstrapStage =
 
 export class ProfileBootstrapError extends Error {
   readonly isRetryable: boolean;
+  readonly canonicalProfileExists: boolean;
+  readonly operation: ProfileBootstrapOperation;
   readonly stage: ProfileBootstrapStage;
 
   constructor(
     message: string,
     options: {
+      canonicalProfileExists?: boolean;
       isRetryable: boolean;
+      operation?: ProfileBootstrapOperation;
       stage: ProfileBootstrapStage;
     }
   ) {
     super(message);
     Object.setPrototypeOf(this, new.target.prototype);
+    this.canonicalProfileExists = options.canonicalProfileExists ?? false;
     this.name = 'ProfileBootstrapError';
     this.isRetryable = options.isRetryable;
+    this.operation = options.operation ?? 'load_profile';
     this.stage = options.stage;
   }
 }
@@ -80,176 +100,19 @@ async function waitForProvisionRetryDelay(attempt: number): Promise<void> {
   });
 }
 
-async function fetchProfileViaUserLink(
-  userId: string
-): Promise<Profile | null> {
-  if (!userId) return null;
-
-  const { data } = await db.queryOnce({
-    $users: {
-      $: {
-        where: { id: userId },
-      },
-      profile: {},
-    },
-  });
-
-  const userRecord = firstInstantRecord(data.$users);
-  if (!userRecord) return null;
-
-  const linkedProfile = firstInstantRecord(
-    (userRecord as Record<string, unknown>).profile
-  );
-
-  return linkedProfile ? mapProfile(linkedProfile) : null;
-}
-
-async function fetchLinkedProfileIdForUser(
-  userId: string
-): Promise<string | null> {
-  if (!userId) return null;
-
-  const { data } = await db.queryOnce({
-    $users: {
-      $: {
-        where: { id: userId },
-      },
-      profile: {},
-    },
-  });
-
-  const userRecord = firstInstantRecord(data.$users);
-  if (!userRecord) return null;
-
-  const linkedProfile = firstInstantRecord(
-    (userRecord as Record<string, unknown>).profile
-  );
-
-  return linkedProfile?.id ?? null;
-}
-
-async function linkCanonicalProfileIfMissing(params: {
-  profileId: string;
-  userId: string;
-}): Promise<void> {
-  if (!params.userId || !params.profileId) return;
-  if (params.profileId !== params.userId) return;
-
-  let linkedProfileId: string | null = null;
-  try {
-    linkedProfileId = await fetchLinkedProfileIdForUser(params.userId);
-  } catch (error: unknown) {
-    captureHandledError(error, {
-      tags: {
-        area: 'profile',
-        operation: 'read_profile_link_before_repair',
-      },
-      extras: {
-        ...getErrorMonitoringExtras(error),
-        profileId: params.profileId,
-        userId: params.userId,
-      },
-    });
-
-    if (__DEV__) {
-      console.warn(
-        '[ProfileAPI] Failed to read current profile link before repair; skipping non-critical link repair.',
-        {
-          error,
-          profileId: params.profileId,
-          userId: params.userId,
-        }
-      );
-    }
-    return;
-  }
-
-  if (linkedProfileId === params.profileId) {
-    return;
-  }
-
-  if (linkedProfileId && linkedProfileId !== params.profileId) {
-    if (__DEV__) {
-      console.warn(
-        '[ProfileAPI] Skipping canonical profile relink because user is already linked to another profile.',
-        {
-          canonicalProfileId: params.profileId,
-          linkedProfileId,
-          userId: params.userId,
-        }
-      );
-    }
-    return;
-  }
-
-  const maxAttempts = PROFILE_PROVISION_RETRY_DELAYS_MS.length + 1;
-  let lastError: unknown = null;
-
-  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-    try {
-      await db.transact(
-        db.tx.profiles[params.profileId]
-          .update({
-            updated_at: nowIso(),
-            userId: params.userId,
-          })
-          .link({ user: params.userId })
-      );
-
-      const refreshedLinkedProfileId = await fetchLinkedProfileIdForUser(
-        params.userId
-      );
-      if (refreshedLinkedProfileId === params.profileId) {
-        return;
-      }
-    } catch (error: unknown) {
-      lastError = error;
-
-      if (
-        error instanceof Error &&
-        error.message.toLowerCase().includes('permission denied')
-      ) {
-        break;
-      }
-    }
-
-    if (attempt < maxAttempts) {
-      await waitForProvisionRetryDelay(attempt);
-    }
-  }
-
-  if (lastError) {
-    captureHandledError(lastError, {
-      tags: {
-        area: 'profile',
-        operation: 'repair_missing_profile_link',
-      },
-      extras: {
-        ...getErrorMonitoringExtras(lastError),
-        profileId: params.profileId,
-        userId: params.userId,
-      },
-    });
-
-    if (__DEV__) {
-      console.warn(
-        '[ProfileAPI] Failed to repair missing profile link; continuing with canonical profile id ownership fallback.',
-        {
-          error: lastError,
-          profileId: params.profileId,
-          userId: params.userId,
-        }
-      );
-    }
-  }
-}
-
 export async function fetchProfileById(
   userId: string
 ): Promise<Profile | null> {
+  return fetchProfileByIdWithDb(db, userId);
+}
+
+async function fetchProfileByIdWithDb(
+  database: ProfileDbClient,
+  userId: string
+): Promise<Profile | null> {
   if (!userId) return null;
 
-  const { data } = await db.queryOnce({
+  const { data } = await database.queryOnce({
     profiles: {
       $: {
         where: { id: userId },
@@ -262,12 +125,16 @@ export async function fetchProfileById(
 }
 
 export async function fetchProfile(userId: string): Promise<Profile | null> {
+  return fetchProfileWithDb(db, userId);
+}
+
+async function fetchProfileWithDb(
+  database: ProfileDbClient,
+  userId: string
+): Promise<Profile | null> {
   if (!userId) return null;
 
-  const canonicalProfile = await fetchProfileById(userId);
-  if (canonicalProfile) return canonicalProfile;
-
-  return fetchProfileViaUserLink(userId);
+  return fetchProfileByIdWithDb(database, userId);
 }
 
 export async function fetchProfileByMemberId(
@@ -288,20 +155,19 @@ export async function fetchProfileByMemberId(
   return profile ? mapProfile(profile) : null;
 }
 
-export async function ensureProfile(params: {
-  userId: string;
-  email?: string;
-  displayName?: string;
-  dateOfBirth?: string;
-}): Promise<Profile | null> {
+export async function ensureProfileWithDb(
+  database: ProfileDbClient,
+  params: {
+    userId: string;
+    email?: string;
+    displayName?: string;
+    dateOfBirth?: string;
+  }
+): Promise<Profile | null> {
   if (!params.userId) return null;
 
-  const current = await fetchProfile(params.userId);
+  const current = await fetchProfileWithDb(database, params.userId);
   if (current) {
-    await linkCanonicalProfileIfMissing({
-      profileId: current.id,
-      userId: params.userId,
-    });
     return current;
   }
 
@@ -312,31 +178,55 @@ export async function ensureProfile(params: {
     attempt++;
 
     const profileId = buildProfileId(params.userId);
-    const payload = getDefaultProfileValues({
-      userId: params.userId,
-      email: params.email,
-      displayName: params.displayName,
-      dateOfBirth: params.dateOfBirth,
-    });
+    const expectedMemberId = buildMemberId(params.userId);
+    const expectedReferralCode = buildReferralCode(params.userId);
+    const payload = {
+      ...getDefaultProfileValues({
+        userId: params.userId,
+        email: params.email,
+        displayName: params.displayName,
+        dateOfBirth: params.dateOfBirth,
+      }),
+      member_id: expectedMemberId,
+      referral_code: expectedReferralCode,
+    };
+
+    if (
+      payload.member_id !== expectedMemberId ||
+      payload.referral_code !== expectedReferralCode
+    ) {
+      captureHandledError(new Error('invalidCanonicalProfileIdentifiers'), {
+        tags: {
+          area: 'profile',
+          operation: 'create_profile',
+        },
+        extras: {
+          expectedMemberId,
+          expectedReferralCode,
+          payloadMemberId: payload.member_id,
+          payloadReferralCode: payload.referral_code,
+          profileId,
+          userId: params.userId,
+        },
+      });
+    }
 
     try {
-      await db.transact(
-        db.tx.profiles[profileId].update(payload).link({ user: params.userId })
-      );
-      await linkCanonicalProfileIfMissing({
-        profileId,
-        userId: params.userId,
-      });
-      return fetchProfile(params.userId);
+      await database.transact(database.tx.profiles[profileId].create(payload));
+      return fetchProfileWithDb(database, params.userId);
     } catch (error) {
       if (!(error instanceof Error))
         throw new ProfileBootstrapError('unableToCompleteProfileSetup', {
           isRetryable: false,
+          operation: 'create_profile',
           stage: profileBootstrapStages.ensureProfile,
         });
 
       if (isProfileIdConflict(error)) {
-        const existingProfile = await fetchProfile(params.userId);
+        const existingProfile = await fetchProfileWithDb(
+          database,
+          params.userId
+        );
         if (existingProfile) {
           return existingProfile;
         }
@@ -344,7 +234,10 @@ export async function ensureProfile(params: {
       }
 
       if (isMemberIdConflict(error)) {
-        const existingProfile = await fetchProfile(params.userId);
+        const existingProfile = await fetchProfileWithDb(
+          database,
+          params.userId
+        );
         if (existingProfile) {
           return existingProfile;
         }
@@ -352,7 +245,10 @@ export async function ensureProfile(params: {
       }
 
       if (isReferralCodeConflict(error)) {
-        const existingProfile = await fetchProfile(params.userId);
+        const existingProfile = await fetchProfileWithDb(
+          database,
+          params.userId
+        );
         if (existingProfile) {
           return existingProfile;
         }
@@ -360,13 +256,19 @@ export async function ensureProfile(params: {
       }
 
       if (error.message.toLowerCase().includes('permission denied')) {
+        const existingCanonicalProfile = await fetchProfileByIdWithDb(
+          database,
+          params.userId
+        );
+
         captureHandledError(error, {
           tags: {
             area: 'profile',
-            operation: 'upsert_profile_with_link',
+            operation: 'create_profile',
           },
           extras: {
             ...getErrorMonitoringExtras(error),
+            canonicalProfileExists: Boolean(existingCanonicalProfile),
             payloadKeys: Object.keys(payload),
             profileId,
             userId: params.userId,
@@ -374,15 +276,19 @@ export async function ensureProfile(params: {
         });
 
         if (__DEV__) {
-          console.error('[ensureProfile] Profile upsert permission denied', {
+          console.error('[ensureProfile] Canonical profile create denied', {
             attempt,
             maxAttempts,
+            canonicalProfileExists: Boolean(existingCanonicalProfile),
             payloadKeys: Object.keys(payload),
             profileId,
             userId: params.userId,
           });
         }
-        const existingProfile = await fetchProfile(params.userId);
+
+        const existingProfile = existingCanonicalProfile
+          ? existingCanonicalProfile
+          : await fetchProfileWithDb(database, params.userId);
         if (existingProfile) {
           return existingProfile;
         }
@@ -392,20 +298,32 @@ export async function ensureProfile(params: {
           continue;
         }
 
-        throw new ProfileBootstrapError('unableToCompleteProfileSetup', {
+        throw new ProfileBootstrapError(PROFILE_PERMISSION_DENIED_ERROR_KEY, {
+          canonicalProfileExists: Boolean(existingCanonicalProfile),
           isRetryable: false,
+          operation: 'create_profile',
           stage: profileBootstrapStages.ensureProfile,
         });
       }
 
       throw new ProfileBootstrapError('unableToCompleteProfileSetup', {
         isRetryable: true,
+        operation: 'create_profile',
         stage: profileBootstrapStages.ensureProfile,
       });
     }
   }
 
-  return fetchProfile(params.userId);
+  return fetchProfileWithDb(database, params.userId);
+}
+
+export async function ensureProfile(params: {
+  userId: string;
+  email?: string;
+  displayName?: string;
+  dateOfBirth?: string;
+}): Promise<Profile | null> {
+  return ensureProfileWithDb(db, params);
 }
 
 export async function updateProfile(
@@ -466,12 +384,13 @@ export async function updateProfile(
       error.message.toLowerCase().includes('permission denied')
     ) {
       console.warn('Profile update permission denied', {
+        canonicalProfileExists: current.id === userId,
         profileId: current.id,
         updateFields: Object.keys(sanitizedUpdates),
         timestamp: nowIso(),
       });
       throw new PermissionDeniedUpdateError(
-        `Permission denied updating profile ${current.id}`
+        PROFILE_PERMISSION_DENIED_ERROR_KEY
       );
     }
 
@@ -503,12 +422,13 @@ export async function setProfileAuthProvider(
       error.message.toLowerCase().includes('permission denied')
     ) {
       console.warn('Profile update permission denied', {
+        canonicalProfileExists: profile.id === userId,
         profileId: profile.id,
         auth_provider: authProvider,
         timestamp: nowIso(),
       });
       throw new PermissionDeniedUpdateError(
-        `Permission denied updating profile ${profile.id}`
+        PROFILE_PERMISSION_DENIED_ERROR_KEY
       );
     }
 

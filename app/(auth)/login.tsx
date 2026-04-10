@@ -105,7 +105,6 @@ export default function LoginScreen(): React.JSX.Element {
         email,
         ...(onboardingData ? { onboardingData } : {}),
       });
-      if (onboardingData) resetSignupDraft();
     },
     sendCodeLoading,
     sendCodeError,
@@ -144,20 +143,16 @@ export default function LoginScreen(): React.JSX.Element {
 
   function handleApplePress(): void {
     if (isAuthBusy) return;
-    void signInWithApple(onboardingData ? { onboardingData } : undefined)
-      .then(() => {
-        if (onboardingData) resetSignupDraft();
-      })
-      .catch(() => undefined);
+    void signInWithApple(onboardingData ? { onboardingData } : undefined).catch(
+      () => undefined
+    );
   }
 
   function handleGooglePress(): void {
     if (isAuthBusy) return;
-    void signInWithGoogle(onboardingData ? { onboardingData } : undefined)
-      .then(() => {
-        if (onboardingData) resetSignupDraft();
-      })
-      .catch(() => undefined);
+    void signInWithGoogle(
+      onboardingData ? { onboardingData } : undefined
+    ).catch(() => undefined);
   }
 
   const socialError = appleSignInError ?? googleSignInError;

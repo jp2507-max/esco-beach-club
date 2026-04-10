@@ -2,8 +2,8 @@ import { updateProfile } from '@/lib/api';
 import {
   type MemberSegment,
   type OnboardingPermissionStatus,
-  type Profile,
   onboardingPermissionStatuses,
+  type Profile,
 } from '@/lib/types';
 import { normalizeMemberSegment } from '@/src/lib/utils/member-segment';
 

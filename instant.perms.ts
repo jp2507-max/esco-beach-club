@@ -117,7 +117,7 @@ const rules = {
   },
   reward_transactions: {
     bind: {
-      isMemberOwner: "auth.id != null && auth.id in data.ref('member.user.id')",
+      isMemberOwner: "auth.id != null && auth.id in data.ref('member.id')",
     },
     allow: {
       view: 'isMemberOwner',
@@ -138,34 +138,34 @@ const rules = {
   profiles: {
     bind: {
       isSelfProfileId: 'auth.id != null && auth.id == data.id',
-      canSetSelfUserLink:
+      canSetSelfUserIdOnUpdate:
         "!('userId' in request.modifiedFields) || (auth.id != null && auth.id == newData.userId)",
       canSetSelfUserIdOnCreate:
         "!('userId' in request.modifiedFields) || (auth.id != null && auth.id == data.userId)",
-      isOwnerOrLinkedProfile: 'isOwner || isLinkedProfile',
-      isLinkedProfile:
-        "auth.id != null && data.id in auth.ref('$user.profile.id')",
+      canonicalProfileCreateUserIdHex:
+        "data.userId.replace('-', '').replace('-', '').replace('-', '').replace('-', '')",
+      hasCanonicalProfileCreateIdentifiers:
+        "data.member_id == ('ESCO-' + canonicalProfileCreateUserIdHex.substring(0, 16).upperAscii()) && data.referral_code == ('ESCO-' + canonicalProfileCreateUserIdHex.substring(16, 32).upperAscii())",
       onlySafeProfileCreateFields:
         "request.modifiedFields.all(field, field in ['avatar_url', 'bio', 'cashback_points_balance', 'cashback_points_lifetime_earned', 'created_at', 'date_of_birth', 'full_name', 'has_seen_welcome_voucher', 'lifetime_tier_key', 'location_permission_status', 'member_id', 'member_segment', 'member_since', 'next_tier_key', 'nights_left', 'push_notification_permission_status', 'referral_code', 'saved', 'tier_progress_expires_at', 'tier_progress_points', 'tier_progress_started_at', 'tier_progress_target_points', 'updated_at', 'userId'])",
       canCreateOwnedProfile: 'isSelfProfileId',
-      isOwner:
-        "auth.id != null && (auth.id == data.id || auth.id in data.ref('user.id'))",
+      isOwner: 'auth.id != null && auth.id == data.id',
       onlySafeProfileUpdateFields:
         "request.modifiedFields.all(field, field in ['auth_provider', 'full_name', 'avatar_url', 'has_seen_welcome_voucher', 'bio', 'member_since', 'member_segment', 'nights_left', 'date_of_birth', 'location_permission_status', 'push_notification_permission_status', 'onboarding_completed_at', 'updated_at', 'userId'])",
       canSetAuthProviderOnce:
         "!('auth_provider' in request.modifiedFields) || (data.auth_provider == null && newData.auth_provider in ['apple', 'google', 'magic_code'])",
       hasValidProfileUpdates:
-        "(!('full_name' in request.modifiedFields) || (newData.full_name != null && newData.full_name.size() >= 1 && newData.full_name.size() <= 60)) && (!('location_permission_status' in request.modifiedFields) || newData.location_permission_status in ['GRANTED', 'DENIED', 'UNDETERMINED']) && (!('push_notification_permission_status' in request.modifiedFields) || newData.push_notification_permission_status in ['GRANTED', 'DENIED', 'UNDETERMINED']) && (!('member_segment' in request.modifiedFields) || newData.member_segment == null || newData.member_segment in ['LONG_TERM', 'SHORT_TERM']) && canSetAuthProviderOnce && canSetSelfUserLink",
+        "(!('full_name' in request.modifiedFields) || (newData.full_name != null && newData.full_name.size() >= 1 && newData.full_name.size() <= 60)) && (!('location_permission_status' in request.modifiedFields) || newData.location_permission_status in ['GRANTED', 'DENIED', 'UNDETERMINED']) && (!('push_notification_permission_status' in request.modifiedFields) || newData.push_notification_permission_status in ['GRANTED', 'DENIED', 'UNDETERMINED']) && (!('member_segment' in request.modifiedFields) || newData.member_segment == null || newData.member_segment in ['LONG_TERM', 'SHORT_TERM']) && canSetAuthProviderOnce && canSetSelfUserIdOnUpdate",
       hasValidProfileCreateValues:
-        "data.userId != null && data.userId == data.id && data.cashback_points_balance == 0 && data.cashback_points_lifetime_earned == 0 && data.has_seen_welcome_voucher == false && data.lifetime_tier_key == 'MEMBER' && data.nights_left == 0 && data.saved == 0 && data.tier_progress_points == 0 && data.location_permission_status in ['GRANTED', 'DENIED', 'UNDETERMINED'] && data.push_notification_permission_status in ['GRANTED', 'DENIED', 'UNDETERMINED'] && (!('onboarding_completed_at' in request.modifiedFields) || data.onboarding_completed_at == null) && (data.member_segment == null || data.member_segment in ['LONG_TERM', 'SHORT_TERM']) && data.full_name != null && data.full_name.size() >= 1 && data.full_name.size() <= 60 && data.member_id != null && data.member_id.size() >= 6 && data.referral_code != null && data.referral_code.size() >= 4 && (data.next_tier_key == null || data.next_tier_key == 'LEGEND')",
+        "data.userId != null && data.userId == data.id && data.cashback_points_balance == 0 && data.cashback_points_lifetime_earned == 0 && data.has_seen_welcome_voucher == false && data.lifetime_tier_key == 'MEMBER' && data.nights_left == 0 && data.saved == 0 && data.tier_progress_points == 0 && data.location_permission_status in ['GRANTED', 'DENIED', 'UNDETERMINED'] && data.push_notification_permission_status in ['GRANTED', 'DENIED', 'UNDETERMINED'] && (!('onboarding_completed_at' in request.modifiedFields) || data.onboarding_completed_at == null) && (data.member_segment == null || data.member_segment in ['LONG_TERM', 'SHORT_TERM']) && data.full_name != null && data.full_name.size() >= 1 && data.full_name.size() <= 60 && data.member_id != null && data.referral_code != null && hasCanonicalProfileCreateIdentifiers && (data.next_tier_key == null || data.next_tier_key == 'LEGEND')",
     },
     allow: {
-      view: 'isOwnerOrLinkedProfile',
+      view: 'isOwner',
       create:
         "canCreateOwnedProfile && onlySafeProfileCreateFields && hasValidProfileCreateValues && canSetSelfUserIdOnCreate && !('auth_provider' in request.modifiedFields)",
       delete: 'false',
       update:
-        'isOwnerOrLinkedProfile && onlySafeProfileUpdateFields && hasValidProfileUpdates',
+        'isOwner && onlySafeProfileUpdateFields && hasValidProfileUpdates',
     },
   },
   events: {
@@ -213,7 +213,7 @@ const rules = {
   },
   referrals: {
     allow: {
-      view: "auth.id != null && auth.id in data.ref('referrer.user.id')",
+      view: "auth.id != null && auth.id in data.ref('referrer.id')",
       create: 'false',
       delete: 'false',
       update: 'false',
