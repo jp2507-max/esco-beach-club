@@ -1,5 +1,3 @@
-import { createHmac, timingSafeEqual } from 'node:crypto';
-
 import type { PosBill, Profile, RewardTransaction } from '@/lib/types';
 import {
   posBillStatuses,
@@ -11,6 +9,7 @@ import {
   jsonResponse,
   parseBearerRefreshToken,
 } from '@/src/lib/api/route-helpers';
+import { verifyHmacSha256Base64Url } from '@/src/lib/crypto/web-crypto';
 import {
   type BillQrPayload,
   buildBillQrSigningPayload,
@@ -127,13 +126,13 @@ function getPosBillQrSecret(): string | null {
   return secret ? secret : null;
 }
 
-function isValidBillQrSignature(params: {
+async function isValidBillQrSignature(params: {
   posBillId: string;
   restaurantId: string;
   secret: string;
   signature: string;
   version: BillQrPayload['version'];
-}): boolean {
+}): Promise<boolean> {
   const signingPayload = buildBillQrSigningPayload({
     posBillId: params.posBillId,
     restaurantId: params.restaurantId,
@@ -144,18 +143,11 @@ function isValidBillQrSignature(params: {
     return false;
   }
 
-  const expectedSignature = createHmac('sha256', params.secret)
-    .update(signingPayload)
-    .digest('base64url');
-
-  const actualBuffer = Buffer.from(params.signature);
-  const expectedBuffer = Buffer.from(expectedSignature);
-
-  if (actualBuffer.length !== expectedBuffer.length) {
-    return false;
-  }
-
-  return timingSafeEqual(actualBuffer, expectedBuffer);
+  return verifyHmacSha256Base64Url({
+    payload: signingPayload,
+    secret: params.secret,
+    signature: params.signature,
+  });
 }
 
 function toRequiredString(value: unknown): string | null {
@@ -429,7 +421,7 @@ function toRewardServiceMember(
   };
 }
 
-function toRewardServiceTransaction(params: {
+async function toRewardServiceTransaction(params: {
   amountVnd: number;
   cashbackPointsDelta: number;
   externalEventId: string;
@@ -438,8 +430,8 @@ function toRewardServiceTransaction(params: {
   occurredAt: string;
   receiptReference: string | null;
   tierProgressPointsDelta: number;
-}): RewardTransaction {
-  const id = buildRewardTransactionId(params.externalEventId);
+}): Promise<RewardTransaction> {
+  const id = await buildRewardTransactionId(params.externalEventId);
 
   return {
     id,
@@ -518,13 +510,13 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   if (
-    !isValidBillQrSignature({
+    !(await isValidBillQrSignature({
       posBillId: billQr.posBillId,
       restaurantId: billQr.restaurantId,
       secret: billQrSecret,
       signature: billQr.signature,
       version: billQr.version,
-    })
+    }))
   ) {
     return jsonResponse({ error: 'invalid_bill_qr' }, 400);
   }
@@ -630,7 +622,7 @@ export async function POST(request: Request): Promise<Response> {
       cashbackPointsDelta,
       now
     );
-    const transaction = toRewardServiceTransaction({
+    const transaction = await toRewardServiceTransaction({
       amountVnd: posBill.amount_vnd,
       cashbackPointsDelta,
       externalEventId: posBill.entry_key,

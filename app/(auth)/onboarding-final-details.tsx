@@ -19,6 +19,7 @@ import {
 
 import { Colors } from '@/constants/colors';
 import { updateProfile } from '@/lib/api';
+import { PROFILE_PERMISSION_DENIED_ERROR_KEY } from '@/lib/api/profile';
 import { onboardingPermissionStatuses } from '@/lib/types';
 import { useAuth } from '@/providers/AuthProvider';
 import { useProfileData } from '@/providers/DataProvider';
@@ -40,7 +41,6 @@ const ICON_DELAY = 100;
 const TITLE_DELAY = 260;
 const CARD_DELAY = 440;
 const CTA_DELAY = 680;
-const PROFILE_PERMISSION_DENIED_ERROR_KEY = 'profilePermissionDenied';
 
 /**
  * Backend auth/profile permission errors currently surface as mixed shapes:

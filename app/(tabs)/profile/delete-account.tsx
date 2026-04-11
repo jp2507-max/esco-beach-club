@@ -24,8 +24,10 @@ import {
   SurfaceCard,
 } from '@/src/components/ui';
 import {
+  type AccountDeletionApiResult,
   postRestoreAccountDeletion,
   postScheduleAccountDeletion,
+  type ScheduleAccountDeletionResponse,
 } from '@/src/lib/account-deletion/account-deletion-api';
 import { getAccountDeletionErrorMessage } from '@/src/lib/account-deletion/account-deletion-error-message';
 import {
@@ -88,6 +90,78 @@ function resolveAuthProviderForDeletion(
   return null;
 }
 
+type AccountDeletionApiFailure = Extract<
+  AccountDeletionApiResult<unknown>,
+  { ok: false }
+>;
+
+function captureAccountDeletionApiFailure(params: {
+  action: 'restore' | 'schedule';
+  authProvider?: AuthProviderType | null;
+  failure: AccountDeletionApiFailure;
+  revocation?: ScheduleAccountDeletionResponse['revocation'];
+}): void {
+  captureHandledError(
+    new Error(
+      params.action === 'schedule'
+        ? 'accountDeletionScheduleFailed'
+        : 'accountDeletionRestoreFailed'
+    ),
+    {
+      contexts: {
+        accountDeletion: {
+          action: params.action,
+          authProvider: params.authProvider ?? null,
+          code: params.failure.code ?? null,
+          message: params.failure.message ?? null,
+          reason: params.failure.reason,
+          revocationMessage: params.revocation?.message ?? null,
+          revocationStatus: params.revocation?.status ?? null,
+          status: params.failure.status ?? null,
+        },
+      },
+      extras: {
+        action: params.action,
+        authProvider: params.authProvider ?? null,
+      },
+      tags: {
+        feature: 'account-deletion',
+        operation:
+          params.action === 'schedule'
+            ? 'account_deletion_schedule_api_failure'
+            : 'account_deletion_restore_api_failure',
+        reason: params.failure.reason,
+      },
+    }
+  );
+}
+
+function captureAccountDeletionUnexpectedError(params: {
+  action: 'restore' | 'schedule';
+  authProvider?: AuthProviderType | null;
+  error: unknown;
+}): void {
+  captureHandledError(params.error, {
+    contexts: {
+      accountDeletion: {
+        action: params.action,
+        authProvider: params.authProvider ?? null,
+      },
+    },
+    extras: {
+      action: params.action,
+      authProvider: params.authProvider ?? null,
+    },
+    tags: {
+      feature: 'account-deletion',
+      operation:
+        params.action === 'schedule'
+          ? 'account_deletion_schedule_unexpected_error'
+          : 'account_deletion_restore_unexpected_error',
+    },
+  });
+}
+
 export default function DeleteAccountScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -129,6 +203,11 @@ export default function DeleteAccountScreen(): React.JSX.Element {
       });
 
       if (!result.ok) {
+        captureAccountDeletionApiFailure({
+          action: 'restore',
+          authProvider: profile?.auth_provider,
+          failure: result,
+        });
         Alert.alert(
           getAccountDeletionErrorMessage(result, t, {
             fallbackKey: 'restoreFailed',
@@ -140,6 +219,11 @@ export default function DeleteAccountScreen(): React.JSX.Element {
       Alert.alert(t('deleteAccount.restoreSuccessTitle'));
     } catch (error) {
       console.error('[DeleteAccount] Restore failed', error);
+      captureAccountDeletionUnexpectedError({
+        action: 'restore',
+        authProvider: profile?.auth_provider,
+        error,
+      });
       Alert.alert(t('deleteAccount.errors.restoreFailed'));
     } finally {
       setIsRestoring(false);
@@ -208,6 +292,11 @@ export default function DeleteAccountScreen(): React.JSX.Element {
       });
 
       if (!result.ok) {
+        captureAccountDeletionApiFailure({
+          action: 'schedule',
+          authProvider,
+          failure: result,
+        });
         hapticError();
         Alert.alert(getAccountDeletionErrorMessage(result, t));
         return;
@@ -279,11 +368,11 @@ export default function DeleteAccountScreen(): React.JSX.Element {
     } catch (error) {
       hapticError();
       console.error('[DeleteAccount] Schedule failed', error);
-      if (isProviderSignInCanceled(error)) {
-        Alert.alert(t('deleteAccount.errors.appleVerificationCanceled'));
-        return;
-      }
-
+      captureAccountDeletionUnexpectedError({
+        action: 'schedule',
+        authProvider: profile?.auth_provider,
+        error,
+      });
       Alert.alert(t('deleteAccount.errors.scheduleFailed'));
     } finally {
       setIsSubmitting(false);

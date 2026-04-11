@@ -85,6 +85,36 @@ describe('account deletion api client', () => {
     });
   });
 
+  test('logs the computed default timeout when restore requests abort', async () => {
+    const abortError = new Error('request timed out');
+    abortError.name = 'AbortError';
+
+    global.fetch = mock(async () => {
+      throw abortError;
+    });
+
+    const result = await postRestoreAccountDeletion({
+      refreshToken: 'refresh-token',
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      reason: 'timeout',
+      message: 'request timed out',
+    });
+    expect(addMonitoringBreadcrumbMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        category: 'account-deletion',
+        data: expect.objectContaining({
+          path: '/api/account/delete/restore',
+          timeoutMs: 15000,
+        }),
+        level: 'warning',
+        message: 'account deletion api request timed out',
+      })
+    );
+  });
+
   test('maps non-timeout fetch failures to network failures', async () => {
     global.fetch = mock(async () => {
       throw new Error('socket hang up');

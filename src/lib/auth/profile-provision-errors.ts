@@ -1,4 +1,6 @@
-export const PROFILE_PERMISSION_DENIED_ERROR_KEY = 'profilePermissionDenied';
+import { PROFILE_PERMISSION_DENIED_ERROR_KEY } from '@/lib/api/profile';
+
+export { PROFILE_PERMISSION_DENIED_ERROR_KEY };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;

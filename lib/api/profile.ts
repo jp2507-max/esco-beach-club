@@ -256,9 +256,7 @@ export async function ensureProfileWithDb(
           });
         }
 
-        const existingProfile = existingCanonicalProfile
-          ? existingCanonicalProfile
-          : await fetchProfileByIdWithDb(database, params.userId);
+        const existingProfile = existingCanonicalProfile;
         if (existingProfile) {
           return existingProfile;
         }

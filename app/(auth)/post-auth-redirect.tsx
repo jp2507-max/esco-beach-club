@@ -162,6 +162,7 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
   }, [retryProfileProvision, shouldRetryProvision, userId]);
 
   React.useEffect(() => {
+    // Clear any lingering signup draft when not in signup flow.
     if (authFlow === 'signup' || !hasAnySignupDraft) return;
 
     resetSignupDraft();

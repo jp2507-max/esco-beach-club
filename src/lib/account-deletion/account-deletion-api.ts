@@ -78,11 +78,13 @@ async function postJson<T>(params: {
     };
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
+      const effectiveTimeoutMs = timeout;
+
       addMonitoringBreadcrumb({
         category: 'account-deletion',
         data: {
           path,
-          timeoutMs,
+          timeoutMs: effectiveTimeoutMs,
         },
         level: 'warning',
         message: 'account deletion api request timed out',

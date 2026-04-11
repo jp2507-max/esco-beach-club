@@ -1,5 +1,3 @@
-import { createHash } from 'node:crypto';
-
 import {
   accountDeletionStatuses,
   type AuthProviderType,
@@ -17,9 +15,10 @@ import {
   jsonResponse,
   parseBearerRefreshToken,
 } from '@/src/lib/api/route-helpers';
-import { addMonitoringBreadcrumb } from '@/src/lib/monitoring';
+import { sha256HexPrefix } from '@/src/lib/crypto/web-crypto';
 import {
   createInstantCreateStep,
+  createInstantRecordId,
   createInstantUpdateStep,
   getInstantAdminDb,
 } from '@/src/lib/referral/instant-admin-server';
@@ -85,8 +84,33 @@ function addGracePeriodDays(from: Date, days: number): string {
   return new Date(from.getTime() + days * 24 * 60 * 60 * 1000).toISOString();
 }
 
-function hashIdentifier(value: string): string {
-  return createHash('sha256').update(value).digest('hex').slice(0, 12);
+function hashIdentifier(value: string): Promise<string> {
+  return sha256HexPrefix(value, 12);
+}
+
+function logAccountDeletionBreadcrumb(params: {
+  data?: Record<string, unknown>;
+  level?: 'error' | 'info' | 'warning';
+  message: string;
+}): void {
+  const level = params.level ?? 'info';
+  const payload = {
+    ...params.data,
+    category: 'account-deletion',
+    message: params.message,
+  };
+
+  if (level === 'error') {
+    console.error(payload);
+    return;
+  }
+
+  if (level === 'warning') {
+    console.warn(payload);
+    return;
+  }
+
+  console.info(payload);
 }
 
 export async function POST(request: Request): Promise<Response> {
@@ -141,9 +165,13 @@ export async function POST(request: Request): Promise<Response> {
       ? parsed.appleAuthorizationCode.trim()
       : '';
 
-  const recordId = `account-delete-${authUser.userId}`;
-  const userRef = `user:${hashIdentifier(authUser.userId)}`;
-  const requestRef = `request:${hashIdentifier(recordId)}`;
+  const recordId = createInstantRecordId();
+  const [userRefSuffix, requestRefSuffix] = await Promise.all([
+    hashIdentifier(authUser.userId),
+    hashIdentifier(recordId),
+  ]);
+  const userRef = `user:${userRefSuffix}`;
+  const requestRef = `request:${requestRefSuffix}`;
   let existingRequest: AccountDeletionRequestRecord | undefined;
   try {
     console.info('[account/delete/request] Checking for existing request', {
@@ -220,8 +248,7 @@ export async function POST(request: Request): Promise<Response> {
         userRef,
       }
     );
-    addMonitoringBreadcrumb({
-      category: 'account-deletion',
+    logAccountDeletionBreadcrumb({
       data: {
         hasAppleAuthorizationCode: Boolean(appleAuthorizationCode),
         requestRef,
@@ -274,8 +301,7 @@ export async function POST(request: Request): Promise<Response> {
     requiresAppleRevocation &&
     isAppleDeletionWarningStatus(revocation.status)
   ) {
-    addMonitoringBreadcrumb({
-      category: 'account-deletion',
+    logAccountDeletionBreadcrumb({
       data: {
         requestRef,
         revocationMessage:

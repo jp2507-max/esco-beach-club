@@ -30,6 +30,7 @@ mock.module('@/src/lib/account-deletion/apple-revoke-server', () => ({
 
 mock.module('@/src/lib/referral/instant-admin-server', () => ({
   createInstantCreateStep: createInstantCreateStepMock,
+  createInstantRecordId: () => '00000000-0000-4000-8000-000000000123',
   createInstantUpdateStep: createInstantUpdateStepMock,
   getInstantAdminDb: () => ({
     query: queryMock,
