@@ -4,10 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
-import {
-  ReferralsDataProvider,
-  useReferralsData,
-} from '@/providers/DataProvider';
+import { useReferralsData } from '@/providers/DataProvider';
 import { ProfileSubScreenHeader } from '@/src/components/ui';
 import { useScreenEntry } from '@/src/lib/animations/use-screen-entry';
 import { useStaggeredListEntering } from '@/src/lib/animations/use-staggered-entry';
@@ -238,9 +235,5 @@ function InviteReferralsScreenContent(): React.JSX.Element {
 }
 
 export default function InviteReferralsScreen(): React.JSX.Element {
-  return (
-    <ReferralsDataProvider>
-      <InviteReferralsScreenContent />
-    </ReferralsDataProvider>
-  );
+  return <InviteReferralsScreenContent />;
 }

@@ -31,9 +31,9 @@ import {
 } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 
-const TITLE_DELAY = 100;
-const FORM_DELAY = 260;
-const CTA_DELAY = 420;
+const TITLE_DELAY = 70;
+const FORM_DELAY = 170;
+const CTA_DELAY = 260;
 
 export default function OnboardingProfileBasicsScreen(): React.JSX.Element {
   const router = useRouter();

@@ -24,12 +24,12 @@ import { useSignupOnboardingDraftStore } from '@/src/stores/signup-onboarding-st
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 
-const BANNER_DELAY = 80;
-const RADIO_BASE_DELAY = 220;
-const RADIO_STAGGER = 100;
-const CONSENTS_DELAY = 480;
-const CONSENT_STAGGER = 90;
-const CTA_DELAY = 720;
+const BANNER_DELAY = 50;
+const RADIO_BASE_DELAY = 140;
+const RADIO_STAGGER = 80;
+const CONSENTS_DELAY = 300;
+const CONSENT_STAGGER = 70;
+const CTA_DELAY = 420;
 
 export default function OnboardingLocalIdentityScreen(): React.JSX.Element {
   const router = useRouter();

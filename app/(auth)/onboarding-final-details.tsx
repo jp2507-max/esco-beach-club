@@ -6,9 +6,11 @@ import { useTranslation } from 'react-i18next';
 import { Alert } from 'react-native';
 import {
   cancelAnimation,
+  Easing,
   FadeIn,
   FadeInUp,
   ReduceMotion,
+  type SharedValue,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -37,10 +39,10 @@ import { Image } from '@/src/tw/image';
 const WELCOME_COCKTAIL_IMAGE_URI =
   'https://lh3.googleusercontent.com/aida-public/AB6AXuB6oK4M5GAEAukmyL4P-fxWGcieV8vOhAhVYjyrF1Jr46L3mySepBDndcXRdhdc1tAzZ5WIxmdQJsAUBN2fGXSNBnd5SFLWdksutc6ObMR_yw_fuIjHEucVvyZErUVjOd0HRufWgBdDdaKejA8KX_eSNt_fxHrfF1waZijjj1Rx_OCJrX0uchXHN9J7zJ3ZoNr7vU-DZQlbsepHsxBTCz7WSQnczqLyGpH0p3IhVqSGo1FUYjKdyKPHdiRp8X1Bljuvhyuhv5K5Zv2e';
 
-const ICON_DELAY = 100;
-const TITLE_DELAY = 260;
-const CARD_DELAY = 440;
-const CTA_DELAY = 680;
+const ICON_DELAY = 80;
+const TITLE_DELAY = 180;
+const CARD_DELAY = 300;
+const CTA_DELAY = 420;
 
 /**
  * Backend auth/profile permission errors currently surface as mixed shapes:
@@ -85,40 +87,22 @@ function isPermissionDeniedError(error: unknown): boolean {
 }
 
 function FloatingDot({
+  progress,
+  phase,
   delay,
   amplitude,
   positionClassName,
   appearanceClassName,
 }: {
+  progress: SharedValue<number>;
+  phase: number;
   amplitude: number;
   appearanceClassName: string;
   delay: number;
   positionClassName: string;
 }): React.JSX.Element {
-  const translateY = useSharedValue(0);
-
-  useEffect(() => {
-    translateY.set(
-      withRepeat(
-        withSequence(
-          withTiming(amplitude, {
-            duration: 2400,
-            reduceMotion: ReduceMotion.System,
-          }),
-          withTiming(-amplitude, {
-            duration: 2400,
-            reduceMotion: ReduceMotion.System,
-          })
-        ),
-        -1,
-        true
-      )
-    );
-    return () => cancelAnimation(translateY);
-  }, [amplitude, translateY]);
-
   const dotStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.get() }],
+    transform: [{ translateY: Math.sin(progress.get() + phase) * amplitude }],
   }));
 
   return (
@@ -152,6 +136,7 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
   );
 
   const sparkleScale = useSharedValue(1);
+  const floatingProgress = useSharedValue(0);
 
   useEffect(() => {
     sparkleScale.set(
@@ -172,6 +157,22 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
     );
     return () => cancelAnimation(sparkleScale);
   }, [sparkleScale]);
+
+  useEffect(() => {
+    floatingProgress.set(
+      withRepeat(
+        withTiming(Math.PI * 2, {
+          duration: 5600,
+          easing: Easing.linear,
+          reduceMotion: ReduceMotion.System,
+        }),
+        -1,
+        false
+      )
+    );
+
+    return () => cancelAnimation(floatingProgress);
+  }, [floatingProgress]);
 
   const sparkleStyle = useAnimatedStyle(() => ({
     transform: [{ scale: sparkleScale.get() }],
@@ -314,30 +315,40 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
 
       <View className="pointer-events-none absolute inset-0 opacity-45 dark:opacity-25">
         <FloatingDot
+          progress={floatingProgress}
+          phase={0}
           positionClassName="absolute left-10 top-20 size-4"
           appearanceClassName="size-full rounded-full bg-primary/50 dark:bg-primary-bright/40"
           delay={200}
           amplitude={6}
         />
         <FloatingDot
+          progress={floatingProgress}
+          phase={0.9}
           positionClassName="absolute right-16 top-55 size-3"
           appearanceClassName="size-full rounded-sm bg-secondary/50 dark:bg-secondary/30"
           delay={400}
           amplitude={8}
         />
         <FloatingDot
+          progress={floatingProgress}
+          phase={1.5}
           positionClassName="absolute left-24 top-120 h-5 w-2"
           appearanceClassName="size-full rounded-full bg-warning/45 dark:bg-warning-dark/30"
           delay={300}
           amplitude={5}
         />
         <FloatingDot
+          progress={floatingProgress}
+          phase={2.2}
           positionClassName="absolute right-24 top-110 size-3"
           appearanceClassName="size-full rounded-full bg-primary/40 dark:bg-primary-bright/30"
           delay={500}
           amplitude={7}
         />
         <FloatingDot
+          progress={floatingProgress}
+          phase={2.8}
           positionClassName="absolute bottom-20 right-8 size-6"
           appearanceClassName="size-full rounded-full bg-border/70 dark:bg-dark-border/60"
           delay={350}

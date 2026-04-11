@@ -23,7 +23,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
 import {
-  ReferralsDataProvider,
   useProfileData,
   useReferralProgress,
   useReferralsData,
@@ -590,9 +589,5 @@ function InviteScreenContent(): React.JSX.Element {
 }
 
 export default function InviteScreen(): React.JSX.Element {
-  return (
-    <ReferralsDataProvider>
-      <InviteScreenContent />
-    </ReferralsDataProvider>
-  );
+  return <InviteScreenContent />;
 }

@@ -35,9 +35,9 @@ type FeatureCard = {
   title: string;
 };
 
-const HERO_DELAY = 120;
-const CARD_BASE_DELAY = 350;
-const CARD_STAGGER = 80;
+const HERO_DELAY = 70;
+const CARD_BASE_DELAY = 220;
+const CARD_STAGGER = 60;
 
 export default function OnboardingWelcomeScreen(): React.JSX.Element {
   const router = useRouter();

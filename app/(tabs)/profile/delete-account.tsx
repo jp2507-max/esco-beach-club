@@ -261,26 +261,36 @@ export default function DeleteAccountScreen(): React.JSX.Element {
             return;
           }
 
-          if (shouldContinueAfterAppleVerificationError(error)) {
-            addMonitoringBreadcrumb({
-              category: 'account-deletion',
-              data: {
-                authProvider,
-                errorMessage:
-                  error instanceof Error ? error.message : 'unknown_error',
-              },
-              level: 'warning',
-              message: 'apple deletion verification failed before scheduling',
-            });
-            captureHandledError(error, {
-              extras: {
-                authProvider,
-              },
-              tags: {
-                feature: 'account-deletion',
-                operation: 'apple_pre_delete_verification',
-              },
-            });
+          const shouldContinue =
+            shouldContinueAfterAppleVerificationError(error);
+
+          addMonitoringBreadcrumb({
+            category: 'account-deletion',
+            data: {
+              authProvider,
+              errorMessage:
+                error instanceof Error ? error.message : 'unknown_error',
+              shouldContinue,
+            },
+            level: 'warning',
+            message: 'apple deletion verification failed before scheduling',
+          });
+
+          captureHandledError(error, {
+            extras: {
+              authProvider,
+              shouldContinue,
+            },
+            tags: {
+              feature: 'account-deletion',
+              operation: 'apple_pre_delete_verification',
+            },
+          });
+
+          if (!shouldContinue) {
+            hapticError();
+            Alert.alert(t('deleteAccount.errors.appleRevocationFailed'));
+            return;
           }
         }
       }

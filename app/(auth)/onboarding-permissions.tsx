@@ -59,10 +59,10 @@ function mapPushPermissionStatus(
   return mapExpoPermissionStatus(permission.status);
 }
 
-const TITLE_DELAY = 80;
-const CARD_BASE_DELAY = 200;
-const CARD_STAGGER = 140;
-const CTA_DELAY = 540;
+const TITLE_DELAY = 50;
+const CARD_BASE_DELAY = 140;
+const CARD_STAGGER = 100;
+const CTA_DELAY = 320;
 
 export default function OnboardingPermissionsScreen(): React.JSX.Element {
   const router = useRouter();
@@ -89,6 +89,38 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
     React.useState<boolean>(false);
 
   const isBusy = isRequestingLocation || isRequestingPush;
+  const statusLabelByStatus = React.useMemo<
+    Record<OnboardingPermissionStatus, string>
+  >(
+    () => ({
+      [onboardingPermissionStatuses.denied]: t(
+        'onboardingPermissionsStatusDenied'
+      ),
+      [onboardingPermissionStatuses.granted]: t(
+        'onboardingPermissionsStatusGranted'
+      ),
+      [onboardingPermissionStatuses.undetermined]: t(
+        'onboardingPermissionsStatusUndetermined'
+      ),
+    }),
+    [t]
+  );
+  const actionLabelByStatus = React.useMemo<
+    Record<OnboardingPermissionStatus, string>
+  >(
+    () => ({
+      [onboardingPermissionStatuses.denied]: t(
+        'onboardingPermissionsActionRetry'
+      ),
+      [onboardingPermissionStatuses.granted]: t(
+        'onboardingPermissionsActionEnabled'
+      ),
+      [onboardingPermissionStatuses.undetermined]: t(
+        'onboardingPermissionsActionAllow'
+      ),
+    }),
+    [t]
+  );
 
   React.useEffect(() => {
     let isMounted = true;
@@ -140,27 +172,17 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
   }
 
   function statusLabel(status: OnboardingPermissionStatus): string {
-    if (status === onboardingPermissionStatuses.granted) {
-      return t('onboardingPermissionsStatusGranted');
-    }
-
-    if (status === onboardingPermissionStatuses.denied) {
-      return t('onboardingPermissionsStatusDenied');
-    }
-
-    return t('onboardingPermissionsStatusUndetermined');
+    return (
+      statusLabelByStatus[status] ??
+      statusLabelByStatus[onboardingPermissionStatuses.undetermined]
+    );
   }
 
   function actionLabel(status: OnboardingPermissionStatus): string {
-    if (status === onboardingPermissionStatuses.granted) {
-      return t('onboardingPermissionsActionEnabled');
-    }
-
-    if (status === onboardingPermissionStatuses.denied) {
-      return t('onboardingPermissionsActionRetry');
-    }
-
-    return t('onboardingPermissionsActionAllow');
+    return (
+      actionLabelByStatus[status] ??
+      actionLabelByStatus[onboardingPermissionStatuses.undetermined]
+    );
   }
 
   function resolveEffectiveLocationStatus(): OnboardingPermissionStatus {

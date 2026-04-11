@@ -97,12 +97,6 @@ async function waitForProvisionRetryDelay(attempt: number): Promise<void> {
   });
 }
 
-export async function fetchProfileById(
-  userId: string
-): Promise<Profile | null> {
-  return fetchProfileByIdWithDb(db, userId);
-}
-
 async function fetchProfileByIdWithDb(
   database: ProfileDbClient,
   userId: string

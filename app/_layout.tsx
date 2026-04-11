@@ -38,7 +38,6 @@ import { ReferralClaimEffect } from '@/src/components/referral/referral-claim-ef
 import { isAllowedPendingDeletionPath } from '@/src/lib/account-deletion/pending-deletion-routing';
 import { useAccountDeletionRequest } from '@/src/lib/account-deletion/use-account-deletion-request';
 import { motion } from '@/src/lib/animations/motion';
-import { configureGoogleSignIn } from '@/src/lib/auth/social-auth';
 import { getEscoNavigationTheme } from '@/src/lib/navigation/app-navigation-theme';
 import { createNativeHeaderOptions } from '@/src/lib/navigation/stack-header-options';
 import {
@@ -243,10 +242,6 @@ function ReactQueryLifecycle(): null {
 function AuthRuntimeBootstrap(): null {
   const preference = useThemePreferenceStore((state) => state.preference);
   const hasAppliedThemePreferenceRef = useRef(false);
-
-  useEffect(() => {
-    configureGoogleSignIn();
-  }, []);
 
   // Re-apply when preference changes (and after mount) so native UI stays aligned
   // with the store; module init already applied once on import.
