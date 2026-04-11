@@ -1,4 +1,4 @@
-import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
+import { Redirect, useLocalSearchParams } from 'expo-router';
 import type { TFunction } from 'i18next';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -82,7 +82,6 @@ function BootstrapRecoveryCard(props: {
 export default function PostAuthRedirectScreen(): React.JSX.Element {
   const { t } = useTranslation('auth');
   const { signOut } = useAuth();
-  const router = useRouter();
   const searchParams = useLocalSearchParams<{
     authFlow?: string | string[];
   }>();
@@ -102,6 +101,13 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
   >(null);
   const [isRetryingProvision, setIsRetryingProvision] = React.useState(false);
   const [isSigningOut, setIsSigningOut] = React.useState(false);
+  const isMountedRef = React.useRef(true);
+
+  React.useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   const authFlow = React.useMemo(() => {
     if (Array.isArray(searchParams.authFlow)) {
@@ -169,7 +175,9 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
   }, [authFlow, hasAnySignupDraft, resetSignupDraft]);
 
   async function handleSignOut(): Promise<boolean> {
-    setIsSigningOut(true);
+    if (isMountedRef.current) {
+      setIsSigningOut(true);
+    }
 
     try {
       await signOut();
@@ -185,15 +193,15 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
 
       return false;
     } finally {
-      setIsSigningOut(false);
+      if (isMountedRef.current) {
+        setIsSigningOut(false);
+      }
     }
   }
 
   async function handleBackToSignIn(): Promise<void> {
     const didSignOut = await handleSignOut();
     if (!didSignOut) return;
-
-    router.replace(loginHref);
   }
 
   const isWorking = isRetryingProvision || isSigningOut;

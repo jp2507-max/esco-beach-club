@@ -112,10 +112,10 @@ const auth = {
     '저장 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.',
   venueUpsellNotificationChannelName: '현장 오퍼',
   venueUpsellNotificationChannelDescription:
-    '레스토랑 도착 시 받을 수 있는 실시간 오퍼입니다.',
-  venueUpsellNotificationTitle: '바에서 리워드 포인트 적립',
+    '레스토랑 도착 시 받는 환영 알림입니다.',
+  venueUpsellNotificationTitle: '레스토랑에 오신 것을 환영해요',
   venueUpsellNotificationBody:
-    '지금 칵테일을 주문하고 리워드 포인트를 잔액에 추가하세요!',
+    '오늘 주문으로 리워드 포인트 적립하는 것, 잊지 마세요.',
   onboardingClubWelcomeTitle: '클럽에 오신 것을 환영합니다!',
   onboardingClubWelcomeSubtitle:
     '햇살이 가득하고 멤버십이 활성화되었습니다. 새로운 라이프스타일을 위한 첫 건배를 시작해 보세요.',

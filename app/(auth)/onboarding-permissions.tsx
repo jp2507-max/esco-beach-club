@@ -18,7 +18,10 @@ import { InfoDot } from '@/src/components/ui';
 import { motion, withRM } from '@/src/lib/animations/motion';
 import { useButtonPress } from '@/src/lib/animations/use-button-press';
 import { hapticLight, hapticSuccess } from '@/src/lib/haptics/haptics';
-import { toOnboardingPermissionStatus } from '@/src/lib/mappers';
+import {
+  resolvePushPermissionStatus,
+  toOnboardingPermissionStatus,
+} from '@/src/lib/mappers';
 import { ensureVenueUpsellNotificationChannel } from '@/src/lib/notifications';
 import { shadows } from '@/src/lib/styles/shadows';
 import { useSignupOnboardingDraftStore } from '@/src/stores/signup-onboarding-store';
@@ -29,34 +32,6 @@ function mapExpoPermissionStatus(
   status: string | null | undefined
 ): OnboardingPermissionStatus {
   return toOnboardingPermissionStatus(status);
-}
-
-function mapPushPermissionStatus(
-  permission: Notifications.NotificationPermissionsStatus
-): OnboardingPermissionStatus {
-  const iosStatus = permission.ios?.status;
-
-  if (iosStatus === Notifications.IosAuthorizationStatus.AUTHORIZED) {
-    return onboardingPermissionStatuses.granted;
-  }
-
-  if (iosStatus === Notifications.IosAuthorizationStatus.PROVISIONAL) {
-    return onboardingPermissionStatuses.granted;
-  }
-
-  if (iosStatus === Notifications.IosAuthorizationStatus.EPHEMERAL) {
-    return onboardingPermissionStatuses.granted;
-  }
-
-  if (iosStatus === Notifications.IosAuthorizationStatus.DENIED) {
-    return onboardingPermissionStatuses.denied;
-  }
-
-  if (iosStatus === Notifications.IosAuthorizationStatus.NOT_DETERMINED) {
-    return onboardingPermissionStatuses.undetermined;
-  }
-
-  return mapExpoPermissionStatus(permission.status);
 }
 
 const TITLE_DELAY = 50;
@@ -89,6 +64,11 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
     React.useState<boolean>(false);
 
   const isBusy = isRequestingLocation || isRequestingPush;
+  const isLocationPermissionCtaDisabled =
+    isBusy ||
+    resolveEffectiveLocationStatus() === onboardingPermissionStatuses.granted;
+  const isPushPermissionCtaDisabled =
+    isBusy || pushStatus === onboardingPermissionStatuses.granted;
   const statusLabelByStatus = React.useMemo<
     Record<OnboardingPermissionStatus, string>
   >(
@@ -138,7 +118,7 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
         setLocationStatus(
           mapExpoPermissionStatus(foregroundLocationPermission.status)
         );
-        setPushStatus(mapPushPermissionStatus(notificationsPermission));
+        setPushStatus(resolvePushPermissionStatus(notificationsPermission));
       } catch {
         // Keep the in-memory onboarding draft values when the current device
         // state cannot be read yet.
@@ -268,7 +248,7 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
     try {
       await ensureVenueUpsellNotificationChannel();
       const currentPermission = await Notifications.getPermissionsAsync();
-      const currentPushStatus = mapPushPermissionStatus(currentPermission);
+      const currentPushStatus = resolvePushPermissionStatus(currentPermission);
 
       if (__DEV__) {
         console.info('[OnboardingPermissions] Current push permission:', {
@@ -286,15 +266,7 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
         return;
       }
 
-      if (!currentPermission.canAskAgain) {
-        setPushStatus(onboardingPermissionStatuses.denied);
-        showPushSettingsFallbackAlert();
-        return;
-      }
-
-      await Notifications.requestPermissionsAsync();
-
-      const refreshedPermission = await Notifications.getPermissionsAsync();
+      const refreshedPermission = await Notifications.requestPermissionsAsync();
 
       if (__DEV__) {
         console.info('[OnboardingPermissions] Refreshed push permission:', {
@@ -305,7 +277,7 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
         });
       }
 
-      const mappedPush = mapPushPermissionStatus(refreshedPermission);
+      const mappedPush = resolvePushPermissionStatus(refreshedPermission);
 
       if (
         mappedPush === onboardingPermissionStatuses.undetermined &&
@@ -425,8 +397,9 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
 
             <Pressable
               accessibilityRole="button"
+              accessibilityState={{ disabled: isLocationPermissionCtaDisabled }}
               className="overflow-hidden rounded-full"
-              disabled={isBusy}
+              disabled={isLocationPermissionCtaDisabled}
               onPress={requestLocationPermission}
               testID="onboarding-permissions-enable-location"
             >
@@ -439,6 +412,7 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
                   borderRadius: 999,
                   height: 44,
                   justifyContent: 'center',
+                  opacity: isLocationPermissionCtaDisabled ? 0.5 : 1,
                 }}
               >
                 {isRequestingLocation ? (
@@ -517,8 +491,9 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
 
             <Pressable
               accessibilityRole="button"
+              accessibilityState={{ disabled: isPushPermissionCtaDisabled }}
               className="overflow-hidden rounded-full"
-              disabled={isBusy}
+              disabled={isPushPermissionCtaDisabled}
               onPress={requestPushPermission}
               testID="onboarding-permissions-enable-push"
             >
@@ -531,6 +506,7 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
                   borderRadius: 999,
                   height: 44,
                   justifyContent: 'center',
+                  opacity: isPushPermissionCtaDisabled ? 0.5 : 1,
                 }}
               >
                 {isRequestingPush ? (

@@ -249,7 +249,6 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
     if (isAuthenticated && user?.id) {
       try {
         await persistAuthenticatedOnboardingChoices();
-        setSignupDraft({ hasCompletedSetup: true });
       } catch (error: unknown) {
         if (isPermissionDeniedError(error)) {
           setSignupDraft({ hasCompletedSetup: true });

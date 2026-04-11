@@ -113,10 +113,10 @@ const auth = {
   onboardingSaveErrorMessage: 'Đã xảy ra lỗi khi lưu. Vui lòng thử lại.',
   venueUpsellNotificationChannelName: 'Ưu đãi tại địa điểm',
   venueUpsellNotificationChannelDescription:
-    'Ưu đãi đúng lúc khi bạn đến nhà hàng.',
-  venueUpsellNotificationTitle: 'Nhận điểm thưởng tại quầy bar',
+    'Thông báo chào mừng khi bạn đến nhà hàng.',
+  venueUpsellNotificationTitle: 'Rất vui khi bạn đã đến nhà hàng',
   venueUpsellNotificationBody:
-    'Gọi một ly cocktail ngay bây giờ để cộng điểm thưởng vào số dư của bạn.',
+    'Đừng quên tích điểm thưởng cho đơn gọi hôm nay của bạn.',
   onboardingClubWelcomeTitle: 'Chào mừng đến với Câu lạc bộ!',
   onboardingClubWelcomeSubtitle:
     'Nắng đã lên và gói thành viên của bạn đã được kích hoạt. Hãy bắt đầu lối sống mới bằng một ly chúc mừng.',

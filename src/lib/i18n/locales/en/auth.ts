@@ -112,10 +112,10 @@ const auth = {
     'Something went wrong while saving. Please try again.',
   venueUpsellNotificationChannelName: 'Venue offers',
   venueUpsellNotificationChannelDescription:
-    'Timely offers when you arrive at the restaurant.',
-  venueUpsellNotificationTitle: 'Earn reward points at the bar',
+    'Welcome updates when you arrive at the restaurant.',
+  venueUpsellNotificationTitle: 'Great to see you at the restaurant',
   venueUpsellNotificationBody:
-    'Order a cocktail now to add reward points to your balance.',
+    'Don’t forget to earn your points on your order today.',
   onboardingClubWelcomeTitle: 'Welcome to the Club!',
   onboardingClubWelcomeSubtitle:
     'The sun is out and your membership is active. Let’s start with a toast to your new lifestyle.',
