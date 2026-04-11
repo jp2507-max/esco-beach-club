@@ -147,40 +147,47 @@ async function instantAdminFetch<TResult>(
   path: string,
   init: RequestInit
 ): Promise<TResult | undefined> {
-  const timeoutSignal = AbortSignal.timeout(30_000);
-  const signal =
-    init.signal != null
-      ? AbortSignal.any([timeoutSignal, init.signal])
-      : timeoutSignal;
-
-  const response = await fetch(buildInstantAdminUrl(config, path), {
-    ...init,
-    headers: {
-      Authorization: `Bearer ${config.adminToken}`,
-      'Content-Type': 'application/json',
-      ...init.headers,
-      'app-id': config.appId,
-    },
-    signal,
-  });
-
-  if (!response.ok) {
-    throw createInstantAdminApiError(
-      response.status,
-      await readInstantAdminErrorBody(response)
+  const timeoutController = new AbortController();
+  const abortTimer = setTimeout(() => {
+    timeoutController.abort(
+      new Error('instant_admin_request_timeout_after_30000ms')
     );
-  }
+  }, 30_000);
 
-  if (response.status === 204) {
-    return undefined;
-  }
+  const signal = init.signal ?? timeoutController.signal;
 
-  const responseText = await response.text();
-  if (!responseText) {
-    return undefined;
-  }
+  try {
+    const response = await fetch(buildInstantAdminUrl(config, path), {
+      ...init,
+      headers: {
+        Authorization: `Bearer ${config.adminToken}`,
+        'Content-Type': 'application/json',
+        ...init.headers,
+        'app-id': config.appId,
+      },
+      signal,
+    });
 
-  return JSON.parse(responseText) as TResult;
+    if (!response.ok) {
+      throw createInstantAdminApiError(
+        response.status,
+        await readInstantAdminErrorBody(response)
+      );
+    }
+
+    if (response.status === 204) {
+      return undefined;
+    }
+
+    const responseText = await response.text();
+    if (!responseText) {
+      return undefined;
+    }
+
+    return JSON.parse(responseText) as TResult;
+  } finally {
+    clearTimeout(abortTimer);
+  }
 }
 
 function createInstantAdminDb(config: InstantAdminConfig): InstantAdminDb {

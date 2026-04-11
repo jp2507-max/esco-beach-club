@@ -112,10 +112,10 @@ const auth = {
     '저장 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.',
   venueUpsellNotificationChannelName: '현장 오퍼',
   venueUpsellNotificationChannelDescription:
-    '레스토랑 도착 시 받을 수 있는 실시간 오퍼입니다.',
-  venueUpsellNotificationTitle: '바에서 리워드 포인트 적립',
+    '레스토랑 도착 시 받는 환영 알림입니다.',
+  venueUpsellNotificationTitle: '레스토랑에 오신 것을 환영해요',
   venueUpsellNotificationBody:
-    '지금 칵테일을 주문하고 리워드 포인트를 잔액에 추가하세요!',
+    '오늘 주문으로 리워드 포인트 적립하는 것, 잊지 마세요.',
   onboardingClubWelcomeTitle: '클럽에 오신 것을 환영합니다!',
   onboardingClubWelcomeSubtitle:
     '햇살이 가득하고 멤버십이 활성화되었습니다. 새로운 라이프스타일을 위한 첫 건배를 시작해 보세요.',
@@ -158,6 +158,8 @@ const auth = {
   unableToSendCode: '코드를 보낼 수 없습니다.',
   unableToSignInWithApple: 'Apple로 로그인할 수 없습니다.',
   unableToSignInWithGoogle: 'Google로 로그인할 수 없습니다.',
+  profilePermissionDenied:
+    '로그인은 완료되었지만 프로필 권한 때문에 설정을 마칠 수 없습니다. 로그아웃 후 다시 시도해 주세요.',
   unableToCompleteProfileSetup:
     '로그인은 완료되었지만 프로필 설정을 마무리하지 못했습니다. 다시 시도해 주세요.',
   unableToVerifyCode: '코드를 확인할 수 없습니다.',
@@ -211,6 +213,14 @@ const auth = {
   onboardingWelcomePointGlobalTitle: '글로벌 네트워크',
   onboardingWelcomePointGlobalDescription:
     '40개국 이상, 6개 대륙에서 리워드를 누리세요.',
+  profileBootstrapLoadingMessage:
+    '멤버 프로필을 준비하고 접근 권한을 확인하고 있습니다.',
+  profileBootstrapErrorTitle: '프로필 설정을 마무리하세요',
+  profileBootstrapErrorMessage:
+    '세션은 활성화되었지만 멤버 프로필을 끝까지 불러오지 못했습니다. 잠시 기다리거나 안전하게 로그아웃할 수 있습니다.',
+  profileBootstrapTerminalTitle: '멤버 프로필을 불러올 수 없습니다',
+  profileBootstrapSignOutAction: '로그아웃',
+  profileBootstrapBackToSignInAction: '로그인으로 돌아가기',
   genericError: '문제가 발생했습니다. 다시 시도하거나 지원팀에 문의해 주세요.',
   member: '회원',
 } as const;

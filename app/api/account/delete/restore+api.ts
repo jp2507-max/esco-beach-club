@@ -1,4 +1,5 @@
 import { accountDeletionStatuses } from '@/lib/types';
+import { buildAccountDeletionAdminErrorResponse } from '@/src/lib/account-deletion/account-deletion-server-errors';
 import {
   jsonResponse,
   parseBearerRefreshToken,
@@ -62,16 +63,30 @@ export async function POST(request: Request): Promise<Response> {
     return jsonResponse({ error: 'unauthorized' }, 401);
   }
 
-  const queryResult = await adminDb.query<{
-    account_deletion_requests?: AccountDeletionRequestRecord[];
-  }>({
-    account_deletion_requests: {
-      $: { where: { auth_user_id: authUser.userId } },
-    },
-  });
-  const currentRequest = queryResult.account_deletion_requests?.[0] as
-    | AccountDeletionRequestRecord
-    | undefined;
+  let currentRequest: AccountDeletionRequestRecord | undefined;
+  try {
+    console.info('[account/delete/restore] Checking current request', {
+      userId: authUser.userId,
+    });
+    const queryResult = await adminDb.query<{
+      account_deletion_requests?: AccountDeletionRequestRecord[];
+    }>({
+      account_deletion_requests: {
+        $: { where: { auth_user_id: authUser.userId } },
+      },
+    });
+    currentRequest = queryResult.account_deletion_requests?.[0] as
+      | AccountDeletionRequestRecord
+      | undefined;
+  } catch (error) {
+    const adminError = buildAccountDeletionAdminErrorResponse({
+      context: { userId: authUser.userId },
+      error,
+      failureCode: 'admin_query_failed',
+      operation: 'query_restore_request',
+    });
+    return jsonResponse(adminError.body, adminError.status);
+  }
 
   if (!currentRequest?.id) {
     return jsonResponse({ error: 'not_found' }, 404);
@@ -86,18 +101,32 @@ export async function POST(request: Request): Promise<Response> {
 
   const restoredAt = new Date().toISOString();
 
-  await adminDb.transact(
-    createInstantUpdateStep(
-      'account_deletion_requests',
-      currentRequest.id,
-      {
-        restored_at: restoredAt,
-        status: accountDeletionStatuses.restored,
-        updated_at: restoredAt,
-      },
-      { upsert: false }
-    )
-  );
+  try {
+    console.info('[account/delete/restore] Restoring deletion request', {
+      requestId: currentRequest.id,
+      userId: authUser.userId,
+    });
+    await adminDb.transact(
+      createInstantUpdateStep(
+        'account_deletion_requests',
+        currentRequest.id,
+        {
+          restored_at: restoredAt,
+          status: accountDeletionStatuses.restored,
+          updated_at: restoredAt,
+        },
+        { upsert: false }
+      )
+    );
+  } catch (error) {
+    const adminError = buildAccountDeletionAdminErrorResponse({
+      context: { requestId: currentRequest.id, userId: authUser.userId },
+      error,
+      failureCode: 'admin_write_failed',
+      operation: 'restore_deletion_request',
+    });
+    return jsonResponse(adminError.body, adminError.status);
+  }
 
   return jsonResponse(
     {

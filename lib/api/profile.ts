@@ -6,11 +6,11 @@ import type {
 } from '@/lib/types';
 import { db } from '@/src/lib/instant';
 import { type InstantRecord, mapProfile } from '@/src/lib/mappers';
+import { captureHandledError } from '@/src/lib/monitoring';
 import { normalizeMemberSegment } from '@/src/lib/utils/member-segment';
 
 import {
   buildProfileId,
-  firstInstantRecord,
   getDefaultProfileValues,
   isMemberIdConflict,
   isProfileIdConflict,
@@ -24,13 +24,71 @@ import {
 } from './shared';
 
 const PROFILE_PROVISION_RETRY_DELAYS_MS = [50, 150, 300] as const;
+export const PROFILE_PERMISSION_DENIED_ERROR_KEY = 'profilePermissionDenied';
+
+type ProfileBootstrapOperation =
+  | 'create_profile'
+  | 'load_profile'
+  | 'set_auth_provider'
+  | 'update_profile';
+
+type ProfileDbClient = {
+  queryOnce: typeof db.queryOnce;
+  transact: typeof db.transact;
+  tx: typeof db.tx;
+};
+
+function getErrorMonitoringExtras(error: unknown): Record<string, unknown> {
+  if (error instanceof Error) {
+    return {
+      errorMessage: error.message,
+      errorName: error.name,
+    };
+  }
+
+  return {
+    errorValue: String(error),
+  };
+}
+
+export const profileBootstrapStages = {
+  ensureProfile: 'ensure_profile',
+} as const;
+
+export type ProfileBootstrapStage =
+  (typeof profileBootstrapStages)[keyof typeof profileBootstrapStages];
+
+export class ProfileBootstrapError extends Error {
+  readonly isRetryable: boolean;
+  readonly canonicalProfileExists: boolean;
+  readonly operation: ProfileBootstrapOperation;
+  readonly stage: ProfileBootstrapStage;
+
+  constructor(
+    message: string,
+    options: {
+      canonicalProfileExists?: boolean;
+      isRetryable: boolean;
+      operation?: ProfileBootstrapOperation;
+      stage: ProfileBootstrapStage;
+    }
+  ) {
+    super(message);
+    Object.setPrototypeOf(this, new.target.prototype);
+    this.canonicalProfileExists = options.canonicalProfileExists ?? false;
+    this.name = 'ProfileBootstrapError';
+    this.isRetryable = options.isRetryable;
+    this.operation = options.operation ?? 'load_profile';
+    this.stage = options.stage;
+  }
+}
 
 async function waitForProvisionRetryDelay(attempt: number): Promise<void> {
   const delay =
     PROFILE_PROVISION_RETRY_DELAYS_MS[
       Math.max(
         0,
-        Math.min(attempt, PROFILE_PROVISION_RETRY_DELAYS_MS.length - 1)
+        Math.min(attempt - 1, PROFILE_PROVISION_RETRY_DELAYS_MS.length - 1)
       )
     ];
 
@@ -39,47 +97,26 @@ async function waitForProvisionRetryDelay(attempt: number): Promise<void> {
   });
 }
 
-async function fetchProfileViaUserLink(
+async function fetchProfileByIdWithDb(
+  database: ProfileDbClient,
   userId: string
 ): Promise<Profile | null> {
   if (!userId) return null;
 
-  const { data } = await db.queryOnce({
-    $users: {
-      $: {
-        where: { id: userId },
-      },
-      profile: {},
-    },
-  });
-
-  const userRecord = firstInstantRecord(data.$users);
-  if (!userRecord) return null;
-
-  const linkedProfile = firstInstantRecord(
-    (userRecord as Record<string, unknown>).profile
-  );
-
-  return linkedProfile ? mapProfile(linkedProfile) : null;
-}
-
-export async function fetchProfile(userId: string): Promise<Profile | null> {
-  if (!userId) return null;
-
-  const { data } = await db.queryOnce({
+  const { data } = await database.queryOnce({
     profiles: {
       $: {
-        where: { 'user.id': userId },
+        where: { id: userId },
       },
     },
   });
 
   const profile = data.profiles[0] as InstantRecord | undefined;
-  if (profile) {
-    return mapProfile(profile);
-  }
+  return profile ? mapProfile(profile) : null;
+}
 
-  return fetchProfileViaUserLink(userId);
+export async function fetchProfile(userId: string): Promise<Profile | null> {
+  return fetchProfileByIdWithDb(db, userId);
 }
 
 export async function fetchProfileByMemberId(
@@ -100,16 +137,21 @@ export async function fetchProfileByMemberId(
   return profile ? mapProfile(profile) : null;
 }
 
-export async function ensureProfile(params: {
-  userId: string;
-  email?: string;
-  displayName?: string;
-  dateOfBirth?: string;
-}): Promise<Profile | null> {
+export async function ensureProfileWithDb(
+  database: ProfileDbClient,
+  params: {
+    userId: string;
+    email?: string;
+    displayName?: string;
+    dateOfBirth?: string;
+  }
+): Promise<Profile | null> {
   if (!params.userId) return null;
 
-  const current = await fetchProfile(params.userId);
-  if (current) return current;
+  const current = await fetchProfileByIdWithDb(database, params.userId);
+  if (current) {
+    return current;
+  }
 
   const maxAttempts = PROFILE_PROVISION_RETRY_DELAYS_MS.length + 1;
   let attempt = 0;
@@ -126,17 +168,21 @@ export async function ensureProfile(params: {
     });
 
     try {
-      await db.transact(
-        db.tx.profiles[profileId].create(payload).link({ user: params.userId })
-      );
-      return fetchProfile(params.userId);
+      await database.transact(database.tx.profiles[profileId].create(payload));
+      return fetchProfileByIdWithDb(database, params.userId);
     } catch (error) {
-      if (!(error instanceof Error)) {
-        throw error;
-      }
+      if (!(error instanceof Error))
+        throw new ProfileBootstrapError('unableToCompleteProfileSetup', {
+          isRetryable: false,
+          operation: 'create_profile',
+          stage: profileBootstrapStages.ensureProfile,
+        });
 
       if (isProfileIdConflict(error)) {
-        const existingProfile = await fetchProfile(params.userId);
+        const existingProfile = await fetchProfileByIdWithDb(
+          database,
+          params.userId
+        );
         if (existingProfile) {
           return existingProfile;
         }
@@ -144,32 +190,67 @@ export async function ensureProfile(params: {
       }
 
       if (isMemberIdConflict(error)) {
-        const existingProfile = await fetchProfile(params.userId);
+        const existingProfile = await fetchProfileByIdWithDb(
+          database,
+          params.userId
+        );
         if (existingProfile) {
           return existingProfile;
+        }
+        if (attempt < maxAttempts) {
+          await waitForProvisionRetryDelay(attempt);
+          continue;
         }
         throw error;
       }
 
       if (isReferralCodeConflict(error)) {
-        const existingProfile = await fetchProfile(params.userId);
+        const existingProfile = await fetchProfileByIdWithDb(
+          database,
+          params.userId
+        );
         if (existingProfile) {
           return existingProfile;
+        }
+        if (attempt < maxAttempts) {
+          await waitForProvisionRetryDelay(attempt);
+          continue;
         }
         throw error;
       }
 
       if (error.message.toLowerCase().includes('permission denied')) {
+        const existingCanonicalProfile = await fetchProfileByIdWithDb(
+          database,
+          params.userId
+        );
+
+        captureHandledError(error, {
+          tags: {
+            area: 'profile',
+            operation: 'create_profile',
+          },
+          extras: {
+            ...getErrorMonitoringExtras(error),
+            canonicalProfileExists: Boolean(existingCanonicalProfile),
+            payloadKeys: Object.keys(payload),
+            profileId,
+            userId: params.userId,
+          },
+        });
+
         if (__DEV__) {
-          console.error('[ensureProfile] Profile create permission denied', {
+          console.error('[ensureProfile] Canonical profile create denied', {
             attempt,
             maxAttempts,
+            canonicalProfileExists: Boolean(existingCanonicalProfile),
             payloadKeys: Object.keys(payload),
             profileId,
             userId: params.userId,
           });
         }
-        const existingProfile = await fetchProfile(params.userId);
+
+        const existingProfile = existingCanonicalProfile;
         if (existingProfile) {
           return existingProfile;
         }
@@ -178,13 +259,33 @@ export async function ensureProfile(params: {
           await waitForProvisionRetryDelay(attempt);
           continue;
         }
+
+        throw new ProfileBootstrapError(PROFILE_PERMISSION_DENIED_ERROR_KEY, {
+          canonicalProfileExists: Boolean(existingCanonicalProfile),
+          isRetryable: false,
+          operation: 'create_profile',
+          stage: profileBootstrapStages.ensureProfile,
+        });
       }
 
-      throw error;
+      throw new ProfileBootstrapError('unableToCompleteProfileSetup', {
+        isRetryable: true,
+        operation: 'create_profile',
+        stage: profileBootstrapStages.ensureProfile,
+      });
     }
   }
 
-  return fetchProfile(params.userId);
+  return fetchProfileByIdWithDb(database, params.userId);
+}
+
+export async function ensureProfile(params: {
+  userId: string;
+  email?: string;
+  displayName?: string;
+  dateOfBirth?: string;
+}): Promise<Profile | null> {
+  return ensureProfileWithDb(db, params);
 }
 
 export async function updateProfile(
@@ -245,12 +346,13 @@ export async function updateProfile(
       error.message.toLowerCase().includes('permission denied')
     ) {
       console.warn('Profile update permission denied', {
+        canonicalProfileExists: current.id === userId,
         profileId: current.id,
         updateFields: Object.keys(sanitizedUpdates),
         timestamp: nowIso(),
       });
       throw new PermissionDeniedUpdateError(
-        `Permission denied updating profile ${current.id}`
+        PROFILE_PERMISSION_DENIED_ERROR_KEY
       );
     }
 
@@ -282,12 +384,13 @@ export async function setProfileAuthProvider(
       error.message.toLowerCase().includes('permission denied')
     ) {
       console.warn('Profile update permission denied', {
+        canonicalProfileExists: profile.id === userId,
         profileId: profile.id,
         auth_provider: authProvider,
         timestamp: nowIso(),
       });
       throw new PermissionDeniedUpdateError(
-        `Permission denied updating profile ${profile.id}`
+        PROFILE_PERMISSION_DENIED_ERROR_KEY
       );
     }
 

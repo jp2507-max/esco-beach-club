@@ -15,6 +15,8 @@ import {
 } from './context';
 
 type PartnersResourceParams = {
+  includePartnerRedemptions?: boolean;
+  includePartners?: boolean;
   userId: string;
 };
 
@@ -26,10 +28,20 @@ type PartnersResourceValue = {
 export function usePartnersResource(
   params: PartnersResourceParams
 ): PartnersResourceValue {
-  const { userId } = params;
-  const partnersQuery = db.useQuery(userId ? { partners: {} } : null);
+  const {
+    includePartnerRedemptions = true,
+    includePartners = true,
+    userId,
+  } = params;
+  const shouldQueryPartners = Boolean(userId) && includePartners;
+  const shouldQueryPartnerRedemptions =
+    Boolean(userId) && includePartnerRedemptions;
+
+  const partnersQuery = db.useQuery(
+    shouldQueryPartners ? { partners: {} } : null
+  );
   const partnerRedemptionsQuery = db.useQuery(
-    userId
+    shouldQueryPartnerRedemptions
       ? {
           partner_redemptions: {
             $: {
@@ -42,33 +54,37 @@ export function usePartnersResource(
   );
 
   const partners = useMemo(() => {
-    if (!userId) return EMPTY_PARTNERS;
+    if (!shouldQueryPartners) return EMPTY_PARTNERS;
     const records = (partnersQuery.data?.partners ?? []) as InstantRecord[];
     return records.map(mapPartner);
-  }, [partnersQuery.data, userId]);
+  }, [partnersQuery.data, shouldQueryPartners]);
 
   const partnerRedemptions = useMemo(() => {
-    if (!userId) return EMPTY_PARTNER_REDEMPTIONS;
+    if (!shouldQueryPartnerRedemptions) return EMPTY_PARTNER_REDEMPTIONS;
     const records = (partnerRedemptionsQuery.data?.partner_redemptions ??
       []) as InstantRecord[];
     return records.map(mapPartnerRedemption);
-  }, [partnerRedemptionsQuery.data, userId]);
+  }, [partnerRedemptionsQuery.data, shouldQueryPartnerRedemptions]);
 
   const partnersValue = useMemo(
     () => ({
       partners,
-      partnersLoading: Boolean(userId) && partnersQuery.isLoading,
+      partnersLoading: shouldQueryPartners && partnersQuery.isLoading,
     }),
-    [partners, partnersQuery.isLoading, userId]
+    [partners, partnersQuery.isLoading, shouldQueryPartners]
   );
 
   const partnerRedemptionsValue = useMemo(
     () => ({
       partnerRedemptions,
       partnerRedemptionsLoading:
-        Boolean(userId) && partnerRedemptionsQuery.isLoading,
+        shouldQueryPartnerRedemptions && partnerRedemptionsQuery.isLoading,
     }),
-    [partnerRedemptions, partnerRedemptionsQuery.isLoading, userId]
+    [
+      partnerRedemptions,
+      partnerRedemptionsQuery.isLoading,
+      shouldQueryPartnerRedemptions,
+    ]
   );
 
   return {

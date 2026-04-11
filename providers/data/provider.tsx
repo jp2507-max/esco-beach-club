@@ -68,7 +68,10 @@ export function PartnersDataProvider({
   children,
 }: DataProviderProps): React.JSX.Element {
   const userId = useFeatureUserId();
-  const { partnersValue } = usePartnersResource({ userId });
+  const { partnersValue } = usePartnersResource({
+    includePartnerRedemptions: false,
+    userId,
+  });
 
   return (
     <PartnersContext.Provider value={partnersValue}>
@@ -98,7 +101,10 @@ export function PartnerRedemptionsDataProvider({
   children,
 }: DataProviderProps): React.JSX.Element {
   const userId = useFeatureUserId();
-  const { partnerRedemptionsValue } = usePartnersResource({ userId });
+  const { partnerRedemptionsValue } = usePartnersResource({
+    includePartners: false,
+    userId,
+  });
 
   return (
     <PartnerRedemptionsContext.Provider value={partnerRedemptionsValue}>

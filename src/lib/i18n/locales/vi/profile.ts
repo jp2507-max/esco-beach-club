@@ -15,16 +15,8 @@ const profile = {
     savedEvents: 'Sự kiện đã lưu',
     settings: 'Cài đặt',
     helpSupport: 'Trợ giúp & hỗ trợ',
-    restartOnboarding: 'Bắt đầu lại onboarding',
     logOut: 'Đăng xuất',
     deleteAccount: 'Xóa tài khoản',
-  },
-  restartOnboarding: {
-    confirmTitle: 'Bắt đầu lại onboarding?',
-    confirmMessage:
-      'Chúng tôi sẽ đưa bạn quay lại luồng onboarding để cập nhật các lựa chọn thiết lập.',
-    cancel: 'Hủy',
-    start: 'Bắt đầu',
   },
   notifications: {
     title: 'Thông báo',
@@ -265,18 +257,28 @@ const profile = {
       'Cần hỗ trợ trước? Hãy liên hệ bộ phận hỗ trợ trước khi xóa tài khoản.',
     loadingState: 'Đang kiểm tra trạng thái xóa tài khoản...',
     errors: {
+      appleRevocationFailed:
+        'Chúng tôi không thể xác minh tài khoản Apple của bạn để xóa. Vui lòng thử lại.',
       appleVerificationCanceled:
         'Đã hủy xác minh Apple nên việc xóa chưa được lên lịch.',
       apiUnavailable:
         'Tính năng xóa tài khoản chưa được cấu hình cho bản dựng này. Hãy khởi động Expo dev server có API routes hoặc đặt EXPO_PUBLIC_ACCOUNT_API_BASE_URL.',
+      authProviderUnresolved:
+        'Không thể xác định phương thức đăng nhập của tài khoản này. Hãy liên hệ hỗ trợ để hoàn tất việc xóa.',
       instantAuthUnavailable:
         'Tính năng xóa tài khoản tạm thời không khả dụng vì API cục bộ không thể kết nối tới InstantDB. Hãy kiểm tra DNS hoặc kết nối internet của máy này rồi thử lại.',
       networkUnavailable:
         'Không thể kết nối tới dịch vụ xóa tài khoản. Hãy kiểm tra kết nối rồi thử lại.',
+      requestTimedOut:
+        'Yêu cầu xóa tài khoản mất quá nhiều thời gian. Vui lòng thử lại.',
       restoreFailed: 'Không thể khôi phục tài khoản của bạn. Vui lòng thử lại.',
       scheduleFailed: 'Không thể lên lịch xóa tài khoản. Vui lòng thử lại.',
+      serverSchemaMisconfigured:
+        'Tính năng xóa tài khoản tạm thời không khả dụng vì schema trên máy chủ đã lỗi thời.',
       serverMisconfigured:
         'Tính năng xóa tài khoản hiện tạm thời không khả dụng vì máy chủ thiếu thông tin xác thực Instant admin.',
+      serverUnexpected:
+        'Đã xảy ra lỗi máy chủ khi xóa tài khoản. Vui lòng thử lại sau ít phút.',
       sessionExpired:
         'Phiên bảo mật của bạn đã hết hạn. Hãy đăng nhập lại rồi thử lại.',
     },

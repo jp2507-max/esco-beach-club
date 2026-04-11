@@ -34,6 +34,7 @@ import { ScrollView, View } from '@/src/tw';
 export default function MembershipScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const { t, i18n } = useTranslation('membership');
+  const { t: tCommon } = useTranslation('common');
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const { profile } = useProfileData();
@@ -71,9 +72,10 @@ export default function MembershipScreen(): React.JSX.Element {
   const tierLevel: RewardTierKey =
     memberSummary.lifetimeTierKey ?? rewardTierKeys.member;
   const tierConfig = TIER_CONFIG[tierLevel];
-  const userName = memberSummary.fullName || '—';
+  const valueUnavailable = tCommon('valueUnavailable');
+  const userName = memberSummary.fullName || valueUnavailable;
   const memberSince = useMemo(() => {
-    if (!memberSummary.memberSince) return '—';
+    if (!memberSummary.memberSince) return valueUnavailable;
 
     try {
       const date = new Date(memberSummary.memberSince);
@@ -84,9 +86,9 @@ export default function MembershipScreen(): React.JSX.Element {
       }).format(date);
     } catch (error) {
       console.error('[Membership] Date format failed', error);
-      return memberSummary.memberSince.slice(0, 10);
+      return memberSummary.memberSince.slice(0, 10) || valueUnavailable;
     }
-  }, [i18n.language, memberSummary.memberSince]);
+  }, [i18n.language, memberSummary.memberSince, valueUnavailable]);
   const tierLabel = t(
     `tiers.${getRewardTierLabelKey(memberSummary.lifetimeTierKey)}`
   );

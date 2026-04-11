@@ -21,6 +21,7 @@ import {
 import { hapticLight } from '@/src/lib/haptics/haptics';
 import { shadows } from '@/src/lib/styles/shadows';
 import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
+import { useSignupOnboardingDraftStore } from '@/src/stores/signup-onboarding-store';
 import {
   KeyboardAvoidingView,
   Pressable,
@@ -30,33 +31,35 @@ import {
 } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 
-const TITLE_DELAY = 100;
-const FORM_DELAY = 260;
-const CTA_DELAY = 420;
+const TITLE_DELAY = 70;
+const FORM_DELAY = 170;
+const CTA_DELAY = 260;
 
 export default function OnboardingProfileBasicsScreen(): React.JSX.Element {
   const router = useRouter();
   const { t } = useTranslation('auth');
   const isDark = useAppIsDark();
   const ctaButton = useButtonPress();
+  const signupDraft = useSignupOnboardingDraftStore((state) => state.draft);
+  const setSignupDraft = useSignupOnboardingDraftStore(
+    (state) => state.setDraft
+  );
 
   const { control, handleSubmit } = useForm<OnboardingBasicsFormValues>({
     defaultValues: {
-      dateOfBirth: '',
-      displayName: '',
+      dateOfBirth: signupDraft.dateOfBirth ?? '',
+      displayName: signupDraft.displayName ?? '',
     },
     mode: 'onBlur',
     resolver: zodResolver(onboardingBasicsSchema),
   });
 
   function onValidSubmit(values: OnboardingBasicsFormValues): void {
-    router.push({
-      pathname: './onboarding-local-identity',
-      params: {
-        onboardingDateOfBirth: values.dateOfBirth,
-        onboardingDisplayName: values.displayName,
-      },
+    setSignupDraft({
+      dateOfBirth: values.dateOfBirth,
+      displayName: values.displayName,
     });
+    router.push('./onboarding-local-identity');
   }
 
   function onInvalidSubmit(): void {

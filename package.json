@@ -125,7 +125,7 @@
     "eslint-plugin-testing-library": "^7.16.0",
     "eslint-plugin-unused-imports": "^4.4.1",
     "husky": "^9.1.7",
-    "instant-cli": "0.22.160",
+    "instant-cli": "0.22.174",
     "lint-staged": "^16.4.0",
     "prettier": "^3.8.1",
     "tailwindcss": "^4.2.1",

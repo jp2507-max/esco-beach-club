@@ -220,11 +220,14 @@ function HomeScreenContent(): React.JSX.Element {
 
   const { eventsLoading } = useEventsData();
   const { news, newsLoading } = useNewsData();
-  const { userId } = useProfileData();
+  const { isAuthenticatedButNotReady, userId } = useProfileData();
   const homeEvents = useHomeEvents();
   const memberSummary = useMemberSummary();
+  const valueUnavailable = tCommon('valueUnavailable');
 
-  const userName = memberSummary.fullName || t('guest');
+  const userName =
+    memberSummary.fullName ||
+    (isAuthenticatedButNotReady ? valueUnavailable : t('guest'));
   const isFeedLoading = eventsLoading || newsLoading;
 
   const quickActions = useMemo<QuickAction[]>(

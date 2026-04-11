@@ -1,5 +1,3 @@
-import { createHmac, timingSafeEqual } from 'node:crypto';
-
 import type { PosBill, Profile, RewardTransaction } from '@/lib/types';
 import {
   posBillStatuses,
@@ -11,6 +9,7 @@ import {
   jsonResponse,
   parseBearerRefreshToken,
 } from '@/src/lib/api/route-helpers';
+import { verifyHmacSha256Base64Url } from '@/src/lib/crypto/web-crypto';
 import {
   type BillQrPayload,
   buildBillQrSigningPayload,
@@ -33,9 +32,7 @@ import { verifyInstantRefreshToken } from '@/src/lib/referral/instant-runtime-se
 import type { RewardServiceResponse } from '@/src/lib/reward-backend-contract';
 import { buildRewardTransactionId } from '@/src/lib/rewards/reward-transaction-id';
 
-type ProfileRecord = InstantRecord & {
-  profile?: InstantRecord | InstantRecord[] | null;
-};
+type ProfileRecord = InstantRecord;
 
 type RewardTransactionRecord = {
   external_event_id?: string | null;
@@ -86,59 +83,19 @@ function firstInstantRecord(value: unknown): InstantRecord | null {
     : null;
 }
 
-function firstProfileRecord(value: unknown): ProfileRecord | null {
-  if (Array.isArray(value)) {
-    const [first] = value;
-    return isRecord(first) && typeof first.id === 'string'
-      ? (first as ProfileRecord)
-      : null;
-  }
-
-  return isRecord(value) && typeof value.id === 'string'
-    ? (value as ProfileRecord)
-    : null;
-}
-
 async function resolveProfileForUser(
   adminDb: NonNullable<ReturnType<typeof getInstantAdminDb>>,
   userId: string
 ): Promise<Profile | null> {
-  const directResult = await adminDb.query<{
-    profiles?: InstantRecord[];
-  }>({
-    profiles: {
-      $: { where: { 'user.id': userId } },
-    },
-  });
-  const directProfile = firstInstantRecord(directResult.profiles);
-  if (directProfile) {
-    return mapProfile(directProfile);
-  }
-
-  const deterministicResult = await adminDb.query<{
-    profiles?: InstantRecord[];
+  const result = await adminDb.query<{
+    profiles?: ProfileRecord[];
   }>({
     profiles: {
       $: { where: { id: userId } },
     },
   });
-  const deterministicProfile = firstInstantRecord(deterministicResult.profiles);
-  if (deterministicProfile) {
-    return mapProfile(deterministicProfile);
-  }
-
-  const linkedResult = await adminDb.query<{
-    $users?: ProfileRecord[];
-  }>({
-    $users: {
-      $: { where: { id: userId } },
-      profile: {},
-    },
-  });
-  const linkedUser = firstProfileRecord(linkedResult.$users);
-  const linkedProfile = firstInstantRecord(linkedUser?.profile ?? null);
-
-  return linkedProfile ? mapProfile(linkedProfile) : null;
+  const profile = firstInstantRecord(result.profiles);
+  return profile ? mapProfile(profile) : null;
 }
 
 const profileClaimLockQueue = new Map<string, Promise<unknown>>();
@@ -169,13 +126,13 @@ function getPosBillQrSecret(): string | null {
   return secret ? secret : null;
 }
 
-function isValidBillQrSignature(params: {
+async function isValidBillQrSignature(params: {
   posBillId: string;
   restaurantId: string;
   secret: string;
   signature: string;
   version: BillQrPayload['version'];
-}): boolean {
+}): Promise<boolean> {
   const signingPayload = buildBillQrSigningPayload({
     posBillId: params.posBillId,
     restaurantId: params.restaurantId,
@@ -186,18 +143,11 @@ function isValidBillQrSignature(params: {
     return false;
   }
 
-  const expectedSignature = createHmac('sha256', params.secret)
-    .update(signingPayload)
-    .digest('base64url');
-
-  const actualBuffer = Buffer.from(params.signature);
-  const expectedBuffer = Buffer.from(expectedSignature);
-
-  if (actualBuffer.length !== expectedBuffer.length) {
-    return false;
-  }
-
-  return timingSafeEqual(actualBuffer, expectedBuffer);
+  return verifyHmacSha256Base64Url({
+    payload: signingPayload,
+    secret: params.secret,
+    signature: params.signature,
+  });
 }
 
 function toRequiredString(value: unknown): string | null {
@@ -471,7 +421,7 @@ function toRewardServiceMember(
   };
 }
 
-function toRewardServiceTransaction(params: {
+async function toRewardServiceTransaction(params: {
   amountVnd: number;
   cashbackPointsDelta: number;
   externalEventId: string;
@@ -480,8 +430,8 @@ function toRewardServiceTransaction(params: {
   occurredAt: string;
   receiptReference: string | null;
   tierProgressPointsDelta: number;
-}): RewardTransaction {
-  const id = buildRewardTransactionId(params.externalEventId);
+}): Promise<RewardTransaction> {
+  const id = await buildRewardTransactionId(params.externalEventId);
 
   return {
     id,
@@ -560,13 +510,13 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   if (
-    !isValidBillQrSignature({
+    !(await isValidBillQrSignature({
       posBillId: billQr.posBillId,
       restaurantId: billQr.restaurantId,
       secret: billQrSecret,
       signature: billQr.signature,
       version: billQr.version,
-    })
+    }))
   ) {
     return jsonResponse({ error: 'invalid_bill_qr' }, 400);
   }
@@ -672,7 +622,7 @@ export async function POST(request: Request): Promise<Response> {
       cashbackPointsDelta,
       now
     );
-    const transaction = toRewardServiceTransaction({
+    const transaction = await toRewardServiceTransaction({
       amountVnd: posBill.amount_vnd,
       cashbackPointsDelta,
       externalEventId: posBill.entry_key,

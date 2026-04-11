@@ -146,6 +146,8 @@ export default function PerkHistoryScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { t, i18n } = useTranslation('perks');
+  const { t: tCommon } = useTranslation('common');
+  const valueUnavailable = tCommon('valueUnavailable');
   const isDark = useAppIsDark();
   const headerAccent = accentOnDarkBackground(Colors.primary, isDark);
   const [activeCategory, setActiveCategory] = useState<HistoryCategory>('all');
@@ -179,7 +181,7 @@ export default function PerkHistoryScreen(): React.JSX.Element {
       const dateLabel =
         createdAt && !Number.isNaN(createdAt.getTime())
           ? dateFormatter.format(createdAt)
-          : '—';
+          : valueUnavailable;
 
       return {
         category: partner?.category ?? 'wellness',
@@ -195,7 +197,7 @@ export default function PerkHistoryScreen(): React.JSX.Element {
         status: redemption.status === 'expired' ? 'expired' : 'claimed',
       };
     });
-  }, [dateFormatter, partnerById, partnerRedemptions, t]);
+  }, [dateFormatter, partnerById, partnerRedemptions, t, valueUnavailable]);
 
   const totalUnlockedPerks = useMemo(() => {
     const currentYear = new Date().getFullYear();

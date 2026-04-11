@@ -1,6 +1,6 @@
 import type { TFunction } from 'i18next';
 
-import { ensureProfile, setProfileAuthProvider } from '@/lib/api';
+import { setProfileAuthProvider } from '@/lib/api';
 import { type AuthProviderType, authProviderTypes } from '@/lib/types';
 import {
   getIdTokenAudienceClaim,
@@ -15,7 +15,6 @@ import {
   shouldTryGoogleAudienceFallback,
 } from '@/src/lib/auth/provider-error-mapping';
 import {
-  applyOnboardingProfileDataForNewUser,
   extractSignInUser,
   hasRequiredSignupConsent,
   normalizeSignupOnboardingData,
@@ -31,6 +30,7 @@ import { db } from '@/src/lib/instant';
 import { captureHandledError } from '@/src/lib/monitoring';
 
 const DEFAULT_APPLE_CLIENT_NAME = 'apple';
+const isDevEnvironment = typeof __DEV__ !== 'undefined' && __DEV__;
 
 function resolveOnboardingData(params: {
   onboardingData: SignupOnboardingData | undefined;
@@ -81,18 +81,18 @@ async function persistProfileAuthProvider(params: {
       tags: {
         area: 'auth',
         operation: 'persist_profile_auth_provider',
+        provider: params.providerType,
       },
       extras: {
-        providerType: params.providerType,
-        userId: signInUser.id,
+        signInUserId: signInUser.id,
       },
     });
 
-    if (__DEV__) {
+    if (isDevEnvironment) {
       console.error('[AuthProvider] Failed to persist profile auth provider', {
         error,
         providerType: params.providerType,
-        userId: signInUser.id,
+        signInUserId: signInUser.id,
       });
     }
   }
@@ -118,79 +118,6 @@ async function finalizeSignIn(params: {
         signInCreatedUser: signInUser.created,
       },
     });
-
-    throw new Error('unableToCompleteProfileSetup');
-  }
-
-  try {
-    const profile = await ensureProfile({
-      userId: signInUser.id,
-      ...(signInUser.email ? { email: signInUser.email } : {}),
-      ...(params.onboardingData?.displayName
-        ? { displayName: params.onboardingData.displayName }
-        : {}),
-      ...(params.onboardingData?.dateOfBirth
-        ? { dateOfBirth: params.onboardingData.dateOfBirth }
-        : {}),
-    });
-
-    if (!profile) {
-      throw new Error('profileMissingAfterSignIn');
-    }
-  } catch (error: unknown) {
-    captureHandledError(error, {
-      tags: {
-        area: 'auth',
-        auth_phase: 'profile_provision',
-        operation: 'ensure_profile_after_sign_in',
-        provider: params.providerType,
-      },
-      extras: {
-        hasOnboardingData: params.onboardingData !== null,
-        signInCreatedUser: signInUser.created,
-        hasSignInUserEmail: Boolean(signInUser.email),
-        signInUserId: signInUser.id,
-      },
-    });
-
-    if (__DEV__) {
-      console.error('[AuthProvider] Failed to ensure profile after sign-in', {
-        error,
-        providerType: params.providerType,
-        signInUser,
-      });
-    }
-
-    throw new Error('unableToCompleteProfileSetup');
-  }
-
-  try {
-    await applyOnboardingProfileDataForNewUser({
-      onboardingData: params.onboardingData,
-      signInResult: params.signInResult,
-    });
-  } catch (error: unknown) {
-    captureHandledError(error, {
-      tags: {
-        area: 'auth',
-        auth_phase: 'profile_provision',
-        operation: 'apply_onboarding_profile_data',
-        provider: params.providerType,
-      },
-      extras: {
-        hasOnboardingData: params.onboardingData !== null,
-        signInCreatedUser: signInUser.created,
-        signInUserId: signInUser.id,
-      },
-    });
-
-    if (__DEV__) {
-      console.error('[AuthProvider] Onboarding profile sync failed', {
-        error,
-        providerType: params.providerType,
-        signInUser,
-      });
-    }
 
     throw new Error('unableToCompleteProfileSetup');
   }
@@ -251,7 +178,7 @@ export async function signInWithAppleFlow(params: {
         break;
       }
 
-      if (__DEV__) {
+      if (isDevEnvironment) {
         console.error(
           '[AuthProvider] Retrying Apple sign-in with alternate client name',
           {
@@ -301,7 +228,7 @@ export async function signInWithGoogleFlow(params: {
       extraFields: primaryCreateFields,
     });
   } catch (error: unknown) {
-    if (__DEV__) {
+    if (isDevEnvironment) {
       console.error('[AuthProvider] Instant Google idToken sign-in failed', {
         audience: primaryToken.audience,
         clientName: primaryToken.clientName,
@@ -340,7 +267,7 @@ export async function signInWithGoogleFlow(params: {
         t: params.t,
       });
 
-      if (__DEV__) {
+      if (isDevEnvironment) {
         console.error(
           '[AuthProvider] Retrying Google sign-in with fallback audience',
           {

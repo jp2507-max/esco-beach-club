@@ -63,44 +63,10 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   function resolveAuthPhase(
     errorKey: string
   ): 'oauth_exchange' | 'profile_provision' {
-    return errorKey === 'unableToCompleteProfileSetup'
+    return errorKey === 'unableToCompleteProfileSetup' ||
+      errorKey === 'profilePermissionDenied'
       ? 'profile_provision'
       : 'oauth_exchange';
-  }
-
-  async function recoverProvisioningSessionIfNeeded(params: {
-    errorKey: string;
-    sourceOperation:
-      | 'sign_in_with_apple'
-      | 'sign_in_with_google'
-      | 'verify_magic_code';
-  }): Promise<void> {
-    if (params.errorKey !== 'unableToCompleteProfileSetup') return;
-
-    try {
-      await signOutFlow();
-    } catch (error: unknown) {
-      captureHandledError(error, {
-        tags: {
-          area: 'auth',
-          auth_phase: 'profile_provision',
-          operation: 'revert_orphaned_auth_session',
-        },
-        extras: {
-          sourceOperation: params.sourceOperation,
-        },
-      });
-
-      if (__DEV__) {
-        console.error(
-          '[AuthProvider] Failed to recover orphaned auth session',
-          {
-            error,
-            sourceOperation: params.sourceOperation,
-          }
-        );
-      }
-    }
   }
 
   async function signInWithApple(params?: SignInProviderParams): Promise<void> {
@@ -128,10 +94,6 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
           auth_phase: resolveAuthPhase(nextError.message),
           operation: 'sign_in_with_apple',
         },
-      });
-      await recoverProvisioningSessionIfNeeded({
-        errorKey: nextError.message,
-        sourceOperation: 'sign_in_with_apple',
       });
       setAppleSignInError(nextError);
       throw nextError;
@@ -173,10 +135,6 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
           auth_phase: resolveAuthPhase(nextError.message),
           operation: 'sign_in_with_google',
         },
-      });
-      await recoverProvisioningSessionIfNeeded({
-        errorKey: nextError.message,
-        sourceOperation: 'sign_in_with_google',
       });
       setGoogleSignInError(nextError);
       throw nextError;
@@ -232,10 +190,6 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
           auth_phase: resolveAuthPhase(nextError.message),
           operation: 'verify_magic_code',
         },
-      });
-      await recoverProvisioningSessionIfNeeded({
-        errorKey: nextError.message,
-        sourceOperation: 'verify_magic_code',
       });
       setVerifyCodeError(nextError);
       throw nextError;

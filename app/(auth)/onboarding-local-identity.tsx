@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { ArrowRight, Check, MapPin } from 'lucide-react-native';
 import React from 'react';
 import { Controller, useForm } from 'react-hook-form';
@@ -20,27 +20,25 @@ import {
 } from '@/src/lib/forms/schemas';
 import { hapticLight, hapticSelection } from '@/src/lib/haptics/haptics';
 import { shadows } from '@/src/lib/styles/shadows';
-import { readSingleSearchParam } from '@/src/lib/utils/search-params';
+import { useSignupOnboardingDraftStore } from '@/src/stores/signup-onboarding-store';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 
-type OnboardingBasicsSearchParams = {
-  onboardingDateOfBirth?: string | string[];
-  onboardingDisplayName?: string | string[];
-};
-
-const BANNER_DELAY = 80;
-const RADIO_BASE_DELAY = 220;
-const RADIO_STAGGER = 100;
-const CONSENTS_DELAY = 480;
-const CONSENT_STAGGER = 90;
-const CTA_DELAY = 720;
+const BANNER_DELAY = 50;
+const RADIO_BASE_DELAY = 140;
+const RADIO_STAGGER = 80;
+const CONSENTS_DELAY = 300;
+const CONSENT_STAGGER = 70;
+const CTA_DELAY = 420;
 
 export default function OnboardingLocalIdentityScreen(): React.JSX.Element {
   const router = useRouter();
-  const searchParams = useLocalSearchParams<OnboardingBasicsSearchParams>();
   const { t } = useTranslation('auth');
   const ctaButton = useButtonPress();
+  const signupDraft = useSignupOnboardingDraftStore((state) => state.draft);
+  const setSignupDraft = useSignupOnboardingDraftStore(
+    (state) => state.setDraft
+  );
 
   function showInfoAlert(title: string, message: string): void {
     Alert.alert(title, message);
@@ -48,32 +46,21 @@ export default function OnboardingLocalIdentityScreen(): React.JSX.Element {
 
   const { control, handleSubmit } = useForm<OnboardingLocalIdentityFormValues>({
     defaultValues: {
-      acceptedPrivacyPolicy: false,
-      acceptedTerms: false,
-      memberSegment: undefined,
+      acceptedPrivacyPolicy: signupDraft.hasAcceptedPrivacyPolicy === true,
+      acceptedTerms: signupDraft.hasAcceptedTerms === true,
+      memberSegment: signupDraft.memberSegment,
     },
     mode: 'onBlur',
     resolver: zodResolver(onboardingLocalIdentitySchema),
   });
 
   function onValidSubmit(values: OnboardingLocalIdentityFormValues): void {
-    const onboardingDateOfBirth = readSingleSearchParam(
-      searchParams.onboardingDateOfBirth
-    );
-    const onboardingDisplayName = readSingleSearchParam(
-      searchParams.onboardingDisplayName
-    );
-
-    router.push({
-      pathname: './onboarding-permissions',
-      params: {
-        ...(onboardingDateOfBirth ? { onboardingDateOfBirth } : {}),
-        ...(onboardingDisplayName ? { onboardingDisplayName } : {}),
-        onboardingSegment: values.memberSegment,
-        onboardingPrivacyAccepted: values.acceptedPrivacyPolicy ? '1' : '0',
-        onboardingTermsAccepted: values.acceptedTerms ? '1' : '0',
-      },
+    setSignupDraft({
+      hasAcceptedPrivacyPolicy: values.acceptedPrivacyPolicy,
+      hasAcceptedTerms: values.acceptedTerms,
+      memberSegment: values.memberSegment,
     });
+    router.push('./onboarding-permissions');
   }
 
   function onInvalidSubmit(): void {

@@ -112,10 +112,10 @@ const auth = {
     'Something went wrong while saving. Please try again.',
   venueUpsellNotificationChannelName: 'Venue offers',
   venueUpsellNotificationChannelDescription:
-    'Timely offers when you arrive at the restaurant.',
-  venueUpsellNotificationTitle: 'Earn reward points at the bar',
+    'Welcome updates when you arrive at the restaurant.',
+  venueUpsellNotificationTitle: 'Great to see you at the restaurant',
   venueUpsellNotificationBody:
-    'Order a cocktail now to add reward points to your balance.',
+    'Don’t forget to earn your points on your order today.',
   onboardingClubWelcomeTitle: 'Welcome to the Club!',
   onboardingClubWelcomeSubtitle:
     'The sun is out and your membership is active. Let’s start with a toast to your new lifestyle.',
@@ -157,6 +157,8 @@ const auth = {
   unableToSendCode: 'Unable to send code.',
   unableToSignInWithApple: 'Unable to sign in with Apple.',
   unableToSignInWithGoogle: 'Unable to sign in with Google.',
+  profilePermissionDenied:
+    'Signed in, but profile permissions blocked setup. Please sign out and try again.',
   unableToCompleteProfileSetup:
     'Signed in, but we could not complete your profile setup. Please try again.',
   unableToVerifyCode: 'Unable to verify code.',
@@ -212,6 +214,14 @@ const auth = {
   onboardingWelcomePointGlobalTitle: 'Global Network',
   onboardingWelcomePointGlobalDescription:
     'Access rewards across 40+ countries and 6 continents.',
+  profileBootstrapLoadingMessage:
+    'Preparing your member profile and checking your access.',
+  profileBootstrapErrorTitle: 'Finish setting up your profile',
+  profileBootstrapErrorMessage:
+    'Your session is active, but we could not finish loading your member profile. Please wait a moment or sign out safely.',
+  profileBootstrapTerminalTitle: 'We could not load your member profile',
+  profileBootstrapSignOutAction: 'Sign out',
+  profileBootstrapBackToSignInAction: 'Back to sign in',
   genericError: 'Something went wrong. Please try again or contact support.',
   member: 'Member',
 } as const;

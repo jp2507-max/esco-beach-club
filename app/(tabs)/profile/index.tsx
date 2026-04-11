@@ -6,7 +6,6 @@ import {
   HelpCircle,
   LogOut,
   PencilLine,
-  RefreshCw,
   Settings,
   Star,
   Trash2,
@@ -84,12 +83,16 @@ function ProfileScreenContent(): React.JSX.Element {
   const voucherScale = useSharedValue(0.9);
   const voucherOpacity = useSharedValue(0);
 
-  const { profile, dismissVoucher } = useProfileData();
+  const { dismissVoucher, isAuthenticatedButNotReady, profile } =
+    useProfileData();
   const memberSummary = useMemberSummary();
   const { memberOffersLoading, welcomeOffer } = useMemberOffersData();
   const { signOut } = useAuth();
+  const valueUnavailable = tCommon('valueUnavailable');
 
-  const userName = memberSummary.fullName || t('guest');
+  const userName =
+    memberSummary.fullName ||
+    (isAuthenticatedButNotReady ? valueUnavailable : t('guest'));
   const tierBadge = t(
     `tier.${getRewardTierLabelKey(memberSummary.lifetimeTierKey)}`
   );
@@ -174,13 +177,6 @@ function ProfileScreenContent(): React.JSX.Element {
         route: '/profile/help-center',
       },
       {
-        color: Colors.profileRestartAccent,
-        icon: RefreshCw,
-        id: 'restart-onboarding',
-        label: t('menu.restartOnboarding'),
-        route: '/onboarding-welcome',
-      },
-      {
         color: Colors.danger,
         icon: LogOut,
         id: 'log-out',
@@ -257,23 +253,6 @@ function ProfileScreenContent(): React.JSX.Element {
         console.error('Sign out error:', error);
         Alert.alert(t('errors.signOutFailed'));
       }
-      return;
-    }
-    if (item.id === 'restart-onboarding') {
-      Alert.alert(
-        t('restartOnboarding.confirmTitle'),
-        t('restartOnboarding.confirmMessage'),
-        [
-          {
-            style: 'cancel',
-            text: t('restartOnboarding.cancel'),
-          },
-          {
-            onPress: () => router.push('/onboarding-welcome' as never),
-            text: t('restartOnboarding.start'),
-          },
-        ]
-      );
       return;
     }
     if (item.route) router.push(item.route as never);

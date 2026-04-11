@@ -15,16 +15,8 @@ const profile = {
     savedEvents: '저장한 이벤트',
     settings: '설정',
     helpSupport: '도움말 및 지원',
-    restartOnboarding: '온보딩 다시 시작',
     logOut: '로그아웃',
     deleteAccount: '계정 삭제',
-  },
-  restartOnboarding: {
-    confirmTitle: '온보딩을 다시 시작할까요?',
-    confirmMessage:
-      '설정 선택을 업데이트할 수 있도록 온보딩 흐름으로 다시 이동합니다.',
-    cancel: '취소',
-    start: '시작',
   },
   notifications: {
     title: '알림',
@@ -262,18 +254,28 @@ const profile = {
       '먼저 도움이 필요하신가요? 계정을 삭제하기 전에 지원팀에 문의하세요.',
     loadingState: '계정 삭제 상태를 확인하는 중...',
     errors: {
+      appleRevocationFailed:
+        '계정 삭제를 위해 Apple 계정을 확인할 수 없습니다. 다시 시도해 주세요.',
       appleVerificationCanceled:
         'Apple 확인이 취소되어 삭제가 예약되지 않았습니다.',
       apiUnavailable:
         '이 빌드에서는 계정 삭제가 아직 구성되지 않았습니다. API routes가 포함된 Expo dev server를 시작하거나 EXPO_PUBLIC_ACCOUNT_API_BASE_URL을 설정해 주세요.',
+      authProviderUnresolved:
+        '이 계정의 로그인 방식을 확인할 수 없습니다. 삭제를 완료하려면 지원팀에 문의해 주세요.',
       instantAuthUnavailable:
         '로컬 API 서버가 InstantDB에 연결할 수 없어 계정 삭제를 일시적으로 사용할 수 없습니다. 이 기기의 DNS 또는 인터넷 연결을 확인한 뒤 다시 시도해 주세요.',
       networkUnavailable:
         '계정 삭제 서비스에 연결할 수 없습니다. 네트워크를 확인한 뒤 다시 시도해 주세요.',
+      requestTimedOut:
+        '계정 삭제 요청이 너무 오래 걸렸습니다. 다시 시도해 주세요.',
       restoreFailed: '계정을 복원할 수 없습니다. 다시 시도해 주세요.',
       scheduleFailed: '계정 삭제를 예약할 수 없습니다. 다시 시도해 주세요.',
+      serverSchemaMisconfigured:
+        '서버 스키마가 오래되어 계정 삭제를 일시적으로 사용할 수 없습니다.',
       serverMisconfigured:
         '서버에 Instant 관리자 자격 증명이 없어 계정 삭제를 일시적으로 사용할 수 없습니다.',
+      serverUnexpected:
+        '계정 삭제 중 서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.',
       sessionExpired:
         '보안 세션이 만료되었습니다. 다시 로그인한 뒤 재시도해 주세요.',
     },

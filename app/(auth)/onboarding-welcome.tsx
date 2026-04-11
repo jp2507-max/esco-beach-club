@@ -18,6 +18,7 @@ import { useButtonPress } from '@/src/lib/animations/use-button-press';
 import { config } from '@/src/lib/config';
 import { hapticLight } from '@/src/lib/haptics/haptics';
 import { shadows } from '@/src/lib/styles/shadows';
+import { useSignupOnboardingDraftStore } from '@/src/stores/signup-onboarding-store';
 import { Pressable, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 import { Image } from '@/src/tw/image';
@@ -34,14 +35,17 @@ type FeatureCard = {
   title: string;
 };
 
-const HERO_DELAY = 120;
-const CARD_BASE_DELAY = 350;
-const CARD_STAGGER = 80;
+const HERO_DELAY = 70;
+const CARD_BASE_DELAY = 220;
+const CARD_STAGGER = 60;
 
 export default function OnboardingWelcomeScreen(): React.JSX.Element {
   const router = useRouter();
   const { t } = useTranslation('auth');
   const ctaButton = useButtonPress();
+  const resetSignupDraft = useSignupOnboardingDraftStore(
+    (state) => state.resetDraft
+  );
 
   const featureCards: FeatureCard[] = [
     {
@@ -193,6 +197,7 @@ export default function OnboardingWelcomeScreen(): React.JSX.Element {
               className="overflow-hidden rounded-full"
               onPress={() => {
                 hapticLight();
+                resetSignupDraft();
                 router.push('/onboarding-profile-basics');
               }}
               onPressIn={ctaButton.handlePressIn}

@@ -1,16 +1,6 @@
-import { createPrivateKey, createSign } from 'node:crypto';
-
-import { captureHandledError } from '@/src/lib/monitoring';
+import { encodeBase64Url, signEs256Pkcs8 } from '@/src/lib/crypto/web-crypto';
 
 const APPLE_AUTH_BASE_URL = 'https://appleid.apple.com';
-
-function base64UrlEncode(input: string | Buffer): string {
-  return Buffer.from(input)
-    .toString('base64')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/g, '');
-}
 
 function getRequiredEnv(name: string): string | null {
   const value = process.env[name]?.trim();
@@ -27,7 +17,9 @@ function getAppleClientId(): string | null {
   );
 }
 
-function createAppleClientSecret(clientId: string): string | null {
+async function createAppleClientSecret(
+  clientId: string
+): Promise<string | null> {
   const teamId = getRequiredEnv('APPLE_TEAM_ID');
   const keyId = getRequiredEnv('APPLE_KEY_ID');
   const privateKeyRaw = getRequiredEnv('APPLE_PRIVATE_KEY');
@@ -45,17 +37,13 @@ function createAppleClientSecret(clientId: string): string | null {
     iss: teamId,
     sub: clientId,
   };
-  const signingInput = `${base64UrlEncode(JSON.stringify(header))}.${base64UrlEncode(JSON.stringify(payload))}`;
-  const signer = createSign('SHA256');
-  signer.update(signingInput);
-  signer.end();
-
-  const signature = signer.sign({
-    dsaEncoding: 'ieee-p1363',
-    key: createPrivateKey(normalizePrivateKey(privateKeyRaw)),
+  const signingInput = `${encodeBase64Url(JSON.stringify(header))}.${encodeBase64Url(JSON.stringify(payload))}`;
+  const signature = await signEs256Pkcs8({
+    payload: signingInput,
+    privateKeyPem: normalizePrivateKey(privateKeyRaw),
   });
 
-  return `${signingInput}.${base64UrlEncode(signature)}`;
+  return `${signingInput}.${signature}`;
 }
 
 export type AppleRevocationResult =
@@ -150,16 +138,6 @@ function reportFinalRevocationFailure(params: {
     status: params.status,
   };
   const error = params.error ?? new Error(params.message);
-
-  captureHandledError(error, {
-    extras: context,
-    tags: {
-      feature: 'account-deletion',
-      operation: 'apple-token-revocation',
-      provider: 'apple',
-    },
-  });
-
   console.error('[account-deletion] apple token revocation failed', {
     ...context,
     error,
@@ -174,7 +152,9 @@ async function exchangeAuthorizationCodeForRefreshToken(
   | { message: string; status: 'failed' }
 > {
   const clientId = getAppleClientId();
-  const clientSecret = clientId ? createAppleClientSecret(clientId) : null;
+  const clientSecret = clientId
+    ? await createAppleClientSecret(clientId)
+    : null;
 
   if (!clientId || !clientSecret) {
     return { status: 'not_configured' };
@@ -254,7 +234,7 @@ export async function revokeAppleAuthorizationCode(
 
   // Successful token exchange already validated these via the same getters (see exchangeAuthorizationCodeForRefreshToken).
   const clientId = getAppleClientId()!;
-  const clientSecret = createAppleClientSecret(clientId)!;
+  const clientSecret = (await createAppleClientSecret(clientId))!;
 
   const body = new URLSearchParams({
     client_id: clientId,

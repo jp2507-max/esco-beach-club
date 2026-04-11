@@ -113,10 +113,10 @@ const auth = {
   onboardingSaveErrorMessage: 'Đã xảy ra lỗi khi lưu. Vui lòng thử lại.',
   venueUpsellNotificationChannelName: 'Ưu đãi tại địa điểm',
   venueUpsellNotificationChannelDescription:
-    'Ưu đãi đúng lúc khi bạn đến nhà hàng.',
-  venueUpsellNotificationTitle: 'Nhận điểm thưởng tại quầy bar',
+    'Thông báo chào mừng khi bạn đến nhà hàng.',
+  venueUpsellNotificationTitle: 'Rất vui khi bạn đã đến nhà hàng',
   venueUpsellNotificationBody:
-    'Gọi một ly cocktail ngay bây giờ để cộng điểm thưởng vào số dư của bạn.',
+    'Đừng quên tích điểm thưởng cho đơn gọi hôm nay của bạn.',
   onboardingClubWelcomeTitle: 'Chào mừng đến với Câu lạc bộ!',
   onboardingClubWelcomeSubtitle:
     'Nắng đã lên và gói thành viên của bạn đã được kích hoạt. Hãy bắt đầu lối sống mới bằng một ly chúc mừng.',
@@ -160,6 +160,8 @@ const auth = {
   unableToSendCode: 'Không thể gửi mã.',
   unableToSignInWithApple: 'Không thể đăng nhập bằng Apple.',
   unableToSignInWithGoogle: 'Không thể đăng nhập bằng Google.',
+  profilePermissionDenied:
+    'Đăng nhập đã thành công nhưng quyền hồ sơ đã chặn bước thiết lập. Vui lòng đăng xuất và thử lại.',
   unableToCompleteProfileSetup:
     'Đăng nhập đã thành công nhưng chưa thể hoàn tất thiết lập hồ sơ. Vui lòng thử lại.',
   unableToVerifyCode: 'Không thể xác minh mã.',
@@ -214,6 +216,14 @@ const auth = {
   onboardingWelcomePointGlobalTitle: 'Mạng lưới toàn cầu',
   onboardingWelcomePointGlobalDescription:
     'Truy cập ưu đãi tại hơn 40 quốc gia và 6 châu lục.',
+  profileBootstrapLoadingMessage:
+    'Đang chuẩn bị hồ sơ thành viên và kiểm tra quyền truy cập của bạn.',
+  profileBootstrapErrorTitle: 'Hoàn tất thiết lập hồ sơ',
+  profileBootstrapErrorMessage:
+    'Phiên đăng nhập đã hoạt động nhưng chúng tôi chưa thể tải xong hồ sơ thành viên của bạn. Vui lòng chờ trong giây lát hoặc đăng xuất an toàn.',
+  profileBootstrapTerminalTitle: 'Không thể tải hồ sơ thành viên',
+  profileBootstrapSignOutAction: 'Đăng xuất',
+  profileBootstrapBackToSignInAction: 'Quay lại đăng nhập',
   genericError: 'Đã có lỗi xảy ra. Vui lòng thử lại hoặc liên hệ hỗ trợ.',
   member: 'Thành viên',
 } as const;

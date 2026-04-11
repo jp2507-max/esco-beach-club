@@ -20,19 +20,6 @@ const _schema = i.schema({
       imageURL: i.string().optional(),
       type: i.string().optional(),
     }),
-    booking_occasions: i.entity({
-      created_at: i.date().indexed().optional(),
-      is_active: i.boolean().indexed().optional(),
-      label_key: i.string(),
-      sort_order: i.number().indexed().optional(),
-      value: i.string().unique().indexed(),
-    }),
-    booking_time_slots: i.entity({
-      available: i.boolean().indexed(),
-      created_at: i.date().indexed().optional(),
-      sort_order: i.number().indexed().optional(),
-      time: i.string().unique().indexed(),
-    }),
     account_deletion_requests: i.entity({
       apple_revocation_error: i.string().optional(),
       apple_revocation_status: i.string().indexed().optional(),
@@ -48,6 +35,19 @@ const _schema = i.schema({
       scheduled_for_at: i.date().indexed(),
       status: i.string().indexed(),
       updated_at: i.date().indexed().optional(),
+    }),
+    booking_occasions: i.entity({
+      created_at: i.date().indexed().optional(),
+      is_active: i.boolean().indexed().optional(),
+      label_key: i.string(),
+      sort_order: i.number().indexed().optional(),
+      value: i.string().unique().indexed(),
+    }),
+    booking_time_slots: i.entity({
+      available: i.boolean().indexed(),
+      created_at: i.date().indexed().optional(),
+      sort_order: i.number().indexed().optional(),
+      time: i.string().unique().indexed(),
     }),
     events: i.entity({
       attendees: i.number().optional(),
@@ -68,12 +68,49 @@ const _schema = i.schema({
       title: i.string(),
       vip_price: i.string().optional(),
     }),
+    member_offers: i.entity({
+      badge_key: i.string(),
+      code: i.string().optional(),
+      created_at: i.date().indexed().optional(),
+      is_active: i.boolean().indexed().optional(),
+      kind: i.string().indexed(),
+      sort_order: i.number().indexed().optional(),
+      subtitle_key: i.string(),
+      terms_key: i.string().optional(),
+      title_key: i.string(),
+    }),
+    menu_categories: i.entity({
+      created_at: i.date().indexed().optional(),
+      is_active: i.boolean().indexed().optional(),
+      key: i.string().unique().indexed(),
+      label_key: i.string(),
+      sort_order: i.number().indexed().optional(),
+    }),
+    menu_items: i.entity({
+      category_key: i.string().indexed(),
+      created_at: i.date().indexed().optional(),
+      description_key: i.string(),
+      image: i.string(),
+      is_active: i.boolean().indexed().optional(),
+      name_key: i.string(),
+      price: i.string(),
+      sort_order: i.number().indexed().optional(),
+      tag_key: i.string().optional(),
+    }),
     news_items: i.entity({
       created_at: i.date().indexed().optional(),
       image: i.string().optional(),
       subtitle: i.string().optional(),
       time_label: i.string().optional(),
       title: i.string(),
+    }),
+    partner_redemptions: i.entity({
+      created_at: i.date().indexed().optional(),
+      entry_key: i.string().unique().indexed(),
+      partner_code: i.string().optional(),
+      partner_id: i.string().indexed(),
+      redemption_method: i.string().indexed(),
+      status: i.string().indexed(),
     }),
     partners: i.entity({
       category: i.string().indexed().optional(),
@@ -84,14 +121,6 @@ const _schema = i.schema({
       discount_percentage: i.number().optional(),
       image: i.string().optional(),
       name: i.string(),
-    }),
-    partner_redemptions: i.entity({
-      created_at: i.date().indexed().optional(),
-      entry_key: i.string().unique().indexed(),
-      partner_code: i.string().optional(),
-      partner_id: i.string().indexed(),
-      redemption_method: i.string().indexed(),
-      status: i.string().indexed(),
     }),
     pos_bills: i.entity({
       amount_vnd: i.number().indexed(),
@@ -123,49 +152,12 @@ const _schema = i.schema({
       notes: i.string().optional(),
       preferred_date: i.string().indexed(),
     }),
-    member_offers: i.entity({
-      badge_key: i.string(),
-      code: i.string().optional(),
+    private_event_types: i.entity({
       created_at: i.date().indexed().optional(),
       is_active: i.boolean().indexed().optional(),
-      kind: i.string().indexed(),
-      sort_order: i.number().indexed().optional(),
-      subtitle_key: i.string(),
-      terms_key: i.string().optional(),
-      title_key: i.string(),
-    }),
-    reward_transactions: i.entity({
-      amount_vnd: i.number().indexed(),
-      cashback_points_delta: i.number(),
-      created_at: i.date().indexed().optional(),
-      entry_key: i.string().unique().indexed(),
-      event_type: i.string().indexed(),
-      external_event_id: i.string().indexed(),
-      member_id: i.string().indexed(),
-      occurred_at: i.date().indexed().optional(),
-      reference: i.string().indexed().optional(),
-      source: i.string().indexed(),
-      status: i.string().indexed(),
-      tier_progress_points_delta: i.number(),
-      updated_at: i.date().indexed().optional(),
-    }),
-    menu_categories: i.entity({
-      created_at: i.date().indexed().optional(),
-      is_active: i.boolean().indexed().optional(),
-      key: i.string().unique().indexed(),
       label_key: i.string(),
       sort_order: i.number().indexed().optional(),
-    }),
-    menu_items: i.entity({
-      category_key: i.string().indexed(),
-      created_at: i.date().indexed().optional(),
-      description_key: i.string(),
-      image: i.string(),
-      is_active: i.boolean().indexed().optional(),
-      name_key: i.string(),
-      price: i.string(),
-      sort_order: i.number().indexed().optional(),
-      tag_key: i.string().optional(),
+      value: i.string().unique().indexed(),
     }),
     profiles: i.entity({
       auth_provider: i.string().optional(),
@@ -193,12 +185,13 @@ const _schema = i.schema({
       tier_progress_started_at: i.date().indexed().optional(),
       tier_progress_target_points: i.number().optional(),
       updated_at: i.date().indexed().optional(),
+      userId: i.string().indexed().optional(),
     }),
     referrals: i.entity({
       created_at: i.date().indexed().optional(),
+      referee_profile_id: i.string().unique().indexed().optional(),
       referred_avatar: i.string().optional(),
       referred_name: i.string().optional(),
-      referee_profile_id: i.string().unique().indexed().optional(),
       referrer_id: i.string().indexed().optional(),
       status: i.string().indexed().optional(),
     }),
@@ -207,31 +200,38 @@ const _schema = i.schema({
       created_at: i.date().indexed().optional(),
       rating: i.number(),
     }),
+    reward_transactions: i.entity({
+      amount_vnd: i.number().indexed(),
+      cashback_points_delta: i.number(),
+      created_at: i.date().indexed().optional(),
+      entry_key: i.string().unique().indexed(),
+      event_type: i.string().indexed(),
+      external_event_id: i.string().indexed(),
+      member_id: i.string().indexed(),
+      occurred_at: i.date().indexed().optional(),
+      reference: i.string().indexed().optional(),
+      source: i.string().indexed(),
+      status: i.string().indexed(),
+      tier_progress_points_delta: i.number(),
+      updated_at: i.date().indexed().optional(),
+    }),
     saved_events: i.entity({
       created_at: i.date().indexed().optional(),
-      event_id: i.string().indexed(),
       entry_key: i.string().unique().indexed(),
-    }),
-    private_event_types: i.entity({
-      created_at: i.date().indexed().optional(),
-      is_active: i.boolean().indexed().optional(),
-      label_key: i.string(),
-      sort_order: i.number().indexed().optional(),
-      value: i.string().unique().indexed(),
+      event_id: i.string().indexed(),
     }),
     table_reservations: i.entity({
       contact_email: i.string().indexed(),
       created_at: i.date().indexed().optional(),
       entry_key: i.string().unique().indexed(),
       event_id: i.string().indexed().optional(),
-      // Note: event_title is conditionally denormalized and intentionally immutable to preserve historical title
       event_title: i.string().optional(),
       occasion: i.string().optional(),
       party_size: i.number(),
       reservation_date: i.string().indexed(),
       reservation_time: i.string().indexed(),
-      special_request: i.string().optional(),
       source: i.string().indexed(),
+      special_request: i.string().optional(),
       status: i.string().indexed(),
       updated_at: i.date().indexed().optional(),
     }),
@@ -263,19 +263,7 @@ const _schema = i.schema({
         label: 'linkedGuestUsers',
       },
     },
-    rewardTransactionsMember: {
-      forward: {
-        on: 'reward_transactions',
-        has: 'one',
-        label: 'member',
-      },
-      reverse: {
-        on: 'profiles',
-        has: 'many',
-        label: 'reward_transactions',
-      },
-    },
-    partnerRedemptionsOwner: {
+    partner_redemptionsOwner: {
       forward: {
         on: 'partner_redemptions',
         has: 'one',
@@ -288,7 +276,7 @@ const _schema = i.schema({
         label: 'partner_redemptions',
       },
     },
-    partnerRedemptionsPartner: {
+    partner_redemptionsPartner: {
       forward: {
         on: 'partner_redemptions',
         has: 'one',
@@ -311,19 +299,6 @@ const _schema = i.schema({
         on: '$users',
         has: 'many',
         label: 'private_event_inquiries',
-      },
-    },
-    profilesUser: {
-      forward: {
-        on: 'profiles',
-        has: 'one',
-        label: 'user',
-        onDelete: 'cascade',
-      },
-      reverse: {
-        on: '$users',
-        has: 'one',
-        label: 'profile',
       },
     },
     referralsReferrer: {
@@ -351,7 +326,19 @@ const _schema = i.schema({
         label: 'reviews',
       },
     },
-    savedEventsEvent: {
+    reward_transactionsMember: {
+      forward: {
+        on: 'reward_transactions',
+        has: 'one',
+        label: 'member',
+      },
+      reverse: {
+        on: 'profiles',
+        has: 'many',
+        label: 'reward_transactions',
+      },
+    },
+    saved_eventsEvent: {
       forward: {
         on: 'saved_events',
         has: 'one',
@@ -363,7 +350,7 @@ const _schema = i.schema({
         label: 'saved_events',
       },
     },
-    savedEventsOwner: {
+    saved_eventsOwner: {
       forward: {
         on: 'saved_events',
         has: 'one',
@@ -376,7 +363,7 @@ const _schema = i.schema({
         label: 'saved_events',
       },
     },
-    tableReservationsEvent: {
+    table_reservationsEvent: {
       forward: {
         on: 'table_reservations',
         has: 'one',
@@ -388,7 +375,7 @@ const _schema = i.schema({
         label: 'table_reservations',
       },
     },
-    tableReservationsOwner: {
+    table_reservationsOwner: {
       forward: {
         on: 'table_reservations',
         has: 'one',
@@ -406,7 +393,8 @@ const _schema = i.schema({
 });
 
 // This helps TypeScript display nicer intellisense
-type AppSchema = typeof _schema;
+type _AppSchema = typeof _schema;
+interface AppSchema extends _AppSchema {}
 const schema: AppSchema = _schema;
 
 export type { AppSchema };
