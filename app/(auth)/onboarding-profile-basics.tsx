@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { ArrowRight, CalendarDays, UserRound } from 'lucide-react-native';
+import { ArrowRight, UserRound } from 'lucide-react-native';
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -9,10 +9,10 @@ import { Alert, Platform } from 'react-native';
 import { FadeIn, FadeInUp } from 'react-native-reanimated';
 
 import { Colors } from '@/constants/colors';
+import { AuthScreenContent } from '@/src/components/auth/auth-screen-content';
 import { OnboardingHeader } from '@/src/components/onboarding/onboarding-header';
 import { motion, withRM } from '@/src/lib/animations/motion';
 import { useButtonPress } from '@/src/lib/animations/use-button-press';
-import { ControlledDateInput } from '@/src/lib/forms/controlled-date-input';
 import { ControlledTextInput } from '@/src/lib/forms/controlled-text-input';
 import {
   type OnboardingBasicsFormValues,
@@ -47,7 +47,6 @@ export default function OnboardingProfileBasicsScreen(): React.JSX.Element {
 
   const { control, handleSubmit } = useForm<OnboardingBasicsFormValues>({
     defaultValues: {
-      dateOfBirth: signupDraft.dateOfBirth ?? '',
       displayName: signupDraft.displayName ?? '',
     },
     mode: 'onBlur',
@@ -56,7 +55,6 @@ export default function OnboardingProfileBasicsScreen(): React.JSX.Element {
 
   function onValidSubmit(values: OnboardingBasicsFormValues): void {
     setSignupDraft({
-      dateOfBirth: values.dateOfBirth,
       displayName: values.displayName,
     });
     router.push('./onboarding-local-identity');
@@ -106,90 +104,87 @@ export default function OnboardingProfileBasicsScreen(): React.JSX.Element {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <Animated.View
-            entering={withRM(
-              FadeInUp.springify().damping(18).stiffness(140).delay(TITLE_DELAY)
-            )}
-            className="mb-5 items-center px-2"
-          >
-            <Text className="mb-2 text-center text-[28px] font-extrabold leading-9 text-text dark:text-text-primary-dark">
-              {t('onboardingBasicsTitle')}
-            </Text>
-            <Text className="text-center text-[15px] leading-6 text-text-secondary dark:text-text-secondary-dark">
-              {t('onboardingBasicsSubtitle')}
-            </Text>
-          </Animated.View>
-
-          <Animated.View
-            entering={withRM(
-              FadeInUp.springify().damping(16).stiffness(120).delay(FORM_DELAY)
-            )}
-            className="rounded-3xl border border-border bg-white/92 p-6 dark:border-dark-border dark:bg-dark-bg-card/92"
-            style={shadows.level4}
-          >
-            <ControlledTextInput<OnboardingBasicsFormValues>
-              autoCapitalize="words"
-              autoCorrect={false}
-              control={control}
-              icon={({ color, size }) => (
-                <UserRound color={color} size={size} />
+          <AuthScreenContent>
+            <Animated.View
+              entering={withRM(
+                FadeInUp.springify()
+                  .damping(18)
+                  .stiffness(140)
+                  .delay(TITLE_DELAY)
               )}
-              label={t('displayNameLabel')}
-              maxLength={60}
-              name="displayName"
-              placeholder={t('onboardingBasicsDisplayNamePlaceholder')}
-              testID="onboarding-basics-display-name"
-              textContentType="name"
-            />
-
-            <ControlledDateInput<OnboardingBasicsFormValues>
-              control={control}
-              icon={({ color, size }) => (
-                <CalendarDays color={color} size={size} />
-              )}
-              label={t('dateOfBirthLabel')}
-              name="dateOfBirth"
-              placeholder={t('onboardingBasicsDateOfBirthPlaceholder')}
-              testID="onboarding-basics-date-of-birth"
-            />
-          </Animated.View>
-
-          <Animated.View
-            entering={withRM(FadeIn.duration(motion.dur.md).delay(CTA_DELAY))}
-          >
-            <Animated.View style={ctaButton.animatedStyle}>
-              <Pressable
-                accessibilityRole="button"
-                className="mt-7 overflow-hidden rounded-full"
-                onPress={(e) => {
-                  hapticLight();
-                  onSubmit(e);
-                }}
-                onPressIn={ctaButton.handlePressIn}
-                onPressOut={ctaButton.handlePressOut}
-                testID="onboarding-basics-next"
-              >
-                <LinearGradient
-                  colors={Colors.gradientPrimary}
-                  end={{ x: 1, y: 0 }}
-                  start={{ x: 0, y: 0 }}
-                  style={{
-                    alignItems: 'center',
-                    borderRadius: 999,
-                    height: 54,
-                    justifyContent: 'center',
-                  }}
-                >
-                  <View className="flex-row items-center gap-2.5">
-                    <Text className="text-[17px] font-bold text-white">
-                      {t('onboardingBasicsNext')}
-                    </Text>
-                    <ArrowRight color={Colors.white} size={22} />
-                  </View>
-                </LinearGradient>
-              </Pressable>
+              className="mb-5 items-center px-2"
+            >
+              <Text className="mb-2 text-center text-[28px] font-extrabold leading-9 text-text dark:text-text-primary-dark">
+                {t('onboardingBasicsTitle')}
+              </Text>
+              <Text className="text-center text-[15px] leading-6 text-text-secondary dark:text-text-secondary-dark">
+                {t('onboardingBasicsSubtitle')}
+              </Text>
             </Animated.View>
-          </Animated.View>
+
+            <Animated.View
+              entering={withRM(
+                FadeInUp.springify()
+                  .damping(16)
+                  .stiffness(120)
+                  .delay(FORM_DELAY)
+              )}
+              className="rounded-3xl border border-border bg-white/92 p-6 dark:border-dark-border dark:bg-dark-bg-card/92"
+              style={shadows.level4}
+            >
+              <ControlledTextInput<OnboardingBasicsFormValues>
+                autoCapitalize="words"
+                autoCorrect={false}
+                control={control}
+                icon={({ color, size }) => (
+                  <UserRound color={color} size={size} />
+                )}
+                label={t('displayNameLabel')}
+                maxLength={60}
+                name="displayName"
+                placeholder={t('onboardingBasicsDisplayNamePlaceholder')}
+                testID="onboarding-basics-display-name"
+                textContentType="name"
+              />
+            </Animated.View>
+
+            <Animated.View
+              entering={withRM(FadeIn.duration(motion.dur.md).delay(CTA_DELAY))}
+            >
+              <Animated.View style={ctaButton.animatedStyle}>
+                <Pressable
+                  accessibilityRole="button"
+                  className="mt-7 overflow-hidden rounded-full"
+                  onPress={(e) => {
+                    hapticLight();
+                    onSubmit(e);
+                  }}
+                  onPressIn={ctaButton.handlePressIn}
+                  onPressOut={ctaButton.handlePressOut}
+                  testID="onboarding-basics-next"
+                >
+                  <LinearGradient
+                    colors={Colors.gradientPrimary}
+                    end={{ x: 1, y: 0 }}
+                    start={{ x: 0, y: 0 }}
+                    style={{
+                      alignItems: 'center',
+                      borderRadius: 999,
+                      height: 54,
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <View className="flex-row items-center gap-2.5">
+                      <Text className="text-[17px] font-bold text-white">
+                        {t('onboardingBasicsNext')}
+                      </Text>
+                      <ArrowRight color={Colors.white} size={22} />
+                    </View>
+                  </LinearGradient>
+                </Pressable>
+              </Animated.View>
+            </Animated.View>
+          </AuthScreenContent>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>

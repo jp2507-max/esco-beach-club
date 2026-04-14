@@ -6,7 +6,7 @@ import {
 import { normalizeMemberSegment } from '@/src/lib/utils/member-segment';
 
 export type SignupOnboardingData = {
-  dateOfBirth: string;
+  dateOfBirth?: string;
   displayName: string;
   hasCompletedSetup?: boolean;
   hasAcceptedPrivacyPolicy?: boolean;
@@ -61,12 +61,19 @@ export function normalizeSignupOnboardingData(
   if (!value) return null;
 
   const normalizedDisplayName = value.displayName?.trim() ?? '';
-  const normalizedDateOfBirth = value.dateOfBirth?.trim() ?? '';
+  const normalizedDateOfBirth = value.dateOfBirth?.trim();
 
   const hasValidDisplayName =
     normalizedDisplayName.length >= 2 && normalizedDisplayName.length <= 60;
 
-  if (!hasValidDisplayName || !isValidCalendarDate(normalizedDateOfBirth)) {
+  if (!hasValidDisplayName) {
+    return null;
+  }
+
+  if (
+    normalizedDateOfBirth !== undefined &&
+    !isValidCalendarDate(normalizedDateOfBirth)
+  ) {
     return null;
   }
 
@@ -83,8 +90,8 @@ export function normalizeSignupOnboardingData(
   const hasCompletedSetup = value.hasCompletedSetup === true;
 
   return {
-    dateOfBirth: normalizedDateOfBirth,
     displayName: normalizedDisplayName,
+    ...(normalizedDateOfBirth ? { dateOfBirth: normalizedDateOfBirth } : {}),
     ...(hasCompletedSetup ? { hasCompletedSetup } : {}),
     ...(normalizedMemberSegment
       ? { memberSegment: normalizedMemberSegment }

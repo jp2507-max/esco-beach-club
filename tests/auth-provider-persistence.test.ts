@@ -29,33 +29,6 @@ mock.module('@/src/lib/auth/provider-error-mapping', () => ({
   shouldTryGoogleAudienceFallback: () => false,
 }));
 
-mock.module('@/src/lib/auth/signup-onboarding', () => ({
-  extractSignInUser(result: unknown) {
-    if (!result || typeof result !== 'object') {
-      return { created: false, email: null, id: null };
-    }
-
-    const user =
-      'user' in result && result.user && typeof result.user === 'object'
-        ? (result.user as { email?: unknown; id?: unknown })
-        : null;
-
-    return {
-      created:
-        'created' in result && typeof result.created === 'boolean'
-          ? result.created
-          : false,
-      email: typeof user?.email === 'string' ? user.email : null,
-      id: typeof user?.id === 'string' ? user.id : null,
-    };
-  },
-  hasRequiredSignupConsent: () => true,
-  normalizeSignupOnboardingData: (value: unknown) => {
-    if (!value || typeof value !== 'object') return null;
-    return value;
-  },
-}));
-
 mock.module('react-native-get-random-values', () => ({}));
 
 mock.module('@react-native-google-signin/google-signin', () => ({
@@ -188,7 +161,7 @@ describe('auth provider persistence after sign-in', () => {
     expect(captureHandledErrorMock).toHaveBeenCalledTimes(1);
   });
 
-  test('does not forward onboarding fields into user create extraFields', async () => {
+  test('does not forward onboarding fields into user create extraFields when dob is omitted', async () => {
     signInWithIdTokenMock.mockReset();
     signInWithIdTokenMock.mockResolvedValue({
       created: true,
@@ -200,7 +173,6 @@ describe('auth provider persistence after sign-in', () => {
 
     await signInWithAppleFlow({
       onboardingData: {
-        dateOfBirth: '1990-01-01',
         displayName: 'Member Name',
         hasAcceptedPrivacyPolicy: true,
         hasAcceptedTerms: true,

@@ -173,9 +173,9 @@ const common = {
         collection: {
           title: 'Dữ liệu chúng tôi thu thập',
           body1:
-            'Chúng tôi thu thập thông tin tài khoản và hồ sơ cần thiết để vận hành trải nghiệm thành viên, bao gồm email, mã thành viên, mã giới thiệu, tên hồ sơ, ngày sinh và các thông tin khác mà bạn tự gửi trong biểu mẫu đặt chỗ hoặc yêu cầu sự kiện riêng.',
+            'Chúng tôi thu thập thông tin tài khoản và hồ sơ cần thiết để vận hành trải nghiệm thành viên, bao gồm email, mã thành viên, mã giới thiệu, tên hồ sơ và các thông tin khác mà bạn tự gửi trong biểu mẫu đặt chỗ hoặc yêu cầu sự kiện riêng. Nếu bạn chọn bổ sung ngày sinh sau này, chúng tôi chỉ dùng thông tin đó cho các trải nghiệm cá nhân hóa không bắt buộc như lời chúc sinh nhật hoặc ưu đãi sinh nhật.',
           body2:
-            'Ứng dụng có thể yêu cầu quyền vị trí, thông báo và camera ở dạng tùy chọn. Trong bản phát hành hiện tại, vị trí được dùng trên thiết bị cho tính năng nhận biết khi đến địa điểm, thông báo được dùng cho lời nhắc và ưu đãi cục bộ, còn camera chỉ dành cho luồng quét QR của nhân viên.',
+            'Ứng dụng có thể yêu cầu quyền vị trí, thông báo và camera ở dạng tùy chọn. Trong bản phát hành hiện tại, vị trí được dùng trên thiết bị cho tính năng nhận biết khi đến địa điểm, thông báo được dùng cho lời nhắc và ưu đãi cục bộ, còn camera được dùng để hội viên tự quét mã QR trên hóa đơn.',
         },
         use: {
           title: 'Cách chúng tôi sử dụng dữ liệu',

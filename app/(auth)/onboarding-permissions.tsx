@@ -13,6 +13,7 @@ import {
   type OnboardingPermissionStatus,
   onboardingPermissionStatuses,
 } from '@/lib/types';
+import { AuthScreenContent } from '@/src/components/auth/auth-screen-content';
 import { OnboardingHeader } from '@/src/components/onboarding/onboarding-header';
 import { InfoDot } from '@/src/components/ui';
 import { motion, withRM } from '@/src/lib/animations/motion';
@@ -358,269 +359,273 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
       />
 
       <View className="flex-1 px-5 pb-6">
-        <Animated.View
-          entering={withRM(FadeIn.duration(motion.dur.md).delay(TITLE_DELAY))}
-          className="mb-3 rounded-2xl bg-primary-fixed/45 px-4 py-2 dark:bg-primary/20"
-        >
-          <Text className="text-center text-[24px] font-extrabold leading-7 text-text dark:text-text-primary-dark">
-            {t('onboardingPermissionsTitle')}
-          </Text>
-          <Text className="mt-0.5 text-center text-[13px] leading-5 text-text-secondary dark:text-text-secondary-dark">
-            {t('onboardingPermissionsSubtitle')}
-          </Text>
-        </Animated.View>
-
-        <View className="gap-2.5">
+        <AuthScreenContent className="flex-1">
           <Animated.View
-            entering={withRM(
-              FadeInUp.springify()
-                .damping(18)
-                .stiffness(140)
-                .delay(CARD_BASE_DELAY)
-            )}
-            className="rounded-2xl border border-border bg-white p-4 dark:border-dark-border dark:bg-dark-bg-card"
-            style={shadows.level2}
+            entering={withRM(FadeIn.duration(motion.dur.md).delay(TITLE_DELAY))}
+            className="mb-3 rounded-2xl bg-primary-fixed/45 px-4 py-2 dark:bg-primary/20"
           >
-            <View className="mb-3 flex-row items-start justify-between gap-2">
-              <View className="flex-1 flex-row items-start gap-2.5">
-                <View className="size-9 items-center justify-center rounded-full bg-secondary-fixed/45 dark:bg-secondary/25">
-                  <MapPin
-                    className="text-secondary dark:text-secondary-fixed"
-                    size={16}
-                  />
-                </View>
-                <View className="flex-1">
-                  <View className="flex-row items-center gap-1.5">
-                    <Text className="text-[15px] font-bold leading-5 text-text dark:text-text-primary-dark">
-                      {t('onboardingFinalDetailsLocationTitle')}
-                    </Text>
-                    <InfoDot
-                      accessibilityHint={t('onboardingInfoButtonHint')}
-                      accessibilityLabel={t('onboardingInfoButtonLabel')}
-                      onPress={() =>
-                        showInfoAlert(
-                          t('onboardingPermissionsLocationInfoTitle'),
-                          t('onboardingPermissionsLocationInfoMessage')
-                        )
-                      }
-                      size="sm"
-                      testID="onboarding-permissions-location-info"
-                    />
-                  </View>
-                  <Text className="text-[12px] leading-4 text-text-secondary dark:text-text-secondary-dark">
-                    {t('onboardingFinalDetailsLocationDescription')}
-                  </Text>
-                </View>
-              </View>
-
-              <View className="rounded-full bg-primary/10 px-2.5 py-1 dark:bg-primary-bright/20">
-                <Text className="text-[10px] font-bold uppercase tracking-[1.5px] text-primary dark:text-primary-bright">
-                  {statusLabel(resolveEffectiveLocationStatus())}
-                </Text>
-              </View>
-            </View>
-
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{ disabled: isLocationPermissionCtaDisabled }}
-              className="overflow-hidden rounded-full"
-              disabled={isLocationPermissionCtaDisabled}
-              onPress={requestLocationPermission}
-              testID="onboarding-permissions-enable-location"
-            >
-              <LinearGradient
-                colors={[Colors.secondary, Colors.secondaryDark]}
-                end={{ x: 1, y: 0 }}
-                start={{ x: 0, y: 0 }}
-                style={{
-                  alignItems: 'center',
-                  borderRadius: 999,
-                  height: 44,
-                  justifyContent: 'center',
-                  opacity: isLocationPermissionCtaDisabled ? 0.5 : 1,
-                }}
-              >
-                {isRequestingLocation ? (
-                  <ActivityIndicator color={Colors.white} />
-                ) : (
-                  <Text className="text-[14px] font-bold text-white">
-                    {actionLabel(resolveEffectiveLocationStatus())}
-                  </Text>
-                )}
-              </LinearGradient>
-            </Pressable>
-
-            {resolveEffectiveLocationStatus() ===
-            onboardingPermissionStatuses.denied ? (
-              <Pressable
-                accessibilityRole="button"
-                className="mt-2 items-center"
-                onPress={() => void Linking.openSettings()}
-                testID="onboarding-permissions-open-settings-location"
-              >
-                <Text className="text-[13px] font-semibold text-secondary dark:text-secondary-fixed">
-                  {t('onboardingPermissionsOpenSettings')}
-                </Text>
-              </Pressable>
-            ) : null}
+            <Text className="text-center text-[24px] font-extrabold leading-7 text-text dark:text-text-primary-dark">
+              {t('onboardingPermissionsTitle')}
+            </Text>
+            <Text className="mt-0.5 text-center text-[13px] leading-5 text-text-secondary dark:text-text-secondary-dark">
+              {t('onboardingPermissionsSubtitle')}
+            </Text>
           </Animated.View>
 
-          <Animated.View
-            entering={withRM(
-              FadeInUp.springify()
-                .damping(18)
-                .stiffness(140)
-                .delay(CARD_BASE_DELAY + CARD_STAGGER)
-            )}
-            className="rounded-2xl border border-border bg-white p-4 dark:border-dark-border dark:bg-dark-bg-card"
-            style={shadows.level2}
-          >
-            <View className="mb-3 flex-row items-start justify-between gap-2">
-              <View className="flex-1 flex-row items-start gap-2.5">
-                <View className="size-9 items-center justify-center rounded-full bg-primary-fixed dark:bg-primary/20">
-                  <Bell
-                    className="text-primary dark:text-primary-bright"
-                    size={16}
-                  />
-                </View>
-                <View className="flex-1">
-                  <View className="flex-row items-center gap-1.5">
-                    <Text className="text-[15px] font-bold leading-5 text-text dark:text-text-primary-dark">
-                      {t('onboardingFinalDetailsNotificationsTitle')}
-                    </Text>
-                    <InfoDot
-                      accessibilityHint={t('onboardingInfoButtonHint')}
-                      accessibilityLabel={t('onboardingInfoButtonLabel')}
-                      onPress={() =>
-                        showInfoAlert(
-                          t('onboardingPermissionsNotificationsInfoTitle'),
-                          t('onboardingPermissionsNotificationsInfoMessage')
-                        )
-                      }
-                      size="sm"
-                      testID="onboarding-permissions-notifications-info"
+          <View className="gap-2.5">
+            <Animated.View
+              entering={withRM(
+                FadeInUp.springify()
+                  .damping(18)
+                  .stiffness(140)
+                  .delay(CARD_BASE_DELAY)
+              )}
+              className="rounded-2xl border border-border bg-white p-4 dark:border-dark-border dark:bg-dark-bg-card"
+              style={shadows.level2}
+            >
+              <View className="mb-3 flex-row items-start justify-between gap-2">
+                <View className="flex-1 flex-row items-start gap-2.5">
+                  <View className="size-9 items-center justify-center rounded-full bg-secondary-fixed/45 dark:bg-secondary/25">
+                    <MapPin
+                      className="text-secondary dark:text-secondary-fixed"
+                      size={16}
                     />
                   </View>
-                  <Text className="text-[12px] leading-4 text-text-secondary dark:text-text-secondary-dark">
-                    {t('onboardingFinalDetailsNotificationsDescription')}
+                  <View className="flex-1">
+                    <View className="flex-row items-center gap-1.5">
+                      <Text className="text-[15px] font-bold leading-5 text-text dark:text-text-primary-dark">
+                        {t('onboardingFinalDetailsLocationTitle')}
+                      </Text>
+                      <InfoDot
+                        accessibilityHint={t('onboardingInfoButtonHint')}
+                        accessibilityLabel={t('onboardingInfoButtonLabel')}
+                        onPress={() =>
+                          showInfoAlert(
+                            t('onboardingPermissionsLocationInfoTitle'),
+                            t('onboardingPermissionsLocationInfoMessage')
+                          )
+                        }
+                        size="sm"
+                        testID="onboarding-permissions-location-info"
+                      />
+                    </View>
+                    <Text className="text-[12px] leading-4 text-text-secondary dark:text-text-secondary-dark">
+                      {t('onboardingFinalDetailsLocationDescription')}
+                    </Text>
+                  </View>
+                </View>
+
+                <View className="rounded-full bg-primary/10 px-2.5 py-1 dark:bg-primary-bright/20">
+                  <Text className="text-[10px] font-bold uppercase tracking-[1.5px] text-primary dark:text-primary-bright">
+                    {statusLabel(resolveEffectiveLocationStatus())}
                   </Text>
                 </View>
               </View>
 
-              <View className="rounded-full bg-primary/10 px-2.5 py-1 dark:bg-primary-bright/20">
-                <Text className="text-[10px] font-bold uppercase tracking-[1.5px] text-primary dark:text-primary-bright">
-                  {statusLabel(pushStatus)}
-                </Text>
-              </View>
-            </View>
-
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{ disabled: isPushPermissionCtaDisabled }}
-              className="overflow-hidden rounded-full"
-              disabled={isPushPermissionCtaDisabled}
-              onPress={requestPushPermission}
-              testID="onboarding-permissions-enable-push"
-            >
-              <LinearGradient
-                colors={Colors.gradientPrimary}
-                end={{ x: 1, y: 0 }}
-                start={{ x: 0, y: 0 }}
-                style={{
-                  alignItems: 'center',
-                  borderRadius: 999,
-                  height: 44,
-                  justifyContent: 'center',
-                  opacity: isPushPermissionCtaDisabled ? 0.5 : 1,
-                }}
-              >
-                {isRequestingPush ? (
-                  <ActivityIndicator color={Colors.white} />
-                ) : (
-                  <Text className="text-[14px] font-bold text-white">
-                    {pushActionLabel()}
-                  </Text>
-                )}
-              </LinearGradient>
-            </Pressable>
-
-            {pushStatus === onboardingPermissionStatuses.denied ? (
               <Pressable
                 accessibilityRole="button"
-                className="mt-2 items-center"
-                onPress={() => void Linking.openSettings()}
-                testID="onboarding-permissions-open-settings-push"
+                accessibilityState={{
+                  disabled: isLocationPermissionCtaDisabled,
+                }}
+                className="overflow-hidden rounded-full"
+                disabled={isLocationPermissionCtaDisabled}
+                onPress={requestLocationPermission}
+                testID="onboarding-permissions-enable-location"
               >
-                <Text className="text-[13px] font-semibold text-secondary dark:text-secondary-fixed">
-                  {t('onboardingPermissionsOpenSettings')}
-                </Text>
+                <LinearGradient
+                  colors={[Colors.secondary, Colors.secondaryDark]}
+                  end={{ x: 1, y: 0 }}
+                  start={{ x: 0, y: 0 }}
+                  style={{
+                    alignItems: 'center',
+                    borderRadius: 999,
+                    height: 44,
+                    justifyContent: 'center',
+                    opacity: isLocationPermissionCtaDisabled ? 0.5 : 1,
+                  }}
+                >
+                  {isRequestingLocation ? (
+                    <ActivityIndicator color={Colors.white} />
+                  ) : (
+                    <Text className="text-[14px] font-bold text-white">
+                      {actionLabel(resolveEffectiveLocationStatus())}
+                    </Text>
+                  )}
+                </LinearGradient>
               </Pressable>
-            ) : null}
-          </Animated.View>
-        </View>
 
-        <Animated.View
-          entering={withRM(FadeIn.duration(motion.dur.md).delay(CTA_DELAY))}
-          className="mt-auto gap-3"
-        >
-          <Animated.View style={ctaButton.animatedStyle}>
+              {resolveEffectiveLocationStatus() ===
+              onboardingPermissionStatuses.denied ? (
+                <Pressable
+                  accessibilityRole="button"
+                  className="mt-2 items-center"
+                  onPress={() => void Linking.openSettings()}
+                  testID="onboarding-permissions-open-settings-location"
+                >
+                  <Text className="text-[13px] font-semibold text-secondary dark:text-secondary-fixed">
+                    {t('onboardingPermissionsOpenSettings')}
+                  </Text>
+                </Pressable>
+              ) : null}
+            </Animated.View>
+
+            <Animated.View
+              entering={withRM(
+                FadeInUp.springify()
+                  .damping(18)
+                  .stiffness(140)
+                  .delay(CARD_BASE_DELAY + CARD_STAGGER)
+              )}
+              className="rounded-2xl border border-border bg-white p-4 dark:border-dark-border dark:bg-dark-bg-card"
+              style={shadows.level2}
+            >
+              <View className="mb-3 flex-row items-start justify-between gap-2">
+                <View className="flex-1 flex-row items-start gap-2.5">
+                  <View className="size-9 items-center justify-center rounded-full bg-primary-fixed dark:bg-primary/20">
+                    <Bell
+                      className="text-primary dark:text-primary-bright"
+                      size={16}
+                    />
+                  </View>
+                  <View className="flex-1">
+                    <View className="flex-row items-center gap-1.5">
+                      <Text className="text-[15px] font-bold leading-5 text-text dark:text-text-primary-dark">
+                        {t('onboardingFinalDetailsNotificationsTitle')}
+                      </Text>
+                      <InfoDot
+                        accessibilityHint={t('onboardingInfoButtonHint')}
+                        accessibilityLabel={t('onboardingInfoButtonLabel')}
+                        onPress={() =>
+                          showInfoAlert(
+                            t('onboardingPermissionsNotificationsInfoTitle'),
+                            t('onboardingPermissionsNotificationsInfoMessage')
+                          )
+                        }
+                        size="sm"
+                        testID="onboarding-permissions-notifications-info"
+                      />
+                    </View>
+                    <Text className="text-[12px] leading-4 text-text-secondary dark:text-text-secondary-dark">
+                      {t('onboardingFinalDetailsNotificationsDescription')}
+                    </Text>
+                  </View>
+                </View>
+
+                <View className="rounded-full bg-primary/10 px-2.5 py-1 dark:bg-primary-bright/20">
+                  <Text className="text-[10px] font-bold uppercase tracking-[1.5px] text-primary dark:text-primary-bright">
+                    {statusLabel(pushStatus)}
+                  </Text>
+                </View>
+              </View>
+
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ disabled: isPushPermissionCtaDisabled }}
+                className="overflow-hidden rounded-full"
+                disabled={isPushPermissionCtaDisabled}
+                onPress={requestPushPermission}
+                testID="onboarding-permissions-enable-push"
+              >
+                <LinearGradient
+                  colors={Colors.gradientPrimary}
+                  end={{ x: 1, y: 0 }}
+                  start={{ x: 0, y: 0 }}
+                  style={{
+                    alignItems: 'center',
+                    borderRadius: 999,
+                    height: 44,
+                    justifyContent: 'center',
+                    opacity: isPushPermissionCtaDisabled ? 0.5 : 1,
+                  }}
+                >
+                  {isRequestingPush ? (
+                    <ActivityIndicator color={Colors.white} />
+                  ) : (
+                    <Text className="text-[14px] font-bold text-white">
+                      {pushActionLabel()}
+                    </Text>
+                  )}
+                </LinearGradient>
+              </Pressable>
+
+              {pushStatus === onboardingPermissionStatuses.denied ? (
+                <Pressable
+                  accessibilityRole="button"
+                  className="mt-2 items-center"
+                  onPress={() => void Linking.openSettings()}
+                  testID="onboarding-permissions-open-settings-push"
+                >
+                  <Text className="text-[13px] font-semibold text-secondary dark:text-secondary-fixed">
+                    {t('onboardingPermissionsOpenSettings')}
+                  </Text>
+                </Pressable>
+              ) : null}
+            </Animated.View>
+          </View>
+
+          <Animated.View
+            entering={withRM(FadeIn.duration(motion.dur.md).delay(CTA_DELAY))}
+            className="mt-auto gap-3"
+          >
+            <Animated.View style={ctaButton.animatedStyle}>
+              <Pressable
+                accessibilityRole="button"
+                className="overflow-hidden rounded-full"
+                disabled={isBusy}
+                onPress={handleNavigateNext}
+                onPressIn={ctaButton.handlePressIn}
+                onPressOut={ctaButton.handlePressOut}
+                testID="onboarding-permissions-continue"
+              >
+                <LinearGradient
+                  colors={Colors.gradientPrimary}
+                  end={{ x: 1, y: 0 }}
+                  start={{ x: 0, y: 0 }}
+                  style={{
+                    alignItems: 'center',
+                    borderRadius: 999,
+                    height: 54,
+                    justifyContent: 'center',
+                  }}
+                >
+                  <View className="flex-row items-center gap-2.5">
+                    <Text className="text-[17px] font-bold text-white">
+                      {t('onboardingPermissionsContinue')}
+                    </Text>
+                    <ArrowRight color={Colors.white} size={22} />
+                  </View>
+                </LinearGradient>
+              </Pressable>
+            </Animated.View>
+
             <Pressable
               accessibilityRole="button"
-              className="overflow-hidden rounded-full"
+              className="items-center"
               disabled={isBusy}
               onPress={handleNavigateNext}
-              onPressIn={ctaButton.handlePressIn}
-              onPressOut={ctaButton.handlePressOut}
-              testID="onboarding-permissions-continue"
+              testID="onboarding-permissions-not-now"
             >
-              <LinearGradient
-                colors={Colors.gradientPrimary}
-                end={{ x: 1, y: 0 }}
-                start={{ x: 0, y: 0 }}
-                style={{
-                  alignItems: 'center',
-                  borderRadius: 999,
-                  height: 54,
-                  justifyContent: 'center',
-                }}
-              >
-                <View className="flex-row items-center gap-2.5">
-                  <Text className="text-[17px] font-bold text-white">
-                    {t('onboardingPermissionsContinue')}
-                  </Text>
-                  <ArrowRight color={Colors.white} size={22} />
-                </View>
-              </LinearGradient>
+              <Text className="text-[16px] font-bold text-secondary dark:text-secondary-fixed">
+                {t('onboardingPermissionsNotNow')}
+              </Text>
             </Pressable>
-          </Animated.View>
 
-          <Pressable
-            accessibilityRole="button"
-            className="items-center"
-            disabled={isBusy}
-            onPress={handleNavigateNext}
-            testID="onboarding-permissions-not-now"
-          >
-            <Text className="text-[16px] font-bold text-secondary dark:text-secondary-fixed">
-              {t('onboardingPermissionsNotNow')}
-            </Text>
-          </Pressable>
-
-          <Animated.View
-            entering={withRM(
-              FadeIn.duration(motion.dur.md).delay(CTA_DELAY + 120)
-            )}
-            className="flex-row items-center justify-center gap-2"
-          >
-            <Check
-              className="text-primary dark:text-primary-bright"
-              size={14}
-            />
-            <Text className="text-[12px] text-text-muted dark:text-text-muted-dark">
-              {t('onboardingPermissionsPrivacyNote')}
-            </Text>
+            <Animated.View
+              entering={withRM(
+                FadeIn.duration(motion.dur.md).delay(CTA_DELAY + 120)
+              )}
+              className="flex-row items-center justify-center gap-2"
+            >
+              <Check
+                className="text-primary dark:text-primary-bright"
+                size={14}
+              />
+              <Text className="text-[12px] text-text-muted dark:text-text-muted-dark">
+                {t('onboardingPermissionsPrivacyNote')}
+              </Text>
+            </Animated.View>
           </Animated.View>
-        </Animated.View>
+        </AuthScreenContent>
       </View>
     </View>
   );

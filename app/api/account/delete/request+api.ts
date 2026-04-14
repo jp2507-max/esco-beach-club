@@ -330,20 +330,36 @@ export async function POST(request: Request): Promise<Response> {
       ? await revokeAppleAuthorizationCode(appleAuthorizationCode)
       : { status: 'not_required' as const };
   } catch (error) {
+    const serializedError =
+      error instanceof Error
+        ? {
+            message: error.message,
+            name: error.name,
+            stack: error.stack,
+          }
+        : { value: error };
     console.error('[account/delete/request] Apple revocation threw', {
-      error,
+      error: serializedError,
       requestRef,
       userRef,
     });
     revocation = {
       status: 'failed' as const,
-      message: error instanceof Error ? error.message : 'unknown_error',
+      message: 'revocation_failed',
     };
   }
 
+  const safeRevocation =
+    revocation.status === 'failed'
+      ? {
+          status: 'failed' as const,
+          message: 'revocation_failed',
+        }
+      : revocation;
+
   if (requiresAppleRevocation) {
     const revocationFailureResponse =
-      buildAppleRevocationFailureResponse(revocation);
+      buildAppleRevocationFailureResponse(safeRevocation);
     if (revocationFailureResponse) {
       logAccountDeletionBreadcrumb({
         data: {
@@ -367,12 +383,12 @@ export async function POST(request: Request): Promise<Response> {
   const revocationResponse = effectiveAuthProvider
     ? getAccountDeletionRevocationResponse({
         provider: effectiveAuthProvider,
-        revocation,
+        revocation: safeRevocation,
       })
     : undefined;
   const payload = {
     ...(effectiveAuthProvider === authProviderTypes.apple
-      ? getAppleRevocationPersistenceFields(revocation)
+      ? getAppleRevocationPersistenceFields(safeRevocation)
       : {}),
     ...(effectiveAuthProvider ? { auth_provider: effectiveAuthProvider } : {}),
     auth_user_id: authUser.userId,

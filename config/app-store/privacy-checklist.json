@@ -4,7 +4,7 @@
     "magic_code_auth",
     "google_sign_in",
     "sign_in_with_apple",
-    "staff_qr_scanner",
+    "member_bill_qr_scanner",
     "restaurant_presence_geofence",
     "invite_deep_links",
     "account_deletion_30_day_grace_period"
@@ -62,26 +62,26 @@
   ],
   "notCollectedOffDevice": [
     "Precise/background location is used on-device for foreground checks and geofencing; the current repo does not send coordinates to the backend.",
-    "Camera access is used locally for staff QR scanning; the current repo does not upload captured frames or images.",
+    "Camera access is used locally for member bill QR scanning; the current repo does not upload captured frames or images.",
     "The app requests notification permission and schedules local notifications; the current repo does not register or persist a push token."
   ],
   "appStoreConnectPrivacyChecklist": {
     "dataCollectionNotes": [
-      "Disclose account email, display name, date of birth, member identifier, and referral code as linked account data used for authentication and member benefits.",
+      "Disclose account email, display name, member identifier, and referral code as linked account data used for authentication and member benefits.",
+      "If date of birth is disclosed, mark it as optional profile information used for member personalization such as birthday wishes or birthday perks.",
       "Disclose private-event inquiry contact information and free-form notes if that flow ships in the reviewed binary.",
       "Disclose crash/error telemetry for Sentry and confirm whether user identifiers are attached in production.",
       "Do not mark precise/background location as collected unless the release build actually transmits coordinates off-device; current repo usage is on-device geofencing only.",
-      "Do not mark camera captures as collected unless staff scanner output is persisted or uploaded; current repo usage is local QR scanning only."
+      "Do not mark camera captures as collected unless scanner output is persisted or uploaded; current repo usage is local member bill QR scanning only."
     ],
     "reviewArtifacts": [
       "Provide a member demo account.",
-      "Provide a staff review account if QR scanner review is required.",
       "Provide a sample member QR payload."
     ],
     "manualAppStoreConnectAnswers": [
       "Privacy Policy URL must be set to https://escolife.expo.app/privacy.",
       "Support URL must be set to https://escolife.expo.app/support.",
-      "App Review notes must explain optional background location, local camera scanning, local notifications, deep links, and the 30-day account deletion grace period."
+      "App Review notes must explain optional background location, local member bill QR scanning, local notifications, deep links, optional date of birth collection for personalization, and the 30-day account deletion grace period."
     ]
   }
 }

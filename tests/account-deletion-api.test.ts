@@ -31,7 +31,10 @@ describe('account deletion api client', () => {
   test('uses a 30 second timeout budget for scheduling deletion', async () => {
     const observedTimeouts: number[] = [];
 
-    global.setTimeout = ((handler: TimerHandler, timeout?: number) => {
+    global.setTimeout = ((
+      handler: Parameters<typeof setTimeout>[0],
+      timeout?: number
+    ) => {
       observedTimeouts.push(Number(timeout));
       if (typeof handler === 'function') handler();
       return 1 as unknown as ReturnType<typeof setTimeout>;
@@ -50,7 +53,10 @@ describe('account deletion api client', () => {
   test('keeps restore requests on the default timeout budget', async () => {
     const observedTimeouts: number[] = [];
 
-    global.setTimeout = ((handler: TimerHandler, timeout?: number) => {
+    global.setTimeout = ((
+      handler: Parameters<typeof setTimeout>[0],
+      timeout?: number
+    ) => {
       observedTimeouts.push(Number(timeout));
       if (typeof handler === 'function') handler();
       return 1 as unknown as ReturnType<typeof setTimeout>;

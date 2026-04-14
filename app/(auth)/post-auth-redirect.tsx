@@ -1,4 +1,4 @@
-import { Redirect, useLocalSearchParams } from 'expo-router';
+import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import type { TFunction } from 'i18next';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -81,6 +81,7 @@ function BootstrapRecoveryCard(props: {
 
 export default function PostAuthRedirectScreen(): React.JSX.Element {
   const { t } = useTranslation('auth');
+  const router = useRouter();
   const { signOut } = useAuth();
   const searchParams = useLocalSearchParams<{
     authFlow?: string | string[];
@@ -132,8 +133,7 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
     signupDraft.hasCompletedSetup === true &&
     signupDraft.hasAcceptedPrivacyPolicy === true &&
     signupDraft.hasAcceptedTerms === true &&
-    Boolean(signupDraft.displayName) &&
-    Boolean(signupDraft.dateOfBirth);
+    Boolean(signupDraft.displayName);
 
   const shouldRetryProvision =
     bootstrapState === profileBootstrapStates.recoverableError &&
@@ -202,6 +202,9 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
   async function handleBackToSignIn(): Promise<void> {
     const didSignOut = await handleSignOut();
     if (!didSignOut) return;
+
+    resetSignupDraft();
+    router.replace('/(auth)/login');
   }
 
   const isWorking = isRetryingProvision || isSigningOut;

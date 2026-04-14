@@ -25,6 +25,7 @@ import { PROFILE_PERMISSION_DENIED_ERROR_KEY } from '@/lib/api/profile';
 import { onboardingPermissionStatuses } from '@/lib/types';
 import { useAuth } from '@/providers/AuthProvider';
 import { useProfileData } from '@/providers/DataProvider';
+import { AuthScreenContent } from '@/src/components/auth/auth-screen-content';
 import { OnboardingHeader } from '@/src/components/onboarding/onboarding-header';
 import { motion, withRM } from '@/src/lib/animations/motion';
 import { useButtonPress } from '@/src/lib/animations/use-button-press';
@@ -184,7 +185,6 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
     const onboardingDisplayName = signupDraft.displayName
       ?.trim()
       .replace(/\s+/g, ' ');
-    const onboardingDateOfBirth = signupDraft.dateOfBirth?.trim();
     const memberSegment = signupDraft.memberSegment;
     const locationPermissionStatus =
       signupDraft.locationPermissionStatus ??
@@ -210,9 +210,6 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
         : pushNotificationPermissionStatus;
 
     await updateProfile(user.id, {
-      ...(onboardingDateOfBirth
-        ? { date_of_birth: onboardingDateOfBirth }
-        : {}),
       ...(onboardingDisplayName && onboardingDisplayName.length >= 2
         ? { full_name: onboardingDisplayName }
         : {}),
@@ -362,159 +359,164 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
       />
 
       <View className="flex-1 px-6 pb-12">
-        <View className="items-center">
-          <Animated.View
-            entering={withRM(
-              ZoomIn.springify().damping(12).stiffness(160).delay(ICON_DELAY)
-            )}
-            className="mb-4 size-14 items-center justify-center rounded-full bg-primary-fixed dark:bg-primary/20"
-          >
+        <AuthScreenContent className="flex-1">
+          <View className="items-center">
             <Animated.View
-              style={sparkleStyle}
-              className="items-center justify-center"
+              entering={withRM(
+                ZoomIn.springify().damping(12).stiffness(160).delay(ICON_DELAY)
+              )}
+              className="mb-4 size-14 items-center justify-center rounded-full bg-primary-fixed dark:bg-primary/20"
             >
-              <Sparkles
-                className="text-primary dark:text-primary-bright"
-                size={24}
-              />
+              <Animated.View
+                style={sparkleStyle}
+                className="items-center justify-center"
+              >
+                <Sparkles
+                  className="text-primary dark:text-primary-bright"
+                  size={24}
+                />
+              </Animated.View>
             </Animated.View>
-          </Animated.View>
-
-          <Animated.View
-            entering={withRM(
-              FadeInUp.springify().damping(18).stiffness(140).delay(TITLE_DELAY)
-            )}
-          >
-            <Text className="text-center text-[28px] font-extrabold leading-9 text-text dark:text-text-primary-dark">
-              {t('onboardingClubWelcomeTitle')}
-            </Text>
-          </Animated.View>
-
-          <Animated.View
-            entering={withRM(
-              FadeIn.duration(motion.dur.md).delay(TITLE_DELAY + 100)
-            )}
-          >
-            <Text className="mt-3 px-2 text-center text-[15px] leading-6 text-text-secondary dark:text-text-secondary-dark">
-              {t('onboardingClubWelcomeSubtitle')}
-            </Text>
-          </Animated.View>
-        </View>
-
-        <Animated.View
-          entering={withRM(
-            FadeInUp.springify().damping(16).stiffness(120).delay(CARD_DELAY)
-          )}
-          className="mt-6 overflow-hidden rounded-3xl border border-border/70 bg-white/92 p-5 dark:border-dark-border dark:bg-dark-bg-card/90"
-        >
-          <Image
-            className="absolute inset-0 h-full w-full opacity-14"
-            source={{ uri: WELCOME_COCKTAIL_IMAGE_URI }}
-            cachePolicy="memory-disk"
-            contentFit="cover"
-            transition={180}
-          />
-
-          <View className="relative z-10 items-center">
-            <Text className="text-[12px] font-bold uppercase tracking-[4px] text-secondary dark:text-secondary-fixed">
-              {t('onboardingClubValueLabel')}
-            </Text>
-
-            <Text className="mt-3 text-center text-[26px] font-bold leading-8 text-text dark:text-text-primary-dark">
-              {t('onboardingClubRewardTitle')}
-            </Text>
 
             <Animated.View
               entering={withRM(
                 FadeInUp.springify()
-                  .damping(14)
-                  .stiffness(130)
-                  .delay(CARD_DELAY + 180)
+                  .damping(18)
+                  .stiffness(140)
+                  .delay(TITLE_DELAY)
               )}
-              className="mt-5 w-full rounded-2xl border-2 border-dashed border-border-light bg-surface-container-low px-4 py-3 dark:border-dark-border dark:bg-dark-bg-elevated"
             >
-              <View className="flex-row items-center justify-between gap-3">
-                <View className="flex-row items-center gap-3">
-                  <Animated.View
-                    entering={withRM(
-                      ZoomIn.springify()
-                        .damping(12)
-                        .stiffness(160)
-                        .delay(CARD_DELAY + 320)
-                    )}
-                    className="size-16 items-center justify-center rounded-xl bg-primary dark:bg-primary-bright"
-                  >
-                    <Ticket color={Colors.white} size={22} />
-                  </Animated.View>
-
-                  <View>
-                    <Text className="text-[17px] font-bold text-text dark:text-text-primary-dark">
-                      {t('onboardingClubVoucherCode', {
-                        code: config.onboardingClubVoucher.code,
-                      })}
-                    </Text>
-                    <Text className="text-[13px] text-text-secondary dark:text-text-secondary-dark">
-                      {t('onboardingClubVoucherValidity', {
-                        scope: config.onboardingClubVoucher.scope,
-                      })}
-                    </Text>
-                  </View>
-                </View>
-
-                <View className="size-12 items-center justify-center rounded-xl bg-gold/15">
-                  <Sparkles className="text-gold" size={18} />
-                </View>
-              </View>
+              <Text className="text-center text-[28px] font-extrabold leading-9 text-text dark:text-text-primary-dark">
+                {t('onboardingClubWelcomeTitle')}
+              </Text>
             </Animated.View>
 
             <Animated.View
               entering={withRM(
-                FadeIn.duration(motion.dur.md).delay(CARD_DELAY + 400)
+                FadeIn.duration(motion.dur.md).delay(TITLE_DELAY + 100)
               )}
             >
-              <Text className="mt-5 px-2 text-center text-[14px] leading-6 text-text-secondary dark:text-text-secondary-dark">
-                {t('onboardingClubVoucherInstruction')}
+              <Text className="mt-3 px-2 text-center text-[15px] leading-6 text-text-secondary dark:text-text-secondary-dark">
+                {t('onboardingClubWelcomeSubtitle')}
               </Text>
             </Animated.View>
           </View>
-        </Animated.View>
 
-        <Animated.View
-          entering={withRM(FadeIn.duration(motion.dur.md).delay(CTA_DELAY))}
-        >
-          <Animated.View style={ctaButton.animatedStyle}>
-            <Pressable
-              accessibilityRole="button"
-              className="mt-8 overflow-hidden rounded-full"
-              onPress={() => {
-                hapticLight();
-                handleCompleteSetup();
-              }}
-              onPressIn={ctaButton.handlePressIn}
-              onPressOut={ctaButton.handlePressOut}
-              testID="onboarding-final-details-complete"
-            >
-              <LinearGradient
-                colors={Colors.gradientPrimary}
-                end={{ x: 1, y: 0 }}
-                start={{ x: 0, y: 0 }}
-                style={{
-                  alignItems: 'center',
-                  borderRadius: 999,
-                  height: 54,
-                  justifyContent: 'center',
-                }}
+          <Animated.View
+            entering={withRM(
+              FadeInUp.springify().damping(16).stiffness(120).delay(CARD_DELAY)
+            )}
+            className="mt-6 overflow-hidden rounded-3xl border border-border/70 bg-white/92 p-5 dark:border-dark-border dark:bg-dark-bg-card/90"
+          >
+            <Image
+              className="absolute inset-0 h-full w-full opacity-14"
+              source={{ uri: WELCOME_COCKTAIL_IMAGE_URI }}
+              cachePolicy="memory-disk"
+              contentFit="cover"
+              transition={180}
+            />
+
+            <View className="relative z-10 items-center">
+              <Text className="text-[12px] font-bold uppercase tracking-[4px] text-secondary dark:text-secondary-fixed">
+                {t('onboardingClubValueLabel')}
+              </Text>
+
+              <Text className="mt-3 text-center text-[26px] font-bold leading-8 text-text dark:text-text-primary-dark">
+                {t('onboardingClubRewardTitle')}
+              </Text>
+
+              <Animated.View
+                entering={withRM(
+                  FadeInUp.springify()
+                    .damping(14)
+                    .stiffness(130)
+                    .delay(CARD_DELAY + 180)
+                )}
+                className="mt-5 w-full rounded-2xl border-2 border-dashed border-border-light bg-surface-container-low px-4 py-3 dark:border-dark-border dark:bg-dark-bg-elevated"
               >
-                <View className="flex-row items-center gap-2">
-                  <Text className="text-[17px] font-bold text-white">
-                    {t('onboardingClubPrimaryCta')}
-                  </Text>
-                  <ArrowRight color={Colors.white} size={22} />
+                <View className="flex-row items-center justify-between gap-3">
+                  <View className="flex-row items-center gap-3">
+                    <Animated.View
+                      entering={withRM(
+                        ZoomIn.springify()
+                          .damping(12)
+                          .stiffness(160)
+                          .delay(CARD_DELAY + 320)
+                      )}
+                      className="size-16 items-center justify-center rounded-xl bg-primary dark:bg-primary-bright"
+                    >
+                      <Ticket color={Colors.white} size={22} />
+                    </Animated.View>
+
+                    <View>
+                      <Text className="text-[17px] font-bold text-text dark:text-text-primary-dark">
+                        {t('onboardingClubVoucherCode', {
+                          code: config.onboardingClubVoucher.code,
+                        })}
+                      </Text>
+                      <Text className="text-[13px] text-text-secondary dark:text-text-secondary-dark">
+                        {t('onboardingClubVoucherValidity', {
+                          scope: config.onboardingClubVoucher.scope,
+                        })}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View className="size-12 items-center justify-center rounded-xl bg-gold/15">
+                    <Sparkles className="text-gold" size={18} />
+                  </View>
                 </View>
-              </LinearGradient>
-            </Pressable>
+              </Animated.View>
+
+              <Animated.View
+                entering={withRM(
+                  FadeIn.duration(motion.dur.md).delay(CARD_DELAY + 400)
+                )}
+              >
+                <Text className="mt-5 px-2 text-center text-[14px] leading-6 text-text-secondary dark:text-text-secondary-dark">
+                  {t('onboardingClubVoucherInstruction')}
+                </Text>
+              </Animated.View>
+            </View>
           </Animated.View>
-        </Animated.View>
+
+          <Animated.View
+            entering={withRM(FadeIn.duration(motion.dur.md).delay(CTA_DELAY))}
+          >
+            <Animated.View style={ctaButton.animatedStyle}>
+              <Pressable
+                accessibilityRole="button"
+                className="mt-8 overflow-hidden rounded-full"
+                onPress={() => {
+                  hapticLight();
+                  handleCompleteSetup();
+                }}
+                onPressIn={ctaButton.handlePressIn}
+                onPressOut={ctaButton.handlePressOut}
+                testID="onboarding-final-details-complete"
+              >
+                <LinearGradient
+                  colors={Colors.gradientPrimary}
+                  end={{ x: 1, y: 0 }}
+                  start={{ x: 0, y: 0 }}
+                  style={{
+                    alignItems: 'center',
+                    borderRadius: 999,
+                    height: 54,
+                    justifyContent: 'center',
+                  }}
+                >
+                  <View className="flex-row items-center gap-2">
+                    <Text className="text-[17px] font-bold text-white">
+                      {t('onboardingClubPrimaryCta')}
+                    </Text>
+                    <ArrowRight color={Colors.white} size={22} />
+                  </View>
+                </LinearGradient>
+              </Pressable>
+            </Animated.View>
+          </Animated.View>
+        </AuthScreenContent>
       </View>
     </View>
   );

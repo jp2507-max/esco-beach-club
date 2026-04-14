@@ -1,11 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import type { TFunction } from 'i18next';
-import {
-  CalendarDays,
-  Mail,
-  ShieldCheck,
-  UserRound,
-} from 'lucide-react-native';
+import { Mail, ShieldCheck, UserRound } from 'lucide-react-native';
 import React from 'react';
 import type { Control } from 'react-hook-form';
 import { Platform } from 'react-native';
@@ -157,27 +152,6 @@ export function SignupAuthCard({
               placeholder={t('emailPlaceholder')}
               testID="signup-email"
               textContentType="emailAddress"
-            />
-          </Animated.View>
-          <Animated.View
-            entering={withRM(FadeInUp.delay(120).duration(motion.dur.md))}
-          >
-            <ControlledTextInput<SignupFormValues>
-              autoCapitalize="none"
-              autoCorrect={false}
-              control={control}
-              icon={({ color, size }) => (
-                <CalendarDays color={color} size={size} />
-              )}
-              keyboardType={
-                Platform.OS === 'ios' ? 'numbers-and-punctuation' : 'default'
-              }
-              label={t('dateOfBirthLabel')}
-              maxLength={10}
-              name="dateOfBirth"
-              placeholder={t('dateOfBirthPlaceholder')}
-              testID="signup-date-of-birth"
-              textContentType="birthdate"
             />
           </Animated.View>
         </>

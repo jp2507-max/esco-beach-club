@@ -9,6 +9,7 @@ import { Alert, Linking } from 'react-native';
 import { FadeIn, FadeInUp } from 'react-native-reanimated';
 
 import { Colors } from '@/constants/colors';
+import { AuthScreenContent } from '@/src/components/auth/auth-screen-content';
 import { OnboardingHeader } from '@/src/components/onboarding/onboarding-header';
 import { InfoDot } from '@/src/components/ui';
 import { motion, withRM } from '@/src/lib/animations/motion';
@@ -85,402 +86,412 @@ export default function OnboardingLocalIdentityScreen(): React.JSX.Element {
         contentContainerClassName="flex-grow px-5 pb-6"
         showsVerticalScrollIndicator={false}
       >
-        <Animated.View
-          entering={withRM(FadeIn.duration(motion.dur.md).delay(BANNER_DELAY))}
-          className="mb-2 overflow-hidden rounded-2xl bg-primary-fixed/50 px-4 py-2 dark:bg-primary/20"
-        >
-          <View className="pointer-events-none absolute -left-10 -top-10 size-40 rounded-full bg-primary/12 dark:bg-primary-bright/18" />
-          <Text className="mb-0.5 text-center text-[24px] font-extrabold leading-7 text-text dark:text-text-primary-dark">
-            {t('onboardingLocalIdentityTitle')}
-          </Text>
-          <Text className="text-center text-[13px] leading-5 text-text-secondary dark:text-text-secondary-dark">
-            {t('onboardingLocalIdentitySubtitle')}
-          </Text>
-        </Animated.View>
+        <AuthScreenContent className="flex-grow">
+          <Animated.View
+            entering={withRM(
+              FadeIn.duration(motion.dur.md).delay(BANNER_DELAY)
+            )}
+            className="mb-2 overflow-hidden rounded-2xl bg-primary-fixed/50 px-4 py-2 dark:bg-primary/20"
+          >
+            <View className="pointer-events-none absolute -left-10 -top-10 size-40 rounded-full bg-primary/12 dark:bg-primary-bright/18" />
+            <Text className="mb-0.5 text-center text-[24px] font-extrabold leading-7 text-text dark:text-text-primary-dark">
+              {t('onboardingLocalIdentityTitle')}
+            </Text>
+            <Text className="text-center text-[13px] leading-5 text-text-secondary dark:text-text-secondary-dark">
+              {t('onboardingLocalIdentitySubtitle')}
+            </Text>
+          </Animated.View>
 
-        <Animated.View
-          entering={withRM(
-            FadeInUp.springify()
-              .damping(18)
-              .stiffness(140)
-              .delay(RADIO_BASE_DELAY)
-          )}
-          className="mb-3 rounded-3xl border border-border bg-white p-4 dark:border-dark-border dark:bg-dark-bg-card"
-          style={shadows.level4}
-        >
-          <View className="mb-3 flex-row items-start gap-3">
-            <View className="size-9 items-center justify-center rounded-full bg-secondary-fixed/45 dark:bg-secondary/25">
-              <MapPin
-                className="text-secondary dark:text-secondary-fixed"
-                size={16}
-              />
-            </View>
-            <View className="flex-1">
-              <View className="flex-row items-center gap-1.5">
-                <Text className="text-[16px] font-bold leading-6 text-text dark:text-text-primary-dark">
-                  {t('onboardingLocalIdentityRegionalAccessTitle')}
-                </Text>
-                <InfoDot
-                  accessibilityHint={t('onboardingInfoButtonHint')}
-                  accessibilityLabel={t('onboardingInfoButtonLabel')}
-                  onPress={() =>
-                    showInfoAlert(
-                      t('onboardingLocalIdentityRegionalAccessInfoTitle'),
-                      t('onboardingLocalIdentityRegionalAccessInfoMessage')
-                    )
-                  }
-                  size="sm"
-                  testID="onboarding-local-identity-regional-info"
+          <Animated.View
+            entering={withRM(
+              FadeInUp.springify()
+                .damping(18)
+                .stiffness(140)
+                .delay(RADIO_BASE_DELAY)
+            )}
+            className="mb-3 rounded-3xl border border-border bg-white p-4 dark:border-dark-border dark:bg-dark-bg-card"
+            style={shadows.level4}
+          >
+            <View className="mb-3 flex-row items-start gap-3">
+              <View className="size-9 items-center justify-center rounded-full bg-secondary-fixed/45 dark:bg-secondary/25">
+                <MapPin
+                  className="text-secondary dark:text-secondary-fixed"
+                  size={16}
                 />
               </View>
-              <Text className="text-[12px] leading-4 text-text-secondary dark:text-text-secondary-dark">
-                {t('onboardingLocalIdentityRegionalAccessDescription')}
-              </Text>
-            </View>
-          </View>
-
-          <Controller
-            control={control}
-            name="memberSegment"
-            render={({ field }) => {
-              const isLongTermSelected = field.value === 'LONG_TERM';
-              const isShortTermSelected = field.value === 'SHORT_TERM';
-
-              return (
-                <View className="gap-2">
-                  <Animated.View
-                    entering={withRM(
-                      FadeInUp.duration(motion.dur.sm).delay(
-                        RADIO_BASE_DELAY + RADIO_STAGGER
-                      )
-                    )}
-                  >
-                    <Pressable
-                      accessibilityRole="radio"
-                      accessibilityState={{ selected: isLongTermSelected }}
-                      className={`flex-row items-center gap-3 rounded-2xl border px-4 py-3 ${
-                        isLongTermSelected
-                          ? 'border-primary bg-primary/5 dark:border-primary-bright dark:bg-primary-bright/15'
-                          : 'border-border bg-surface dark:border-dark-border dark:bg-dark-bg-elevated'
-                      }`}
-                      onPress={() => {
-                        hapticSelection();
-                        field.onChange('LONG_TERM');
-                      }}
-                      testID="onboarding-local-identity-long-term"
-                    >
-                      <View
-                        className={`size-5 items-center justify-center rounded-full border-2 ${
-                          isLongTermSelected
-                            ? 'border-primary dark:border-primary-bright'
-                            : 'border-border dark:border-dark-border'
-                        }`}
-                      >
-                        {isLongTermSelected ? (
-                          <Check
-                            className="text-primary dark:text-primary-bright"
-                            size={12}
-                          />
-                        ) : null}
-                      </View>
-                      <View className="flex-1">
-                        <Text className="text-[15px] font-bold text-text dark:text-text-primary-dark">
-                          {t('onboardingLocalIdentityLocalTitle')}
-                        </Text>
-                        <Text className="text-[12px] leading-4 text-text-secondary dark:text-text-secondary-dark">
-                          {t('onboardingLocalIdentityLocalDescription')}
-                        </Text>
-                      </View>
-                    </Pressable>
-                  </Animated.View>
-
-                  <Animated.View
-                    entering={withRM(
-                      FadeInUp.duration(motion.dur.sm).delay(
-                        RADIO_BASE_DELAY + RADIO_STAGGER * 2
-                      )
-                    )}
-                  >
-                    <Pressable
-                      accessibilityRole="radio"
-                      accessibilityState={{ selected: isShortTermSelected }}
-                      className={`flex-row items-center gap-3 rounded-2xl border px-4 py-3 ${
-                        isShortTermSelected
-                          ? 'border-primary bg-primary/5 dark:border-primary-bright dark:bg-primary-bright/15'
-                          : 'border-border bg-surface dark:border-dark-border dark:bg-dark-bg-elevated'
-                      }`}
-                      onPress={() => {
-                        hapticSelection();
-                        field.onChange('SHORT_TERM');
-                      }}
-                      testID="onboarding-local-identity-short-term"
-                    >
-                      <View
-                        className={`size-5 items-center justify-center rounded-full border-2 ${
-                          isShortTermSelected
-                            ? 'border-primary dark:border-primary-bright'
-                            : 'border-border dark:border-dark-border'
-                        }`}
-                      >
-                        {isShortTermSelected ? (
-                          <Check
-                            className="text-primary dark:text-primary-bright"
-                            size={12}
-                          />
-                        ) : null}
-                      </View>
-                      <View className="flex-1">
-                        <Text className="text-[15px] font-bold text-text dark:text-text-primary-dark">
-                          {t('onboardingLocalIdentityForeignerTitle')}
-                        </Text>
-                        <Text className="text-[12px] leading-4 text-text-secondary dark:text-text-secondary-dark">
-                          {t('onboardingLocalIdentityForeignerDescription')}
-                        </Text>
-                      </View>
-                    </Pressable>
-                  </Animated.View>
-                </View>
-              );
-            }}
-          />
-        </Animated.View>
-
-        <Animated.View
-          entering={withRM(
-            FadeIn.duration(motion.dur.md).delay(CONSENTS_DELAY)
-          )}
-          className="mb-3"
-        >
-          <View className="mb-2 flex-row items-center gap-2 px-1">
-            <View className="h-px flex-1 bg-border/60 dark:bg-dark-border/70" />
-            <Text className="text-[10px] font-bold uppercase tracking-[2.5px] text-text-muted dark:text-text-muted-dark">
-              {t('onboardingLocalIdentityLegalConsentsTitle')}
-            </Text>
-            <View className="h-px flex-1 bg-border/60 dark:bg-dark-border/70" />
-          </View>
-
-          <View className="gap-2">
-            <Animated.View
-              entering={withRM(
-                FadeInUp.duration(motion.dur.sm).delay(
-                  CONSENTS_DELAY + CONSENT_STAGGER
-                )
-              )}
-            >
-              <Controller
-                control={control}
-                name="acceptedTerms"
-                render={({ field }) => (
-                  <Pressable
-                    accessibilityRole="checkbox"
-                    accessibilityState={{ checked: field.value }}
-                    className="rounded-2xl border border-border bg-white px-4 py-3 dark:border-dark-border dark:bg-dark-bg-card"
-                    onPress={() => {
-                      hapticSelection();
-                      field.onChange(!field.value);
-                    }}
-                    testID="onboarding-local-identity-terms"
-                  >
-                    <View className="flex-row items-start gap-3">
-                      <View
-                        className={`mt-0.5 size-5 items-center justify-center rounded-md border ${
-                          field.value
-                            ? 'border-primary bg-primary dark:border-primary-bright dark:bg-primary-bright'
-                            : 'border-border dark:border-dark-border'
-                        }`}
-                      >
-                        {field.value ? (
-                          <Check color={Colors.white} size={12} />
-                        ) : null}
-                      </View>
-
-                      <View className="flex-1">
-                        <View className="flex-row items-center gap-1.5">
-                          <Text className="text-[14px] font-semibold leading-5 text-text dark:text-text-primary-dark">
-                            {t('onboardingLocalIdentityTermsTitle')}
-                          </Text>
-                          <InfoDot
-                            accessibilityHint={t('onboardingInfoButtonHint')}
-                            accessibilityLabel={t('onboardingInfoButtonLabel')}
-                            onPress={() =>
-                              showInfoAlert(
-                                t('onboardingLocalIdentityTermsInfoTitle'),
-                                t('onboardingLocalIdentityTermsInfoMessage')
-                              )
-                            }
-                            size="sm"
-                            testID="onboarding-local-identity-terms-info"
-                          />
-                        </View>
-                        <View className="flex-row flex-wrap items-center">
-                          <Text className="text-[12px] leading-4 text-text-secondary dark:text-text-secondary-dark">
-                            {t(
-                              'onboardingLocalIdentityTermsDescriptionPrefix'
-                            )}{' '}
-                          </Text>
-                          <Pressable
-                            accessible={true}
-                            accessibilityHint={t('onboardingInfoButtonHint')}
-                            accessibilityLabel={t(
-                              'onboardingLocalIdentityTermsLinkText'
-                            )}
-                            accessibilityRole="link"
-                            className="rounded-sm"
-                            hitSlop={6}
-                            onPress={(event) => {
-                              event.stopPropagation();
-                              void Linking.openURL(
-                                config.legal.termsOfServiceUrl
-                              );
-                            }}
-                          >
-                            <Text className="text-[12px] leading-4 text-primary dark:text-primary-bright">
-                              {t('onboardingLocalIdentityTermsLinkText')}
-                            </Text>
-                          </Pressable>
-                          <Text className="text-[12px] leading-4 text-text-secondary dark:text-text-secondary-dark">
-                            {' '}
-                            {t('onboardingLocalIdentityTermsDescriptionSuffix')}
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
-                  </Pressable>
-                )}
-              />
-            </Animated.View>
-
-            <Animated.View
-              entering={withRM(
-                FadeInUp.duration(motion.dur.sm).delay(
-                  CONSENTS_DELAY + CONSENT_STAGGER * 2
-                )
-              )}
-            >
-              <Controller
-                control={control}
-                name="acceptedPrivacyPolicy"
-                render={({ field }) => (
-                  <Pressable
-                    accessibilityRole="checkbox"
-                    accessibilityState={{ checked: field.value }}
-                    className="rounded-2xl border border-border bg-white px-4 py-3 dark:border-dark-border dark:bg-dark-bg-card"
-                    onPress={() => {
-                      hapticSelection();
-                      field.onChange(!field.value);
-                    }}
-                    testID="onboarding-local-identity-privacy"
-                  >
-                    <View className="flex-row items-start gap-3">
-                      <View
-                        className={`mt-0.5 size-5 items-center justify-center rounded-md border ${
-                          field.value
-                            ? 'border-primary bg-primary dark:border-primary-bright dark:bg-primary-bright'
-                            : 'border-border dark:border-dark-border'
-                        }`}
-                      >
-                        {field.value ? (
-                          <Check color={Colors.white} size={12} />
-                        ) : null}
-                      </View>
-
-                      <View className="flex-1">
-                        <View className="flex-row items-center gap-1.5">
-                          <Text className="text-[14px] font-semibold leading-5 text-text dark:text-text-primary-dark">
-                            {t('onboardingLocalIdentityPrivacyTitle')}
-                          </Text>
-                          <InfoDot
-                            accessibilityHint={t('onboardingInfoButtonHint')}
-                            accessibilityLabel={t('onboardingInfoButtonLabel')}
-                            onPress={() =>
-                              showInfoAlert(
-                                t('onboardingLocalIdentityPrivacyInfoTitle'),
-                                t('onboardingLocalIdentityPrivacyInfoMessage')
-                              )
-                            }
-                            size="sm"
-                            testID="onboarding-local-identity-privacy-info"
-                          />
-                        </View>
-                        <View className="flex-row flex-wrap items-center">
-                          <Text className="text-[12px] leading-4 text-text-secondary dark:text-text-secondary-dark">
-                            {t(
-                              'onboardingLocalIdentityPrivacyDescriptionPrefix'
-                            )}{' '}
-                          </Text>
-                          <Pressable
-                            accessible={true}
-                            accessibilityHint={t('onboardingInfoButtonHint')}
-                            accessibilityLabel={t(
-                              'onboardingLocalIdentityPrivacyLinkText'
-                            )}
-                            accessibilityRole="link"
-                            className="rounded-sm"
-                            hitSlop={6}
-                            onPress={(event) => {
-                              event.stopPropagation();
-                              void Linking.openURL(
-                                config.legal.privacyPolicyUrl
-                              );
-                            }}
-                          >
-                            <Text className="text-[12px] leading-4 text-primary dark:text-primary-bright">
-                              {t('onboardingLocalIdentityPrivacyLinkText')}
-                            </Text>
-                          </Pressable>
-                          <Text className="text-[12px] leading-4 text-text-secondary dark:text-text-secondary-dark">
-                            {' '}
-                            {t(
-                              'onboardingLocalIdentityPrivacyDescriptionSuffix'
-                            )}
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
-                  </Pressable>
-                )}
-              />
-            </Animated.View>
-          </View>
-        </Animated.View>
-
-        <Animated.View
-          entering={withRM(FadeIn.duration(motion.dur.md).delay(CTA_DELAY))}
-          className="mt-auto"
-        >
-          <Animated.View style={ctaButton.animatedStyle}>
-            <Pressable
-              accessibilityRole="button"
-              className="overflow-hidden rounded-full"
-              onPress={(e) => {
-                hapticLight();
-                onSubmit(e);
-              }}
-              onPressIn={ctaButton.handlePressIn}
-              onPressOut={ctaButton.handlePressOut}
-              testID="onboarding-local-identity-continue"
-            >
-              <LinearGradient
-                colors={Colors.gradientPrimary}
-                end={{ x: 1, y: 0 }}
-                start={{ x: 0, y: 0 }}
-                style={{
-                  alignItems: 'center',
-                  borderRadius: 999,
-                  height: 54,
-                  justifyContent: 'center',
-                }}
-              >
-                <View className="flex-row items-center gap-2.5">
-                  <Text className="text-[17px] font-bold text-white">
-                    {t('onboardingLocalIdentityContinue')}
+              <View className="flex-1">
+                <View className="flex-row items-center gap-1.5">
+                  <Text className="text-[16px] font-bold leading-6 text-text dark:text-text-primary-dark">
+                    {t('onboardingLocalIdentityRegionalAccessTitle')}
                   </Text>
-                  <ArrowRight color={Colors.white} size={22} />
+                  <InfoDot
+                    accessibilityHint={t('onboardingInfoButtonHint')}
+                    accessibilityLabel={t('onboardingInfoButtonLabel')}
+                    onPress={() =>
+                      showInfoAlert(
+                        t('onboardingLocalIdentityRegionalAccessInfoTitle'),
+                        t('onboardingLocalIdentityRegionalAccessInfoMessage')
+                      )
+                    }
+                    size="sm"
+                    testID="onboarding-local-identity-regional-info"
+                  />
                 </View>
-              </LinearGradient>
-            </Pressable>
+                <Text className="text-[12px] leading-4 text-text-secondary dark:text-text-secondary-dark">
+                  {t('onboardingLocalIdentityRegionalAccessDescription')}
+                </Text>
+              </View>
+            </View>
+
+            <Controller
+              control={control}
+              name="memberSegment"
+              render={({ field }) => {
+                const isLongTermSelected = field.value === 'LONG_TERM';
+                const isShortTermSelected = field.value === 'SHORT_TERM';
+
+                return (
+                  <View className="gap-2">
+                    <Animated.View
+                      entering={withRM(
+                        FadeInUp.duration(motion.dur.sm).delay(
+                          RADIO_BASE_DELAY + RADIO_STAGGER
+                        )
+                      )}
+                    >
+                      <Pressable
+                        accessibilityRole="radio"
+                        accessibilityState={{ selected: isLongTermSelected }}
+                        className={`flex-row items-center gap-3 rounded-2xl border px-4 py-3 ${
+                          isLongTermSelected
+                            ? 'border-primary bg-primary/5 dark:border-primary-bright dark:bg-primary-bright/15'
+                            : 'border-border bg-surface dark:border-dark-border dark:bg-dark-bg-elevated'
+                        }`}
+                        onPress={() => {
+                          hapticSelection();
+                          field.onChange('LONG_TERM');
+                        }}
+                        testID="onboarding-local-identity-long-term"
+                      >
+                        <View
+                          className={`size-5 items-center justify-center rounded-full border-2 ${
+                            isLongTermSelected
+                              ? 'border-primary dark:border-primary-bright'
+                              : 'border-border dark:border-dark-border'
+                          }`}
+                        >
+                          {isLongTermSelected ? (
+                            <Check
+                              className="text-primary dark:text-primary-bright"
+                              size={12}
+                            />
+                          ) : null}
+                        </View>
+                        <View className="flex-1">
+                          <Text className="text-[15px] font-bold text-text dark:text-text-primary-dark">
+                            {t('onboardingLocalIdentityLocalTitle')}
+                          </Text>
+                          <Text className="text-[12px] leading-4 text-text-secondary dark:text-text-secondary-dark">
+                            {t('onboardingLocalIdentityLocalDescription')}
+                          </Text>
+                        </View>
+                      </Pressable>
+                    </Animated.View>
+
+                    <Animated.View
+                      entering={withRM(
+                        FadeInUp.duration(motion.dur.sm).delay(
+                          RADIO_BASE_DELAY + RADIO_STAGGER * 2
+                        )
+                      )}
+                    >
+                      <Pressable
+                        accessibilityRole="radio"
+                        accessibilityState={{ selected: isShortTermSelected }}
+                        className={`flex-row items-center gap-3 rounded-2xl border px-4 py-3 ${
+                          isShortTermSelected
+                            ? 'border-primary bg-primary/5 dark:border-primary-bright dark:bg-primary-bright/15'
+                            : 'border-border bg-surface dark:border-dark-border dark:bg-dark-bg-elevated'
+                        }`}
+                        onPress={() => {
+                          hapticSelection();
+                          field.onChange('SHORT_TERM');
+                        }}
+                        testID="onboarding-local-identity-short-term"
+                      >
+                        <View
+                          className={`size-5 items-center justify-center rounded-full border-2 ${
+                            isShortTermSelected
+                              ? 'border-primary dark:border-primary-bright'
+                              : 'border-border dark:border-dark-border'
+                          }`}
+                        >
+                          {isShortTermSelected ? (
+                            <Check
+                              className="text-primary dark:text-primary-bright"
+                              size={12}
+                            />
+                          ) : null}
+                        </View>
+                        <View className="flex-1">
+                          <Text className="text-[15px] font-bold text-text dark:text-text-primary-dark">
+                            {t('onboardingLocalIdentityForeignerTitle')}
+                          </Text>
+                          <Text className="text-[12px] leading-4 text-text-secondary dark:text-text-secondary-dark">
+                            {t('onboardingLocalIdentityForeignerDescription')}
+                          </Text>
+                        </View>
+                      </Pressable>
+                    </Animated.View>
+                  </View>
+                );
+              }}
+            />
           </Animated.View>
-        </Animated.View>
+
+          <Animated.View
+            entering={withRM(
+              FadeIn.duration(motion.dur.md).delay(CONSENTS_DELAY)
+            )}
+            className="mb-3"
+          >
+            <View className="mb-2 flex-row items-center gap-2 px-1">
+              <View className="h-px flex-1 bg-border/60 dark:bg-dark-border/70" />
+              <Text className="text-[10px] font-bold uppercase tracking-[2.5px] text-text-muted dark:text-text-muted-dark">
+                {t('onboardingLocalIdentityLegalConsentsTitle')}
+              </Text>
+              <View className="h-px flex-1 bg-border/60 dark:bg-dark-border/70" />
+            </View>
+
+            <View className="gap-2">
+              <Animated.View
+                entering={withRM(
+                  FadeInUp.duration(motion.dur.sm).delay(
+                    CONSENTS_DELAY + CONSENT_STAGGER
+                  )
+                )}
+              >
+                <Controller
+                  control={control}
+                  name="acceptedTerms"
+                  render={({ field }) => (
+                    <Pressable
+                      accessibilityRole="checkbox"
+                      accessibilityState={{ checked: field.value }}
+                      className="rounded-2xl border border-border bg-white px-4 py-3 dark:border-dark-border dark:bg-dark-bg-card"
+                      onPress={() => {
+                        hapticSelection();
+                        field.onChange(!field.value);
+                      }}
+                      testID="onboarding-local-identity-terms"
+                    >
+                      <View className="flex-row items-start gap-3">
+                        <View
+                          className={`mt-0.5 size-5 items-center justify-center rounded-md border ${
+                            field.value
+                              ? 'border-primary bg-primary dark:border-primary-bright dark:bg-primary-bright'
+                              : 'border-border dark:border-dark-border'
+                          }`}
+                        >
+                          {field.value ? (
+                            <Check color={Colors.white} size={12} />
+                          ) : null}
+                        </View>
+
+                        <View className="flex-1">
+                          <View className="flex-row items-center gap-1.5">
+                            <Text className="text-[14px] font-semibold leading-5 text-text dark:text-text-primary-dark">
+                              {t('onboardingLocalIdentityTermsTitle')}
+                            </Text>
+                            <InfoDot
+                              accessibilityHint={t('onboardingInfoButtonHint')}
+                              accessibilityLabel={t(
+                                'onboardingInfoButtonLabel'
+                              )}
+                              onPress={() =>
+                                showInfoAlert(
+                                  t('onboardingLocalIdentityTermsInfoTitle'),
+                                  t('onboardingLocalIdentityTermsInfoMessage')
+                                )
+                              }
+                              size="sm"
+                              testID="onboarding-local-identity-terms-info"
+                            />
+                          </View>
+                          <View className="flex-row flex-wrap items-center">
+                            <Text className="text-[12px] leading-4 text-text-secondary dark:text-text-secondary-dark">
+                              {t(
+                                'onboardingLocalIdentityTermsDescriptionPrefix'
+                              )}{' '}
+                            </Text>
+                            <Pressable
+                              accessible={true}
+                              accessibilityHint={t('onboardingInfoButtonHint')}
+                              accessibilityLabel={t(
+                                'onboardingLocalIdentityTermsLinkText'
+                              )}
+                              accessibilityRole="link"
+                              className="rounded-sm"
+                              hitSlop={6}
+                              onPress={(event) => {
+                                event.stopPropagation();
+                                void Linking.openURL(
+                                  config.legal.termsOfServiceUrl
+                                );
+                              }}
+                            >
+                              <Text className="text-[12px] leading-4 text-primary dark:text-primary-bright">
+                                {t('onboardingLocalIdentityTermsLinkText')}
+                              </Text>
+                            </Pressable>
+                            <Text className="text-[12px] leading-4 text-text-secondary dark:text-text-secondary-dark">
+                              {' '}
+                              {t(
+                                'onboardingLocalIdentityTermsDescriptionSuffix'
+                              )}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+                    </Pressable>
+                  )}
+                />
+              </Animated.View>
+
+              <Animated.View
+                entering={withRM(
+                  FadeInUp.duration(motion.dur.sm).delay(
+                    CONSENTS_DELAY + CONSENT_STAGGER * 2
+                  )
+                )}
+              >
+                <Controller
+                  control={control}
+                  name="acceptedPrivacyPolicy"
+                  render={({ field }) => (
+                    <Pressable
+                      accessibilityRole="checkbox"
+                      accessibilityState={{ checked: field.value }}
+                      className="rounded-2xl border border-border bg-white px-4 py-3 dark:border-dark-border dark:bg-dark-bg-card"
+                      onPress={() => {
+                        hapticSelection();
+                        field.onChange(!field.value);
+                      }}
+                      testID="onboarding-local-identity-privacy"
+                    >
+                      <View className="flex-row items-start gap-3">
+                        <View
+                          className={`mt-0.5 size-5 items-center justify-center rounded-md border ${
+                            field.value
+                              ? 'border-primary bg-primary dark:border-primary-bright dark:bg-primary-bright'
+                              : 'border-border dark:border-dark-border'
+                          }`}
+                        >
+                          {field.value ? (
+                            <Check color={Colors.white} size={12} />
+                          ) : null}
+                        </View>
+
+                        <View className="flex-1">
+                          <View className="flex-row items-center gap-1.5">
+                            <Text className="text-[14px] font-semibold leading-5 text-text dark:text-text-primary-dark">
+                              {t('onboardingLocalIdentityPrivacyTitle')}
+                            </Text>
+                            <InfoDot
+                              accessibilityHint={t('onboardingInfoButtonHint')}
+                              accessibilityLabel={t(
+                                'onboardingInfoButtonLabel'
+                              )}
+                              onPress={() =>
+                                showInfoAlert(
+                                  t('onboardingLocalIdentityPrivacyInfoTitle'),
+                                  t('onboardingLocalIdentityPrivacyInfoMessage')
+                                )
+                              }
+                              size="sm"
+                              testID="onboarding-local-identity-privacy-info"
+                            />
+                          </View>
+                          <View className="flex-row flex-wrap items-center">
+                            <Text className="text-[12px] leading-4 text-text-secondary dark:text-text-secondary-dark">
+                              {t(
+                                'onboardingLocalIdentityPrivacyDescriptionPrefix'
+                              )}{' '}
+                            </Text>
+                            <Pressable
+                              accessible={true}
+                              accessibilityHint={t('onboardingInfoButtonHint')}
+                              accessibilityLabel={t(
+                                'onboardingLocalIdentityPrivacyLinkText'
+                              )}
+                              accessibilityRole="link"
+                              className="rounded-sm"
+                              hitSlop={6}
+                              onPress={(event) => {
+                                event.stopPropagation();
+                                void Linking.openURL(
+                                  config.legal.privacyPolicyUrl
+                                );
+                              }}
+                            >
+                              <Text className="text-[12px] leading-4 text-primary dark:text-primary-bright">
+                                {t('onboardingLocalIdentityPrivacyLinkText')}
+                              </Text>
+                            </Pressable>
+                            <Text className="text-[12px] leading-4 text-text-secondary dark:text-text-secondary-dark">
+                              {' '}
+                              {t(
+                                'onboardingLocalIdentityPrivacyDescriptionSuffix'
+                              )}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+                    </Pressable>
+                  )}
+                />
+              </Animated.View>
+            </View>
+          </Animated.View>
+
+          <Animated.View
+            entering={withRM(FadeIn.duration(motion.dur.md).delay(CTA_DELAY))}
+            className="mt-auto"
+          >
+            <Animated.View style={ctaButton.animatedStyle}>
+              <Pressable
+                accessibilityRole="button"
+                className="overflow-hidden rounded-full"
+                onPress={(e) => {
+                  hapticLight();
+                  onSubmit(e);
+                }}
+                onPressIn={ctaButton.handlePressIn}
+                onPressOut={ctaButton.handlePressOut}
+                testID="onboarding-local-identity-continue"
+              >
+                <LinearGradient
+                  colors={Colors.gradientPrimary}
+                  end={{ x: 1, y: 0 }}
+                  start={{ x: 0, y: 0 }}
+                  style={{
+                    alignItems: 'center',
+                    borderRadius: 999,
+                    height: 54,
+                    justifyContent: 'center',
+                  }}
+                >
+                  <View className="flex-row items-center gap-2.5">
+                    <Text className="text-[17px] font-bold text-white">
+                      {t('onboardingLocalIdentityContinue')}
+                    </Text>
+                    <ArrowRight color={Colors.white} size={22} />
+                  </View>
+                </LinearGradient>
+              </Pressable>
+            </Animated.View>
+          </Animated.View>
+        </AuthScreenContent>
       </ScrollView>
     </View>
   );

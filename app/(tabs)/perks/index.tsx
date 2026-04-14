@@ -10,6 +10,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { accentOnDarkBackground, Colors } from '@/constants/colors';
 import type { Partner } from '@/lib/types';
 import { useFilteredPartners, usePartnersData } from '@/providers/DataProvider';
+import {
+  APP_SCREEN_MAX_WIDTH,
+  AppScreenContent,
+} from '@/src/components/app/app-screen-content';
 import { CategoryChip, ScreenHeader, SkeletonCard } from '@/src/components/ui';
 import { HeaderGlassButton } from '@/src/components/ui/header-glass-button';
 import { useButtonPress } from '@/src/lib/animations/use-button-press';
@@ -185,7 +189,8 @@ export default function PerksScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const [activeCategory, setActiveCategory] = useState<string>('All');
-  const cardWidth = (width - 52) / 2;
+  const boundedContentWidth = Math.min(width, APP_SCREEN_MAX_WIDTH);
+  const cardWidth = (boundedContentWidth - 52) / 2;
   const headerAccent = accentOnDarkBackground(Colors.primary, isDark);
   const listContentContainerStyle = useMemo(
     () => ({
@@ -248,66 +253,68 @@ export default function PerksScreen(): React.JSX.Element {
       className="flex-1 bg-background dark:bg-dark-bg"
       style={{ paddingTop: insets.top }}
     >
-      <ScreenHeader
-        rightAction={historyButton}
-        testID="perks-screen-header"
-        title={t('title')}
-      />
+      <AppScreenContent className="flex-1">
+        <ScreenHeader
+          rightAction={historyButton}
+          testID="perks-screen-header"
+          title={t('title')}
+        />
 
-      <FlashList
-        contentContainerStyle={listContentContainerStyle}
-        data={filtered}
-        keyExtractor={(item) => item.id}
-        ListHeaderComponent={
-          <PerksListHeader>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerClassName="mb-4 gap-2"
-            >
-              {partnerCategories.map((category) => (
-                <CategoryChip
-                  key={category.value}
-                  isActive={activeCategory === category.value}
-                  label={t(category.labelKey)}
-                  onPress={() => {
-                    hapticSelection();
-                    setActiveCategory(category.value);
-                  }}
-                  testID={`cat-${category.value}`}
-                />
-              ))}
-            </ScrollView>
+        <FlashList
+          contentContainerStyle={listContentContainerStyle}
+          data={filtered}
+          keyExtractor={(item) => item.id}
+          ListHeaderComponent={
+            <PerksListHeader>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerClassName="mb-4 gap-2"
+              >
+                {partnerCategories.map((category) => (
+                  <CategoryChip
+                    key={category.value}
+                    isActive={activeCategory === category.value}
+                    label={t(category.labelKey)}
+                    onPress={() => {
+                      hapticSelection();
+                      setActiveCategory(category.value);
+                    }}
+                    testID={`cat-${category.value}`}
+                  />
+                ))}
+              </ScrollView>
 
-            <DanangCtaCard onPress={handleOpenDanangGuide} />
-          </PerksListHeader>
-        }
-        ListEmptyComponent={
-          partnersLoading ? (
-            <View className="flex-row flex-wrap justify-between">
-              {Array.from({ length: 4 }, (_, i) => (
-                <SkeletonCard
-                  key={i}
-                  height={cardWidth * 0.7 + 88}
-                  style={{ marginBottom: 14, width: cardWidth }}
-                />
-              ))}
-            </View>
-          ) : (
-            <View className="rounded-2xl border border-border bg-card px-4 py-8 dark:border-dark-border dark:bg-dark-bg-card">
-              <Text className="text-center text-lg font-bold text-text dark:text-text-primary-dark">
-                {t('emptyTitle')}
-              </Text>
-              <Text className="mt-2 text-center text-sm leading-6 text-text-secondary dark:text-text-secondary-dark">
-                {t('emptyDescription')}
-              </Text>
-            </View>
-          )
-        }
-        numColumns={2}
-        renderItem={renderCard}
-        showsVerticalScrollIndicator={false}
-      />
+              <DanangCtaCard onPress={handleOpenDanangGuide} />
+            </PerksListHeader>
+          }
+          ListEmptyComponent={
+            partnersLoading ? (
+              <View className="flex-row flex-wrap justify-between">
+                {Array.from({ length: 4 }, (_, i) => (
+                  <SkeletonCard
+                    key={i}
+                    height={cardWidth * 0.7 + 88}
+                    style={{ marginBottom: 14, width: cardWidth }}
+                  />
+                ))}
+              </View>
+            ) : (
+              <View className="rounded-2xl border border-border bg-card px-4 py-8 dark:border-dark-border dark:bg-dark-bg-card">
+                <Text className="text-center text-lg font-bold text-text dark:text-text-primary-dark">
+                  {t('emptyTitle')}
+                </Text>
+                <Text className="mt-2 text-center text-sm leading-6 text-text-secondary dark:text-text-secondary-dark">
+                  {t('emptyDescription')}
+                </Text>
+              </View>
+            )
+          }
+          numColumns={2}
+          renderItem={renderCard}
+          showsVerticalScrollIndicator={false}
+        />
+      </AppScreenContent>
     </View>
   );
 }

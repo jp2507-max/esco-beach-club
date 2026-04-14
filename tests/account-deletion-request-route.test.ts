@@ -16,7 +16,7 @@ const createInstantUpdateStepMock = mock(
 const revokeAppleAuthorizationCodeMock = mock(async () => ({
   status: 'revoked' as const,
 }));
-const transactMock = mock(async () => undefined);
+const transactMock = mock(async () => ({}) as Record<string, unknown>);
 const signOutMock = mock(async () => undefined);
 const queryMock = mock(async () => ({}));
 const verifyInstantRefreshTokenMock = mock(async () => ({
@@ -72,7 +72,7 @@ describe('account deletion request route', () => {
     transactMock.mockReset();
     verifyInstantRefreshTokenMock.mockReset();
 
-    transactMock.mockResolvedValue(undefined);
+    transactMock.mockResolvedValue({});
     signOutMock.mockResolvedValue(undefined);
     verifyInstantRefreshTokenMock.mockResolvedValue({
       ok: true,
@@ -215,7 +215,7 @@ describe('account deletion request route', () => {
     expect(response.status).toBe(502);
     expect(body).toEqual({
       error: 'apple_revocation_failed',
-      message: 'token_exchange_failed',
+      message: 'revocation_failed',
     });
     expect(createInstantCreateStepMock).not.toHaveBeenCalled();
     expect(transactMock).not.toHaveBeenCalled();

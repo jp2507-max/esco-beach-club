@@ -14,6 +14,7 @@ import {
   MenuContentDataProvider,
   useMenuContentData,
 } from '@/providers/DataProvider';
+import { AppScreenContent } from '@/src/components/app/app-screen-content';
 import { Badge, Card } from '@/src/components/ui';
 import { useScreenEntry } from '@/src/lib/animations/use-screen-entry';
 import {
@@ -358,44 +359,49 @@ function MenuScreenContent(): React.JSX.Element {
 
   return (
     <View className="flex-1 bg-background dark:bg-dark-bg">
-      <View className="border-b border-border pt-3 dark:border-dark-border">
-        <ScrollView
-          contentContainerClassName="gap-1.5 px-4 pb-3"
-          horizontal={true}
-          showsHorizontalScrollIndicator={false}
-        >
-          {resolvedCategories.map((cat) => {
-            const active = activeCategory === cat.key;
-            const tabStyles = getTabStyles(active, isDark);
+      <AppScreenContent className="flex-1">
+        <View className="border-b border-border pt-3 dark:border-dark-border">
+          <ScrollView
+            contentContainerClassName="gap-1.5 px-4 pb-3"
+            horizontal={true}
+            showsHorizontalScrollIndicator={false}
+          >
+            {resolvedCategories.map((cat) => {
+              const active = activeCategory === cat.key;
+              const tabStyles = getTabStyles(active, isDark);
 
-            return (
-              <Pressable
-                accessibilityRole="button"
-                key={cat.key}
-                className="rounded-full px-5 py-2.5"
-                onPress={() => setActiveCategory(cat.key)}
-                style={tabStyles.container}
-                testID={`tab-${cat.key}`}
-              >
-                <Text className="text-sm font-semibold" style={tabStyles.label}>
-                  {tMenu(cat.labelKey)}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-      </View>
+              return (
+                <Pressable
+                  accessibilityRole="button"
+                  key={cat.key}
+                  className="rounded-full px-5 py-2.5"
+                  onPress={() => setActiveCategory(cat.key)}
+                  style={tabStyles.container}
+                  testID={`tab-${cat.key}`}
+                >
+                  <Text
+                    className="text-sm font-semibold"
+                    style={tabStyles.label}
+                  >
+                    {tMenu(cat.labelKey)}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
 
-      <Animated.View className="flex-1" style={contentStyle}>
-        <FlashList
-          contentInsetAdjustmentBehavior="automatic"
-          contentContainerStyle={listContentContainerStyle}
-          data={currentItems}
-          keyExtractor={(item) => item.id}
-          renderItem={renderMenuItem}
-          showsVerticalScrollIndicator={false}
-        />
-      </Animated.View>
+        <Animated.View className="flex-1" style={contentStyle}>
+          <FlashList
+            contentInsetAdjustmentBehavior="automatic"
+            contentContainerStyle={listContentContainerStyle}
+            data={currentItems}
+            keyExtractor={(item) => item.id}
+            renderItem={renderMenuItem}
+            showsVerticalScrollIndicator={false}
+          />
+        </Animated.View>
+      </AppScreenContent>
     </View>
   );
 }

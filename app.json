@@ -50,6 +50,10 @@
           "backgroundColor": "#FFFDF5",
           "image": "./assets/images/launch-wordmark-light.png",
           "imageWidth": 240,
+          "android": {
+            "imageWidth": 212,
+            "resizeMode": "contain"
+          },
           "resizeMode": "contain",
           "dark": {
             "backgroundColor": "#000000",
@@ -63,7 +67,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow Esco Beach Club to access your camera so staff can scan member QR codes."
+          "cameraPermission": "Allow Esco Beach Club to access your camera so you can scan bill QR codes and claim member points."
         }
       ],
       [

@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test';
+import { afterEach, describe, expect, mock, test } from 'bun:test';
 
 const runtimeConfigMock = {
   getInstantAppIdForServer: mock(() => 'app-123'),
@@ -17,17 +17,11 @@ describe('instant admin server fetch composition', () => {
   const originalFetch = global.fetch;
   const originalSetTimeout = global.setTimeout;
   const originalClearTimeout = global.clearTimeout;
-  const originalAdminToken = process.env.INSTANT_APP_ADMIN_TOKEN;
-
-  beforeEach(() => {
-    process.env.INSTANT_APP_ADMIN_TOKEN = 'admin-token';
-  });
 
   afterEach(() => {
     global.fetch = originalFetch;
     global.setTimeout = originalSetTimeout;
     global.clearTimeout = originalClearTimeout;
-    process.env.INSTANT_APP_ADMIN_TOKEN = originalAdminToken;
   });
 
   test('keeps the timeout active when the caller passes a signal', async () => {
@@ -38,9 +32,12 @@ describe('instant admin server fetch composition', () => {
       apiUri: 'https://api.instantdb.com',
       appId: 'app-123',
     };
-    let timeoutHandler: TimerHandler | undefined;
+    let timeoutHandler: Parameters<typeof setTimeout>[0] | undefined;
 
-    global.setTimeout = ((handler: TimerHandler, timeout?: number) => {
+    global.setTimeout = ((
+      handler: Parameters<typeof setTimeout>[0],
+      timeout?: number
+    ) => {
       expect(timeout).toBe(30000);
       timeoutHandler = handler;
       return 1 as unknown as ReturnType<typeof setTimeout>;

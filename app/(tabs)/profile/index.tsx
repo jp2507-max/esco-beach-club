@@ -31,6 +31,7 @@ import {
   useMemberSummary,
   useProfileData,
 } from '@/providers/DataProvider';
+import { AppScreenContent } from '@/src/components/app/app-screen-content';
 import { ProfileHeader } from '@/src/components/profile/profile-header';
 import {
   type ProfileMenuItem,
@@ -292,97 +293,99 @@ function ProfileScreenContent(): React.JSX.Element {
         />
       </View>
 
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        contentContainerClassName="px-5 pb-5"
-        showsVerticalScrollIndicator={false}
-      >
-        <ProfileHeader
-          avatarUrl={memberSummary.avatarUrl}
-          comingSoonLabel={t('menu.comingSoon')}
-          isDark={isDark}
-          notificationsHint={t('notifications.hint')}
-          onPressNotifications={() => Alert.alert(t('menu.comingSoon'))}
-          userName={userName}
-          welcomeBackLabel={t('welcomeBack')}
-        />
-
-        <View className="mb-5 items-center">
-          <View className="flex-row items-center rounded-full border border-border bg-white px-4.5 py-2 dark:border-dark-border dark:bg-dark-bg-card">
-            <Star color={Colors.primary} size={14} />
-            <Text className="ml-1.5 text-xs font-extrabold tracking-[1.5px] text-text dark:text-text-primary-dark">
-              {tierBadge}
-            </Text>
-          </View>
-        </View>
-
-        <View className="mb-4">
-          <MemberCard
-            copy={{
-              balanceLabel: t('memberCard.cashbackBalance'),
-              balanceSuffix: t('memberCard.cashbackSuffix'),
-              brandAccessibilityHint: tCommon('branding.markHint'),
-              brandLabel: tCommon('branding.mark'),
-              emptyQrLabel: t('guest'),
-              memberNameLabel: t('memberCard.memberName'),
-              statusLabel: t('memberCard.lifetimeTier'),
-            }}
-            cashbackPoints={memberSummary.cashbackBalancePoints}
-            memberId={memberSummary.memberId}
-            memberName={userName}
-            tierProgressPercent={memberSummary.tierProgressPercent}
-            tierLabel={tierBadge}
+      <AppScreenContent className="flex-1">
+        <ScrollView
+          contentInsetAdjustmentBehavior="automatic"
+          contentContainerClassName="px-5 pb-5"
+          showsVerticalScrollIndicator={false}
+        >
+          <ProfileHeader
+            avatarUrl={memberSummary.avatarUrl}
+            comingSoonLabel={t('menu.comingSoon')}
+            isDark={isDark}
+            notificationsHint={t('notifications.hint')}
+            onPressNotifications={() => Alert.alert(t('menu.comingSoon'))}
+            userName={userName}
+            welcomeBackLabel={t('welcomeBack')}
           />
-        </View>
 
-        <ProfileStatsRow
-          earnedLabel={t('earned')}
-          earnedProgressDegrees={(earnedProgress / 100) * 360}
-          earnedValue={cashbackLifetimePoints.toLocaleString()}
-          isDark={isDark}
-          savedLabel={t('saved')}
-          savedProgressDegrees={(savedProgress / 100) * 360}
-          savedValue={`$${saved}`}
-        />
+          <View className="mb-5 items-center">
+            <View className="flex-row items-center rounded-full border border-border bg-white px-4.5 py-2 dark:border-dark-border dark:bg-dark-bg-card">
+              <Star color={Colors.primary} size={14} />
+              <Text className="ml-1.5 text-xs font-extrabold tracking-[1.5px] text-text dark:text-text-primary-dark">
+                {tierBadge}
+              </Text>
+            </View>
+          </View>
 
-        {shouldRenderVoucher && (
-          <Animated.View className="mb-5" style={voucherStyle}>
-            <WelcomeVoucherCard
-              badgeLabel={t(welcomeOfferBadgeKey)}
-              codeLabel={t('codeLabel', { code: welcomeOfferCode })}
-              gotItLabel={t('gotIt')}
-              isDark={isDark}
-              onDismiss={() => {
-                setShowVoucher(false);
-                dismissVoucher();
+          <View className="mb-4">
+            <MemberCard
+              copy={{
+                balanceLabel: t('memberCard.cashbackBalance'),
+                balanceSuffix: t('memberCard.cashbackSuffix'),
+                brandAccessibilityHint: tCommon('branding.markHint'),
+                brandLabel: tCommon('branding.mark'),
+                emptyQrLabel: t('guest'),
+                memberNameLabel: t('memberCard.memberName'),
+                statusLabel: t('memberCard.lifetimeTier'),
               }}
-              subtitle={t(welcomeOfferSubtitleKey)}
-              termsLabel={t(welcomeOfferTermsKey)}
-              title={t(welcomeOfferTitleKey)}
+              cashbackPoints={memberSummary.cashbackBalancePoints}
+              memberId={memberSummary.memberId}
+              memberName={userName}
+              tierProgressPercent={memberSummary.tierProgressPercent}
+              tierLabel={tierBadge}
             />
-          </Animated.View>
-        )}
+          </View>
 
-        <SupportCta
-          conciergeLabel={t('contactVipConcierge')}
-          hasPrioritySupport={
-            hasPrioritySupport && Boolean(config.contact.conciergeBase)
-          }
-          isDark={isDark}
-          onConcierge={handleConcierge}
-          onSupport={handleSupport}
-          supportLabel={t('contactSupport')}
-        />
+          <ProfileStatsRow
+            earnedLabel={t('earned')}
+            earnedProgressDegrees={(earnedProgress / 100) * 360}
+            earnedValue={cashbackLifetimePoints.toLocaleString()}
+            isDark={isDark}
+            savedLabel={t('saved')}
+            savedProgressDegrees={(savedProgress / 100) * 360}
+            savedValue={`$${saved}`}
+          />
 
-        <ProfileMenuList
-          comingSoonLabel={t('menu.comingSoon')}
-          isDark={isDark}
-          items={menuItems}
-          onPressItem={handleMenuPress}
-        />
+          {shouldRenderVoucher && (
+            <Animated.View className="mb-5" style={voucherStyle}>
+              <WelcomeVoucherCard
+                badgeLabel={t(welcomeOfferBadgeKey)}
+                codeLabel={t('codeLabel', { code: welcomeOfferCode })}
+                gotItLabel={t('gotIt')}
+                isDark={isDark}
+                onDismiss={() => {
+                  setShowVoucher(false);
+                  dismissVoucher();
+                }}
+                subtitle={t(welcomeOfferSubtitleKey)}
+                termsLabel={t(welcomeOfferTermsKey)}
+                title={t(welcomeOfferTitleKey)}
+              />
+            </Animated.View>
+          )}
 
-        <View className="h-7.5" />
-      </ScrollView>
+          <SupportCta
+            conciergeLabel={t('contactVipConcierge')}
+            hasPrioritySupport={
+              hasPrioritySupport && Boolean(config.contact.conciergeBase)
+            }
+            isDark={isDark}
+            onConcierge={handleConcierge}
+            onSupport={handleSupport}
+            supportLabel={t('contactSupport')}
+          />
+
+          <ProfileMenuList
+            comingSoonLabel={t('menu.comingSoon')}
+            isDark={isDark}
+            items={menuItems}
+            onPressItem={handleMenuPress}
+          />
+
+          <View className="h-7.5" />
+        </ScrollView>
+      </AppScreenContent>
     </View>
   );
 }

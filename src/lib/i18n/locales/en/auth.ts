@@ -16,7 +16,6 @@ const auth = {
   onboardingBasicsSubtitle:
     "Let's start with the basics for your premium escape.",
   onboardingBasicsDisplayNamePlaceholder: 'How should we call you?',
-  onboardingBasicsDateOfBirthPlaceholder: 'Select your birthday',
   onboardingBasicsNext: 'Next',
   onboardingBasicsAgreementPrefix: 'By continuing, you agree to our',
   onboardingBasicsTermsCta: 'Terms of Service',
@@ -134,8 +133,6 @@ const auth = {
   displayNameLabel: 'Display Name',
   displayNamePlaceholder: 'Your display name',
   emailLabel: 'Email',
-  dateOfBirthLabel: 'Date of Birth',
-  dateOfBirthPlaceholder: 'YYYY-MM-DD',
   emailPlaceholder: 'Email address',
   codePlaceholder: 'Verification code',
   continueWithApple: 'Continue with Apple',
@@ -180,11 +177,9 @@ const auth = {
   invalidEmailTitle: 'Invalid Email',
   invalidEmailMessage: 'Please enter a valid email address.',
   invalidSignupInfoTitle: 'Incomplete Details',
-  invalidSignupInfoMessage:
-    'Please enter your display name, email, and date of birth.',
+  invalidSignupInfoMessage: 'Please enter your display name and email.',
   onboardingBasicsInvalidTitle: 'Incomplete Details',
-  onboardingBasicsInvalidMessage:
-    'Please enter your display name and date of birth.',
+  onboardingBasicsInvalidMessage: 'Please enter your display name.',
   missingCodeTitle: 'Missing Code',
   missingCodeMessage: 'Please enter the verification code from your email.',
   wrongEmailPrefix: 'Wrong email?',

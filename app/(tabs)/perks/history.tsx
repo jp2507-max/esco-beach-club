@@ -19,6 +19,7 @@ import {
   usePartnerRedemptionsData,
   usePartnersData,
 } from '@/providers/DataProvider';
+import { AppScreenContent } from '@/src/components/app/app-screen-content';
 import { CategoryChip } from '@/src/components/ui';
 import { shadows } from '@/src/lib/styles/shadows';
 import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
@@ -313,69 +314,71 @@ export default function PerkHistoryScreen(): React.JSX.Element {
         options={{ headerShown: false, title: t('history.title') }}
       />
 
-      <View
-        className="flex-row items-center bg-background px-4 pb-3 dark:bg-dark-bg"
-        style={{ paddingTop: insets.top + 6 }}
-      >
-        <Pressable
-          accessibilityHint={t('history.backHint')}
-          accessibilityLabel={t('history.backAction')}
-          accessibilityRole="button"
-          className="size-9 items-center justify-center rounded-full bg-card dark:bg-dark-bg-card"
-          onPress={() => router.back()}
-          style={shadows.level1}
-          testID="perk-history-back"
+      <AppScreenContent className="flex-1">
+        <View
+          className="flex-row items-center bg-background px-4 pb-3 dark:bg-dark-bg"
+          style={{ paddingTop: insets.top + 6 }}
         >
-          <ArrowLeft color={headerAccent} size={20} />
-        </Pressable>
-        <Text className="ml-2 text-2xl font-extrabold tracking-[-0.4px] text-primary dark:text-primary-bright">
-          {t('history.title')}
-        </Text>
-      </View>
+          <Pressable
+            accessibilityHint={t('history.backHint')}
+            accessibilityLabel={t('history.backAction')}
+            accessibilityRole="button"
+            className="size-9 items-center justify-center rounded-full bg-card dark:bg-dark-bg-card"
+            onPress={() => router.back()}
+            style={shadows.level1}
+            testID="perk-history-back"
+          >
+            <ArrowLeft color={headerAccent} size={20} />
+          </Pressable>
+          <Text className="ml-2 text-2xl font-extrabold tracking-[-0.4px] text-primary dark:text-primary-bright">
+            {t('history.title')}
+          </Text>
+        </View>
 
-      <FlashList
-        contentInsetAdjustmentBehavior="never"
-        contentContainerStyle={listContentContainerStyle}
-        data={filteredItems}
-        keyExtractor={(item) => item.id}
-        ListEmptyComponent={
-          partnerRedemptionsLoading ? (
-            <View className="items-center rounded-2xl border border-border bg-card px-4 py-10 dark:border-dark-border dark:bg-dark-bg-card">
-              <ActivityIndicator
-                color={isDark ? Colors.primaryBright : Colors.primary}
-                size="large"
+        <FlashList
+          contentInsetAdjustmentBehavior="never"
+          contentContainerStyle={listContentContainerStyle}
+          data={filteredItems}
+          keyExtractor={(item) => item.id}
+          ListEmptyComponent={
+            partnerRedemptionsLoading ? (
+              <View className="items-center rounded-2xl border border-border bg-card px-4 py-10 dark:border-dark-border dark:bg-dark-bg-card">
+                <ActivityIndicator
+                  color={isDark ? Colors.primaryBright : Colors.primary}
+                  size="large"
+                />
+                <Text className="mt-4 text-sm font-medium text-text-secondary dark:text-text-secondary-dark">
+                  {historyLoadingLabel}
+                </Text>
+              </View>
+            ) : (
+              <View className="rounded-2xl border border-border bg-card px-4 py-8 dark:border-dark-border dark:bg-dark-bg-card">
+                <Text className="text-center text-lg font-bold text-text dark:text-text-primary-dark">
+                  {historyEmptyTitle}
+                </Text>
+                <Text className="mt-2 text-center text-sm leading-6 text-text-secondary dark:text-text-secondary-dark">
+                  {historyEmptyDescription}
+                </Text>
+              </View>
+            )
+          }
+          ListFooterComponent={
+            <View className="mb-6 mt-6 flex-row items-center justify-center">
+              <Text className="text-base font-bold text-text-secondary dark:text-text-secondary-dark">
+                {t('history.fullArchive')}
+              </Text>
+              <History
+                color={isDark ? Colors.textSecondaryDark : Colors.textSecondary}
+                size={14}
+                style={{ marginLeft: 8 }}
               />
-              <Text className="mt-4 text-sm font-medium text-text-secondary dark:text-text-secondary-dark">
-                {historyLoadingLabel}
-              </Text>
             </View>
-          ) : (
-            <View className="rounded-2xl border border-border bg-card px-4 py-8 dark:border-dark-border dark:bg-dark-bg-card">
-              <Text className="text-center text-lg font-bold text-text dark:text-text-primary-dark">
-                {historyEmptyTitle}
-              </Text>
-              <Text className="mt-2 text-center text-sm leading-6 text-text-secondary dark:text-text-secondary-dark">
-                {historyEmptyDescription}
-              </Text>
-            </View>
-          )
-        }
-        ListFooterComponent={
-          <View className="mb-6 mt-6 flex-row items-center justify-center">
-            <Text className="text-base font-bold text-text-secondary dark:text-text-secondary-dark">
-              {t('history.fullArchive')}
-            </Text>
-            <History
-              color={isDark ? Colors.textSecondaryDark : Colors.textSecondary}
-              size={14}
-              style={{ marginLeft: 8 }}
-            />
-          </View>
-        }
-        ListHeaderComponent={listHeader}
-        renderItem={renderHistoryItem}
-        showsVerticalScrollIndicator={false}
-      />
+          }
+          ListHeaderComponent={listHeader}
+          renderItem={renderHistoryItem}
+          showsVerticalScrollIndicator={false}
+        />
+      </AppScreenContent>
     </View>
   );
 }

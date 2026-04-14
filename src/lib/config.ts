@@ -15,7 +15,12 @@ function toOptionalHttpUrl(value: string | undefined): string | null {
       return null;
     }
 
-    return parsedUrl.toString().replace(/\/+$/, '');
+    const hasOnlyRootPath =
+      parsedUrl.pathname === '/' && !parsedUrl.search && !parsedUrl.hash;
+    if (hasOnlyRootPath) return parsedUrl.origin;
+
+    parsedUrl.pathname = parsedUrl.pathname.replace(/\/+$/, '') || '/';
+    return parsedUrl.toString();
   } catch {
     return null;
   }

@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/colors';
 import type { Event } from '@/lib/types';
 import { useSavedEventsData } from '@/providers/DataProvider';
+import { AppScreenContent } from '@/src/components/app/app-screen-content';
 import {
   Button,
   ProfileSubScreenHeader,
@@ -169,53 +170,55 @@ export default function SavedEventsScreen(): React.JSX.Element {
     >
       <ProfileSubScreenHeader title={t('savedEvents.title')} />
 
-      <FlashList
-        contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={listContentContainerStyle}
-        data={savedEventsList}
-        keyExtractor={(item) => item.id}
-        ListHeaderComponent={
-          savedEventsLoading ? null : (
-            <Animated.View style={contentStyle}>
-              <SurfaceCard className="mb-6 p-5">
-                <Text className="text-sm leading-5 text-text-secondary dark:text-text-secondary-dark">
-                  {t('savedEvents.subtitle')}
+      <AppScreenContent className="flex-1">
+        <FlashList
+          contentInsetAdjustmentBehavior="automatic"
+          contentContainerStyle={listContentContainerStyle}
+          data={savedEventsList}
+          keyExtractor={(item) => item.id}
+          ListHeaderComponent={
+            savedEventsLoading ? null : (
+              <Animated.View style={contentStyle}>
+                <SurfaceCard className="mb-6 p-5">
+                  <Text className="text-sm leading-5 text-text-secondary dark:text-text-secondary-dark">
+                    {t('savedEvents.subtitle')}
+                  </Text>
+                </SurfaceCard>
+              </Animated.View>
+            )
+          }
+          ListEmptyComponent={
+            savedEventsLoading ? (
+              <View>
+                <SkeletonCard className="mb-4" height={140} />
+                <SkeletonCard className="mb-4" height={140} />
+                <SkeletonCard height={140} />
+              </View>
+            ) : (
+              <SurfaceCard className="p-6">
+                <Text className="text-lg font-bold text-text dark:text-text-primary-dark">
+                  {t('savedEvents.emptyTitle')}
                 </Text>
+                <Text className="mt-2 text-sm leading-5 text-text-secondary dark:text-text-secondary-dark">
+                  {t('savedEvents.emptyDescription')}
+                </Text>
+                <Button
+                  className="mt-5"
+                  onPress={() => {
+                    hapticLight();
+                    router.push('/events');
+                  }}
+                  testID="saved-events-browse"
+                >
+                  {t('savedEvents.browseEvents')}
+                </Button>
               </SurfaceCard>
-            </Animated.View>
-          )
-        }
-        ListEmptyComponent={
-          savedEventsLoading ? (
-            <View>
-              <SkeletonCard className="mb-4" height={140} />
-              <SkeletonCard className="mb-4" height={140} />
-              <SkeletonCard height={140} />
-            </View>
-          ) : (
-            <SurfaceCard className="p-6">
-              <Text className="text-lg font-bold text-text dark:text-text-primary-dark">
-                {t('savedEvents.emptyTitle')}
-              </Text>
-              <Text className="mt-2 text-sm leading-5 text-text-secondary dark:text-text-secondary-dark">
-                {t('savedEvents.emptyDescription')}
-              </Text>
-              <Button
-                className="mt-5"
-                onPress={() => {
-                  hapticLight();
-                  router.push('/events');
-                }}
-                testID="saved-events-browse"
-              >
-                {t('savedEvents.browseEvents')}
-              </Button>
-            </SurfaceCard>
-          )
-        }
-        renderItem={renderSavedEvent}
-        showsVerticalScrollIndicator={false}
-      />
+            )
+          }
+          renderItem={renderSavedEvent}
+          showsVerticalScrollIndicator={false}
+        />
+      </AppScreenContent>
     </View>
   );
 }

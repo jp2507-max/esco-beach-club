@@ -23,6 +23,13 @@ const dateOfBirthField = z
   .regex(/^\d{4}-\d{2}-\d{2}$/, { error: v('invalidDate') })
   .refine(isValidCalendarDate, { error: v('invalidDate') });
 
+const optionalDateOfBirthField = z.preprocess((value) => {
+  if (typeof value !== 'string') return value;
+
+  const trimmedValue = value.trim();
+  return trimmedValue.length > 0 ? trimmedValue : undefined;
+}, dateOfBirthField.optional());
+
 const displayNameField = z
   .string()
   .trim()
@@ -54,14 +61,12 @@ export const verifyCodeSchema = z.object({
 export type VerifyCodeFormValues = z.infer<typeof verifyCodeSchema>;
 
 export const signupSchema = emailAuthSchema.extend({
-  dateOfBirth: dateOfBirthField,
   displayName: displayNameField,
 });
 
 export type SignupFormValues = z.infer<typeof signupSchema>;
 
 export const onboardingBasicsSchema = z.object({
-  dateOfBirth: dateOfBirthField,
   displayName: displayNameField,
 });
 
@@ -124,6 +129,7 @@ export type PrivateEventFormValues = z.infer<typeof privateEventSchema>;
 export type PrivateEventFormInput = z.input<typeof privateEventSchema>;
 
 export const editProfileSchema = z.object({
+  dateOfBirth: optionalDateOfBirthField,
   fullName: z
     .string()
     .trim()
@@ -135,6 +141,7 @@ export const editProfileSchema = z.object({
     .max(160, { error: v('profileBioMax') }),
 });
 
+export type EditProfileFormInput = z.input<typeof editProfileSchema>;
 export type EditProfileFormValues = z.infer<typeof editProfileSchema>;
 
 export const reviewSchema = z.object({

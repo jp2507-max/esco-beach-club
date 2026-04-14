@@ -127,9 +127,9 @@ function getGoogleInstantClientName(audience: GoogleSignInAudience): string {
 
 function maskClientId(clientId?: string): string {
   if (!clientId) return 'missing';
-  if (clientId.length <= 18) return clientId;
+  if (clientId.length <= 12) return clientId;
 
-  return `${clientId.slice(0, 12)}...${clientId.slice(-6)}`;
+  return `${clientId.slice(0, 8)}...${clientId.slice(-4)}`;
 }
 
 function logGoogleAndroidDeveloperConfigMismatch(params: {

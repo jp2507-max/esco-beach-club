@@ -286,6 +286,10 @@ const profile = {
   editProfile: {
     title: 'Chỉnh sửa hồ sơ',
     subtitle: 'Giữ thông tin thành viên của bạn luôn mới nhất.',
+    dateOfBirth: 'Ngày sinh',
+    dateOfBirthHint:
+      'Không bắt buộc. Hãy thêm nếu bạn muốn nhận lời chúc sinh nhật và ưu đãi sinh nhật dành cho thành viên.',
+    dateOfBirthPlaceholder: 'Chọn ngày sinh của bạn',
     fullName: 'Họ và tên',
     bio: 'Giới thiệu',
     bioPlaceholder: 'Chia sẻ đôi điều về bạn với các thành viên khác',
@@ -325,77 +329,6 @@ const profile = {
         vi: 'Tiếng Việt',
       },
     },
-  },
-  staff: {
-    accessDeniedDescription:
-      'Màn hình ẩn này chỉ dành cho tài khoản nhân viên Esco đã được thêm vào allowlist.',
-    accessDeniedTitle: 'Cần quyền nhân viên',
-    allowlistPending:
-      'Hãy nhờ admin thêm tài khoản này vào allowlist nhân viên.',
-    approvalRequired: 'Các điều chỉnh thủ công nhạy cảm cần quản lý phê duyệt.',
-    award: 'Ghi nhận điểm thưởng',
-    awarding: 'Đang ghi nhận...',
-    awardTitle: 'Ghi nhận điều chỉnh điểm thưởng',
-    badge: 'Nhân viên',
-    billAmountLabel: 'Giá trị hóa đơn (VND)',
-    billAmountPlaceholder: '100000',
-    cameraPermissionDescription:
-      'Cho phép truy cập camera để nhân viên quét mã QR thành viên tại Esco Beach.',
-    cameraPermissionTitle: 'Cần quyền camera',
-    currentPoints: 'Số dư điểm thưởng hiện tại: {{value}}',
-    errors: {
-      billBelowMinimumSpend:
-        'Giá trị hóa đơn không đạt ngưỡng chi tiêu tối thiểu.',
-      generic: 'Đã xảy ra lỗi. Vui lòng thử lại.',
-      invalidBillAmount: 'Hãy nhập giá trị hóa đơn hợp lệ bằng VND.',
-      invalidRewardServiceResponse:
-        'Dịch vụ phần thưởng trả về phản hồi không hợp lệ. Vui lòng thử lại.',
-      invalidQr: 'Mã QR này không phải mã thành viên Esco hợp lệ.',
-      rewardServiceRejectedRequest:
-        'Dịch vụ phần thưởng đã từ chối yêu cầu này. Vui lòng kiểm tra thông tin hóa đơn và thử lại.',
-      rewardServiceUnavailable:
-        'Dịch vụ phần thưởng hiện không khả dụng. Vui lòng thử lại sau ít phút.',
-      managerApprovalRequired:
-        'Cần mã PIN quản lý hợp lệ cho giao dịch vượt ngưỡng phê duyệt.',
-      memberNotFound: 'Không tìm thấy thành viên với mã này.',
-      receiptReferenceRequired:
-        'Cần mã tham chiếu hóa đơn để ghi nhận điểm thưởng an toàn.',
-      staffAccessRequired:
-        'Tài khoản này chưa được allowlist để điều chỉnh phần thưởng thủ công.',
-      title: 'Không thể hoàn tất thao tác',
-    },
-    findMember: 'Tìm thành viên',
-    formulaNote:
-      '{{points}} điểm thưởng được cộng cho mỗi {{amount}} chi tiêu.',
-    goBack: 'Quay lại',
-    grantPermission: 'Cấp quyền camera',
-    invalidQrTitle: 'Mã QR không hợp lệ',
-    loading: 'Đang kiểm tra quyền nhân viên...',
-    lookupHint: 'Quét mã QR thành viên hoặc nhập mã thành viên thủ công.',
-    managerPinLabel: 'PIN quản lý',
-    managerPinPlaceholder: 'Nhập PIN quản lý',
-    manualEntryNote:
-      'Nếu quét không thành công, hãy nhập mã thành viên thủ công rồi tiếp tục bên dưới.',
-    memberFoundBadge: 'Đã tìm thấy thành viên',
-    memberIdLabel: 'Mã thành viên',
-    memberIdPlaceholder: 'ESCO-XXXXXXXX',
-    memberLookup: 'Tra cứu thành viên',
-    memberNotFound: 'Không có thành viên nào khớp với mã này.',
-    memberNotFoundTitle: 'Không tìm thấy thành viên',
-    memberPendingLookup:
-      'Nhấn Tìm thành viên để xác nhận thành viên này trước khi ghi nhận điểm thưởng.',
-    pointsPreviewDescription:
-      'Điểm thưởng được làm tròn xuống theo từng bậc {{amount}} trước khi ghi nhận.',
-    pointsPreviewLabel: 'Xem trước điểm thưởng',
-    receiptReferenceLabel: 'Mã tham chiếu hóa đơn',
-    receiptReferencePlaceholder: 'Số bill hoặc hóa đơn',
-    scanAgain: 'Quét lại',
-    subtitle:
-      'Quét QR của khách hoặc nhập mã thành viên để ghi nhận một điều chỉnh điểm thưởng an toàn.',
-    successMessage:
-      '{{name}} đã nhận {{points}} điểm thưởng từ hóa đơn {{amount}}.',
-    successTitle: 'Đã ghi nhận điểm thưởng',
-    title: 'Máy quét phần thưởng',
   },
   invite: {
     allReferralsTitle: 'Lượt giới thiệu của bạn',

@@ -283,6 +283,10 @@ const profile = {
   editProfile: {
     title: '프로필 수정',
     subtitle: '회원 정보를 최신 상태로 유지하세요.',
+    dateOfBirth: '생일',
+    dateOfBirthHint:
+      '선택 사항입니다. 생일 축하나 회원 생일 혜택을 받고 싶다면 추가해 주세요.',
+    dateOfBirthPlaceholder: '생일을 선택해 주세요',
     fullName: '이름',
     bio: '소개',
     bioPlaceholder: '회원들에게 나를 짧게 소개해 보세요',
@@ -322,76 +326,6 @@ const profile = {
         vi: 'Tiếng Việt',
       },
     },
-  },
-  staff: {
-    accessDeniedDescription:
-      '이 숨겨진 화면은 허용 목록에 등록된 Esco 직원 계정에서만 사용할 수 있습니다.',
-    accessDeniedTitle: '직원 권한 필요',
-    allowlistPending:
-      '관리자에게 이 계정을 직원 허용 목록에 추가해 달라고 요청하세요.',
-    approvalRequired: '민감한 수동 조정에는 관리자 승인이 필요합니다.',
-    award: '포인트 기록',
-    awarding: '기록 중...',
-    awardTitle: '포인트 조정 기록',
-    badge: '직원',
-    billAmountLabel: '결제 금액 (VND)',
-    billAmountPlaceholder: '100000',
-    cameraPermissionDescription:
-      'Esco Beach에서 회원 QR 코드를 스캔할 수 있도록 카메라 접근 권한을 허용해 주세요.',
-    cameraPermissionTitle: '카메라 권한 필요',
-    currentPoints: '현재 포인트 잔액: {{value}}',
-    errors: {
-      billBelowMinimumSpend: '이 결제 금액은 최소 결제 금액 기준에 미달합니다.',
-      generic: '문제가 발생했습니다. 다시 시도해 주세요.',
-      invalidBillAmount: 'VND 기준의 올바른 결제 금액을 입력해 주세요.',
-      invalidRewardServiceResponse:
-        '리워드 서비스 응답이 올바르지 않습니다. 다시 시도해 주세요.',
-      invalidQr: '이 QR 코드는 유효한 Esco 회원 코드가 아닙니다.',
-      rewardServiceRejectedRequest:
-        '리워드 서비스에서 요청을 거부했습니다. 결제 정보를 확인한 뒤 다시 시도해 주세요.',
-      rewardServiceUnavailable:
-        '리워드 서비스를 현재 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.',
-      managerApprovalRequired:
-        '승인 한도를 초과하는 거래에는 유효한 관리자 PIN이 필요합니다.',
-      memberNotFound: '해당 ID의 회원을 찾을 수 없습니다.',
-      receiptReferenceRequired:
-        '안전한 포인트 기록을 위해 영수증 또는 청구 참조 번호가 필요합니다.',
-      staffAccessRequired:
-        '이 계정은 수동 리워드 조정용 허용 목록에 등록되어 있지 않습니다.',
-      title: '작업을 완료할 수 없습니다',
-    },
-    findMember: '회원 찾기',
-    formulaNote:
-      '{{amount}} 사용 시마다 {{points}} 리워드 포인트가 적립됩니다.',
-    goBack: '뒤로 가기',
-    grantPermission: '카메라 권한 허용',
-    invalidQrTitle: '잘못된 QR 코드',
-    loading: '직원 권한 확인 중...',
-    lookupHint: '회원 QR 코드를 스캔하거나 회원 ID를 직접 입력하세요.',
-    managerPinLabel: '관리자 PIN',
-    managerPinPlaceholder: '관리자 PIN 입력',
-    manualEntryNote:
-      '스캔이 실패하면 회원 ID를 직접 입력하고 아래에서 계속 진행하세요.',
-    memberFoundBadge: '회원 확인됨',
-    memberIdLabel: '회원 ID',
-    memberIdPlaceholder: 'ESCO-XXXXXXXX',
-    memberLookup: '회원 조회',
-    memberNotFound: '해당 코드와 일치하는 회원이 없습니다.',
-    memberNotFoundTitle: '회원을 찾을 수 없음',
-    memberPendingLookup:
-      '포인트를 기록하기 전에 회원을 확인하려면 회원 찾기를 눌러 주세요.',
-    pointsPreviewDescription:
-      '리워드 포인트는 {{amount}} 단위로 내림 처리됩니다.',
-    pointsPreviewLabel: '포인트 미리보기',
-    receiptReferenceLabel: '영수증 참조',
-    receiptReferencePlaceholder: '영수증 또는 청구 번호',
-    scanAgain: '다시 스캔',
-    subtitle:
-      '고객 QR을 스캔하거나 회원 ID를 입력하여 안전한 포인트 조정을 기록하세요.',
-    successMessage:
-      '{{name}}님에게 {{amount}} 결제로 {{points}} 리워드 포인트가 기록되었습니다.',
-    successTitle: '포인트 기록 완료',
-    title: '리워드 스캐너',
   },
   invite: {
     allReferralsTitle: '추천 내역',

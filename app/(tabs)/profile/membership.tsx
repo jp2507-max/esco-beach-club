@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { type RewardTierKey, rewardTierKeys } from '@/lib/types';
 import { useMemberSummary, useProfileData } from '@/providers/DataProvider';
+import { AppScreenContent } from '@/src/components/app/app-screen-content';
 import {
   MembershipActivitySection,
   MembershipBenefitsSection,
@@ -129,43 +130,45 @@ export default function MembershipScreen(): React.JSX.Element {
     >
       <ProfileSubScreenHeader testID="membership-back" title={t('title')} />
 
-      <ScrollView
-        contentContainerClassName="px-5 pb-10 pt-1"
-        showsVerticalScrollIndicator={false}
-      >
-        <MembershipTierHeroCard
-          cashbackBalancePoints={memberSummary.cashbackBalancePoints}
-          heroStyle={heroStyle}
-          memberSince={memberSince}
-          nextTierLabel={nextTierLabel}
-          progressPercent={memberSummary.tierProgressPercent}
-          progressPoints={memberSummary.activeTierProgressPoints}
-          progressTargetPoints={memberSummary.tierProgressTargetPoints}
-          showTierProgress={showTierProgress}
-          t={t}
-          tierConfig={tierConfig}
-          tierLabel={tierLabel}
-          tierProgressExpiryLabel={tierProgressExpiryLabel}
-          userName={userName}
-        />
+      <AppScreenContent className="flex-1">
+        <ScrollView
+          contentContainerClassName="px-5 pb-10 pt-1"
+          showsVerticalScrollIndicator={false}
+        >
+          <MembershipTierHeroCard
+            cashbackBalancePoints={memberSummary.cashbackBalancePoints}
+            heroStyle={heroStyle}
+            memberSince={memberSince}
+            nextTierLabel={nextTierLabel}
+            progressPercent={memberSummary.tierProgressPercent}
+            progressPoints={memberSummary.activeTierProgressPoints}
+            progressTargetPoints={memberSummary.tierProgressTargetPoints}
+            showTierProgress={showTierProgress}
+            t={t}
+            tierConfig={tierConfig}
+            tierLabel={tierLabel}
+            tierProgressExpiryLabel={tierProgressExpiryLabel}
+            userName={userName}
+          />
 
-        <MembershipBenefitsSection
-          benefits={benefits}
-          fadeStyle={fadeStyle}
-          isDark={isDark}
-          t={t}
-        />
+          <MembershipBenefitsSection
+            benefits={benefits}
+            fadeStyle={fadeStyle}
+            isDark={isDark}
+            t={t}
+          />
 
-        <MembershipActivitySection
-          activities={activities}
-          fadeStyle={fadeStyle}
-          isActivityLoading={isActivityLoading}
-          isDark={isDark}
-          t={t}
-        />
+          <MembershipActivitySection
+            activities={activities}
+            fadeStyle={fadeStyle}
+            isActivityLoading={isActivityLoading}
+            isDark={isDark}
+            t={t}
+          />
 
-        <View className="h-6" />
-      </ScrollView>
+          <View className="h-6" />
+        </ScrollView>
+      </AppScreenContent>
     </View>
   );
 }

@@ -8,6 +8,7 @@ import type { AnimatedStyle } from 'react-native-reanimated';
 import { accentOnDarkBackground, Colors } from '@/constants/colors';
 import { SkeletonText } from '@/src/components/ui';
 import { useStaggeredListEntering } from '@/src/lib/animations/use-staggered-entry';
+import { buildMembershipBenefitRows } from '@/src/lib/profile/membership-benefit-rows';
 import {
   type BenefitConfig,
   getMembershipActivityCopy,
@@ -185,6 +186,8 @@ export function MembershipBenefitsSection({
   isDark: boolean;
   t: TFunction;
 }): React.JSX.Element {
+  const benefitRows = buildMembershipBenefitRows(benefits);
+
   return (
     <Animated.View className="mb-8" style={fadeStyle}>
       <View className="mb-4 flex-row items-end justify-between px-1">
@@ -196,58 +199,75 @@ export function MembershipBenefitsSection({
         </Text>
       </View>
 
-      <View className="flex-row flex-wrap gap-3">
-        {benefits.map((benefit, benefitIndex) => {
-          const IconComp = benefit.icon;
-          const benefitAccent = accentOnDarkBackground(benefit.color, isDark);
+      <View className="gap-3">
+        {benefitRows.map((row, rowIndex) => (
+          <View
+            key={row.map((benefit) => benefit.key).join('-')}
+            className={cn(
+              'items-start',
+              row.length === 1 ? 'gap-0' : 'flex-row justify-between'
+            )}
+          >
+            {row.map((benefit, itemIndex) => {
+              const IconComp = benefit.icon;
+              const benefitAccent = accentOnDarkBackground(
+                benefit.color,
+                isDark
+              );
+              const benefitIndex = rowIndex * 2 + itemIndex;
 
-          if (benefit.wide) {
-            return (
-              <StaggeredBenefitShell key={benefit.key} index={benefitIndex}>
-                <View
-                  className="w-full flex-row items-center gap-4 rounded-2xl border border-border bg-white p-5 dark:border-dark-border dark:bg-dark-bg-card"
-                  style={shadows.level1}
-                >
+              if (benefit.wide) {
+                return (
+                  <StaggeredBenefitShell key={benefit.key} index={benefitIndex}>
+                    <View
+                      className="w-full flex-row items-center gap-4 rounded-2xl border border-border bg-white p-5 dark:border-dark-border dark:bg-dark-bg-card"
+                      style={shadows.level1}
+                    >
+                      <View
+                        className="size-14 items-center justify-center rounded-full"
+                        style={{ backgroundColor: `${benefitAccent}15` }}
+                      >
+                        <IconComp color={benefitAccent} size={26} />
+                      </View>
+                      <View className="flex-1">
+                        <Text className="text-[15px] font-bold text-text dark:text-text-primary-dark">
+                          {t(benefit.titleKey)}
+                        </Text>
+                        {benefit.descKey ? (
+                          <Text className="mt-0.5 text-xs text-text-secondary dark:text-text-secondary-dark">
+                            {t(benefit.descKey)}
+                          </Text>
+                        ) : null}
+                      </View>
+                    </View>
+                  </StaggeredBenefitShell>
+                );
+              }
+
+              return (
+                <StaggeredBenefitShell key={benefit.key} index={benefitIndex}>
                   <View
-                    className="size-14 items-center justify-center rounded-full"
-                    style={{ backgroundColor: `${benefitAccent}15` }}
+                    className="self-start gap-3 rounded-2xl border border-border bg-white p-5 dark:border-dark-border dark:bg-dark-bg-card"
+                    style={[
+                      shadows.level1,
+                      { width: row.length === 1 ? '100%' : '48.5%' },
+                    ]}
                   >
-                    <IconComp color={benefitAccent} size={26} />
-                  </View>
-                  <View className="flex-1">
-                    <Text className="text-[15px] font-bold text-text dark:text-text-primary-dark">
+                    <View
+                      className="size-12 items-center justify-center rounded-full"
+                      style={{ backgroundColor: `${benefitAccent}15` }}
+                    >
+                      <IconComp color={benefitAccent} size={22} />
+                    </View>
+                    <Text className="text-[15px] font-bold leading-tight text-text dark:text-text-primary-dark">
                       {t(benefit.titleKey)}
                     </Text>
-                    {benefit.descKey ? (
-                      <Text className="mt-0.5 text-xs text-text-secondary dark:text-text-secondary-dark">
-                        {t(benefit.descKey)}
-                      </Text>
-                    ) : null}
                   </View>
-                </View>
-              </StaggeredBenefitShell>
-            );
-          }
-
-          return (
-            <StaggeredBenefitShell key={benefit.key} index={benefitIndex}>
-              <View
-                className="flex-1 gap-3 rounded-2xl border border-border bg-white p-5 dark:border-dark-border dark:bg-dark-bg-card"
-                style={[shadows.level1, { minWidth: '45%' }]}
-              >
-                <View
-                  className="size-12 items-center justify-center rounded-full"
-                  style={{ backgroundColor: `${benefitAccent}15` }}
-                >
-                  <IconComp color={benefitAccent} size={22} />
-                </View>
-                <Text className="text-[15px] font-bold leading-tight text-text dark:text-text-primary-dark">
-                  {t(benefit.titleKey)}
-                </Text>
-              </View>
-            </StaggeredBenefitShell>
-          );
-        })}
+                </StaggeredBenefitShell>
+              );
+            })}
+          </View>
+        ))}
       </View>
     </Animated.View>
   );
