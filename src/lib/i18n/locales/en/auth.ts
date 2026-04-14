@@ -221,6 +221,7 @@ const auth = {
   profileBootstrapErrorMessage:
     'Your session is active, but we could not finish loading your member profile. Please wait a moment or sign out safely.',
   profileBootstrapTerminalTitle: 'We could not load your member profile',
+  profileBootstrapRetryAction: 'Retry',
   profileBootstrapSignOutAction: 'Sign out',
   profileBootstrapBackToSignInAction: 'Back to sign in',
   genericError: 'Something went wrong. Please try again or contact support.',

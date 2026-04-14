@@ -222,6 +222,7 @@ const auth = {
   profileBootstrapErrorMessage:
     '세션은 활성화되었지만 멤버 프로필을 끝까지 불러오지 못했습니다. 잠시 기다리거나 안전하게 로그아웃할 수 있습니다.',
   profileBootstrapTerminalTitle: '멤버 프로필을 불러올 수 없습니다',
+  profileBootstrapRetryAction: '다시 시도',
   profileBootstrapSignOutAction: '로그아웃',
   profileBootstrapBackToSignInAction: '로그인으로 돌아가기',
   genericError: '문제가 발생했습니다. 다시 시도하거나 지원팀에 문의해 주세요.',

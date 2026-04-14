@@ -10,8 +10,13 @@ import {
   profileBootstrapStates,
   useProfileData,
 } from '@/providers/DataProvider';
+import {
+  resolvePostAuthLoginHref,
+  shouldAutoRetryProfileProvision,
+} from '@/src/lib/auth/post-auth-redirect';
 import { resolveSignupDraftFlow } from '@/src/lib/auth/signup-draft-flow';
 import { isAuthErrorKey } from '@/src/lib/auth-errors';
+import { readTrimmedSearchParam } from '@/src/lib/utils/search-params';
 import { useSignupOnboardingDraftStore } from '@/src/stores/signup-onboarding-store';
 import { ActivityIndicator, Pressable, Text, View } from '@/src/tw';
 
@@ -31,7 +36,9 @@ function BootstrapRecoveryCard(props: {
   errorMessage: string;
   isWorking: boolean;
   onBackToSignIn: () => Promise<void>;
+  onRetry?: () => Promise<void>;
   onSignOut: () => Promise<boolean>;
+  showRetry?: boolean;
   title: string;
 }): React.JSX.Element {
   const { t } = useTranslation('auth');
@@ -47,6 +54,22 @@ function BootstrapRecoveryCard(props: {
         </Text>
 
         <View className="mt-6 gap-3">
+          {props.showRetry && props.onRetry ? (
+            <Pressable
+              accessibilityRole="button"
+              className="h-13 items-center justify-center rounded-full bg-primary px-5 dark:bg-primary-bright"
+              disabled={props.isWorking}
+              onPress={() => {
+                void props.onRetry?.();
+              }}
+              testID="auth-bootstrap-retry"
+            >
+              <Text className="text-sm font-semibold text-white">
+                {t('profileBootstrapRetryAction')}
+              </Text>
+            </Pressable>
+          ) : null}
+
           <Pressable
             accessibilityRole="button"
             className="h-13 items-center justify-center rounded-full border border-border bg-white px-5 dark:border-dark-border dark:bg-dark-bg-elevated"
@@ -114,13 +137,10 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
     };
   }, []);
 
-  const authFlow = React.useMemo(() => {
-    if (Array.isArray(searchParams.authFlow)) {
-      return searchParams.authFlow[0];
-    }
-
-    return searchParams.authFlow;
-  }, [searchParams.authFlow]);
+  const authFlow = React.useMemo(
+    () => readTrimmedSearchParam(searchParams.authFlow),
+    [searchParams.authFlow]
+  );
   const signupDraftFlow = React.useMemo(
     () =>
       resolveSignupDraftFlow({
@@ -140,18 +160,19 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
     shouldResetSignupDraft,
   } = signupDraftFlow;
   const loginHref = React.useMemo(
-    () => ({
-      pathname: '/(auth)/login' as const,
-      params: resolvedAuthFlow ? { authFlow: resolvedAuthFlow } : {},
-    }),
-    [resolvedAuthFlow]
+    () =>
+      resolvePostAuthLoginHref({
+        bootstrapState,
+        resolvedAuthFlow,
+      }),
+    [bootstrapState, resolvedAuthFlow]
   );
-
-  const shouldRetryProvision =
-    bootstrapState === profileBootstrapStates.recoverableError &&
-    !isRetryingProvision &&
-    Boolean(userId) &&
-    retriedProvisionUserId !== userId;
+  const shouldRetryProvision = shouldAutoRetryProfileProvision({
+    bootstrapState,
+    isRetryingProvision,
+    retriedProvisionUserId,
+    userId,
+  });
 
   React.useEffect(() => {
     if (!shouldRetryProvision || !userId) return;
@@ -261,6 +282,22 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
     router.replace('/(auth)/login');
   }
 
+  async function handleRetryProvision(): Promise<void> {
+    if (!userId || isRetryingProvision) return;
+
+    if (isMountedRef.current) {
+      setIsRetryingProvision(true);
+    }
+
+    try {
+      await retryProfileProvision();
+    } finally {
+      if (isMountedRef.current) {
+        setIsRetryingProvision(false);
+      }
+    }
+  }
+
   const isWorking = isRetryingProvision || isSigningOut;
   const errorMessage = profileBootstrapErrorDescription(t, bootstrapError);
 
@@ -289,9 +326,11 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
       <BootstrapRecoveryCard
         errorMessage={errorMessage}
         isWorking={isWorking}
-        title={t('profileBootstrapErrorTitle')}
         onBackToSignIn={handleBackToSignIn}
+        onRetry={handleRetryProvision}
         onSignOut={handleSignOut}
+        showRetry
+        title={t('profileBootstrapErrorTitle')}
       />
     );
   }

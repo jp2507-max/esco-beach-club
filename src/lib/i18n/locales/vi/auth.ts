@@ -224,6 +224,7 @@ const auth = {
   profileBootstrapErrorMessage:
     'Phiên đăng nhập đã hoạt động nhưng chúng tôi chưa thể tải xong hồ sơ thành viên của bạn. Vui lòng chờ trong giây lát hoặc đăng xuất an toàn.',
   profileBootstrapTerminalTitle: 'Không thể tải hồ sơ thành viên',
+  profileBootstrapRetryAction: 'Thử lại',
   profileBootstrapSignOutAction: 'Đăng xuất',
   profileBootstrapBackToSignInAction: 'Quay lại đăng nhập',
   genericError: 'Đã có lỗi xảy ra. Vui lòng thử lại hoặc liên hệ hỗ trợ.',
