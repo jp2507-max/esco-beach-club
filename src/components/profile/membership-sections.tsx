@@ -187,6 +187,9 @@ export function MembershipBenefitsSection({
   t: TFunction;
 }): React.JSX.Element {
   const benefitRows = buildMembershipBenefitRows(benefits);
+  const benefitIndexByKey = new Map(
+    benefits.map((benefit, index) => [benefit.key, index] as const)
+  );
 
   return (
     <Animated.View className="mb-8" style={fadeStyle}>
@@ -200,7 +203,7 @@ export function MembershipBenefitsSection({
       </View>
 
       <View className="gap-3">
-        {benefitRows.map((row, rowIndex) => (
+        {benefitRows.map((row) => (
           <View
             key={row.map((benefit) => benefit.key).join('-')}
             className={cn(
@@ -208,19 +211,19 @@ export function MembershipBenefitsSection({
               row.length === 1 ? 'gap-0' : 'flex-row justify-between'
             )}
           >
-            {row.map((benefit, itemIndex) => {
+            {row.map((benefit) => {
               const IconComp = benefit.icon;
               const benefitAccent = accentOnDarkBackground(
                 benefit.color,
                 isDark
               );
-              const benefitIndex = rowIndex * 2 + itemIndex;
+              const benefitIndex = benefitIndexByKey.get(benefit.key) ?? 0;
 
               if (benefit.wide) {
                 return (
                   <StaggeredBenefitShell key={benefit.key} index={benefitIndex}>
                     <View
-                      className="w-full flex-row items-center gap-4 rounded-2xl border border-border bg-white p-5 dark:border-dark-border dark:bg-dark-bg-card"
+                      className="w-full flex-row items-center gap-4 rounded-2xl border border-border bg-card p-5 dark:border-dark-border dark:bg-dark-bg-card"
                       style={shadows.level1}
                     >
                       <View
@@ -247,7 +250,7 @@ export function MembershipBenefitsSection({
               return (
                 <StaggeredBenefitShell key={benefit.key} index={benefitIndex}>
                   <View
-                    className="self-start gap-3 rounded-2xl border border-border bg-white p-5 dark:border-dark-border dark:bg-dark-bg-card"
+                    className="self-start gap-3 rounded-2xl border border-border bg-card p-5 dark:border-dark-border dark:bg-dark-bg-card"
                     style={[
                       shadows.level1,
                       { width: row.length === 1 ? '100%' : '48.5%' },

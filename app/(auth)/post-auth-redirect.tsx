@@ -117,23 +117,26 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
 
     return searchParams.authFlow;
   }, [searchParams.authFlow]);
+  const isSignupDraftReadyForFinalDetails =
+    signupDraft.hasCompletedSetup === true &&
+    signupDraft.hasAcceptedPrivacyPolicy === true &&
+    signupDraft.hasAcceptedTerms === true &&
+    Boolean(signupDraft.displayName);
+  const resolvedAuthFlow =
+    authFlow ?? (isSignupDraftReadyForFinalDetails ? 'signup' : undefined);
   const loginHref = React.useMemo(
     () => ({
       pathname: '/(auth)/login' as const,
-      params: authFlow ? { authFlow } : {},
+      params: resolvedAuthFlow ? { authFlow: resolvedAuthFlow } : {},
     }),
-    [authFlow]
+    [resolvedAuthFlow]
   );
   const hasAnySignupDraft = React.useMemo(
     () => Object.values(signupDraft).some((value) => value !== undefined),
     [signupDraft]
   );
   const hasSignupFinalDetailsContext =
-    authFlow === 'signup' &&
-    signupDraft.hasCompletedSetup === true &&
-    signupDraft.hasAcceptedPrivacyPolicy === true &&
-    signupDraft.hasAcceptedTerms === true &&
-    Boolean(signupDraft.displayName);
+    resolvedAuthFlow === 'signup' && isSignupDraftReadyForFinalDetails;
 
   const shouldRetryProvision =
     bootstrapState === profileBootstrapStates.recoverableError &&
@@ -168,11 +171,23 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
   }, [retryProfileProvision, shouldRetryProvision, userId]);
 
   React.useEffect(() => {
-    // Clear any lingering signup draft when not in signup flow.
-    if (authFlow === 'signup' || !hasAnySignupDraft) return;
+    // Keep completed signup onboarding state available when auth routing
+    // reaches this screen through the protected stack without local params.
+    if (
+      resolvedAuthFlow === 'signup' ||
+      isSignupDraftReadyForFinalDetails ||
+      !hasAnySignupDraft
+    ) {
+      return;
+    }
 
     resetSignupDraft();
-  }, [authFlow, hasAnySignupDraft, resetSignupDraft]);
+  }, [
+    hasAnySignupDraft,
+    isSignupDraftReadyForFinalDetails,
+    resetSignupDraft,
+    resolvedAuthFlow,
+  ]);
 
   async function handleSignOut(): Promise<boolean> {
     if (isMountedRef.current) {

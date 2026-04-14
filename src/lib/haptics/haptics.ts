@@ -14,7 +14,6 @@ function resolveErrorMessage(error: unknown): string {
 }
 
 function logAndroidHapticFallback(feedbackKey: string, error: unknown): void {
-  if (!__DEV__) return;
   if (loggedAndroidFallbacks.has(feedbackKey)) return;
 
   loggedAndroidFallbacks.add(feedbackKey);
@@ -30,9 +29,11 @@ function logAndroidHapticFallback(feedbackKey: string, error: unknown): void {
     level: 'warning',
     message: 'Android haptic fallback activated',
   });
-  console.warn(
-    `[Haptics] Falling back to vibrator-backed feedback for "${feedbackKey}": ${errorMessage}`
-  );
+  if (__DEV__) {
+    console.warn(
+      `[Haptics] Falling back to vibrator-backed feedback for "${feedbackKey}": ${errorMessage}`
+    );
+  }
 }
 
 async function runAndroidHapticWithFallback(params: {
