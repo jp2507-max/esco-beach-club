@@ -34,13 +34,13 @@ import {
   useEventsData,
   useSavedEventsData,
 } from '@/providers/DataProvider';
+import { AppScreenContent } from '@/src/components/app/app-screen-content';
 import {
   HeaderGlassButton,
   Skeleton,
   SkeletonCard,
   SkeletonText,
 } from '@/src/components/ui';
-import { AppScreenContent } from '@/src/components/app/app-screen-content';
 import { rmTiming } from '@/src/lib/animations/motion';
 import { hapticMedium } from '@/src/lib/haptics/haptics';
 import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';

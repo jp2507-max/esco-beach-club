@@ -222,7 +222,7 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
 
   async function handleAuthenticatedSignupFallback(): Promise<void> {
     try {
-      await signOut();
+      await signOut({ preserveSignupDraft: true });
     } catch (error: unknown) {
       console.error(
         '[OnboardingFinalDetails] Failed to sign out before auth fallback:',

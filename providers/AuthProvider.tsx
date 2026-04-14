@@ -16,6 +16,7 @@ import {
 import type { SignupOnboardingData } from '@/src/lib/auth/signup-onboarding';
 import { db } from '@/src/lib/instant';
 import { captureHandledError } from '@/src/lib/monitoring';
+import { useSignupOnboardingDraftStore } from '@/src/stores/signup-onboarding-store';
 
 type SendCodeParams = {
   email: string;
@@ -31,6 +32,10 @@ export type { SignupOnboardingData } from '@/src/lib/auth/signup-onboarding';
 
 type SignInProviderParams = {
   onboardingData?: SignupOnboardingData;
+};
+
+type SignOutParams = {
+  preserveSignupDraft?: boolean;
 };
 
 export const [AuthProvider, useAuth] = createContextHook(() => {
@@ -198,12 +203,15 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     }
   }
 
-  async function signOut(): Promise<void> {
+  async function signOut(params?: SignOutParams): Promise<void> {
     setSignOutLoading(true);
     setSignOutError(null);
 
     try {
       await signOutFlow();
+      if (params?.preserveSignupDraft !== true) {
+        useSignupOnboardingDraftStore.getState().resetDraft();
+      }
     } catch (error: unknown) {
       const nextError = toError(error, 'unableToSignOut');
       captureHandledError(nextError, {

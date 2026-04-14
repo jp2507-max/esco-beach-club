@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, mock, test } from 'bun:test';
+import { afterAll, beforeEach, describe, expect, mock, test } from 'bun:test';
 
 import { accountDeletionStatuses, authProviderTypes } from '@/lib/types';
 
@@ -8,11 +8,90 @@ const createInstantCreateStepMock = mock(
     payload,
   })
 );
+const createInstantLinkStepMock = mock(
+  (_entity: string, _id: string, payload: Record<string, unknown>) => ({
+    payload,
+  })
+);
 const createInstantUpdateStepMock = mock(
   (_entity: string, _id: string, payload: Record<string, unknown>) => ({
     payload,
   })
 );
+
+async function instantAdminFetchPassthrough<TResult>(
+  config: {
+    adminToken: string;
+    apiUri: string;
+    appId: string;
+  },
+  path: string,
+  init: RequestInit
+): Promise<TResult | undefined> {
+  const timeoutController = new AbortController();
+  const abortTimer = setTimeout(() => {
+    timeoutController.abort(
+      new Error('instant_admin_request_timeout_after_30000ms')
+    );
+  }, 30_000);
+
+  const requestController = new AbortController();
+  const callerSignal = init.signal;
+
+  const onTimeoutAbort = (): void => {
+    requestController.abort(timeoutController.signal.reason);
+  };
+  timeoutController.signal.addEventListener('abort', onTimeoutAbort, {
+    once: true,
+  });
+
+  let onCallerAbort: (() => void) | undefined;
+  if (callerSignal) {
+    if (callerSignal.aborted) {
+      requestController.abort(callerSignal.reason);
+    } else {
+      onCallerAbort = (): void => {
+        requestController.abort(callerSignal.reason);
+      };
+      callerSignal.addEventListener('abort', onCallerAbort, { once: true });
+    }
+  }
+
+  try {
+    const url = new URL(path, config.apiUri);
+    url.searchParams.set('app_id', config.appId);
+
+    const response = await fetch(url.toString(), {
+      ...init,
+      headers: {
+        Authorization: `Bearer ${config.adminToken}`,
+        'Content-Type': 'application/json',
+        ...init.headers,
+        'app-id': config.appId,
+      },
+      signal: requestController.signal,
+    });
+
+    if (response.status === 204) {
+      return undefined;
+    }
+
+    const responseText = await response.text();
+    if (!responseText) {
+      return undefined;
+    }
+
+    return JSON.parse(responseText) as TResult;
+  } finally {
+    clearTimeout(abortTimer);
+    timeoutController.signal.removeEventListener('abort', onTimeoutAbort);
+    if (callerSignal && onCallerAbort) {
+      callerSignal.removeEventListener('abort', onCallerAbort);
+    }
+  }
+}
+
+const instantAdminFetchMock = mock(instantAdminFetchPassthrough);
 const revokeAppleAuthorizationCodeMock = mock(async () => ({
   status: 'revoked' as const,
 }));
@@ -30,8 +109,10 @@ mock.module('@/src/lib/account-deletion/apple-revoke-server', () => ({
 
 mock.module('@/src/lib/referral/instant-admin-server', () => ({
   createInstantCreateStep: createInstantCreateStepMock,
+  createInstantLinkStep: createInstantLinkStepMock,
   createInstantRecordId: () => '00000000-0000-4000-8000-000000000123',
   createInstantUpdateStep: createInstantUpdateStepMock,
+  instantAdminFetch: instantAdminFetchMock,
   getInstantAdminDb: () => ({
     query: queryMock,
     signOut: signOutMock,
@@ -62,16 +143,23 @@ function createRequest(body: Record<string, unknown> = {}): Request {
 }
 
 describe('account deletion request route', () => {
+  afterAll(() => {
+    mock.restore();
+  });
+
   beforeEach(() => {
     addMonitoringBreadcrumbMock.mockReset();
     createInstantCreateStepMock.mockReset();
+    createInstantLinkStepMock.mockReset();
     createInstantUpdateStepMock.mockReset();
+    instantAdminFetchMock.mockReset();
     queryMock.mockReset();
     revokeAppleAuthorizationCodeMock.mockReset();
     signOutMock.mockReset();
     transactMock.mockReset();
     verifyInstantRefreshTokenMock.mockReset();
 
+    instantAdminFetchMock.mockImplementation(instantAdminFetchPassthrough);
     transactMock.mockResolvedValue({});
     signOutMock.mockResolvedValue(undefined);
     verifyInstantRefreshTokenMock.mockResolvedValue({

@@ -10,6 +10,7 @@ import {
   profileBootstrapStates,
   useProfileData,
 } from '@/providers/DataProvider';
+import { resolveSignupDraftFlow } from '@/src/lib/auth/signup-draft-flow';
 import { isAuthErrorKey } from '@/src/lib/auth-errors';
 import { useSignupOnboardingDraftStore } from '@/src/stores/signup-onboarding-store';
 import { ActivityIndicator, Pressable, Text, View } from '@/src/tw';
@@ -87,6 +88,9 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
     authFlow?: string | string[];
   }>();
   const signupDraft = useSignupOnboardingDraftStore((state) => state.draft);
+  const setSignupDraft = useSignupOnboardingDraftStore(
+    (state) => state.setDraft
+  );
   const resetSignupDraft = useSignupOnboardingDraftStore(
     (state) => state.resetDraft
   );
@@ -117,13 +121,24 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
 
     return searchParams.authFlow;
   }, [searchParams.authFlow]);
-  const isSignupDraftReadyForFinalDetails =
-    signupDraft.hasCompletedSetup === true &&
-    signupDraft.hasAcceptedPrivacyPolicy === true &&
-    signupDraft.hasAcceptedTerms === true &&
-    Boolean(signupDraft.displayName);
-  const resolvedAuthFlow =
-    authFlow ?? (isSignupDraftReadyForFinalDetails ? 'signup' : undefined);
+  const signupDraftFlow = React.useMemo(
+    () =>
+      resolveSignupDraftFlow({
+        authFlow,
+        draft: signupDraft,
+        userId,
+      }),
+    [authFlow, signupDraft, userId]
+  );
+  const {
+    hasAnySignupDraft,
+    hasForeignSignupDraftOwner,
+    hasSignupFinalDetailsContext,
+    isSignupDraftReadyForFinalDetails,
+    resolvedAuthFlow,
+    shouldBindSignupDraftOwner,
+    shouldResetSignupDraft,
+  } = signupDraftFlow;
   const loginHref = React.useMemo(
     () => ({
       pathname: '/(auth)/login' as const,
@@ -131,12 +146,6 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
     }),
     [resolvedAuthFlow]
   );
-  const hasAnySignupDraft = React.useMemo(
-    () => Object.values(signupDraft).some((value) => value !== undefined),
-    [signupDraft]
-  );
-  const hasSignupFinalDetailsContext =
-    resolvedAuthFlow === 'signup' && isSignupDraftReadyForFinalDetails;
 
   const shouldRetryProvision =
     bootstrapState === profileBootstrapStates.recoverableError &&
@@ -171,6 +180,22 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
   }, [retryProfileProvision, shouldRetryProvision, userId]);
 
   React.useEffect(() => {
+    if (!shouldBindSignupDraftOwner || !userId) {
+      return;
+    }
+
+    setSignupDraft({ ownerUserId: userId });
+  }, [setSignupDraft, shouldBindSignupDraftOwner, userId]);
+
+  React.useEffect(() => {
+    if (!shouldResetSignupDraft) {
+      return;
+    }
+
+    resetSignupDraft();
+  }, [resetSignupDraft, shouldResetSignupDraft]);
+
+  React.useEffect(() => {
     // Keep completed signup onboarding state available when auth routing
     // reaches this screen through the protected stack without local params.
     if (
@@ -192,6 +217,16 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
     resetSignupDraft,
     resolvedAuthFlow,
   ]);
+
+  React.useEffect(() => {
+    if (!hasForeignSignupDraftOwner || __DEV__ !== true) {
+      return;
+    }
+
+    console.warn(
+      '[PostAuthRedirect] Cleared signup onboarding draft owned by another user.'
+    );
+  }, [hasForeignSignupDraftOwner]);
 
   async function handleSignOut(): Promise<boolean> {
     if (isMountedRef.current) {

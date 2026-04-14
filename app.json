@@ -21,8 +21,7 @@
         "ITSAppUsesNonExemptEncryption": false,
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Allow Esco Beach Club to access your location in the background so we can recognize when you arrive at the restaurant and unlock member-only venue offers.",
         "NSLocationWhenInUseUsageDescription": "Allow Esco Beach Club to access your location so we can show nearby events, partner perks, and venue updates.",
-        "NSUserNotificationUsageDescription": "Allow Esco Beach Club to send booking updates, event reminders, and exclusive member offers.",
-        "UIDesignRequiresCompatibility": false
+        "NSUserNotificationUsageDescription": "Allow Esco Beach Club to send booking updates, event reminders, and exclusive member offers."
       }
     },
     "android": {

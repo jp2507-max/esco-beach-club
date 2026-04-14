@@ -1,4 +1,4 @@
-import { describe, expect, mock, test } from 'bun:test';
+import { afterAll, describe, expect, mock, test } from 'bun:test';
 
 const captureHandledErrorMock = mock(() => {});
 const googleConfigureMock = mock(() => {});
@@ -94,16 +94,31 @@ mock.module('@/src/lib/monitoring', () => ({
   captureHandledError: captureHandledErrorMock,
 }));
 
+const originalCrypto = globalThis.crypto;
+
 (
   globalThis as {
-    crypto?: { getRandomValues: (target: Uint8Array) => Uint8Array };
+    crypto?: {
+      getRandomValues?: (target: Uint8Array) => Uint8Array;
+      subtle?: SubtleCrypto;
+    };
   }
 ).crypto = {
   getRandomValues(target: Uint8Array): Uint8Array {
     target.fill(7);
     return target;
   },
+  ...(originalCrypto?.subtle ? { subtle: originalCrypto.subtle } : {}),
 };
+
+afterAll(() => {
+  (
+    globalThis as {
+      crypto?: Crypto;
+    }
+  ).crypto = originalCrypto;
+  mock.restore();
+});
 
 const { signInWithAppleFlow } =
   await import('@/src/lib/auth/provider-auth-flows');
