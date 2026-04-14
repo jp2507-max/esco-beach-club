@@ -19,6 +19,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/colors';
 import { submitReview } from '@/lib/api';
 import { useUserId } from '@/providers/DataProvider';
+import {
+  APP_SHEET_MAX_WIDTH,
+  AppScreenContent,
+} from '@/src/components/app/app-screen-content';
 import { ProfileSubScreenHeader } from '@/src/components/ui';
 import { motion, rmTiming } from '@/src/lib/animations/motion';
 import { ControlledTextInput } from '@/src/lib/forms/controlled-text-input';
@@ -169,11 +173,13 @@ export default function RateUsScreen(): React.JSX.Element {
       className="flex-1 bg-background dark:bg-dark-bg"
       style={{ paddingTop: insets.top }}
     >
-      <ProfileSubScreenHeader
-        className="pb-2"
-        testID="close-rate"
-        title={t('rateUs.title')}
-      />
+      <AppScreenContent maxWidth={APP_SHEET_MAX_WIDTH}>
+        <ProfileSubScreenHeader
+          className="pb-2"
+          testID="close-rate"
+          title={t('rateUs.title')}
+        />
+      </AppScreenContent>
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -181,124 +187,133 @@ export default function RateUsScreen(): React.JSX.Element {
       >
         {!submitted ? (
           <>
-            <ScrollView
-              className="flex-1"
-              contentInsetAdjustmentBehavior="automatic"
-              contentContainerClassName="items-center px-6 pb-6"
-              showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled"
-            >
-              <View className="mb-5 mt-5 size-22.5 items-center justify-center rounded-full border border-border bg-white dark:border-dark-border dark:bg-dark-bg-card">
-                <Text className="text-[40px]">
-                  {rating === 0
-                    ? '🏖️'
-                    : rating <= 2
-                      ? '😕'
-                      : rating === 3
-                        ? '😊'
-                        : '🤩'}
+            <AppScreenContent className="flex-1" maxWidth={APP_SHEET_MAX_WIDTH}>
+              <ScrollView
+                className="flex-1"
+                contentInsetAdjustmentBehavior="automatic"
+                contentContainerClassName="items-center px-6 pb-6"
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+              >
+                <View className="mb-5 mt-5 size-22.5 items-center justify-center rounded-full border border-border bg-white dark:border-dark-border dark:bg-dark-bg-card">
+                  <Text className="text-[40px]">
+                    {rating === 0
+                      ? '🏖️'
+                      : rating <= 2
+                        ? '😕'
+                        : rating === 3
+                          ? '😊'
+                          : '🤩'}
+                  </Text>
+                </View>
+
+                <Text className="mb-2 text-center text-[26px] font-extrabold text-text dark:text-text-primary-dark">
+                  {t('rateUs.howWasVisit')}
                 </Text>
-              </View>
-
-              <Text className="mb-2 text-center text-[26px] font-extrabold text-text dark:text-text-primary-dark">
-                {t('rateUs.howWasVisit')}
-              </Text>
-              <Text className="mb-7 px-2 text-center text-sm leading-5 text-text-secondary dark:text-text-secondary-dark">
-                {t('rateUs.feedbackHint')}
-              </Text>
-
-              <View className="mb-2.5 flex-row">
-                {STAR_VALUES.map((star) => (
-                  <View key={star} className={star < 5 ? 'mr-3.5' : ''}>
-                    <StarButton
-                      isActive={star <= rating}
-                      onPress={() => handleStarPress(star)}
-                      scale={starScales[star - 1]}
-                      star={star}
-                    />
-                  </View>
-                ))}
-              </View>
-
-              {rating > 0 ? (
-                <Text
-                  className="mb-7 mt-1.5 text-[15px] font-bold"
-                  style={{ color: Colors.starActive }}
-                >
-                  {t(STAR_LABEL_KEYS[rating - 1] as never)}
+                <Text className="mb-7 px-2 text-center text-sm leading-5 text-text-secondary dark:text-text-secondary-dark">
+                  {t('rateUs.feedbackHint')}
                 </Text>
-              ) : null}
 
-              <View className="w-full">
-                <ControlledTextInput<ReviewFormValues>
-                  className="min-h-22.5"
-                  containerClassName="min-h-[130px] items-start p-4"
-                  control={control}
-                  maxLength={500}
-                  multiline={true}
-                  name="comment"
-                  numberOfLines={4}
-                  placeholder={t('rateUs.placeholder')}
-                  testID="comment-input"
-                  textAlignVertical="top"
-                />
-                <Text className="mb-6 text-right text-[11px] text-text-muted dark:text-text-muted-dark">
-                  {comment.length}/500
-                </Text>
-              </View>
-            </ScrollView>
+                <View className="mb-2.5 flex-row">
+                  {STAR_VALUES.map((star) => (
+                    <View key={star} className={star < 5 ? 'mr-3.5' : ''}>
+                      <StarButton
+                        isActive={star <= rating}
+                        onPress={() => handleStarPress(star)}
+                        scale={starScales[star - 1]}
+                        star={star}
+                      />
+                    </View>
+                  ))}
+                </View>
+
+                {rating > 0 ? (
+                  <Text
+                    className="mb-7 mt-1.5 text-[15px] font-bold"
+                    style={{ color: Colors.starActive }}
+                  >
+                    {t(STAR_LABEL_KEYS[rating - 1] as never)}
+                  </Text>
+                ) : null}
+
+                <View className="w-full">
+                  <ControlledTextInput<ReviewFormValues>
+                    className="min-h-22.5"
+                    containerClassName="min-h-[130px] items-start p-4"
+                    control={control}
+                    maxLength={500}
+                    multiline={true}
+                    name="comment"
+                    numberOfLines={4}
+                    placeholder={t('rateUs.placeholder')}
+                    testID="comment-input"
+                    textAlignVertical="top"
+                  />
+                  <Text className="mb-6 text-right text-[11px] text-text-muted dark:text-text-muted-dark">
+                    {comment.length}/500
+                  </Text>
+                </View>
+              </ScrollView>
+            </AppScreenContent>
 
             <View
-              className="border-t border-border bg-background px-6 pt-4 dark:border-dark-border dark:bg-dark-bg"
+              className="border-t border-border bg-background pt-4 dark:border-dark-border dark:bg-dark-bg"
               style={{ paddingBottom: Math.max(insets.bottom, 12) }}
             >
-              <Pressable
-                accessibilityRole="button"
-                className="w-full flex-row items-center justify-center rounded-2xl bg-primary py-4"
-                disabled={rating === 0 || reviewMutation.isPending}
-                onPress={handleSubmit(handleValidSubmit, handleInvalidSubmit)}
-                style={
-                  rating === 0 || reviewMutation.isPending
-                    ? { opacity: 0.5 }
-                    : undefined
-                }
-                testID="submit-review"
-              >
-                <Send color={Colors.white} size={18} />
-                <Text className="ml-2 text-base font-bold text-white">
-                  {t('rateUs.submitLabel')}
-                </Text>
-              </Pressable>
+              <AppScreenContent className="px-6" maxWidth={APP_SHEET_MAX_WIDTH}>
+                <Pressable
+                  accessibilityRole="button"
+                  className="w-full flex-row items-center justify-center rounded-2xl bg-primary py-4"
+                  disabled={rating === 0 || reviewMutation.isPending}
+                  onPress={handleSubmit(handleValidSubmit, handleInvalidSubmit)}
+                  style={
+                    rating === 0 || reviewMutation.isPending
+                      ? { opacity: 0.5 }
+                      : undefined
+                  }
+                  testID="submit-review"
+                >
+                  <Send color={Colors.white} size={18} />
+                  <Text className="ml-2 text-base font-bold text-white">
+                    {t('rateUs.submitLabel')}
+                  </Text>
+                </Pressable>
+              </AppScreenContent>
             </View>
           </>
         ) : (
-          <ScrollView
-            className="flex-1"
-            contentInsetAdjustmentBehavior="automatic"
-            contentContainerClassName="items-center px-6 pb-10"
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-          >
-            <Animated.View className="items-center pt-15" style={successStyle}>
-              <Text className="mb-5 text-[64px]">🎉</Text>
-              <Text className="mb-2.5 text-[28px] font-extrabold text-text dark:text-text-primary-dark">
-                {t('rateUs.thankYou')}
-              </Text>
-              <Text className="mb-9 px-5 text-center text-[15px] leading-5.5 text-text-secondary dark:text-text-secondary-dark">
-                {t('rateUs.thankYouMessage')}
-              </Text>
-              <Pressable
-                accessibilityRole="button"
-                className="rounded-2xl bg-secondary px-12 py-4"
-                onPress={() => router.back()}
-                testID="done-btn"
+          <AppScreenContent className="flex-1" maxWidth={APP_SHEET_MAX_WIDTH}>
+            <ScrollView
+              className="flex-1"
+              contentInsetAdjustmentBehavior="automatic"
+              contentContainerClassName="items-center px-6 pb-10"
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
+              <Animated.View
+                className="items-center pt-15"
+                style={successStyle}
               >
-                <Text className="text-base font-bold text-white">
-                  {t('rateUs.done')}
+                <Text className="mb-5 text-[64px]">🎉</Text>
+                <Text className="mb-2.5 text-[28px] font-extrabold text-text dark:text-text-primary-dark">
+                  {t('rateUs.thankYou')}
                 </Text>
-              </Pressable>
-            </Animated.View>
-          </ScrollView>
+                <Text className="mb-9 px-5 text-center text-[15px] leading-5.5 text-text-secondary dark:text-text-secondary-dark">
+                  {t('rateUs.thankYouMessage')}
+                </Text>
+                <Pressable
+                  accessibilityRole="button"
+                  className="rounded-2xl bg-secondary px-12 py-4"
+                  onPress={() => router.back()}
+                  testID="done-btn"
+                >
+                  <Text className="text-base font-bold text-white">
+                    {t('rateUs.done')}
+                  </Text>
+                </Pressable>
+              </Animated.View>
+            </ScrollView>
+          </AppScreenContent>
         )}
       </KeyboardAvoidingView>
     </View>

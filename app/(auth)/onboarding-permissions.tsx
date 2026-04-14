@@ -68,8 +68,7 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
   const isLocationPermissionCtaDisabled =
     isBusy ||
     resolveEffectiveLocationStatus() === onboardingPermissionStatuses.granted;
-  const isPushPermissionCtaDisabled =
-    isBusy || pushStatus === onboardingPermissionStatuses.granted;
+  const isPushPermissionCtaDisabled = isBusy;
   const statusLabelByStatus = React.useMemo<
     Record<OnboardingPermissionStatus, string>
   >(

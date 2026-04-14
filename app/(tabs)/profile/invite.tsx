@@ -27,6 +27,7 @@ import {
   useReferralProgress,
   useReferralsData,
 } from '@/providers/DataProvider';
+import { AppScreenContent } from '@/src/components/app/app-screen-content';
 import { ProfileSubScreenHeader } from '@/src/components/ui';
 import { rmTiming } from '@/src/lib/animations/motion';
 import { useStaggeredListEntering } from '@/src/lib/animations/use-staggered-entry';
@@ -284,286 +285,290 @@ function InviteScreenContent(): React.JSX.Element {
 
       <ProfileSubScreenHeader className="pb-2" title={t('menu.inviteEarn')} />
 
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        contentContainerClassName="px-5 pt-1"
-        showsVerticalScrollIndicator={false}
-      >
-        <Animated.View style={fadeStyle}>
-          <Text className="mt-2 text-center text-[32px] font-extrabold leading-10 text-text dark:text-text-primary-dark">
-            {t('invite.titlePrefix')}
-            {'\n'}
-            <Text className="text-primary dark:text-primary-bright">
-              {t('invite.titleHighlight')}
+      <AppScreenContent className="flex-1">
+        <ScrollView
+          contentInsetAdjustmentBehavior="automatic"
+          contentContainerClassName="px-5 pt-1"
+          showsVerticalScrollIndicator={false}
+        >
+          <Animated.View style={fadeStyle}>
+            <Text className="mt-2 text-center text-[32px] font-extrabold leading-10 text-text dark:text-text-primary-dark">
+              {t('invite.titlePrefix')}
+              {'\n'}
+              <Text className="text-primary dark:text-primary-bright">
+                {t('invite.titleHighlight')}
+              </Text>
             </Text>
-          </Text>
-          <Text className="mb-7 mt-2.5 text-center text-[15px] leading-5.5 text-text-secondary dark:text-text-secondary-dark">
-            {t('invite.subtitle')}
-          </Text>
+            <Text className="mb-7 mt-2.5 text-center text-[15px] leading-5.5 text-text-secondary dark:text-text-secondary-dark">
+              {t('invite.subtitle')}
+            </Text>
 
-          <View
-            className="mb-7 rounded-[18px] border border-border bg-white p-5 dark:border-dark-border dark:bg-dark-bg-card"
-            style={shadows.level2}
-          >
-            <Text className="mb-3.5 text-[11px] font-bold tracking-[1.5px] text-primary dark:text-primary-bright">
-              {t('invite.referralCode')}
-            </Text>
             <View
-              className="flex-row items-center rounded-[14px] px-3.5 py-3.5"
-              style={{
-                backgroundColor: isDark
-                  ? Colors.darkBgElevated
-                  : Colors.inviteReferralCodeBgLight,
-              }}
+              className="mb-7 rounded-[18px] border border-border bg-white p-5 dark:border-dark-border dark:bg-dark-bg-card"
+              style={shadows.level2}
             >
+              <Text className="mb-3.5 text-[11px] font-bold tracking-[1.5px] text-primary dark:text-primary-bright">
+                {t('invite.referralCode')}
+              </Text>
               <View
-                className="mr-3 size-9 items-center justify-center rounded-full"
+                className="flex-row items-center rounded-[14px] px-3.5 py-3.5"
                 style={{
                   backgroundColor: isDark
-                    ? `${Colors.primaryBright}22`
-                    : `${Colors.primary}15`,
+                    ? Colors.darkBgElevated
+                    : Colors.inviteReferralCodeBgLight,
                 }}
               >
-                <Users
-                  color={isDark ? Colors.primaryBright : Colors.primary}
-                  size={18}
-                />
-              </View>
-              <Text className="flex-1 text-xl font-extrabold tracking-[1px] text-text dark:text-text-primary-dark">
-                {code ?? t('invite.codeLoading')}
-              </Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={t('invite.copyReferralCode')}
-                accessibilityHint={t('invite.copyReferralCodeHint')}
-                className="size-9 items-center justify-center rounded-xl border border-border bg-white dark:border-dark-border dark:bg-dark-bg-elevated"
-                disabled={!code}
-                onPress={handleCopy}
-                testID="copy-code"
-              >
-                {copiedRecently ? (
-                  <Text className="text-[10px] font-bold text-primary dark:text-primary-bright">
-                    {t('invite.codeCopied')}
-                  </Text>
-                ) : (
-                  <Copy
-                    color={isDark ? Colors.textMutedDark : Colors.textSecondary}
+                <View
+                  className="mr-3 size-9 items-center justify-center rounded-full"
+                  style={{
+                    backgroundColor: isDark
+                      ? `${Colors.primaryBright}22`
+                      : `${Colors.primary}15`,
+                  }}
+                >
+                  <Users
+                    color={isDark ? Colors.primaryBright : Colors.primary}
                     size={18}
                   />
-                )}
-              </Pressable>
-            </View>
-          </View>
-
-          <View className="mb-6">
-            <Text className="mb-2 text-[11px] font-bold tracking-[1px] text-text-secondary dark:text-text-secondary-dark">
-              {t('invite.goalVipStatus')}
-            </Text>
-            <View className="mb-3 flex-row items-center justify-between">
-              <Text className="text-lg font-extrabold text-text dark:text-text-primary-dark">
-                {t('invite.friendsJoined', {
-                  current: referralCurrent,
-                  goal: referralGoal,
-                })}
-              </Text>
-              <Zap
-                color={isDark ? Colors.primaryBright : Colors.primary}
-                size={22}
-              />
-            </View>
-            <View
-              className="relative h-2 overflow-visible rounded"
-              onLayout={handleProgressTrackLayout}
-              style={{ backgroundColor: progressTrackColor }}
-            >
-              <Animated.View
-                className="absolute left-0 top-0 h-2 rounded bg-primary dark:bg-primary-bright"
-                style={progressFillStyle}
-              />
-              <Animated.View
-                className="absolute -top-1 left-0 size-4 rounded-full bg-white"
-                style={[
-                  progressThumbStyle,
-                  {
-                    borderColor: Colors.primary,
-                    borderWidth: 3,
-                  },
-                ]}
-              />
-            </View>
-          </View>
-
-          <View className="mb-8 flex-row justify-around">
-            {milestones.map((m) => (
-              <View key={m.id} className="flex-1 items-center">
-                <View
-                  className="mb-2 size-14 items-center justify-center rounded-full"
-                  style={{
-                    backgroundColor: m.isGoal
-                      ? isDark
-                        ? Colors.primaryBright
-                        : Colors.primary
-                      : m.unlocked
-                        ? milestoneUnlockedBg
-                        : milestoneLockedBg,
-                  }}
-                >
-                  {m.isGoal ? (
-                    <View
-                      className="absolute -right-1.5 -top-1.5 rounded-md px-1.5 py-0.5"
-                      style={{
-                        backgroundColor: Colors.primary,
-                        borderColor: Colors.badgeLightBackground,
-                        borderWidth: 2,
-                      }}
-                    >
-                      <Text className="text-[8px] font-extrabold tracking-[0.5px] text-white">
-                        {t('invite.milestones.goal')}
-                      </Text>
-                    </View>
-                  ) : null}
-                  <m.icon
-                    size={22}
-                    color={
-                      m.unlocked
-                        ? milestoneUnlockedIcon
-                        : m.isGoal
-                          ? Colors.white
-                          : isDark
-                            ? Colors.textMutedDark
-                            : Colors.textLight
-                    }
-                  />
                 </View>
-                <Text className="mb-0.5 text-xs font-bold text-text dark:text-text-primary-dark">
-                  {m.label}
+                <Text className="flex-1 text-xl font-extrabold tracking-[1px] text-text dark:text-text-primary-dark">
+                  {code ?? t('invite.codeLoading')}
                 </Text>
-                <Text
-                  className="text-[11px] font-medium"
-                  style={{
-                    color: m.unlocked
-                      ? referralStatusText
-                      : isDark
-                        ? Colors.textSecondaryDark
-                        : Colors.textSecondary,
-                  }}
-                >
-                  {m.sub}
-                </Text>
-              </View>
-            ))}
-          </View>
-
-          <View className="mb-5">
-            <View className="mb-3.5 flex-row items-center justify-between">
-              <Text className="text-lg font-extrabold text-text dark:text-text-primary-dark">
-                {t('invite.recentReferrals')}
-              </Text>
-              {referrals.length > 0 ? (
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityHint={t('invite.viewAllHint')}
-                  accessibilityLabel={t('invite.viewAll')}
-                  hitSlop={8}
-                  onPress={() => {
-                    hapticLight();
-                    router.push('/profile/invite-referrals');
-                  }}
+                  accessibilityLabel={t('invite.copyReferralCode')}
+                  accessibilityHint={t('invite.copyReferralCodeHint')}
+                  className="size-9 items-center justify-center rounded-xl border border-border bg-white dark:border-dark-border dark:bg-dark-bg-elevated"
+                  disabled={!code}
+                  onPress={handleCopy}
+                  testID="copy-code"
                 >
-                  <Text className="text-sm font-semibold text-primary dark:text-primary-bright">
-                    {t('invite.viewAll')}
-                  </Text>
+                  {copiedRecently ? (
+                    <Text className="text-[10px] font-bold text-primary dark:text-primary-bright">
+                      {t('invite.codeCopied')}
+                    </Text>
+                  ) : (
+                    <Copy
+                      color={
+                        isDark ? Colors.textMutedDark : Colors.textSecondary
+                      }
+                      size={18}
+                    />
+                  )}
                 </Pressable>
-              ) : null}
+              </View>
             </View>
-            {referrals.slice(0, 3).map((ref, refIndex) => {
-              const isPositiveStatus =
-                ref.status === 'Accepted' || ref.status === 'Completed';
-              const isRejectedStatus = ref.status === 'Rejected';
 
-              return (
-                <InviteReferralRowStagger key={ref.id} index={refIndex}>
+            <View className="mb-6">
+              <Text className="mb-2 text-[11px] font-bold tracking-[1px] text-text-secondary dark:text-text-secondary-dark">
+                {t('invite.goalVipStatus')}
+              </Text>
+              <View className="mb-3 flex-row items-center justify-between">
+                <Text className="text-lg font-extrabold text-text dark:text-text-primary-dark">
+                  {t('invite.friendsJoined', {
+                    current: referralCurrent,
+                    goal: referralGoal,
+                  })}
+                </Text>
+                <Zap
+                  color={isDark ? Colors.primaryBright : Colors.primary}
+                  size={22}
+                />
+              </View>
+              <View
+                className="relative h-2 overflow-visible rounded"
+                onLayout={handleProgressTrackLayout}
+                style={{ backgroundColor: progressTrackColor }}
+              >
+                <Animated.View
+                  className="absolute left-0 top-0 h-2 rounded bg-primary dark:bg-primary-bright"
+                  style={progressFillStyle}
+                />
+                <Animated.View
+                  className="absolute -top-1 left-0 size-4 rounded-full bg-white"
+                  style={[
+                    progressThumbStyle,
+                    {
+                      borderColor: Colors.primary,
+                      borderWidth: 3,
+                    },
+                  ]}
+                />
+              </View>
+            </View>
+
+            <View className="mb-8 flex-row justify-around">
+              {milestones.map((m) => (
+                <View key={m.id} className="flex-1 items-center">
                   <View
-                    className="mb-3 flex-row items-center justify-between rounded-2xl border border-border bg-white p-3.5 dark:border-dark-border dark:bg-dark-bg-card"
-                    style={shadows.level1}
+                    className="mb-2 size-14 items-center justify-center rounded-full"
+                    style={{
+                      backgroundColor: m.isGoal
+                        ? isDark
+                          ? Colors.primaryBright
+                          : Colors.primary
+                        : m.unlocked
+                          ? milestoneUnlockedBg
+                          : milestoneLockedBg,
+                    }}
                   >
-                    <View className="flex-row items-center">
-                      <View className="mr-3 size-11">
-                        <Image
-                          className="size-11 rounded-full"
-                          source={
-                            ref.referred_avatar
-                              ? { uri: ref.referred_avatar }
-                              : defaultAvatar
-                          }
-                        />
-                        <View
-                          className="absolute bottom-0 left-0 size-3 rounded-full"
-                          style={{
-                            backgroundColor: Colors.success,
-                            borderColor: isDark
-                              ? Colors.darkBgCard
-                              : Colors.surface,
-                            borderWidth: 2,
-                          }}
-                        />
-                      </View>
-                      <View>
-                        <Text className="text-[15px] font-bold text-text dark:text-text-primary-dark">
-                          {ref.referred_name}
-                        </Text>
-                        <Text className="mt-0.5 text-xs text-text-secondary dark:text-text-secondary-dark">
-                          {t('invite.joinedViaYourLink')}
-                        </Text>
-                      </View>
-                    </View>
-                    <View
-                      className="rounded-[10px] px-3 py-1.25"
-                      style={{
-                        backgroundColor: isRejectedStatus
-                          ? referralWarningBg
-                          : isPositiveStatus
-                            ? referralStatusBg
-                            : isDark
-                              ? Colors.badgeDarkBackground
-                              : Colors.badgeLightBackground,
-                      }}
-                    >
-                      <Text
-                        className="text-xs font-bold"
+                    {m.isGoal ? (
+                      <View
+                        className="absolute -right-1.5 -top-1.5 rounded-md px-1.5 py-0.5"
                         style={{
-                          color: isRejectedStatus
-                            ? referralWarningText
-                            : isPositiveStatus
-                              ? referralStatusText
-                              : isDark
-                                ? Colors.textSecondaryDark
-                                : Colors.textSecondary,
+                          backgroundColor: Colors.primary,
+                          borderColor: Colors.badgeLightBackground,
+                          borderWidth: 2,
                         }}
                       >
-                        {t(
-                          referralStatusToKey[ref.status] ||
-                            'invite.status.unknown'
-                        )}
-                      </Text>
-                    </View>
+                        <Text className="text-[8px] font-extrabold tracking-[0.5px] text-white">
+                          {t('invite.milestones.goal')}
+                        </Text>
+                      </View>
+                    ) : null}
+                    <m.icon
+                      size={22}
+                      color={
+                        m.unlocked
+                          ? milestoneUnlockedIcon
+                          : m.isGoal
+                            ? Colors.white
+                            : isDark
+                              ? Colors.textMutedDark
+                              : Colors.textLight
+                      }
+                    />
                   </View>
-                </InviteReferralRowStagger>
-              );
-            })}
-            {referrals.length === 0 ? (
-              <Text className="py-5 text-center text-sm text-text-secondary dark:text-text-secondary-dark">
-                {t('invite.noReferralsYet')}
-              </Text>
-            ) : null}
-          </View>
-        </Animated.View>
+                  <Text className="mb-0.5 text-xs font-bold text-text dark:text-text-primary-dark">
+                    {m.label}
+                  </Text>
+                  <Text
+                    className="text-[11px] font-medium"
+                    style={{
+                      color: m.unlocked
+                        ? referralStatusText
+                        : isDark
+                          ? Colors.textSecondaryDark
+                          : Colors.textSecondary,
+                    }}
+                  >
+                    {m.sub}
+                  </Text>
+                </View>
+              ))}
+            </View>
 
-        <View className="h-25" />
-      </ScrollView>
+            <View className="mb-5">
+              <View className="mb-3.5 flex-row items-center justify-between">
+                <Text className="text-lg font-extrabold text-text dark:text-text-primary-dark">
+                  {t('invite.recentReferrals')}
+                </Text>
+                {referrals.length > 0 ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityHint={t('invite.viewAllHint')}
+                    accessibilityLabel={t('invite.viewAll')}
+                    hitSlop={8}
+                    onPress={() => {
+                      hapticLight();
+                      router.push('/profile/invite-referrals');
+                    }}
+                  >
+                    <Text className="text-sm font-semibold text-primary dark:text-primary-bright">
+                      {t('invite.viewAll')}
+                    </Text>
+                  </Pressable>
+                ) : null}
+              </View>
+              {referrals.slice(0, 3).map((ref, refIndex) => {
+                const isPositiveStatus =
+                  ref.status === 'Accepted' || ref.status === 'Completed';
+                const isRejectedStatus = ref.status === 'Rejected';
+
+                return (
+                  <InviteReferralRowStagger key={ref.id} index={refIndex}>
+                    <View
+                      className="mb-3 flex-row items-center justify-between rounded-2xl border border-border bg-white p-3.5 dark:border-dark-border dark:bg-dark-bg-card"
+                      style={shadows.level1}
+                    >
+                      <View className="flex-row items-center">
+                        <View className="mr-3 size-11">
+                          <Image
+                            className="size-11 rounded-full"
+                            source={
+                              ref.referred_avatar
+                                ? { uri: ref.referred_avatar }
+                                : defaultAvatar
+                            }
+                          />
+                          <View
+                            className="absolute bottom-0 left-0 size-3 rounded-full"
+                            style={{
+                              backgroundColor: Colors.success,
+                              borderColor: isDark
+                                ? Colors.darkBgCard
+                                : Colors.surface,
+                              borderWidth: 2,
+                            }}
+                          />
+                        </View>
+                        <View>
+                          <Text className="text-[15px] font-bold text-text dark:text-text-primary-dark">
+                            {ref.referred_name}
+                          </Text>
+                          <Text className="mt-0.5 text-xs text-text-secondary dark:text-text-secondary-dark">
+                            {t('invite.joinedViaYourLink')}
+                          </Text>
+                        </View>
+                      </View>
+                      <View
+                        className="rounded-[10px] px-3 py-1.25"
+                        style={{
+                          backgroundColor: isRejectedStatus
+                            ? referralWarningBg
+                            : isPositiveStatus
+                              ? referralStatusBg
+                              : isDark
+                                ? Colors.badgeDarkBackground
+                                : Colors.badgeLightBackground,
+                        }}
+                      >
+                        <Text
+                          className="text-xs font-bold"
+                          style={{
+                            color: isRejectedStatus
+                              ? referralWarningText
+                              : isPositiveStatus
+                                ? referralStatusText
+                                : isDark
+                                  ? Colors.textSecondaryDark
+                                  : Colors.textSecondary,
+                          }}
+                        >
+                          {t(
+                            referralStatusToKey[ref.status] ||
+                              'invite.status.unknown'
+                          )}
+                        </Text>
+                      </View>
+                    </View>
+                  </InviteReferralRowStagger>
+                );
+              })}
+              {referrals.length === 0 ? (
+                <Text className="py-5 text-center text-sm text-text-secondary dark:text-text-secondary-dark">
+                  {t('invite.noReferralsYet')}
+                </Text>
+              ) : null}
+            </View>
+          </Animated.View>
+
+          <View className="h-25" />
+        </ScrollView>
+      </AppScreenContent>
 
       <View
-        className="absolute bottom-0 left-0 right-0 border-t border-border px-5 pt-3 dark:border-dark-border"
+        className="absolute bottom-0 left-0 right-0 border-t border-border pt-3 dark:border-dark-border"
         style={{
           backgroundColor: isDark
             ? Colors.darkBgCard
@@ -571,18 +576,20 @@ function InviteScreenContent(): React.JSX.Element {
           paddingBottom: Math.max(insets.bottom, 16),
         }}
       >
-        <Pressable
-          accessibilityRole="button"
-          className="flex-row items-center justify-center rounded-[18px] bg-primary py-4.25 opacity-100 disabled:opacity-50 dark:bg-primary-bright"
-          disabled={!code}
-          onPress={handleShare}
-          testID="share-btn"
-        >
-          <Upload color={Colors.white} size={20} />
-          <Text className="ml-2.5 text-[17px] font-bold text-white">
-            {t('invite.shareInviteLink')}
-          </Text>
-        </Pressable>
+        <AppScreenContent className="px-5">
+          <Pressable
+            accessibilityRole="button"
+            className="flex-row items-center justify-center rounded-[18px] bg-primary py-4.25 opacity-100 disabled:opacity-50 dark:bg-primary-bright"
+            disabled={!code}
+            onPress={handleShare}
+            testID="share-btn"
+          >
+            <Upload color={Colors.white} size={20} />
+            <Text className="ml-2.5 text-[17px] font-bold text-white">
+              {t('invite.shareInviteLink')}
+            </Text>
+          </Pressable>
+        </AppScreenContent>
       </View>
     </View>
   );

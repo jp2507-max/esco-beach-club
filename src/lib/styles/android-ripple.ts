@@ -1,8 +1,5 @@
-import {
-  Platform,
-  type ColorValue,
-  type PressableAndroidRippleConfig,
-} from 'react-native';
+import type { ColorValue, PressableAndroidRippleConfig } from 'react-native';
+import { Platform } from 'react-native';
 
 export function getAndroidRippleConfig(
   color: ColorValue

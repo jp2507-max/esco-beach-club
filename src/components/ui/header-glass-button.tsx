@@ -161,18 +161,24 @@ export function HeaderGlassButton({
       Platform.OS === 'android'
         ? [
             shadows.level2,
-            {
-              backgroundColor: isDark
-                ? Colors.darkBgElevated
-                : Colors.surfaceContainerLow,
-              borderColor: isDark
-                ? Colors.darkBorderBright
-                : Colors.borderLight,
-              shadowColor: isDark ? Colors.black : Colors.primary,
-            },
+            variant === 'overlay'
+              ? {
+                  backgroundColor: 'rgba(0,0,0,0.35)',
+                  borderColor: 'rgba(255,255,255,0.35)',
+                  shadowColor: Colors.black,
+                }
+              : {
+                  backgroundColor: isDark
+                    ? Colors.darkBgElevated
+                    : Colors.surfaceContainerLow,
+                  borderColor: isDark
+                    ? Colors.darkBorderBright
+                    : Colors.borderLight,
+                  shadowColor: isDark ? Colors.black : Colors.primary,
+                },
           ]
         : undefined,
-    [isDark]
+    [isDark, variant]
   );
 
   return (
@@ -187,7 +193,9 @@ export function HeaderGlassButton({
         canUseGlass
           ? glassContainerClassName
           : Platform.OS === 'android'
-            ? 'bg-transparent'
+            ? variant === 'overlay'
+              ? 'border-white/35 bg-transparent'
+              : 'bg-transparent'
             : fallbackContainerClassName,
         className
       )}

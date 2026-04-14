@@ -40,6 +40,7 @@ import {
   SkeletonCard,
   SkeletonText,
 } from '@/src/components/ui';
+import { AppScreenContent } from '@/src/components/app/app-screen-content';
 import { rmTiming } from '@/src/lib/animations/motion';
 import { hapticMedium } from '@/src/lib/haptics/haptics';
 import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
@@ -169,14 +170,16 @@ export default function EventDetailsScreen(): React.JSX.Element {
             </View>
           </View>
         </View>
-        <View className="flex-1 rounded-t-[20px] bg-background px-5 pt-6 dark:bg-dark-bg">
-          <SkeletonText className="mb-6" lines={3} />
-          <SkeletonText className="mb-2 h-6 w-48" lines={1} />
-          <SkeletonText className="mb-4" lines={2} />
-          <SkeletonCard className="mb-3" height={100} />
-          <SkeletonCard className="mb-3" height={100} />
-          <SkeletonCard height={100} />
-        </View>
+        <AppScreenContent className="flex-1" style={{ marginTop: -16 }}>
+          <View className="flex-1 rounded-t-[20px] bg-background px-5 pt-6 dark:bg-dark-bg">
+            <SkeletonText className="mb-6" lines={3} />
+            <SkeletonText className="mb-2 h-6 w-48" lines={1} />
+            <SkeletonText className="mb-4" lines={2} />
+            <SkeletonCard className="mb-3" height={100} />
+            <SkeletonCard className="mb-3" height={100} />
+            <SkeletonCard height={100} />
+          </View>
+        </AppScreenContent>
       </View>
     );
   }
@@ -359,219 +362,226 @@ export default function EventDetailsScreen(): React.JSX.Element {
         </View>
       </Animated.View>
 
-      <Animated.ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        className="flex-1 rounded-t-[20px] bg-background dark:bg-dark-bg"
-        contentContainerClassName="px-5 pt-6"
-        onScroll={scrollHandler}
-        scrollEventThrottle={16}
-        showsVerticalScrollIndicator={false}
-        style={{ marginTop: -16 }}
-      >
-        <Animated.View style={contentStyle}>
-          <View className="mb-6 flex-row">
-            <View className="mr-2.5 flex-row items-center rounded-xl border border-border bg-white px-3.5 py-2.5 dark:border-dark-border dark:bg-dark-bg-card">
-              <MapPin
-                color={accentOnDarkBackground(Colors.secondary, isDark)}
-                size={16}
-              />
-              <Text className="ml-1.5 text-[13px] font-semibold text-text dark:text-text-primary-dark">
-                {event.location}
+      <AppScreenContent className="flex-1" style={{ marginTop: -16 }}>
+        <Animated.ScrollView
+          contentInsetAdjustmentBehavior="automatic"
+          className="flex-1 rounded-t-[20px] bg-background dark:bg-dark-bg"
+          contentContainerClassName="px-5 pt-6"
+          onScroll={scrollHandler}
+          scrollEventThrottle={16}
+          showsVerticalScrollIndicator={false}
+        >
+          <Animated.View style={contentStyle}>
+            <View className="mb-6 flex-row">
+              <View className="mr-2.5 flex-row items-center rounded-xl border border-border bg-white px-3.5 py-2.5 dark:border-dark-border dark:bg-dark-bg-card">
+                <MapPin
+                  color={accentOnDarkBackground(Colors.secondary, isDark)}
+                  size={16}
+                />
+                <Text className="ml-1.5 text-[13px] font-semibold text-text dark:text-text-primary-dark">
+                  {event.location}
+                </Text>
+              </View>
+              <View className="flex-row items-center rounded-xl border border-border bg-white px-3.5 py-2.5 dark:border-dark-border dark:bg-dark-bg-card">
+                <Users
+                  color={accentOnDarkBackground(Colors.primary, isDark)}
+                  size={16}
+                />
+                <Text className="ml-1.5 text-[13px] font-semibold text-text dark:text-text-primary-dark">
+                  {t('attendeesCount', { count: event.attendees })}
+                </Text>
+              </View>
+            </View>
+
+            <View className="mb-7">
+              <Text className="mb-2 text-xl font-extrabold text-text dark:text-text-primary-dark">
+                {t('aboutThisEvent')}
+              </Text>
+              <Text className="text-sm leading-5.5 text-text-secondary dark:text-text-secondary-dark">
+                {t('aboutDescription1', { location: event.location })}{' '}
+                {event.description || t('aboutDescription2')}{' '}
+                {t('aboutDescription3')}
               </Text>
             </View>
-            <View className="flex-row items-center rounded-xl border border-border bg-white px-3.5 py-2.5 dark:border-dark-border dark:bg-dark-bg-card">
-              <Users
-                color={accentOnDarkBackground(Colors.primary, isDark)}
-                size={16}
-              />
-              <Text className="ml-1.5 text-[13px] font-semibold text-text dark:text-text-primary-dark">
-                {t('attendeesCount', { count: event.attendees })}
+
+            <View className="mb-6">
+              <Text className="mb-2 text-xl font-extrabold text-text dark:text-text-primary-dark">
+                {t('chooseExperience')}
               </Text>
-            </View>
-          </View>
+              <Text className="mb-4 text-[13px] text-text-secondary dark:text-text-secondary-dark">
+                {t('selectTier')}
+              </Text>
 
-          <View className="mb-7">
-            <Text className="mb-2 text-xl font-extrabold text-text dark:text-text-primary-dark">
-              {t('aboutThisEvent')}
-            </Text>
-            <Text className="text-sm leading-5.5 text-text-secondary dark:text-text-secondary-dark">
-              {t('aboutDescription1', { location: event.location })}{' '}
-              {event.description || t('aboutDescription2')}{' '}
-              {t('aboutDescription3')}
-            </Text>
-          </View>
-
-          <View className="mb-6">
-            <Text className="mb-2 text-xl font-extrabold text-text dark:text-text-primary-dark">
-              {t('chooseExperience')}
-            </Text>
-            <Text className="mb-4 text-[13px] text-text-secondary dark:text-text-secondary-dark">
-              {t('selectTier')}
-            </Text>
-
-            {priceTiers.map((tier) => (
-              <View
-                key={tier.labelKey}
-                className="mb-3 rounded-[18px] border p-4.5"
-                style={{
-                  backgroundColor: tier.highlight
-                    ? isDark
-                      ? `${Colors.primary}22`
-                      : Colors.eventTierHighlightLight
-                    : isDark
-                      ? Colors.darkBgCard
-                      : Colors.surface,
-                  borderColor: tier.highlight
-                    ? Colors.primary
-                    : isDark
-                      ? Colors.darkBorder
-                      : Colors.border,
-                  borderWidth: tier.highlight ? 2 : 1,
-                }}
-              >
-                {tier.highlight ? (
-                  <View className="absolute -top-2.5 right-4 rounded-lg bg-primary px-2.5 py-1">
-                    <Text className="text-[9px] font-extrabold tracking-[1px] text-white">
-                      {t('recommended')}
-                    </Text>
-                  </View>
-                ) : null}
-
-                <View className="flex-row items-center justify-between">
-                  <View className="flex-row items-center">
-                    <View
-                      className="mr-3 size-11 items-center justify-center rounded-[14px]"
-                      style={{
-                        backgroundColor: tier.highlight
-                          ? Colors.primary
-                          : isDark
-                            ? `${Colors.secondaryBright}30`
-                            : `${Colors.tealLight}40`,
-                      }}
-                    >
-                      <tier.icon
-                        size={20}
-                        color={
-                          tier.highlight
-                            ? Colors.white
-                            : accentOnDarkBackground(Colors.secondary, isDark)
-                        }
-                      />
+              {priceTiers.map((tier) => (
+                <View
+                  key={tier.labelKey}
+                  className="mb-3 rounded-[18px] border p-4.5"
+                  style={{
+                    backgroundColor: tier.highlight
+                      ? isDark
+                        ? `${Colors.primary}22`
+                        : Colors.eventTierHighlightLight
+                      : isDark
+                        ? Colors.darkBgCard
+                        : Colors.surface,
+                    borderColor: tier.highlight
+                      ? Colors.primary
+                      : isDark
+                        ? Colors.darkBorder
+                        : Colors.border,
+                    borderWidth: tier.highlight ? 2 : 1,
+                  }}
+                >
+                  {tier.highlight ? (
+                    <View className="absolute -top-2.5 right-4 rounded-lg bg-primary px-2.5 py-1">
+                      <Text className="text-[9px] font-extrabold tracking-[1px] text-white">
+                        {t('recommended')}
+                      </Text>
                     </View>
-                    <View>
-                      <Text
-                        className="text-base font-bold"
+                  ) : null}
+
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-row items-center">
+                      <View
+                        className="mr-3 size-11 items-center justify-center rounded-[14px]"
                         style={{
-                          color: tier.highlight
+                          backgroundColor: tier.highlight
                             ? Colors.primary
                             : isDark
-                              ? Colors.textPrimaryDark
-                              : Colors.text,
+                              ? `${Colors.secondaryBright}30`
+                              : `${Colors.tealLight}40`,
                         }}
                       >
-                        {t(tier.labelKey)}
-                      </Text>
-                      <Text className="mt-0.5 text-[11px] font-medium text-text-muted dark:text-text-muted-dark">
-                        {t('perPerson')}
-                      </Text>
+                        <tier.icon
+                          size={20}
+                          color={
+                            tier.highlight
+                              ? Colors.white
+                              : accentOnDarkBackground(Colors.secondary, isDark)
+                          }
+                        />
+                      </View>
+                      <View>
+                        <Text
+                          className="text-base font-bold"
+                          style={{
+                            color: tier.highlight
+                              ? Colors.primary
+                              : isDark
+                                ? Colors.textPrimaryDark
+                                : Colors.text,
+                          }}
+                        >
+                          {t(tier.labelKey)}
+                        </Text>
+                        <Text className="mt-0.5 text-[11px] font-medium text-text-muted dark:text-text-muted-dark">
+                          {t('perPerson')}
+                        </Text>
+                      </View>
                     </View>
-                  </View>
-                  <Text
-                    className="text-[28px] font-extrabold"
-                    style={{
-                      color: tier.highlight
-                        ? Colors.primary
-                        : isDark
-                          ? Colors.textPrimaryDark
-                          : Colors.text,
-                    }}
-                  >
-                    {tier.price}
-                  </Text>
-                </View>
-
-                <View className="my-3.5 h-px bg-border dark:bg-dark-border" />
-
-                {tier.perkKeys.map((key) => (
-                  <View key={key} className="mb-2 flex-row items-center">
-                    <View
-                      className="mr-2.5 size-1.5 rounded-full"
+                    <Text
+                      className="text-[28px] font-extrabold"
                       style={{
-                        backgroundColor: tier.highlight
+                        color: tier.highlight
                           ? Colors.primary
-                          : accentOnDarkBackground(Colors.secondary, isDark),
+                          : isDark
+                            ? Colors.textPrimaryDark
+                            : Colors.text,
                       }}
-                    />
-                    <Text className="text-[13px] font-medium text-text-secondary dark:text-text-secondary-dark">
-                      {t(key)}
+                    >
+                      {tier.price}
                     </Text>
                   </View>
-                ))}
-              </View>
-            ))}
-          </View>
 
-          <Pressable
-            accessibilityRole="button"
-            className="flex-row items-center rounded-2xl border px-4 py-4"
-            onPress={() => router.push('/private-event')}
-            style={{
-              backgroundColor: isDark
-                ? `${Colors.secondaryBright}18`
-                : `${Colors.tealLight}25`,
-              borderColor: isDark
-                ? `${Colors.secondaryBright}35`
-                : `${Colors.secondary}20`,
-            }}
-            testID="private-party-link"
-          >
-            <View
-              className="mr-3.5 size-11 items-center justify-center rounded-[14px] border border-border bg-white dark:border-dark-border dark:bg-dark-bg-elevated"
+                  <View className="my-3.5 h-px bg-border dark:bg-dark-border" />
+
+                  {tier.perkKeys.map((key) => (
+                    <View key={key} className="mb-2 flex-row items-center">
+                      <View
+                        className="mr-2.5 size-1.5 rounded-full"
+                        style={{
+                          backgroundColor: tier.highlight
+                            ? Colors.primary
+                            : accentOnDarkBackground(Colors.secondary, isDark),
+                        }}
+                      />
+                      <Text className="text-[13px] font-medium text-text-secondary dark:text-text-secondary-dark">
+                        {t(key)}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              ))}
+            </View>
+
+            <Pressable
+              accessibilityRole="button"
+              className="flex-row items-center rounded-2xl border px-4 py-4"
+              onPress={() => router.push('/private-event')}
               style={{
+                backgroundColor: isDark
+                  ? `${Colors.secondaryBright}18`
+                  : `${Colors.tealLight}25`,
                 borderColor: isDark
                   ? `${Colors.secondaryBright}35`
                   : `${Colors.secondary}20`,
               }}
+              testID="private-party-link"
             >
-              <PartyPopper
-                color={accentOnDarkBackground(Colors.secondary, isDark)}
-                size={20}
-              />
-            </View>
-            <View className="flex-1">
-              <Text className="mb-0.5 text-[15px] font-bold text-text dark:text-text-primary-dark">
-                {t('privatePartyTitle')}
-              </Text>
-              <Text className="text-xs font-medium text-text-secondary dark:text-text-secondary-dark">
-                {t('privatePartyDescription')}
-              </Text>
-            </View>
-          </Pressable>
+              <View
+                className="mr-3.5 size-11 items-center justify-center rounded-[14px] border border-border bg-white dark:border-dark-border dark:bg-dark-bg-elevated"
+                style={{
+                  borderColor: isDark
+                    ? `${Colors.secondaryBright}35`
+                    : `${Colors.secondary}20`,
+                }}
+              >
+                <PartyPopper
+                  color={accentOnDarkBackground(Colors.secondary, isDark)}
+                  size={20}
+                />
+              </View>
+              <View className="flex-1">
+                <Text className="mb-0.5 text-[15px] font-bold text-text dark:text-text-primary-dark">
+                  {t('privatePartyTitle')}
+                </Text>
+                <Text className="text-xs font-medium text-text-secondary dark:text-text-secondary-dark">
+                  {t('privatePartyDescription')}
+                </Text>
+              </View>
+            </Pressable>
 
-          <View className="h-30" />
-        </Animated.View>
-      </Animated.ScrollView>
+            <View className="h-30" />
+          </Animated.View>
+        </Animated.ScrollView>
+      </AppScreenContent>
 
       <View
-        className="absolute bottom-0 left-0 right-0 flex-row items-center justify-between border-t border-border bg-white px-5 pt-3.5 dark:border-dark-border dark:bg-dark-bg-card"
+        className="absolute bottom-0 left-0 right-0 border-t border-border bg-white pt-3.5 dark:border-dark-border dark:bg-dark-bg-card"
         style={{ paddingBottom: Math.max(insets.bottom, 16) }}
       >
-        <View>
-          <Text className="text-xs font-medium text-text-muted dark:text-text-muted-dark">
-            {t('from')}
-          </Text>
-          <Text className="text-2xl font-extrabold text-text dark:text-text-primary-dark">
-            {event.price}
-          </Text>
-        </View>
-        <Pressable
-          accessibilityRole="button"
-          className="rounded-2xl bg-primary px-9 py-4"
-          onPress={handleBook}
-          testID="book-now-btn"
-        >
-          <Text className="text-base font-bold text-white">{t('bookNow')}</Text>
-        </Pressable>
+        <AppScreenContent className="px-5">
+          <View className="flex-row items-center justify-between">
+            <View>
+              <Text className="text-xs font-medium text-text-muted dark:text-text-muted-dark">
+                {t('from')}
+              </Text>
+              <Text className="text-2xl font-extrabold text-text dark:text-text-primary-dark">
+                {event.price}
+              </Text>
+            </View>
+            <Pressable
+              accessibilityRole="button"
+              className="rounded-2xl bg-primary px-9 py-4"
+              onPress={handleBook}
+              testID="book-now-btn"
+            >
+              <Text className="text-base font-bold text-white">
+                {t('bookNow')}
+              </Text>
+            </Pressable>
+          </View>
+        </AppScreenContent>
       </View>
     </View>
   );

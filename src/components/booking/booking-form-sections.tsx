@@ -17,6 +17,10 @@ import type { AnimatedStyle } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { accentOnDarkBackground, Colors } from '@/constants/colors';
+import {
+  APP_SCREEN_MAX_WIDTH,
+  AppScreenContent,
+} from '@/src/components/app/app-screen-content';
 import { Button } from '@/src/components/ui';
 import type {
   BookingDateOption,
@@ -615,12 +619,14 @@ export function BookingFormContent({
 
 export function BookingFooterBar({
   canConfirm,
+  contentMaxWidth = APP_SCREEN_MAX_WIDTH,
   insetsBottom,
   isSubmitting,
   t,
   onConfirm,
 }: {
   canConfirm: boolean;
+  contentMaxWidth?: number;
   insetsBottom: number;
   isSubmitting: boolean;
   t: TFunction;
@@ -628,18 +634,20 @@ export function BookingFooterBar({
 }): React.JSX.Element {
   return (
     <View
-      className="absolute bottom-0 left-0 right-0 border-t border-border bg-white px-5 pt-3.5 dark:border-dark-border dark:bg-dark-bg-card"
+      className="absolute bottom-0 left-0 right-0 border-t border-border bg-white pt-3.5 dark:border-dark-border dark:bg-dark-bg-card"
       style={{ paddingBottom: Math.max(insetsBottom, 16) }}
     >
-      <Button
-        className="rounded-2xl"
-        disabled={!canConfirm || isSubmitting}
-        onPress={onConfirm}
-        size="lg"
-        testID="confirm-booking"
-      >
-        {isSubmitting ? t('reserving') : t('confirmReservation')}
-      </Button>
+      <AppScreenContent className="px-5" maxWidth={contentMaxWidth}>
+        <Button
+          className="rounded-2xl"
+          disabled={!canConfirm || isSubmitting}
+          onPress={onConfirm}
+          size="lg"
+          testID="confirm-booking"
+        >
+          {isSubmitting ? t('reserving') : t('confirmReservation')}
+        </Button>
+      </AppScreenContent>
     </View>
   );
 }

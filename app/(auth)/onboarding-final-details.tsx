@@ -272,8 +272,11 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
         return;
       }
 
+      // Navigate directly to the authenticated profile surface after a
+      // successful completion write to avoid relying on eventual-consistency
+      // timing in the post-auth profile bootstrap redirect.
       resetSignupDraft();
-      router.replace('/(auth)/post-auth-redirect');
+      router.replace('/profile');
       return;
     }
 

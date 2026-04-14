@@ -18,7 +18,10 @@ import { AuthScreenContent } from '@/src/components/auth/auth-screen-content';
 import { ErrorBanner, SocialAuthButtons } from '@/src/components/ui';
 import { motion, withRM } from '@/src/lib/animations/motion';
 import type { SignupOnboardingData } from '@/src/lib/auth/signup-onboarding';
-import { useEmailCodeAuthFlow } from '@/src/lib/auth/use-email-code-auth-flow';
+import {
+  useEmailCodeAuthFlow,
+  type UseEmailCodeAuthFlowParams,
+} from '@/src/lib/auth/use-email-code-auth-flow';
 import { isAuthErrorKey } from '@/src/lib/auth-errors';
 import { ControlledTextInput } from '@/src/lib/forms/controlled-text-input';
 import {
@@ -95,15 +98,22 @@ export default function LoginScreen(): React.JSX.Element {
     isSignupAuthFlow && onboardingData !== undefined;
   const shouldRedirectToOnboarding =
     isSignupAuthFlow && onboardingData === undefined;
-  const flow = useEmailCodeAuthFlow({
-    sendCode,
-    verifyCode: async ({ code, email }) => {
+  const verifyCodeForEmailFlow = React.useCallback<
+    UseEmailCodeAuthFlowParams['verifyCode']
+  >(
+    async ({ code, email }) => {
       await verifyCode({
         code,
         email,
         ...(onboardingData ? { onboardingData } : {}),
       });
     },
+    [onboardingData, verifyCode]
+  );
+
+  const flow = useEmailCodeAuthFlow({
+    sendCode,
+    verifyCode: verifyCodeForEmailFlow,
     sendCodeLoading,
     sendCodeError,
     verifyCodeLoading,

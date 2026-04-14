@@ -5,6 +5,7 @@ import { cn } from '@/src/lib/utils';
 import { View } from '@/src/tw';
 
 export const APP_SCREEN_MAX_WIDTH = 820;
+export const APP_SHEET_MAX_WIDTH = 620;
 
 type AppScreenContentProps = {
   children: React.ReactNode;

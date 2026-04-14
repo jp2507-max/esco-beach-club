@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
 import { useReferralsData } from '@/providers/DataProvider';
+import { AppScreenContent } from '@/src/components/app/app-screen-content';
 import { ProfileSubScreenHeader } from '@/src/components/ui';
 import { useScreenEntry } from '@/src/lib/animations/use-screen-entry';
 import { useStaggeredListEntering } from '@/src/lib/animations/use-staggered-entry';
@@ -203,33 +204,35 @@ function InviteReferralsScreenContent(): React.JSX.Element {
         title={t('invite.allReferralsTitle')}
       />
 
-      <Animated.View className="flex-1" style={contentStyle}>
-        <FlashList
-          contentInsetAdjustmentBehavior="automatic"
-          contentContainerStyle={listContentContainerStyle}
-          data={referrals}
-          keyExtractor={(item) => item.id}
-          ListEmptyComponent={
-            referralsLoading ? (
-              <View className="items-center rounded-2xl border border-border bg-card px-4 py-10 dark:border-dark-border dark:bg-dark-bg-card">
-                <ActivityIndicator
-                  color={isDark ? Colors.primaryBright : Colors.primary}
-                  size="large"
-                />
-                <Text className="mt-4 text-sm font-medium text-text-secondary dark:text-text-secondary-dark">
-                  {t('invite.loadingReferrals')}
+      <AppScreenContent className="flex-1">
+        <Animated.View className="flex-1" style={contentStyle}>
+          <FlashList
+            contentInsetAdjustmentBehavior="automatic"
+            contentContainerStyle={listContentContainerStyle}
+            data={referrals}
+            keyExtractor={(item) => item.id}
+            ListEmptyComponent={
+              referralsLoading ? (
+                <View className="items-center rounded-2xl border border-border bg-card px-4 py-10 dark:border-dark-border dark:bg-dark-bg-card">
+                  <ActivityIndicator
+                    color={isDark ? Colors.primaryBright : Colors.primary}
+                    size="large"
+                  />
+                  <Text className="mt-4 text-sm font-medium text-text-secondary dark:text-text-secondary-dark">
+                    {t('invite.loadingReferrals')}
+                  </Text>
+                </View>
+              ) : (
+                <Text className="py-8 text-center text-sm text-text-secondary dark:text-text-secondary-dark">
+                  {t('invite.noReferralsYet')}
                 </Text>
-              </View>
-            ) : (
-              <Text className="py-8 text-center text-sm text-text-secondary dark:text-text-secondary-dark">
-                {t('invite.noReferralsYet')}
-              </Text>
-            )
-          }
-          renderItem={renderReferral}
-          showsVerticalScrollIndicator={false}
-        />
-      </Animated.View>
+              )
+            }
+            renderItem={renderReferral}
+            showsVerticalScrollIndicator={false}
+          />
+        </Animated.View>
+      </AppScreenContent>
     </View>
   );
 }

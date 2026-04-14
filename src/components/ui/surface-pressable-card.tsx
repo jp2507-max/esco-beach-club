@@ -1,7 +1,7 @@
 import type { ComponentProps } from 'react';
 import React from 'react';
-import { useColorScheme } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
+import { useColorScheme } from 'react-native';
 
 import { Colors } from '@/constants/colors';
 import { useButtonPress } from '@/src/lib/animations/use-button-press';
