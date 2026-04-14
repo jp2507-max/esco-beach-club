@@ -99,9 +99,13 @@ const auth = {
   onboardingPermissionsActionAllow: '권한 허용',
   onboardingPermissionsActionRetry: '다시 시도',
   onboardingPermissionsActionEnabled: '활성화됨',
+  onboardingPermissionsActionManage: '관리',
   onboardingPermissionsContinue: '계속',
   onboardingPermissionsNotNow: '지금은 안 할게요',
   onboardingPermissionsOpenSettings: '기기 설정 열기',
+  onboardingPermissionsPushAlreadyEnabledTitle: '알림이 이미 활성화되어 있어요',
+  onboardingPermissionsPushAlreadyEnabledMessage:
+    '이미 설정되어 있습니다. 필요하면 기기 설정에서 알림을 관리해 주세요.',
   onboardingPermissionsErrorTitle: '권한 요청 실패',
   onboardingPermissionsErrorMessage:
     '권한 팝업을 열 수 없습니다. 다시 시도하거나 지금은 건너뛸 수 있어요.',
@@ -149,6 +153,8 @@ const auth = {
   appleOauthClientNotConfigured:
     'Apple 로그인 구성이 잘못되었습니다. 지원팀에 문의해 주세요.',
   googleAuthNotConfigured: 'Google 로그인이 아직 구성되지 않았습니다.',
+  googleAndroidAuthNotConfigured:
+    '이 Android 빌드에서는 Google 로그인이 아직 구성되지 않았습니다. 설치된 빌드에 맞는 Android OAuth 패키지 이름과 SHA 지문을 확인해 주세요.',
   googleOauthClientNotConfigured:
     'Google 로그인 구성이 잘못되었습니다. 지원팀에 문의해 주세요.',
   googleIdTokenMissing: 'Google에서 신원 토큰을 반환하지 않았습니다.',

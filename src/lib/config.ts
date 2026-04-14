@@ -5,18 +5,7 @@ function toOptionalNumber(value: string | undefined): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-function toOptionalUrlOrigin(value: string | undefined): string | null {
-  const trimmedValue = value?.trim();
-  if (!trimmedValue) return null;
-
-  try {
-    return new URL(trimmedValue).origin;
-  } catch {
-    return null;
-  }
-}
-
-function toOptionalUrl(value: string | undefined): string | null {
+function toOptionalHttpUrl(value: string | undefined): string | null {
   const trimmedValue = value?.trim();
   if (!trimmedValue) return null;
 
@@ -26,10 +15,19 @@ function toOptionalUrl(value: string | undefined): string | null {
       return null;
     }
 
-    return parsedUrl.toString();
+    return parsedUrl.toString().replace(/\/+$/, '');
   } catch {
     return null;
   }
+}
+
+function toOptionalUrlOrigin(value: string | undefined): string | null {
+  const parsedUrl = toOptionalHttpUrl(value);
+  return parsedUrl ? new URL(parsedUrl).origin : null;
+}
+
+function toOptionalUrl(value: string | undefined): string | null {
+  return toOptionalHttpUrl(value);
 }
 
 const restaurantLatitude = toOptionalNumber(
@@ -42,7 +40,7 @@ const restaurantRadiusMeters =
   toOptionalNumber(process.env.EXPO_PUBLIC_RESTAURANT_RADIUS_METERS) ?? 90;
 const defaultPublicSiteUrl = 'https://escolife.expo.app';
 const publicSiteUrl =
-  process.env.EXPO_PUBLIC_APP_URL?.trim()?.replace(/\/+$/, '') ||
+  toOptionalHttpUrl(process.env.EXPO_PUBLIC_APP_URL) ||
   toOptionalUrlOrigin(process.env.EXPO_PUBLIC_SUPPORT_URL) ||
   toOptionalUrlOrigin(process.env.EXPO_PUBLIC_PRIVACY_POLICY_URL) ||
   toOptionalUrlOrigin(process.env.EXPO_PUBLIC_TERMS_OF_SERVICE_URL) ||
@@ -76,16 +74,17 @@ export const config = {
       process.env.EXPO_PUBLIC_SUPPORT_EMAIL?.trim() ||
       'booking@escobeach-danang.com',
     supportUrl:
-      process.env.EXPO_PUBLIC_SUPPORT_URL?.trim() || `${publicSiteUrl}/support`,
+      toOptionalHttpUrl(process.env.EXPO_PUBLIC_SUPPORT_URL) ||
+      `${publicSiteUrl}/support`,
   },
   /** Bundled hero image for onboarding welcome screen. */
   heroImage: require('@/assets/images/splash-icon.png'),
   legal: {
     privacyPolicyUrl:
-      process.env.EXPO_PUBLIC_PRIVACY_POLICY_URL?.trim() ||
+      toOptionalHttpUrl(process.env.EXPO_PUBLIC_PRIVACY_POLICY_URL) ||
       `${publicSiteUrl}/privacy`,
     termsOfServiceUrl:
-      process.env.EXPO_PUBLIC_TERMS_OF_SERVICE_URL?.trim() ||
+      toOptionalHttpUrl(process.env.EXPO_PUBLIC_TERMS_OF_SERVICE_URL) ||
       `${publicSiteUrl}/terms`,
   },
   onboardingClubVoucher: {

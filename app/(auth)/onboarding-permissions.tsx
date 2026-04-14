@@ -67,8 +67,7 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
   const isLocationPermissionCtaDisabled =
     isBusy ||
     resolveEffectiveLocationStatus() === onboardingPermissionStatuses.granted;
-  const isPushPermissionCtaDisabled =
-    isBusy || pushStatus === onboardingPermissionStatuses.granted;
+  const isPushPermissionCtaDisabled = isBusy;
   const statusLabelByStatus = React.useMemo<
     Record<OnboardingPermissionStatus, string>
   >(
@@ -151,6 +150,23 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
     );
   }
 
+  function showPushAlreadyEnabledAlert(): void {
+    Alert.alert(
+      t('onboardingPermissionsPushAlreadyEnabledTitle'),
+      t('onboardingPermissionsPushAlreadyEnabledMessage'),
+      [
+        {
+          text: t('onboardingPermissionsNotNow'),
+          style: 'cancel',
+        },
+        {
+          text: t('onboardingPermissionsOpenSettings'),
+          onPress: () => void Linking.openSettings(),
+        },
+      ]
+    );
+  }
+
   function statusLabel(status: OnboardingPermissionStatus): string {
     return (
       statusLabelByStatus[status] ??
@@ -163,6 +179,14 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
       actionLabelByStatus[status] ??
       actionLabelByStatus[onboardingPermissionStatuses.undetermined]
     );
+  }
+
+  function pushActionLabel(): string {
+    if (pushStatus === onboardingPermissionStatuses.granted) {
+      return t('onboardingPermissionsActionManage');
+    }
+
+    return actionLabel(pushStatus);
   }
 
   function resolveEffectiveLocationStatus(): OnboardingPermissionStatus {
@@ -263,6 +287,7 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
 
       if (currentPushStatus === onboardingPermissionStatuses.granted) {
         hapticSuccess();
+        showPushAlreadyEnabledAlert();
         return;
       }
 
@@ -513,7 +538,7 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
                   <ActivityIndicator color={Colors.white} />
                 ) : (
                   <Text className="text-[14px] font-bold text-white">
-                    {actionLabel(pushStatus)}
+                    {pushActionLabel()}
                   </Text>
                 )}
               </LinearGradient>

@@ -1,6 +1,17 @@
 function normalizeBaseUrl(value: string | null | undefined): string | null {
   const trimmed = value?.trim();
-  return trimmed ? trimmed.replace(/\/+$/, '') : null;
+  if (!trimmed) return null;
+
+  try {
+    const parsedUrl = new URL(trimmed);
+    if (parsedUrl.protocol !== 'https:' && parsedUrl.protocol !== 'http:') {
+      return null;
+    }
+
+    return parsedUrl.toString().replace(/\/+$/, '');
+  } catch {
+    return null;
+  }
 }
 
 export type ClientApiFailureReason =

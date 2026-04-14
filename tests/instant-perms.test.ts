@@ -74,6 +74,15 @@ describe('profiles permissions', () => {
     );
   });
 
+  test('allows onboarding completion timestamp only via updates', () => {
+    expect(rules.profiles.bind.onlySafeProfileCreateFields).not.toContain(
+      'onboarding_completed_at'
+    );
+    expect(rules.profiles.bind.onlySafeProfileUpdateFields).toContain(
+      'onboarding_completed_at'
+    );
+  });
+
   test('keeps owner checks canonical to deterministic profile ids', () => {
     expect(rules.profiles.bind.isOwner).toBe(canonicalProfileOwnerPredicate);
     expect(rules.profiles.bind.onlySafeProfileUpdateFields).toContain('userId');

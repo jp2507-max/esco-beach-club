@@ -99,9 +99,13 @@ const auth = {
   onboardingPermissionsActionAllow: 'Allow Access',
   onboardingPermissionsActionRetry: 'Try Again',
   onboardingPermissionsActionEnabled: 'Enabled',
+  onboardingPermissionsActionManage: 'Manage',
   onboardingPermissionsContinue: 'Continue',
   onboardingPermissionsNotNow: 'Not now',
   onboardingPermissionsOpenSettings: 'Open Device Settings',
+  onboardingPermissionsPushAlreadyEnabledTitle: 'Notifications are enabled',
+  onboardingPermissionsPushAlreadyEnabledMessage:
+    'You are already set. Manage notification preferences in your device settings if needed.',
   onboardingPermissionsErrorTitle: 'Permission Request Failed',
   onboardingPermissionsErrorMessage:
     'We could not open the permission prompt. Please try again or continue for now.',
@@ -148,6 +152,8 @@ const auth = {
   appleOauthClientNotConfigured:
     'Apple sign-in is misconfigured. Please contact support.',
   googleAuthNotConfigured: 'Google Sign-In is not configured yet.',
+  googleAndroidAuthNotConfigured:
+    'Google Sign-In is not configured for this Android build yet. Verify the Android OAuth package name and SHA fingerprints for the installed build.',
   googleOauthClientNotConfigured:
     'Google sign-in is misconfigured. Please contact support.',
   googleIdTokenMissing: 'Google did not return an identity token.',

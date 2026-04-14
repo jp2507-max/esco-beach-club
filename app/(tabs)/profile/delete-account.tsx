@@ -1,5 +1,4 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { type Href, useRouter } from 'expo-router';
 import {
   AlertTriangle,
@@ -39,8 +38,9 @@ import {
 import { useAccountDeletionRequest } from '@/src/lib/account-deletion/use-account-deletion-request';
 import { useScreenEntry } from '@/src/lib/animations/use-screen-entry';
 import {
-  configureGoogleSignIn,
+  cleanupGoogleSessionAfterDeletion,
   getAppleAuthorizationCode,
+  googlePostDeleteCleanupStatuses,
 } from '@/src/lib/auth/social-auth';
 import { ControlledTextInput } from '@/src/lib/forms/controlled-text-input';
 import {
@@ -327,34 +327,43 @@ export default function DeleteAccountScreen(): React.JSX.Element {
       }
 
       if (shouldAttemptGoogleProviderRevocation(authProvider)) {
-        try {
-          configureGoogleSignIn();
-          await GoogleSignin.revokeAccess();
-        } catch (error) {
+        const cleanupResult = await cleanupGoogleSessionAfterDeletion();
+
+        if (
+          cleanupResult.status ===
+          googlePostDeleteCleanupStatuses.failedNonBlocking
+        ) {
           addMonitoringBreadcrumb({
             category: 'account-deletion',
             data: {
               authProvider,
-              errorMessage:
-                error instanceof Error ? error.message : 'unknown_error',
+              cleanupStatus: cleanupResult.status,
+              errorMessage: cleanupResult.message,
             },
-            level: 'warning',
+            level: 'info',
             message:
               'google provider revocation failed after scheduling deletion',
           });
-          captureHandledError(error, {
+
+          captureHandledError(cleanupResult.error, {
+            contexts: {
+              accountDeletion: {
+                action: 'schedule',
+                authProvider,
+                cleanupStatus: cleanupResult.status,
+              },
+            },
             extras: {
               authProvider,
+              cleanupStatus: cleanupResult.status,
+              nonBlocking: true,
             },
             tags: {
               feature: 'account-deletion',
               operation: 'google_post_delete_revoke_access',
+              severity: 'non_blocking',
             },
           });
-          console.error(
-            '[DeleteAccount] Google provider revocation failed after schedule',
-            error
-          );
         }
       }
 

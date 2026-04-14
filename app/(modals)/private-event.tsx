@@ -496,6 +496,7 @@ function PrivateEventScreenContent(): React.JSX.Element {
                       {Platform.OS === 'ios' ? (
                         <Modal
                           animationType="slide"
+                          presentationStyle="overFullScreen"
                           transparent
                           visible={isDatePickerVisible}
                           onRequestClose={() => {

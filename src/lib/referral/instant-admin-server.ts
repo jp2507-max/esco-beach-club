@@ -142,7 +142,7 @@ function buildInstantAdminUrl(
   return url.toString();
 }
 
-async function instantAdminFetch<TResult>(
+export async function instantAdminFetch<TResult>(
   config: InstantAdminConfig,
   path: string,
   init: RequestInit
@@ -153,8 +153,27 @@ async function instantAdminFetch<TResult>(
       new Error('instant_admin_request_timeout_after_30000ms')
     );
   }, 30_000);
+  const requestController = new AbortController();
+  const callerSignal = init.signal;
 
-  const signal = init.signal ?? timeoutController.signal;
+  const onTimeoutAbort = (): void => {
+    requestController.abort(timeoutController.signal.reason);
+  };
+  timeoutController.signal.addEventListener('abort', onTimeoutAbort, {
+    once: true,
+  });
+
+  let onCallerAbort: (() => void) | undefined;
+  if (callerSignal) {
+    if (callerSignal.aborted) {
+      requestController.abort(callerSignal.reason);
+    } else {
+      onCallerAbort = (): void => {
+        requestController.abort(callerSignal.reason);
+      };
+      callerSignal.addEventListener('abort', onCallerAbort, { once: true });
+    }
+  }
 
   try {
     const response = await fetch(buildInstantAdminUrl(config, path), {
@@ -165,7 +184,7 @@ async function instantAdminFetch<TResult>(
         ...init.headers,
         'app-id': config.appId,
       },
-      signal,
+      signal: requestController.signal,
     });
 
     if (!response.ok) {
@@ -187,6 +206,10 @@ async function instantAdminFetch<TResult>(
     return JSON.parse(responseText) as TResult;
   } finally {
     clearTimeout(abortTimer);
+    timeoutController.signal.removeEventListener('abort', onTimeoutAbort);
+    if (callerSignal && onCallerAbort) {
+      callerSignal.removeEventListener('abort', onCallerAbort);
+    }
   }
 }
 

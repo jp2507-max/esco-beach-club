@@ -1,6 +1,7 @@
 import { describe, expect, mock, test } from 'bun:test';
 
 const captureHandledErrorMock = mock(() => {});
+const googleConfigureMock = mock(() => {});
 const setProfileAuthProviderMock = mock(async () => {});
 const signInWithIdTokenMock = mock(async () => ({
   created: true,
@@ -49,26 +50,54 @@ mock.module('@/src/lib/auth/signup-onboarding', () => ({
     };
   },
   hasRequiredSignupConsent: () => true,
-  normalizeSignupOnboardingData: () => null,
+  normalizeSignupOnboardingData: (value: unknown) => {
+    if (!value || typeof value !== 'object') return null;
+    return value;
+  },
 }));
 
-mock.module('@/src/lib/auth/social-auth', () => ({
-  canTryGoogleAudienceFallback: () => false,
-  getAppleIdToken: async () => ({
-    clientName: 'apple',
-    idToken: 'apple-id-token',
-    nonce: 'apple-nonce',
+mock.module('react-native-get-random-values', () => ({}));
+
+mock.module('@react-native-google-signin/google-signin', () => ({
+  GoogleSignin: {
+    configure: googleConfigureMock,
+    getCurrentUser: () => null,
+    hasPlayServices: async () => true,
+    hasPreviousSignIn: () => false,
+    revokeAccess: async () => null,
+    signIn: async () => ({ data: { idToken: 'google-id-token' } }),
+    signOut: async () => null,
+  },
+  isErrorWithCode(error: unknown): error is { code: string; message: string } {
+    return Boolean(
+      error &&
+      typeof error === 'object' &&
+      'code' in error &&
+      typeof (error as { code?: unknown }).code === 'string'
+    );
+  },
+  statusCodes: {
+    IN_PROGRESS: 'IN_PROGRESS',
+    PLAY_SERVICES_NOT_AVAILABLE: 'PLAY_SERVICES_NOT_AVAILABLE',
+    SIGN_IN_CANCELLED: 'SIGN_IN_CANCELLED',
+  },
+}));
+
+mock.module('expo-apple-authentication', () => ({
+  AppleAuthenticationScope: {
+    EMAIL: 1,
+    FULL_NAME: 0,
+  },
+  isAvailableAsync: async () => true,
+  signInAsync: async () => ({
+    identityToken: 'apple-id-token',
   }),
-  getGoogleIdToken: async () => ({
-    audience: 'web',
-    clientName: 'google',
-    idToken: 'google-id-token',
-  }),
-  getGoogleIdTokenWithOptions: async () => ({
-    audience: 'web',
-    clientName: 'google',
-    idToken: 'google-id-token',
-  }),
+}));
+
+mock.module('react-native', () => ({
+  Platform: {
+    OS: 'ios',
+  },
 }));
 
 mock.module('@/src/lib/instant', () => ({
@@ -91,6 +120,17 @@ mock.module('@/src/lib/instant', () => ({
 mock.module('@/src/lib/monitoring', () => ({
   captureHandledError: captureHandledErrorMock,
 }));
+
+(
+  globalThis as {
+    crypto?: { getRandomValues: (target: Uint8Array) => Uint8Array };
+  }
+).crypto = {
+  getRandomValues(target: Uint8Array): Uint8Array {
+    target.fill(7);
+    return target;
+  },
+};
 
 const { signInWithAppleFlow } =
   await import('@/src/lib/auth/provider-auth-flows');
@@ -146,5 +186,37 @@ describe('auth provider persistence after sign-in', () => {
     expect(thrownError).toBeNull();
     expect(setProfileAuthProviderMock).toHaveBeenCalledTimes(1);
     expect(captureHandledErrorMock).toHaveBeenCalledTimes(1);
+  });
+
+  test('does not forward onboarding fields into user create extraFields', async () => {
+    signInWithIdTokenMock.mockReset();
+    signInWithIdTokenMock.mockResolvedValue({
+      created: true,
+      user: {
+        email: 'member@example.com',
+        id: 'user-123',
+      },
+    });
+
+    await signInWithAppleFlow({
+      onboardingData: {
+        dateOfBirth: '1990-01-01',
+        displayName: 'Member Name',
+        hasAcceptedPrivacyPolicy: true,
+        hasAcceptedTerms: true,
+        hasCompletedSetup: true,
+        locationPermissionStatus: 'GRANTED',
+        memberSegment: 'LONG_TERM',
+        pushNotificationPermissionStatus: 'DENIED',
+      },
+      t: ((key: string) => key) as (key: string) => string,
+    });
+
+    expect(signInWithIdTokenMock).toHaveBeenCalledTimes(1);
+    const firstCall = signInWithIdTokenMock.mock.calls[0]?.[0] as {
+      extraFields?: Record<string, unknown>;
+    };
+    expect(firstCall.extraFields).toEqual({ display_name: 'Member' });
+    expect(Object.keys(firstCall.extraFields ?? {})).toEqual(['display_name']);
   });
 });

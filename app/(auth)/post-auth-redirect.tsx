@@ -124,7 +124,7 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
     [authFlow]
   );
   const hasAnySignupDraft = React.useMemo(
-    () => Object.keys(signupDraft).length > 0,
+    () => Object.values(signupDraft).some((value) => value !== undefined),
     [signupDraft]
   );
   const hasSignupFinalDetailsContext =

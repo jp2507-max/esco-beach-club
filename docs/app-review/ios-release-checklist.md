@@ -6,7 +6,6 @@
 - Terms of service URL is live
 - Support URL is live
 - Member review account is active
-- Staff review account is active if QR scanner review is required
 - App Review notes are filled in `docs/app-review/review-notes-template.md`
 - App Store Connect app record exists for `com.escobeachclub.app`
 - `submit.production.ios.ascAppId` is set before final automated submit, or the first submit is run interactively to create/link the app record

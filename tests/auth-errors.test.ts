@@ -7,6 +7,7 @@ describe('auth error keys', () => {
   test('includes profile provisioning failure key', () => {
     expect(AUTH_ERROR_KEYS).toContain('unableToCompleteProfileSetup');
     expect(AUTH_ERROR_KEYS).toContain('profilePermissionDenied');
+    expect(AUTH_ERROR_KEYS).toContain('googleAndroidAuthNotConfigured');
   });
 
   test('recognizes valid auth error keys', () => {
@@ -71,6 +72,18 @@ describe('auth error keys', () => {
     );
 
     expect(mappedError.message).toBe('profilePermissionDenied');
+  });
+
+  test('maps google DEVELOPER_ERROR to googleAndroidAuthNotConfigured', () => {
+    const mappedError = toError(
+      new Error(
+        'DEVELOPER_ERROR: Follow troubleshooting instructions at https://react-native-google-signin.github.io/docs/troubleshooting'
+      ),
+      'unableToSignInWithGoogle',
+      { oauthProvider: 'google' }
+    );
+
+    expect(mappedError.message).toBe('googleAndroidAuthNotConfigured');
   });
 
   test('falls back when error payload has no usable message', () => {

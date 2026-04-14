@@ -46,6 +46,90 @@ describe('resolvePushPermissionStatus', () => {
     );
   });
 
+  test('maps iOS provisional status to granted', () => {
+    const permission = buildPermission({
+      granted: false,
+      ios: {
+        status: 3,
+      },
+      status: 'undetermined',
+    });
+
+    expect(resolvePushPermissionStatus(permission)).toBe(
+      onboardingPermissionStatuses.granted
+    );
+  });
+
+  test('maps iOS provisional string status to granted', () => {
+    const permission = buildPermission({
+      granted: false,
+      ios: {
+        status: 'PROVISIONAL',
+      },
+      status: 'undetermined',
+    });
+
+    expect(resolvePushPermissionStatus(permission)).toBe(
+      onboardingPermissionStatuses.granted
+    );
+  });
+
+  test('maps iOS ephemeral status to granted', () => {
+    const permission = buildPermission({
+      granted: false,
+      ios: {
+        status: 4,
+      },
+      status: 'undetermined',
+    });
+
+    expect(resolvePushPermissionStatus(permission)).toBe(
+      onboardingPermissionStatuses.granted
+    );
+  });
+
+  test('maps iOS ephemeral string status to granted', () => {
+    const permission = buildPermission({
+      granted: false,
+      ios: {
+        status: 'EPHEMERAL',
+      },
+      status: 'undetermined',
+    });
+
+    expect(resolvePushPermissionStatus(permission)).toBe(
+      onboardingPermissionStatuses.granted
+    );
+  });
+
+  test('maps iOS notDetermined status to undetermined', () => {
+    const permission = buildPermission({
+      granted: false,
+      ios: {
+        status: 0,
+      },
+      status: 'undetermined',
+    });
+
+    expect(resolvePushPermissionStatus(permission)).toBe(
+      onboardingPermissionStatuses.undetermined
+    );
+  });
+
+  test('maps iOS notDetermined string status to undetermined', () => {
+    const permission = buildPermission({
+      granted: false,
+      ios: {
+        status: 'NOT_DETERMINED',
+      },
+      status: 'undetermined',
+    });
+
+    expect(resolvePushPermissionStatus(permission)).toBe(
+      onboardingPermissionStatuses.undetermined
+    );
+  });
+
   test('maps granted boolean to granted', () => {
     const permission = buildPermission({
       granted: true,

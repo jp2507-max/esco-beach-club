@@ -184,9 +184,7 @@ export function HeaderGlassButton({
         />
       ) : (
         <BlurView
-          experimentalBlurMethod={
-            Platform.OS === 'android' ? 'dimezisBlurView' : undefined
-          }
+          blurMethod={Platform.OS === 'android' ? 'none' : undefined}
           intensity={78}
           pointerEvents="none"
           style={[StyleSheet.absoluteFillObject, GLASS_FILL_STYLE]}

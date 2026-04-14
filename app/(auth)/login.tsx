@@ -75,11 +75,9 @@ export default function LoginScreen(): React.JSX.Element {
     return {
       dateOfBirth: signupDraft.dateOfBirth,
       displayName: signupDraft.displayName,
-      ...(signupDraft.hasCompletedSetup ? { hasCompletedSetup: true } : {}),
-      ...(signupDraft.hasAcceptedPrivacyPolicy
-        ? { hasAcceptedPrivacyPolicy: true }
-        : {}),
-      ...(signupDraft.hasAcceptedTerms ? { hasAcceptedTerms: true } : {}),
+      hasCompletedSetup: true,
+      hasAcceptedPrivacyPolicy: true,
+      hasAcceptedTerms: true,
       ...(signupDraft.memberSegment
         ? { memberSegment: signupDraft.memberSegment }
         : {}),

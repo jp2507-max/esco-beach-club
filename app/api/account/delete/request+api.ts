@@ -6,7 +6,6 @@ import {
 import {
   getAccountDeletionRevocationResponse,
   getAppleRevocationPersistenceFields,
-  isAppleDeletionWarningStatus,
 } from '@/src/lib/account-deletion/account-deletion-flow';
 import { buildAccountDeletionAdminErrorResponse } from '@/src/lib/account-deletion/account-deletion-server-errors';
 import { revokeAppleAuthorizationCode } from '@/src/lib/account-deletion/apple-revoke-server';
@@ -111,6 +110,48 @@ function logAccountDeletionBreadcrumb(params: {
   }
 
   console.info(payload);
+}
+
+function buildAppleRevocationFailureResponse(
+  revocation: Awaited<ReturnType<typeof revokeAppleAuthorizationCode>>
+): {
+  body: {
+    error: 'apple_revocation_failed';
+    message: string;
+  };
+  status: number;
+} | null {
+  if (revocation.status === 'revoked' || revocation.status === 'not_required') {
+    return null;
+  }
+
+  if (revocation.status === 'missing_authorization_code') {
+    return {
+      body: {
+        error: 'apple_revocation_failed',
+        message: revocation.status,
+      },
+      status: 400,
+    };
+  }
+
+  if (revocation.status === 'not_configured') {
+    return {
+      body: {
+        error: 'apple_revocation_failed',
+        message: revocation.status,
+      },
+      status: 503,
+    };
+  }
+
+  return {
+    body: {
+      error: 'apple_revocation_failed',
+      message: revocation.message,
+    },
+    status: 502,
+  };
 }
 
 export async function POST(request: Request): Promise<Response> {
@@ -275,6 +316,9 @@ export async function POST(request: Request): Promise<Response> {
 
   const effectiveAuthProvider = trustedAuthProvider;
 
+  // Apple revocation is a server-side prerequisite that can block scheduling.
+  // Google revocation is intentionally handled client-side as post-delete,
+  // best-effort cleanup through the native Google SDK session context.
   const requiresAppleRevocation =
     effectiveAuthProvider === authProviderTypes.apple;
 
@@ -297,21 +341,27 @@ export async function POST(request: Request): Promise<Response> {
     };
   }
 
-  if (
-    requiresAppleRevocation &&
-    isAppleDeletionWarningStatus(revocation.status)
-  ) {
-    logAccountDeletionBreadcrumb({
-      data: {
-        requestRef,
-        revocationMessage:
-          'message' in revocation ? revocation.message : revocation.status,
-        revocationStatus: revocation.status,
-        userRef,
-      },
-      level: 'warning',
-      message: 'account deletion persisted with apple revocation warning',
-    });
+  if (requiresAppleRevocation) {
+    const revocationFailureResponse =
+      buildAppleRevocationFailureResponse(revocation);
+    if (revocationFailureResponse) {
+      logAccountDeletionBreadcrumb({
+        data: {
+          requestRef,
+          revocationMessage:
+            'message' in revocation ? revocation.message : revocation.status,
+          revocationStatus: revocation.status,
+          userRef,
+        },
+        level: 'error',
+        message: 'account deletion blocked by apple revocation failure',
+      });
+
+      return jsonResponse(
+        revocationFailureResponse.body,
+        revocationFailureResponse.status
+      );
+    }
   }
 
   const revocationResponse = effectiveAuthProvider

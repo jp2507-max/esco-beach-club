@@ -15,7 +15,7 @@ This file is the human-review companion to `config/apple/privacy-manifest.json` 
 ## Not Collected Off Device In Current Repo
 
 - Precise/background location is used on device for restaurant geofencing and venue-notification timing. The current code does not send coordinates to the backend.
-- Camera access is used locally for staff QR scanning. The current code does not upload captured images or frames.
+- Camera access is used locally for member QR scanning. The current code does not upload captured images or frames.
 - Notification permission is requested, but the current repo does not register or persist a push token.
 
 ## Manual Review Before Submission

@@ -370,6 +370,7 @@ export function BookingFormContent({
 
           <Modal
             animationType="slide"
+            presentationStyle="overFullScreen"
             transparent
             visible={isTimePickerVisible}
             onRequestClose={() => setIsTimePickerVisible(false)}

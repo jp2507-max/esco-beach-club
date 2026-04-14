@@ -111,7 +111,35 @@ describe('account deletion request route', () => {
     });
   });
 
-  test('schedules deletion when the Apple authorization code is missing', async () => {
+  test('schedules deletion for Google accounts without Apple revocation', async () => {
+    queryMock
+      .mockResolvedValueOnce({ account_deletion_requests: [] })
+      .mockResolvedValueOnce({
+        profiles: [
+          {
+            auth_provider: authProviderTypes.google,
+            id: 'user-123',
+          },
+        ],
+      });
+
+    const response = await POST(createRequest({ authProvider: 'google' }));
+    const body = await response.json();
+
+    expect(response.status).toBe(201);
+    expect(body.request.status).toBe(accountDeletionStatuses.pending);
+    expect(body.revocation).toBeUndefined();
+    expect(revokeAppleAuthorizationCodeMock).not.toHaveBeenCalled();
+    expect(createInstantCreateStepMock.mock.calls[0]?.[2]).toMatchObject({
+      auth_provider: authProviderTypes.google,
+      profile_id: 'user-123',
+    });
+    expect(createInstantCreateStepMock.mock.calls[0]?.[2]).not.toHaveProperty(
+      'apple_revocation_status'
+    );
+  });
+
+  test('rejects deletion when the Apple authorization code is missing', async () => {
     queryMock
       .mockResolvedValueOnce({ account_deletion_requests: [] })
       .mockResolvedValueOnce({
@@ -129,18 +157,16 @@ describe('account deletion request route', () => {
     const response = await POST(createRequest());
     const body = await response.json();
 
-    expect(response.status).toBe(201);
-    expect(body.revocation).toEqual({
+    expect(response.status).toBe(400);
+    expect(body).toEqual({
+      error: 'apple_revocation_failed',
       message: 'missing_authorization_code',
-      status: 'missing_authorization_code',
     });
-    expect(createInstantCreateStepMock.mock.calls[0]?.[2]).toMatchObject({
-      apple_revocation_error: 'missing_authorization_code',
-      apple_revocation_status: 'missing_authorization_code',
-    });
+    expect(createInstantCreateStepMock).not.toHaveBeenCalled();
+    expect(transactMock).not.toHaveBeenCalled();
   });
 
-  test('schedules deletion when Apple revocation is not configured', async () => {
+  test('rejects deletion when Apple revocation is not configured', async () => {
     queryMock
       .mockResolvedValueOnce({ account_deletion_requests: [] })
       .mockResolvedValueOnce({
@@ -158,18 +184,16 @@ describe('account deletion request route', () => {
     const response = await POST(createRequest());
     const body = await response.json();
 
-    expect(response.status).toBe(201);
-    expect(body.revocation).toEqual({
+    expect(response.status).toBe(503);
+    expect(body).toEqual({
+      error: 'apple_revocation_failed',
       message: 'not_configured',
-      status: 'not_configured',
     });
-    expect(createInstantCreateStepMock.mock.calls[0]?.[2]).toMatchObject({
-      apple_revocation_error: 'not_configured',
-      apple_revocation_status: 'not_configured',
-    });
+    expect(createInstantCreateStepMock).not.toHaveBeenCalled();
+    expect(transactMock).not.toHaveBeenCalled();
   });
 
-  test('schedules deletion when Apple revocation fails', async () => {
+  test('rejects deletion when Apple revocation fails', async () => {
     queryMock
       .mockResolvedValueOnce({ account_deletion_requests: [] })
       .mockResolvedValueOnce({
@@ -188,15 +212,13 @@ describe('account deletion request route', () => {
     const response = await POST(createRequest());
     const body = await response.json();
 
-    expect(response.status).toBe(201);
-    expect(body.revocation).toEqual({
+    expect(response.status).toBe(502);
+    expect(body).toEqual({
+      error: 'apple_revocation_failed',
       message: 'token_exchange_failed',
-      status: 'failed',
     });
-    expect(createInstantCreateStepMock.mock.calls[0]?.[2]).toMatchObject({
-      apple_revocation_error: 'token_exchange_failed',
-      apple_revocation_status: 'failed',
-    });
+    expect(createInstantCreateStepMock).not.toHaveBeenCalled();
+    expect(transactMock).not.toHaveBeenCalled();
   });
 
   test('schedules deletion when the auth provider cannot be resolved', async () => {

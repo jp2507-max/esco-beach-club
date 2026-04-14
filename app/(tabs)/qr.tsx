@@ -695,9 +695,7 @@ export default function QrTabScreen(): React.JSX.Element {
         animationType="slide"
         transparent
         visible={isMemberCardOpen}
-        presentationStyle={
-          Platform.OS === 'ios' ? 'overFullScreen' : 'fullScreen'
-        }
+        presentationStyle="overFullScreen"
         onRequestClose={handleCloseMemberCard}
       >
         <View className="flex-1 bg-black/70">

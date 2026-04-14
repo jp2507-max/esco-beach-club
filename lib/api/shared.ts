@@ -166,10 +166,18 @@ function buildPublicIdentifier(): string {
   return `${PUBLIC_IDENTIFIER_PREFIX}${buildRandomHex(PUBLIC_IDENTIFIER_HEX_LENGTH)}`;
 }
 
+/**
+ * Generates a random member identifier.
+ * The `_userId` parameter is retained only for backward compatibility.
+ */
 export function buildMemberId(_userId: string): string {
   return buildPublicIdentifier();
 }
 
+/**
+ * Generates a random referral code.
+ * The `_userId` parameter is retained only for backward compatibility.
+ */
 export function buildReferralCode(_userId: string): string {
   return buildPublicIdentifier();
 }

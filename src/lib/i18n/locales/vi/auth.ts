@@ -101,9 +101,13 @@ const auth = {
   onboardingPermissionsActionAllow: 'Cho phép truy cập',
   onboardingPermissionsActionRetry: 'Thử lại',
   onboardingPermissionsActionEnabled: 'Đã bật',
+  onboardingPermissionsActionManage: 'Quản lý',
   onboardingPermissionsContinue: 'Tiếp tục',
   onboardingPermissionsNotNow: 'Để sau',
   onboardingPermissionsOpenSettings: 'Mở cài đặt thiết bị',
+  onboardingPermissionsPushAlreadyEnabledTitle: 'Thông báo đã được bật',
+  onboardingPermissionsPushAlreadyEnabledMessage:
+    'Bạn đã sẵn sàng. Nếu cần, hãy quản lý thông báo trong cài đặt thiết bị.',
   onboardingPermissionsErrorTitle: 'Yêu cầu quyền thất bại',
   onboardingPermissionsErrorMessage:
     'Không thể mở hộp thoại cấp quyền. Vui lòng thử lại hoặc tiếp tục sau.',
@@ -151,6 +155,8 @@ const auth = {
   appleOauthClientNotConfigured:
     'Cấu hình đăng nhập Apple không đúng. Vui lòng liên hệ hỗ trợ.',
   googleAuthNotConfigured: 'Google Sign-In chưa được cấu hình.',
+  googleAndroidAuthNotConfigured:
+    'Google Sign-In chưa được cấu hình cho bản dựng Android này. Hãy kiểm tra package name OAuth Android và các dấu vân tay SHA của đúng bản dựng đang cài đặt.',
   googleOauthClientNotConfigured:
     'Cấu hình đăng nhập Google không đúng. Vui lòng liên hệ hỗ trợ.',
   googleIdTokenMissing: 'Google không trả về mã thông báo danh tính.',
