@@ -181,6 +181,10 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
       return;
     }
 
+    if (resolvedAuthFlow == null) {
+      return;
+    }
+
     resetSignupDraft();
   }, [
     hasAnySignupDraft,

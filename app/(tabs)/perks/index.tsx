@@ -196,7 +196,7 @@ export default function PerksScreen(): React.JSX.Element {
     () => ({
       paddingBottom: 20 + insets.bottom,
       paddingHorizontal: 16,
-      paddingTop: 12,
+      paddingTop: 0,
     }),
     [insets.bottom]
   );
@@ -254,18 +254,18 @@ export default function PerksScreen(): React.JSX.Element {
       style={{ paddingTop: insets.top }}
     >
       <AppScreenContent className="flex-1">
-        <ScreenHeader
-          rightAction={historyButton}
-          testID="perks-screen-header"
-          title={t('title')}
-        />
-
         <FlashList
+          contentInsetAdjustmentBehavior="automatic"
           contentContainerStyle={listContentContainerStyle}
           data={filtered}
           keyExtractor={(item) => item.id}
           ListHeaderComponent={
             <PerksListHeader>
+              <ScreenHeader
+                rightAction={historyButton}
+                testID="perks-screen-header"
+                title={t('title')}
+              />
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}

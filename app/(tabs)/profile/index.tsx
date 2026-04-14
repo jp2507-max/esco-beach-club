@@ -278,27 +278,30 @@ function ProfileScreenContent(): React.JSX.Element {
       className="flex-1"
       style={{ backgroundColor: profileCanvasBg, paddingTop: insets.top }}
     >
-      <View className="absolute left-0 right-0 top-0 h-125 overflow-hidden">
-        <View
-          className="absolute size-62.5 rounded-full"
-          style={{ backgroundColor: profileOrbLarge, right: -40, top: -50 }}
-        />
-        <View
-          className="absolute size-50 rounded-full"
-          style={{ backgroundColor: profileOrbMid, left: -60, top: 100 }}
-        />
-        <View
-          className="absolute size-40 rounded-full"
-          style={{ backgroundColor: profileOrbSmall, right: 40, top: 50 }}
-        />
-      </View>
-
       <AppScreenContent className="flex-1">
         <ScrollView
           contentInsetAdjustmentBehavior="automatic"
           contentContainerClassName="px-5 pb-5"
           showsVerticalScrollIndicator={false}
         >
+          <View
+            className="absolute left-[-20px] right-[-20px] top-0 h-125 overflow-hidden"
+            pointerEvents="none"
+          >
+            <View
+              className="absolute size-62.5 rounded-full"
+              style={{ backgroundColor: profileOrbLarge, right: -20, top: -50 }}
+            />
+            <View
+              className="absolute size-50 rounded-full"
+              style={{ backgroundColor: profileOrbMid, left: -40, top: 100 }}
+            />
+            <View
+              className="absolute size-40 rounded-full"
+              style={{ backgroundColor: profileOrbSmall, right: 60, top: 50 }}
+            />
+          </View>
+
           <ProfileHeader
             avatarUrl={memberSummary.avatarUrl}
             comingSoonLabel={t('menu.comingSoon')}

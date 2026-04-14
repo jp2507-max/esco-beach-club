@@ -2,6 +2,8 @@ import { Crown, Headphones } from 'lucide-react-native';
 import React from 'react';
 
 import { Colors } from '@/constants/colors';
+import { getAndroidRippleConfig } from '@/src/lib/styles/android-ripple';
+import { shadows } from '@/src/lib/styles/shadows';
 import { Pressable, Text } from '@/src/tw';
 
 type SupportCtaProps = {
@@ -21,19 +23,22 @@ export function SupportCta({
   onSupport,
   supportLabel,
 }: SupportCtaProps): React.JSX.Element {
+  const androidRipple = getAndroidRippleConfig(
+    isDark ? Colors.ACTIVE_BG_DARK : Colors.ACTIVE_BG_LIGHT
+  );
+
   if (hasPrioritySupport) {
     return (
       <Pressable
+        android_ripple={androidRipple}
         accessibilityRole="button"
         className="mb-5 flex-row items-center justify-center rounded-2xl py-4"
         onPress={onConcierge}
         style={{
+          ...shadows.level3,
           backgroundColor: Colors.gold,
-          elevation: 4,
           shadowColor: Colors.gold,
-          shadowOffset: { height: 4, width: 0 },
-          shadowOpacity: 0.3,
-          shadowRadius: 8,
+          shadowOpacity: 0.22,
         }}
         testID="vip-concierge"
       >
@@ -47,6 +52,7 @@ export function SupportCta({
 
   return (
     <Pressable
+      android_ripple={androidRipple}
       accessibilityRole="button"
       className="mb-5 flex-row items-center justify-center rounded-2xl border-2 border-secondary py-3.5 dark:border-secondary-bright"
       onPress={onSupport}

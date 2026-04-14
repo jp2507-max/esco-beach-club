@@ -9,6 +9,7 @@ export const APP_SCREEN_MAX_WIDTH = 820;
 type AppScreenContentProps = {
   children: React.ReactNode;
   className?: string;
+  collapsable?: boolean;
   maxWidth?: number;
   style?: StyleProp<ViewStyle>;
 };
@@ -16,12 +17,14 @@ type AppScreenContentProps = {
 export function AppScreenContent({
   children,
   className,
+  collapsable = false,
   maxWidth = APP_SCREEN_MAX_WIDTH,
   style,
 }: AppScreenContentProps): React.JSX.Element {
   return (
     <View
       className={cn('w-full self-center', className)}
+      collapsable={collapsable}
       style={[{ maxWidth }, style]}
     >
       {children}

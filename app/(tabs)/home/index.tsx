@@ -347,39 +347,6 @@ function HomeScreenContent(): React.JSX.Element {
       className="flex-1 bg-background dark:bg-dark-bg"
       style={{ paddingTop: insets.top }}
     >
-      <View className="absolute left-0 right-0 top-0 h-75 overflow-hidden">
-        <View
-          className="absolute size-45 rounded-full"
-          style={{
-            backgroundColor: isDark
-              ? Colors.homeOrbPrimaryDark
-              : Colors.homeOrbPrimaryLight,
-            right: -20,
-            top: -40,
-          }}
-        />
-        <View
-          className="absolute size-30 rounded-full"
-          style={{
-            backgroundColor: isDark
-              ? Colors.homeOrbSecondaryDark
-              : Colors.homeOrbSecondaryLight,
-            right: 80,
-            top: 30,
-          }}
-        />
-        <View
-          className="absolute size-25 rounded-full"
-          style={{
-            backgroundColor: isDark
-              ? Colors.homeOrbAccentDark
-              : Colors.homeOrbAccentLight,
-            left: -20,
-            top: 10,
-          }}
-        />
-      </View>
-
       <AppScreenContent className="flex-1">
         <FlashList
           contentInsetAdjustmentBehavior="automatic"
@@ -391,7 +358,42 @@ function HomeScreenContent(): React.JSX.Element {
           showsVerticalScrollIndicator={false}
           ListHeaderComponent={
             <>
-              <View className="px-5">
+              <View className="relative px-5">
+                <View
+                  className="absolute left-[-20px] right-[-20px] top-0 h-75 overflow-hidden"
+                  pointerEvents="none"
+                >
+                  <View
+                    className="absolute size-45 rounded-full"
+                    style={{
+                      backgroundColor: isDark
+                        ? Colors.homeOrbPrimaryDark
+                        : Colors.homeOrbPrimaryLight,
+                      right: 0,
+                      top: -40,
+                    }}
+                  />
+                  <View
+                    className="absolute size-30 rounded-full"
+                    style={{
+                      backgroundColor: isDark
+                        ? Colors.homeOrbSecondaryDark
+                        : Colors.homeOrbSecondaryLight,
+                      right: 100,
+                      top: 30,
+                    }}
+                  />
+                  <View
+                    className="absolute size-25 rounded-full"
+                    style={{
+                      backgroundColor: isDark
+                        ? Colors.homeOrbAccentDark
+                        : Colors.homeOrbAccentLight,
+                      left: 0,
+                      top: 10,
+                    }}
+                  />
+                </View>
                 <View className="pb-5 pt-8">
                   <View className="mb-5 flex-row items-center justify-between gap-3">
                     <View

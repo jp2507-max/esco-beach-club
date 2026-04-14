@@ -30,6 +30,12 @@ export default function TabLayout(): React.JSX.Element {
     iOSInactiveTint ?? (isDark ? Colors.textMutedDark : Colors.textSecondary);
   const activeTint =
     iOSActiveTint ?? (isDark ? Colors.primaryBright : Colors.primary);
+  const androidRippleColor =
+    Platform.OS === 'android'
+      ? isDark
+        ? Colors.ACTIVE_BG_DARK
+        : Colors.ACTIVE_BG_LIGHT
+      : undefined;
   const handleTabPress = React.useCallback((): void => {
     triggerTabPressHapticFeedback();
   }, []);
@@ -43,6 +49,7 @@ export default function TabLayout(): React.JSX.Element {
       badgeBackgroundColor={activeTint}
       badgeTextColor={Colors.white}
       iconColor={{ default: inactiveTint, selected: activeTint }}
+      rippleColor={androidRippleColor}
       tintColor={activeTint}
       labelStyle={{
         default: { color: inactiveTint, fontSize: 12, fontWeight: '600' },

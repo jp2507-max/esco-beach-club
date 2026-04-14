@@ -65,7 +65,7 @@ export default function EventsScreen(): React.JSX.Element {
   const contentContainerStyle = useMemo(
     () => ({
       ...listContentContainerStyle,
-      paddingTop: 12,
+      paddingTop: 0,
     }),
     [listContentContainerStyle]
   );
@@ -77,16 +77,8 @@ export default function EventsScreen(): React.JSX.Element {
       style={{ paddingTop: insets.top }}
     >
       <AppScreenContent className="flex-1">
-        <ScreenHeader testID="events-screen-header" title={t('title')} />
-
-        <SearchInput
-          className="mb-3"
-          onChangeText={setSearchQuery}
-          placeholder={t('searchPlaceholder')}
-          testID="events-search"
-        />
-
         <FlashList
+          contentInsetAdjustmentBehavior="automatic"
           contentContainerStyle={contentContainerStyle}
           data={listEvents}
           keyExtractor={(item) => item.id}
@@ -101,21 +93,30 @@ export default function EventsScreen(): React.JSX.Element {
             />
           }
           ListHeaderComponent={
-            <EventsListHeader
-              activeCategory={activeCategory}
-              featuredEvent={featuredEvent}
-              isEventSaved={isEventSaved}
-              selectedDayFullLabel={selectedDay?.fullLabel ?? ''}
-              selectedDayKey={selectedDayKey}
-              t={t}
-              weekStripItems={weekStripItems}
-              onCategorySelect={setActiveCategory}
-              onOpenEvent={openEvent}
-              onToggleSavedEvent={(id) => {
-                void toggleSavedEvent(id);
-              }}
-              onWeekDaySelect={setSelectedDayKey}
-            />
+            <>
+              <ScreenHeader testID="events-screen-header" title={t('title')} />
+              <SearchInput
+                className="mb-3"
+                onChangeText={setSearchQuery}
+                placeholder={t('searchPlaceholder')}
+                testID="events-search"
+              />
+              <EventsListHeader
+                activeCategory={activeCategory}
+                featuredEvent={featuredEvent}
+                isEventSaved={isEventSaved}
+                selectedDayFullLabel={selectedDay?.fullLabel ?? ''}
+                selectedDayKey={selectedDayKey}
+                t={t}
+                weekStripItems={weekStripItems}
+                onCategorySelect={setActiveCategory}
+                onOpenEvent={openEvent}
+                onToggleSavedEvent={(id) => {
+                  void toggleSavedEvent(id);
+                }}
+                onWeekDaySelect={setSelectedDayKey}
+              />
+            </>
           }
           renderItem={renderItem}
           showsVerticalScrollIndicator={false}

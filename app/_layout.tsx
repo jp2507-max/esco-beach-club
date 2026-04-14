@@ -20,12 +20,15 @@ import {
   useRouter,
 } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
+import * as SystemUI from 'expo-system-ui';
 import * as Updates from 'expo-updates';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AppState, type AppStateStatus, Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { Colors } from '@/constants/colors';
 import { AuthProvider, useAuth } from '@/providers/AuthProvider';
 import {
   DataProvider,
@@ -392,8 +395,20 @@ function EscoNavigationTheme({
     () => getEscoNavigationTheme(isDark),
     [isDark]
   );
+  const systemBackgroundColor = isDark ? Colors.darkBg : Colors.background;
 
-  return <ThemeProvider value={navigationTheme}>{children}</ThemeProvider>;
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+
+    void SystemUI.setBackgroundColorAsync(systemBackgroundColor);
+  }, [systemBackgroundColor]);
+
+  return (
+    <ThemeProvider value={navigationTheme}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+      {children}
+    </ThemeProvider>
+  );
 }
 
 function RootLayout(): React.JSX.Element {
