@@ -7,7 +7,6 @@ import {
 } from '@react-native-google-signin/google-signin';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { Platform } from 'react-native';
-
 const DEFAULT_APPLE_CLIENT_NAME = 'apple';
 const DEFAULT_GOOGLE_CLIENT_NAME = 'google';
 
