@@ -27,7 +27,12 @@ import { ProfileSubScreenHeader } from '@/src/components/ui';
 import { motion, rmTiming } from '@/src/lib/animations/motion';
 import { ControlledTextInput } from '@/src/lib/forms/controlled-text-input';
 import { type ReviewFormValues, reviewSchema } from '@/src/lib/forms/schemas';
-import { hapticLight, hapticSuccess } from '@/src/lib/haptics/haptics';
+import {
+  hapticError,
+  hapticLight,
+  hapticMedium,
+  hapticSuccess,
+} from '@/src/lib/haptics/haptics';
 import { captureHandledError } from '@/src/lib/monitoring';
 import {
   KeyboardAvoidingView,
@@ -138,6 +143,7 @@ export default function RateUsScreen(): React.JSX.Element {
           operation: 'submit_review',
         },
       });
+      hapticError();
       const message =
         err instanceof Error ? err.message : t('rateUs.reviewSubmitError');
       Alert.alert(t('rateUs.reviewFailed'), message);
@@ -160,11 +166,13 @@ export default function RateUsScreen(): React.JSX.Element {
   }
 
   function handleInvalidSubmit(): void {
+    hapticError();
     Alert.alert(t('rateUs.ratingRequired'), t('rateUs.ratingRequiredMessage'));
   }
 
   function handleValidSubmit(values: ReviewFormValues): void {
     if (reviewMutation.isPending) return;
+    hapticMedium();
     reviewMutation.mutate(values);
   }
 

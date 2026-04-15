@@ -48,7 +48,7 @@ import {
   type AccountDeletionConfirmFormValues,
   accountDeletionConfirmSchema,
 } from '@/src/lib/forms/schemas';
-import { hapticError } from '@/src/lib/haptics/haptics';
+import { hapticError, hapticMedium } from '@/src/lib/haptics/haptics';
 import {
   addMonitoringBreadcrumb,
   captureHandledError,
@@ -197,6 +197,7 @@ export default function DeleteAccountScreen(): React.JSX.Element {
   async function handleRestore(): Promise<void> {
     if (!user?.refresh_token || isRestoring) return;
 
+    hapticMedium();
     setIsRestoring(true);
     try {
       const result = await postRestoreAccountDeletion({
@@ -209,6 +210,7 @@ export default function DeleteAccountScreen(): React.JSX.Element {
           authProvider: profile?.auth_provider,
           failure: result,
         });
+        hapticError();
         Alert.alert(
           getAccountDeletionErrorMessage(result, t, {
             fallbackKey: 'restoreFailed',
@@ -225,6 +227,7 @@ export default function DeleteAccountScreen(): React.JSX.Element {
         authProvider: profile?.auth_provider,
         error,
       });
+      hapticError();
       Alert.alert(t('deleteAccount.errors.restoreFailed'));
     } finally {
       setIsRestoring(false);
@@ -233,10 +236,12 @@ export default function DeleteAccountScreen(): React.JSX.Element {
 
   const handleScheduleDeletion = handleSubmit(async () => {
     if (!user?.refresh_token || !user.id) {
+      hapticError();
       Alert.alert(t('deleteAccount.errors.sessionExpired'));
       return;
     }
 
+    hapticMedium();
     setIsSubmitting(true);
     try {
       const authProvider = resolveAuthProviderForDeletion(

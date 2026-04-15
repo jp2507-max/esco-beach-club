@@ -18,7 +18,7 @@ import {
   type OnboardingBasicsFormValues,
   onboardingBasicsSchema,
 } from '@/src/lib/forms/schemas';
-import { hapticLight } from '@/src/lib/haptics/haptics';
+import { hapticError, hapticLight } from '@/src/lib/haptics/haptics';
 import { shadows } from '@/src/lib/styles/shadows';
 import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
 import { useSignupOnboardingDraftStore } from '@/src/stores/signup-onboarding-store';
@@ -61,6 +61,7 @@ export default function OnboardingProfileBasicsScreen(): React.JSX.Element {
   }
 
   function onInvalidSubmit(): void {
+    hapticError();
     Alert.alert(
       t('onboardingBasicsInvalidTitle'),
       t('onboardingBasicsInvalidMessage')
