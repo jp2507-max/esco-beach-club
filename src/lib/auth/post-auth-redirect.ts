@@ -1,14 +1,7 @@
-import type { Href } from 'expo-router';
-
 import {
-  profileBootstrapStates,
   type ProfileBootstrapState,
+  profileBootstrapStates,
 } from '@/providers/data/context';
-
-type ResolvePostAuthLoginHrefParams = {
-  bootstrapState: ProfileBootstrapState;
-  resolvedAuthFlow?: string;
-};
 
 type ShouldAutoRetryProfileProvisionParams = {
   bootstrapState: ProfileBootstrapState;
@@ -17,20 +10,7 @@ type ShouldAutoRetryProfileProvisionParams = {
   userId: string;
 };
 
-export function resolvePostAuthLoginHref(
-  params: ResolvePostAuthLoginHrefParams
-): Href {
-  if (params.bootstrapState === profileBootstrapStates.signedOut) {
-    return '/(auth)/login';
-  }
-
-  if (params.resolvedAuthFlow) {
-    return {
-      pathname: '/(auth)/login',
-      params: { authFlow: params.resolvedAuthFlow },
-    };
-  }
-
+export function resolvePostAuthLoginHref(): '/(auth)/login' {
   return '/(auth)/login';
 }
 

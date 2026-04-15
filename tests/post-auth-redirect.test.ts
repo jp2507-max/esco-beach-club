@@ -7,25 +7,8 @@ import {
 } from '@/src/lib/auth/post-auth-redirect';
 
 describe('post auth redirect helpers', () => {
-  test('drops stale signup auth flow after sign-out recovery', () => {
-    expect(
-      resolvePostAuthLoginHref({
-        bootstrapState: profileBootstrapStates.signedOut,
-        resolvedAuthFlow: 'signup',
-      })
-    ).toBe('/(auth)/login');
-  });
-
-  test('preserves signup auth flow while recovery stays authenticated', () => {
-    expect(
-      resolvePostAuthLoginHref({
-        bootstrapState: profileBootstrapStates.recoverableError,
-        resolvedAuthFlow: 'signup',
-      })
-    ).toEqual({
-      pathname: '/(auth)/login',
-      params: { authFlow: 'signup' },
-    });
+  test('resolves the post-auth login route to the plain login screen', () => {
+    expect(resolvePostAuthLoginHref()).toBe('/(auth)/login');
   });
 
   test('auto retries profile provisioning only once per authenticated user', () => {

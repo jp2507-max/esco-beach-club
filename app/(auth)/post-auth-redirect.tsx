@@ -159,14 +159,7 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
     shouldBindSignupDraftOwner,
     shouldResetSignupDraft,
   } = signupDraftFlow;
-  const loginHref = React.useMemo(
-    () =>
-      resolvePostAuthLoginHref({
-        bootstrapState,
-        resolvedAuthFlow,
-      }),
-    [bootstrapState, resolvedAuthFlow]
-  );
+  const loginHref = resolvePostAuthLoginHref();
   const shouldRetryProvision = shouldAutoRetryProfileProvision({
     bootstrapState,
     isRetryingProvision,
