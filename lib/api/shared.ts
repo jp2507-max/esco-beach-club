@@ -116,17 +116,70 @@ export function normalizePermissionStatus(
   return undefined;
 }
 
+/**
+ * Canonical profile identifiers:
+ * - `profiles.id` is the internal Instant entity id and is intentionally the auth user id.
+ * - `profiles.member_id` is the public member-facing identifier used in QR/staff flows.
+ *
+ * Public identifiers intentionally keep the same `ESCO-` + 16 uppercase hex format,
+ * but they should not reveal the canonical auth/profile id.
+ */
 export function buildProfileId(userId: string): string {
   return userId;
 }
 
-export function buildMemberId(userId: string): string {
-  return `ESCO-${userId.replace(/-/g, '').slice(0, 16).toUpperCase()}`;
+const PUBLIC_IDENTIFIER_PREFIX = 'ESCO-';
+const PUBLIC_IDENTIFIER_HEX_LENGTH = 16;
+
+function buildRandomHex(length: number): string {
+  let value = '';
+
+  while (value.length < length) {
+    if (
+      typeof crypto !== 'undefined' &&
+      typeof crypto.randomUUID === 'function'
+    ) {
+      value += crypto.randomUUID().replace(/-/g, '').toUpperCase();
+      continue;
+    }
+
+    if (
+      typeof crypto !== 'undefined' &&
+      typeof crypto.getRandomValues === 'function'
+    ) {
+      const bytes = new Uint8Array(16);
+      crypto.getRandomValues(bytes);
+      value += Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0'))
+        .join('')
+        .toUpperCase();
+      continue;
+    }
+
+    value +=
+      `${Math.random().toString(16).slice(2)}${Date.now().toString(16)}`.toUpperCase();
+  }
+
+  return value.slice(0, length);
 }
 
-export function buildReferralCode(userId: string): string {
-  // Second half of UUID hex (disjoint from buildMemberId's slice(0,16)); 16 chars entropy.
-  return `ESCO-${userId.replace(/-/g, '').slice(16, 32).toUpperCase()}`;
+function buildPublicIdentifier(): string {
+  return `${PUBLIC_IDENTIFIER_PREFIX}${buildRandomHex(PUBLIC_IDENTIFIER_HEX_LENGTH)}`;
+}
+
+/**
+ * Generates a random member identifier.
+ * The `_userId` parameter is retained only for backward compatibility.
+ */
+export function buildMemberId(_userId: string): string {
+  return buildPublicIdentifier();
+}
+
+/**
+ * Generates a random referral code.
+ * The `_userId` parameter is retained only for backward compatibility.
+ */
+export function buildReferralCode(_userId: string): string {
+  return buildPublicIdentifier();
 }
 
 export function isMemberIdConflict(error: Error): boolean {
@@ -300,7 +353,6 @@ export type DefaultProfileValues = {
   member_since: string;
   next_tier_key: Profile['next_tier_key'];
   nights_left: number;
-  onboarding_completed_at: string | null;
   push_notification_permission_status: OnboardingPermissionStatus;
   referral_code: string;
   saved: number;
@@ -309,6 +361,7 @@ export type DefaultProfileValues = {
   tier_progress_started_at: string | null;
   tier_progress_target_points: number;
   updated_at: string;
+  userId: string;
 };
 
 export function getDefaultProfileValues(options: {
@@ -331,6 +384,19 @@ export function getDefaultProfileValues(options: {
   const defaultLifetimeTier = rewardTierKeys.member;
   const defaultNextTier = getNextRewardTierKey(defaultLifetimeTier);
   const defaultTierDefinition = getRewardTierDefinition(defaultLifetimeTier);
+  const memberId = buildMemberId(userId);
+  let resolvedReferralCode = referralCode?.trim() || buildReferralCode(userId);
+  let attempts = 0;
+  const maxAttempts = 5;
+
+  while (resolvedReferralCode === memberId && attempts < maxAttempts) {
+    resolvedReferralCode = buildReferralCode(userId);
+    attempts += 1;
+  }
+
+  if (resolvedReferralCode === memberId) {
+    throw new Error('profileIdentifierGenerationFailed');
+  }
 
   return {
     bio: '',
@@ -342,15 +408,14 @@ export function getDefaultProfileValues(options: {
     has_seen_welcome_voucher: false,
     lifetime_tier_key: defaultLifetimeTier,
     location_permission_status: onboardingPermissionStatuses.undetermined,
-    member_id: buildMemberId(userId),
+    member_id: memberId,
     member_segment: null,
     member_since: createdAt,
     next_tier_key: defaultNextTier,
     nights_left: 0,
-    onboarding_completed_at: null,
     push_notification_permission_status:
       onboardingPermissionStatuses.undetermined,
-    referral_code: referralCode?.trim() || buildReferralCode(userId),
+    referral_code: resolvedReferralCode,
     saved: 0,
     tier_progress_expires_at: null,
     tier_progress_points: 0,
@@ -358,5 +423,6 @@ export function getDefaultProfileValues(options: {
     tier_progress_target_points:
       defaultNextTier === null ? 0 : defaultTierDefinition.progressTargetPoints,
     updated_at: createdAt,
+    userId,
   };
 }

@@ -12,7 +12,10 @@ import {
   stopRestaurantGeofencing,
   syncBackgroundLocationPermissionStatus,
 } from '@/src/lib/location/restaurant-geofence';
-import { toOnboardingPermissionStatus } from '@/src/lib/mappers';
+import {
+  resolvePushPermissionStatus,
+  toOnboardingPermissionStatus,
+} from '@/src/lib/mappers';
 import { captureHandledError } from '@/src/lib/monitoring';
 import {
   configureNotificationPresentation,
@@ -38,9 +41,7 @@ export function RestaurantPresenceProvider({
     const foregroundLocationStatus = toOnboardingPermissionStatus(
       foregroundLocationPermission.status
     );
-    const pushStatus = toOnboardingPermissionStatus(
-      notificationsPermission.status
-    );
+    const pushStatus = resolvePushPermissionStatus(notificationsPermission);
     const backgroundLocationStatus =
       await syncBackgroundLocationPermissionStatus();
     const hasGeofenceConfig = config.restaurantPresence.geofence !== null;

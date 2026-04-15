@@ -18,7 +18,7 @@ export function useReferralsResource(
       ? {
           referrals: {
             $: {
-              where: { 'referrer.user.id': userId },
+              where: { 'referrer.id': userId },
             },
           },
         }

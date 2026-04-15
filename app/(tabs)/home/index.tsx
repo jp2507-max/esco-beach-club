@@ -24,6 +24,7 @@ import {
   useProfileData,
 } from '@/providers/DataProvider';
 import { AccountDeletionBanner } from '@/src/components/account-deletion/account-deletion-banner';
+import { AppScreenContent } from '@/src/components/app/app-screen-content';
 import {
   Avatar,
   Card,
@@ -220,11 +221,14 @@ function HomeScreenContent(): React.JSX.Element {
 
   const { eventsLoading } = useEventsData();
   const { news, newsLoading } = useNewsData();
-  const { userId } = useProfileData();
+  const { isAuthenticatedButNotReady, userId } = useProfileData();
   const homeEvents = useHomeEvents();
   const memberSummary = useMemberSummary();
+  const valueUnavailable = tCommon('valueUnavailable');
 
-  const userName = memberSummary.fullName || t('guest');
+  const userName =
+    memberSummary.fullName ||
+    (isAuthenticatedButNotReady ? valueUnavailable : t('guest'));
   const isFeedLoading = eventsLoading || newsLoading;
 
   const quickActions = useMemo<QuickAction[]>(
@@ -343,165 +347,169 @@ function HomeScreenContent(): React.JSX.Element {
       className="flex-1 bg-background dark:bg-dark-bg"
       style={{ paddingTop: insets.top }}
     >
-      <View className="absolute left-0 right-0 top-0 h-75 overflow-hidden">
-        <View
-          className="absolute size-45 rounded-full"
-          style={{
-            backgroundColor: isDark
-              ? Colors.homeOrbPrimaryDark
-              : Colors.homeOrbPrimaryLight,
-            right: -20,
-            top: -40,
-          }}
-        />
-        <View
-          className="absolute size-30 rounded-full"
-          style={{
-            backgroundColor: isDark
-              ? Colors.homeOrbSecondaryDark
-              : Colors.homeOrbSecondaryLight,
-            right: 80,
-            top: 30,
-          }}
-        />
-        <View
-          className="absolute size-25 rounded-full"
-          style={{
-            backgroundColor: isDark
-              ? Colors.homeOrbAccentDark
-              : Colors.homeOrbAccentLight,
-            left: -20,
-            top: 10,
-          }}
-        />
-      </View>
-
-      <FlashList
-        contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={listContentContainerStyle}
-        data={feedRows}
-        getItemType={getFeedItemType}
-        keyExtractor={(item) => item.id}
-        renderItem={renderFeedItem}
-        showsVerticalScrollIndicator={false}
-        ListHeaderComponent={
-          <>
-            <View className="px-5">
-              <View className="pb-5 pt-8">
-                <View className="mb-5 flex-row items-center justify-between gap-3">
+      <AppScreenContent className="flex-1">
+        <FlashList
+          contentInsetAdjustmentBehavior="automatic"
+          contentContainerStyle={listContentContainerStyle}
+          data={feedRows}
+          getItemType={getFeedItemType}
+          keyExtractor={(item) => item.id}
+          renderItem={renderFeedItem}
+          showsVerticalScrollIndicator={false}
+          ListHeaderComponent={
+            <>
+              <View className="relative px-5">
+                <View
+                  className="absolute left-[-20px] right-[-20px] top-0 h-75 overflow-hidden"
+                  pointerEvents="none"
+                >
                   <View
-                    accessibilityHint={tCommon('branding.markHint')}
-                    accessibilityLabel={tCommon('branding.mark')}
-                    accessibilityRole="header"
-                    className="min-w-0 flex-1 justify-center pr-2"
-                    style={{ minHeight: 56 }}
-                  >
-                    {brandLogoFailed ? (
-                      <Text
-                        className="font-black uppercase text-primary dark:text-primary-bright"
-                        numberOfLines={1}
-                      >
-                        {tCommon('branding.mark')}
-                      </Text>
-                    ) : (
-                      <Image
-                        accessibilityHint={tCommon('branding.markHint')}
-                        accessibilityLabel={tCommon('branding.mark')}
-                        className="w-full max-w-55"
-                        contentFit="contain"
-                        contentPosition="left center"
-                        onError={() => setBrandLogoFailed(true)}
-                        source={escoLogoSource}
+                    className="absolute size-45 rounded-full"
+                    style={{
+                      backgroundColor: isDark
+                        ? Colors.homeOrbPrimaryDark
+                        : Colors.homeOrbPrimaryLight,
+                      right: 0,
+                      top: -40,
+                    }}
+                  />
+                  <View
+                    className="absolute size-30 rounded-full"
+                    style={{
+                      backgroundColor: isDark
+                        ? Colors.homeOrbSecondaryDark
+                        : Colors.homeOrbSecondaryLight,
+                      right: 100,
+                      top: 30,
+                    }}
+                  />
+                  <View
+                    className="absolute size-25 rounded-full"
+                    style={{
+                      backgroundColor: isDark
+                        ? Colors.homeOrbAccentDark
+                        : Colors.homeOrbAccentLight,
+                      left: 0,
+                      top: 10,
+                    }}
+                  />
+                </View>
+                <View className="pb-5 pt-8">
+                  <View className="mb-5 flex-row items-center justify-between gap-3">
+                    <View
+                      accessibilityHint={tCommon('branding.markHint')}
+                      accessibilityLabel={tCommon('branding.mark')}
+                      accessibilityRole="header"
+                      className="min-w-0 flex-1 justify-center pr-2"
+                      style={{ minHeight: 56 }}
+                    >
+                      {brandLogoFailed ? (
+                        <Text
+                          className="font-black uppercase text-primary dark:text-primary-bright"
+                          numberOfLines={1}
+                        >
+                          {tCommon('branding.mark')}
+                        </Text>
+                      ) : (
+                        <Image
+                          accessibilityHint={tCommon('branding.markHint')}
+                          accessibilityLabel={tCommon('branding.mark')}
+                          className="w-full max-w-55"
+                          contentFit="contain"
+                          contentPosition="left center"
+                          onError={() => setBrandLogoFailed(true)}
+                          source={escoLogoSource}
+                          style={{
+                            alignSelf: 'flex-start',
+                            height: 56,
+                            width: '100%',
+                          }}
+                        />
+                      )}
+                    </View>
+                    <HeaderGlassButton
+                      accessibilityLabel={t('openProfile')}
+                      accessibilityHint={t('openProfileHint')}
+                      className="size-12 shrink-0 border-white/35 dark:border-white/20"
+                      glassStyle="regular"
+                      onPress={handleProfilePress}
+                      testID="profile-avatar"
+                    >
+                      <Avatar
+                        className="size-9.5 rounded-full"
+                        uri={memberSummary.avatarUrl}
+                      />
+                      <View
+                        className="absolute -bottom-px -right-px size-3.5 rounded-full"
                         style={{
-                          alignSelf: 'flex-start',
-                          height: 56,
-                          width: '100%',
+                          backgroundColor: Colors.success,
+                          borderColor: Colors.background,
+                          borderWidth: 2.5,
                         }}
                       />
-                    )}
+                    </HeaderGlassButton>
                   </View>
-                  <HeaderGlassButton
-                    accessibilityLabel={t('openProfile')}
-                    accessibilityHint={t('openProfileHint')}
-                    className="size-12 shrink-0 border-white/35 dark:border-white/20"
-                    glassStyle="regular"
-                    onPress={handleProfilePress}
-                    testID="profile-avatar"
+
+                  <Text
+                    className="text-[28px] font-extrabold text-primary dark:text-primary-bright"
+                    numberOfLines={2}
                   >
-                    <Avatar
-                      className="size-9.5 rounded-full"
-                      uri={memberSummary.avatarUrl}
-                    />
-                    <View
-                      className="absolute -bottom-px -right-px size-3.5 rounded-full"
-                      style={{
-                        backgroundColor: Colors.success,
-                        borderColor: Colors.background,
-                        borderWidth: 2.5,
-                      }}
-                    />
-                  </HeaderGlassButton>
+                    {t('welcomeBackName', { name: userName })}
+                  </Text>
                 </View>
 
-                <Text
-                  className="text-[28px] font-extrabold text-primary dark:text-primary-bright"
-                  numberOfLines={2}
-                >
-                  {t('welcomeBackName', { name: userName })}
+                <AccountDeletionBanner userId={userId} />
+
+                <Animated.View className="mb-6" style={sectionStyle}>
+                  <ScrollView
+                    contentContainerClassName="gap-2.5"
+                    horizontal={true}
+                    showsHorizontalScrollIndicator={false}
+                  >
+                    {quickActions.map((action) => (
+                      <MemoizedQuickActionChip
+                        key={action.id}
+                        action={action}
+                        onPress={handleRoutePress}
+                      />
+                    ))}
+                  </ScrollView>
+                </Animated.View>
+              </View>
+
+              <SectionHeader
+                actionLabel={t('seeAll')}
+                className="mb-4 mt-1 px-5"
+                title={t('happeningThisWeek')}
+                onActionPress={handleSeeAllEvents}
+              />
+            </>
+          }
+          ListEmptyComponent={
+            isFeedLoading ? (
+              <View className="px-5 py-10">
+                <SkeletonCard className="mb-5" height={200} />
+                <View className="mb-6 flex-row gap-2.5">
+                  <Skeleton className="h-12 flex-1 rounded-full" />
+                  <Skeleton className="h-12 flex-1 rounded-full" />
+                </View>
+                <SkeletonCard className="mb-4" height={200} />
+                <SkeletonCard height={88} />
+              </View>
+            ) : (
+              <View className="px-5 py-12">
+                <Text className="text-center text-lg font-bold text-text dark:text-text-primary-dark">
+                  {t('emptyTitle')}
+                </Text>
+                <Text className="mt-2 text-center text-sm leading-6 text-text-secondary dark:text-text-secondary-dark">
+                  {t('emptyDescription')}
                 </Text>
               </View>
-
-              <AccountDeletionBanner userId={userId} />
-
-              <Animated.View className="mb-6" style={sectionStyle}>
-                <ScrollView
-                  contentContainerClassName="gap-2.5"
-                  horizontal={true}
-                  showsHorizontalScrollIndicator={false}
-                >
-                  {quickActions.map((action) => (
-                    <MemoizedQuickActionChip
-                      key={action.id}
-                      action={action}
-                      onPress={handleRoutePress}
-                    />
-                  ))}
-                </ScrollView>
-              </Animated.View>
-            </View>
-
-            <SectionHeader
-              actionLabel={t('seeAll')}
-              className="mb-4 mt-1 px-5"
-              title={t('happeningThisWeek')}
-              onActionPress={handleSeeAllEvents}
-            />
-          </>
-        }
-        ListEmptyComponent={
-          isFeedLoading ? (
-            <View className="px-5 py-10">
-              <SkeletonCard className="mb-5" height={200} />
-              <View className="mb-6 flex-row gap-2.5">
-                <Skeleton className="h-12 flex-1 rounded-full" />
-                <Skeleton className="h-12 flex-1 rounded-full" />
-              </View>
-              <SkeletonCard className="mb-4" height={200} />
-              <SkeletonCard height={88} />
-            </View>
-          ) : (
-            <View className="px-5 py-12">
-              <Text className="text-center text-lg font-bold text-text dark:text-text-primary-dark">
-                {t('emptyTitle')}
-              </Text>
-              <Text className="mt-2 text-center text-sm leading-6 text-text-secondary dark:text-text-secondary-dark">
-                {t('emptyDescription')}
-              </Text>
-            </View>
-          )
-        }
-        ListFooterComponent={<View className="h-7.5" />}
-      />
+            )
+          }
+          ListFooterComponent={<View className="h-7.5" />}
+        />
+      </AppScreenContent>
     </View>
   );
 }

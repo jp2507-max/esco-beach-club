@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Mail, ShieldCheck, Waves } from 'lucide-react-native';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -14,9 +14,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/providers/AuthProvider';
+import { AuthScreenContent } from '@/src/components/auth/auth-screen-content';
 import { ErrorBanner, SocialAuthButtons } from '@/src/components/ui';
 import { motion, withRM } from '@/src/lib/animations/motion';
-import { useEmailCodeAuthFlow } from '@/src/lib/auth/use-email-code-auth-flow';
+import type { SignupOnboardingData } from '@/src/lib/auth/signup-onboarding';
+import {
+  useEmailCodeAuthFlow,
+  type UseEmailCodeAuthFlowParams,
+} from '@/src/lib/auth/use-email-code-auth-flow';
 import { isAuthErrorKey } from '@/src/lib/auth-errors';
 import { ControlledTextInput } from '@/src/lib/forms/controlled-text-input';
 import {
@@ -25,6 +30,7 @@ import {
 } from '@/src/lib/forms/schemas';
 import { hapticMedium } from '@/src/lib/haptics/haptics';
 import { shadows } from '@/src/lib/styles/shadows';
+import { useSignupOnboardingDraftStore } from '@/src/stores/signup-onboarding-store';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -38,6 +44,9 @@ import { Animated } from '@/src/tw/animated';
 export default function LoginScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const searchParams = useLocalSearchParams<{
+    authFlow?: string;
+  }>();
   const { t } = useTranslation('auth');
   const {
     appleSignInError,
@@ -53,9 +62,61 @@ export default function LoginScreen(): React.JSX.Element {
     verifyCodeError,
     verifyCodeLoading,
   } = useAuth();
+  const signupDraft = useSignupOnboardingDraftStore((state) => state.draft);
+  const isSignupAuthFlow = searchParams.authFlow === 'signup';
+  const onboardingData = React.useMemo<SignupOnboardingData | undefined>(() => {
+    if (
+      !isSignupAuthFlow ||
+      !signupDraft.displayName ||
+      signupDraft.hasCompletedSetup !== true ||
+      signupDraft.hasAcceptedPrivacyPolicy !== true ||
+      signupDraft.hasAcceptedTerms !== true
+    ) {
+      return undefined;
+    }
+
+    return {
+      displayName: signupDraft.displayName,
+      hasCompletedSetup: true,
+      hasAcceptedPrivacyPolicy: true,
+      hasAcceptedTerms: true,
+      ...(signupDraft.dateOfBirth
+        ? { dateOfBirth: signupDraft.dateOfBirth }
+        : {}),
+      ...(signupDraft.memberSegment
+        ? { memberSegment: signupDraft.memberSegment }
+        : {}),
+      ...(signupDraft.locationPermissionStatus
+        ? { locationPermissionStatus: signupDraft.locationPermissionStatus }
+        : {}),
+      ...(signupDraft.pushNotificationPermissionStatus
+        ? {
+            pushNotificationPermissionStatus:
+              signupDraft.pushNotificationPermissionStatus,
+          }
+        : {}),
+    };
+  }, [isSignupAuthFlow, signupDraft]);
+  const isOnboardingAuthEntry =
+    isSignupAuthFlow && onboardingData !== undefined;
+  const shouldRedirectToOnboarding =
+    isSignupAuthFlow && onboardingData === undefined;
+  const verifyCodeForEmailFlow = React.useCallback<
+    UseEmailCodeAuthFlowParams['verifyCode']
+  >(
+    async ({ code, email }) => {
+      await verifyCode({
+        code,
+        email,
+        ...(onboardingData ? { onboardingData } : {}),
+      });
+    },
+    [onboardingData, verifyCode]
+  );
+
   const flow = useEmailCodeAuthFlow({
     sendCode,
-    verifyCode,
+    verifyCode: verifyCodeForEmailFlow,
     sendCodeLoading,
     sendCodeError,
     verifyCodeLoading,
@@ -93,12 +154,16 @@ export default function LoginScreen(): React.JSX.Element {
 
   function handleApplePress(): void {
     if (isAuthBusy) return;
-    void signInWithApple().catch(() => undefined);
+    void signInWithApple(onboardingData ? { onboardingData } : undefined).catch(
+      () => undefined
+    );
   }
 
   function handleGooglePress(): void {
     if (isAuthBusy) return;
-    void signInWithGoogle().catch(() => undefined);
+    void signInWithGoogle(
+      onboardingData ? { onboardingData } : undefined
+    ).catch(() => undefined);
   }
 
   const socialError = appleSignInError ?? googleSignInError;
@@ -136,6 +201,10 @@ export default function LoginScreen(): React.JSX.Element {
     return t('genericError');
   }, [resolvedError, t]);
 
+  if (shouldRedirectToOnboarding) {
+    return <Redirect href="/(auth)/onboarding-welcome" />;
+  }
+
   return (
     <View className="flex-1">
       <LinearGradient
@@ -159,185 +228,205 @@ export default function LoginScreen(): React.JSX.Element {
           showsVerticalScrollIndicator={false}
           style={{ paddingTop: insets.top }}
         >
-          <Animated.View
-            className="mb-8 items-center"
-            entering={withRM(FadeInUp.delay(40).duration(motion.dur.md))}
-          >
-            <View
-              className="mb-4 size-18 items-center justify-center rounded-full bg-white"
-              style={shadows.level4}
-            >
-              <Waves color={Colors.primary} size={36} />
-            </View>
-            <Text className="text-[32px] font-extrabold tracking-[1px] text-white">
-              {t('brandTitle')}
-            </Text>
-            <Text className="mt-1 text-sm font-medium text-white/75">
-              {t('loginTagline')}
-            </Text>
-          </Animated.View>
-
-          <Animated.View
-            className="rounded-3xl bg-white p-7 dark:bg-dark-bg-elevated"
-            entering={withRM(FadeInUp.delay(120).duration(motion.dur.md))}
-            style={shadows.level5}
-          >
+          <AuthScreenContent>
             <Animated.View
-              entering={withRM(FadeInUp.delay(0).duration(motion.dur.sm))}
+              className="mb-8 items-center"
+              entering={withRM(FadeInUp.delay(40).duration(motion.dur.md))}
             >
-              <Text className="mb-1 text-2xl font-bold text-text dark:text-text-primary-dark">
-                {isCodeStep ? t('loginVerifyTitle') : t('loginTitle')}
+              <View
+                className="mb-4 size-18 items-center justify-center rounded-full bg-white"
+                style={shadows.level4}
+              >
+                <Waves color={Colors.primary} size={36} />
+              </View>
+              <Text className="text-[32px] font-extrabold tracking-[1px] text-white">
+                {t('brandTitle')}
               </Text>
-              <Text className="mb-6 text-sm text-text-secondary dark:text-text-secondary-dark">
-                {isCodeStep
-                  ? t('loginVerifySubtitle', { email: sentEmail })
-                  : t('loginSubtitle')}
+              <Text className="mt-1 text-sm font-medium text-white/75">
+                {isOnboardingAuthEntry ? t('signupTagline') : t('loginTagline')}
               </Text>
             </Animated.View>
 
             <Animated.View
-              entering={withRM(FadeInUp.delay(40).duration(motion.dur.sm))}
+              className="rounded-3xl bg-white p-7 dark:bg-dark-bg-elevated"
+              entering={withRM(FadeInUp.delay(120).duration(motion.dur.md))}
+              style={shadows.level5}
             >
-              <ErrorBanner className="mb-4" message={resolvedErrorMessage} />
-            </Animated.View>
-
-            {isCodeStep ? (
               <Animated.View
-                entering={withRM(FadeInUp.delay(80).duration(motion.dur.md))}
+                entering={withRM(FadeInUp.delay(0).duration(motion.dur.sm))}
               >
-                <ControlledTextInput<VerifyCodeFormValues>
-                  key="login-code-input"
-                  autoFocus
-                  autoCapitalize="none"
-                  autoComplete={
-                    Platform.OS === 'android' ? 'sms-otp' : 'one-time-code'
-                  }
-                  autoCorrect={false}
-                  control={codeControl}
-                  icon={({ color, size }) => (
-                    <ShieldCheck color={color} size={size} />
-                  )}
-                  keyboardType={
-                    Platform.OS === 'ios' ? 'number-pad' : 'numeric'
-                  }
-                  maxLength={6}
-                  name="code"
-                  placeholder={t('codePlaceholder')}
-                  returnKeyType="done"
-                  testID="login-code"
-                  textContentType={
-                    Platform.OS === 'ios' ? 'oneTimeCode' : undefined
-                  }
-                />
+                <Text className="mb-1 text-2xl font-bold text-text dark:text-text-primary-dark">
+                  {isCodeStep
+                    ? isOnboardingAuthEntry
+                      ? t('signupVerifyTitle')
+                      : t('loginVerifyTitle')
+                    : isOnboardingAuthEntry
+                      ? t('signupTitle')
+                      : t('loginTitle')}
+                </Text>
+                <Text className="mb-6 text-sm text-text-secondary dark:text-text-secondary-dark">
+                  {isCodeStep
+                    ? isOnboardingAuthEntry
+                      ? t('signupVerifySubtitle', { email: sentEmail })
+                      : t('loginVerifySubtitle', { email: sentEmail })
+                    : isOnboardingAuthEntry
+                      ? t('signupSubtitle')
+                      : t('loginSubtitle')}
+                </Text>
               </Animated.View>
-            ) : (
-              <Animated.View
-                entering={withRM(FadeInUp.delay(80).duration(motion.dur.md))}
-              >
-                <ControlledTextInput<EmailFormValues>
-                  key="login-email-input"
-                  autoCapitalize="none"
-                  autoComplete="email"
-                  control={control}
-                  icon={({ color, size }) => <Mail color={color} size={size} />}
-                  keyboardType="email-address"
-                  name="email"
-                  placeholder={t('emailPlaceholder')}
-                  testID="login-email"
-                />
-              </Animated.View>
-            )}
 
-            <Animated.View
-              entering={withRM(FadeInUp.delay(140).duration(motion.dur.sm))}
-            >
-              <Animated.View style={buttonStyle}>
+              <Animated.View
+                entering={withRM(FadeInUp.delay(40).duration(motion.dur.sm))}
+              >
+                <ErrorBanner className="mb-4" message={resolvedErrorMessage} />
+              </Animated.View>
+
+              {isCodeStep ? (
+                <Animated.View
+                  entering={withRM(FadeInUp.delay(80).duration(motion.dur.md))}
+                >
+                  <ControlledTextInput<VerifyCodeFormValues>
+                    key="login-code-input"
+                    autoFocus
+                    autoCapitalize="none"
+                    autoComplete={
+                      Platform.OS === 'android' ? 'sms-otp' : 'one-time-code'
+                    }
+                    autoCorrect={false}
+                    control={codeControl}
+                    icon={({ color, size }) => (
+                      <ShieldCheck color={color} size={size} />
+                    )}
+                    keyboardType={
+                      Platform.OS === 'ios' ? 'number-pad' : 'numeric'
+                    }
+                    maxLength={6}
+                    name="code"
+                    placeholder={t('codePlaceholder')}
+                    returnKeyType="done"
+                    testID="login-code"
+                    textContentType={
+                      Platform.OS === 'ios' ? 'oneTimeCode' : undefined
+                    }
+                  />
+                </Animated.View>
+              ) : (
+                <Animated.View
+                  entering={withRM(FadeInUp.delay(80).duration(motion.dur.md))}
+                >
+                  <ControlledTextInput<EmailFormValues>
+                    key="login-email-input"
+                    autoCapitalize="none"
+                    autoComplete="email"
+                    control={control}
+                    icon={({ color, size }) => (
+                      <Mail color={color} size={size} />
+                    )}
+                    keyboardType="email-address"
+                    name="email"
+                    placeholder={t('emailPlaceholder')}
+                    testID="login-email"
+                  />
+                </Animated.View>
+              )}
+
+              <Animated.View
+                entering={withRM(FadeInUp.delay(140).duration(motion.dur.sm))}
+              >
+                <Animated.View style={buttonStyle}>
+                  <Pressable
+                    accessibilityRole="button"
+                    className="mt-1 overflow-hidden rounded-2xl"
+                    disabled={isAuthBusy}
+                    onPress={() => {
+                      hapticMedium();
+                      if (isCodeStep) void onCodeSubmit();
+                      else void onEmailSubmit();
+                    }}
+                    onPressIn={handlePressIn}
+                    onPressOut={handlePressOut}
+                    testID="login-submit"
+                  >
+                    <LinearGradient
+                      colors={[Colors.primary, Colors.primaryDark]}
+                      end={{ x: 1, y: 0 }}
+                      start={{ x: 0, y: 0 }}
+                      style={{
+                        alignItems: 'center',
+                        borderRadius: 16,
+                        height: 52,
+                        justifyContent: 'center',
+                      }}
+                    >
+                      {isAuthBusy ? (
+                        <ActivityIndicator color={Colors.white} />
+                      ) : (
+                        <Text className="text-base font-bold tracking-[0.5px] text-white">
+                          {isCodeStep
+                            ? isOnboardingAuthEntry
+                              ? t('verifyJoin')
+                              : t('verifyContinue')
+                            : isOnboardingAuthEntry
+                              ? t('sendJoinCode')
+                              : t('sendVerificationCode')}
+                        </Text>
+                      )}
+                    </LinearGradient>
+                  </Pressable>
+                </Animated.View>
+              </Animated.View>
+
+              {isCodeStep ? (
                 <Pressable
                   accessibilityRole="button"
-                  className="mt-1 overflow-hidden rounded-2xl"
-                  disabled={isAuthBusy}
-                  onPress={() => {
-                    hapticMedium();
-                    if (isCodeStep) void onCodeSubmit();
-                    else void onEmailSubmit();
-                  }}
-                  onPressIn={handlePressIn}
-                  onPressOut={handlePressOut}
-                  testID="login-submit"
+                  className="mt-4 items-center"
+                  onPress={handleUseDifferentEmail}
+                  testID="login-edit-email"
                 >
-                  <LinearGradient
-                    colors={[Colors.primary, Colors.primaryDark]}
-                    end={{ x: 1, y: 0 }}
-                    start={{ x: 0, y: 0 }}
-                    style={{
-                      alignItems: 'center',
-                      borderRadius: 16,
-                      height: 52,
-                      justifyContent: 'center',
-                    }}
-                  >
-                    {isAuthBusy ? (
-                      <ActivityIndicator color={Colors.white} />
-                    ) : (
-                      <Text className="text-base font-bold tracking-[0.5px] text-white">
-                        {isCodeStep
-                          ? t('verifyContinue')
-                          : t('sendVerificationCode')}
-                      </Text>
-                    )}
-                  </LinearGradient>
-                </Pressable>
-              </Animated.View>
-            </Animated.View>
-
-            {isCodeStep ? (
-              <Pressable
-                accessibilityRole="button"
-                className="mt-4 items-center"
-                onPress={handleUseDifferentEmail}
-                testID="login-edit-email"
-              >
-                <Text className="text-sm text-text-secondary dark:text-text-secondary-dark">
-                  {t('wrongEmailPrefix')}{' '}
-                  <Text className="font-bold text-primary dark:text-primary-bright">
-                    {t('useDifferentOne')}
+                  <Text className="text-sm text-text-secondary dark:text-text-secondary-dark">
+                    {t('wrongEmailPrefix')}{' '}
+                    <Text className="font-bold text-primary dark:text-primary-bright">
+                      {t('useDifferentOne')}
+                    </Text>
                   </Text>
+                </Pressable>
+              ) : null}
+
+              {!isCodeStep ? (
+                <SocialAuthButtons
+                  appleLoading={appleSignInLoading}
+                  disabled={isAuthBusy}
+                  googleLoading={googleSignInLoading}
+                  onApplePress={handleApplePress}
+                  onGooglePress={handleGooglePress}
+                />
+              ) : null}
+
+              <View className="my-5 flex-row items-center">
+                <View className="h-px flex-1 bg-border dark:bg-dark-border" />
+                <Text className="mx-3 text-[13px] text-text-muted dark:text-text-muted-dark">
+                  {t('or')}
                 </Text>
-              </Pressable>
-            ) : null}
+                <View className="h-px flex-1 bg-border dark:bg-dark-border" />
+              </View>
 
-            {!isCodeStep ? (
-              <SocialAuthButtons
-                appleLoading={appleSignInLoading}
-                disabled={isAuthBusy}
-                googleLoading={googleSignInLoading}
-                onApplePress={handleApplePress}
-                onGooglePress={handleGooglePress}
-              />
-            ) : null}
-
-            <View className="my-5 flex-row items-center">
-              <View className="h-px flex-1 bg-border dark:bg-dark-border" />
-              <Text className="mx-3 text-[13px] text-text-muted dark:text-text-muted-dark">
-                {t('or')}
-              </Text>
-              <View className="h-px flex-1 bg-border dark:bg-dark-border" />
-            </View>
-
-            <Pressable
-              accessibilityRole="button"
-              className="items-center"
-              onPress={() => router.push('/onboarding-welcome')}
-              testID="login-go-signup"
-            >
-              <Text className="text-sm text-text-secondary dark:text-text-secondary-dark">
-                {t('needMemberAccount')}{' '}
-                <Text className="font-bold text-primary dark:text-primary-bright">
-                  {t('createOne')}
-                </Text>
-              </Text>
-            </Pressable>
-          </Animated.View>
+              {!isOnboardingAuthEntry ? (
+                <Pressable
+                  accessibilityRole="button"
+                  className="items-center"
+                  onPress={() => router.push('/onboarding-welcome')}
+                  testID="login-go-signup"
+                >
+                  <Text className="text-sm text-text-secondary dark:text-text-secondary-dark">
+                    {t('needMemberAccount')}{' '}
+                    <Text className="font-bold text-primary dark:text-primary-bright">
+                      {t('createOne')}
+                    </Text>
+                  </Text>
+                </Pressable>
+              ) : null}
+            </Animated.View>
+          </AuthScreenContent>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>

@@ -1,14 +1,16 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { ArrowRight, Sparkles, Ticket } from 'lucide-react-native';
 import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert } from 'react-native';
 import {
   cancelAnimation,
+  Easing,
   FadeIn,
   FadeInUp,
   ReduceMotion,
+  type SharedValue,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -19,20 +21,18 @@ import {
 
 import { Colors } from '@/constants/colors';
 import { updateProfile } from '@/lib/api';
+import { PROFILE_PERMISSION_DENIED_ERROR_KEY } from '@/lib/api/profile';
 import { onboardingPermissionStatuses } from '@/lib/types';
 import { useAuth } from '@/providers/AuthProvider';
 import { useProfileData } from '@/providers/DataProvider';
+import { AuthScreenContent } from '@/src/components/auth/auth-screen-content';
 import { OnboardingHeader } from '@/src/components/onboarding/onboarding-header';
 import { motion, withRM } from '@/src/lib/animations/motion';
 import { useButtonPress } from '@/src/lib/animations/use-button-press';
 import { config } from '@/src/lib/config';
 import { hapticLight } from '@/src/lib/haptics/haptics';
 import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
-import { parseOnboardingMemberSegmentSearchParam } from '@/src/lib/utils/member-segment';
-import {
-  parseOnboardingPermissionStatusSearchParam,
-  readSingleSearchParam,
-} from '@/src/lib/utils/search-params';
+import { useSignupOnboardingDraftStore } from '@/src/stores/signup-onboarding-store';
 import { Pressable, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 import { Image } from '@/src/tw/image';
@@ -40,20 +40,10 @@ import { Image } from '@/src/tw/image';
 const WELCOME_COCKTAIL_IMAGE_URI =
   'https://lh3.googleusercontent.com/aida-public/AB6AXuB6oK4M5GAEAukmyL4P-fxWGcieV8vOhAhVYjyrF1Jr46L3mySepBDndcXRdhdc1tAzZ5WIxmdQJsAUBN2fGXSNBnd5SFLWdksutc6ObMR_yw_fuIjHEucVvyZErUVjOd0HRufWgBdDdaKejA8KX_eSNt_fxHrfF1waZijjj1Rx_OCJrX0uchXHN9J7zJ3ZoNr7vU-DZQlbsepHsxBTCz7WSQnczqLyGpH0p3IhVqSGo1FUYjKdyKPHdiRp8X1Bljuvhyuhv5K5Zv2e';
 
-type OnboardingLocalIdentityParams = {
-  onboardingDateOfBirth?: string | string[];
-  onboardingDisplayName?: string | string[];
-  onboardingLocationPermissionStatus?: string | string[];
-  onboardingPrivacyAccepted?: string | string[];
-  onboardingPushPermissionStatus?: string | string[];
-  onboardingSegment?: string | string[];
-  onboardingTermsAccepted?: string | string[];
-};
-
-const ICON_DELAY = 100;
-const TITLE_DELAY = 260;
-const CARD_DELAY = 440;
-const CTA_DELAY = 680;
+const ICON_DELAY = 80;
+const TITLE_DELAY = 180;
+const CARD_DELAY = 300;
+const CTA_DELAY = 420;
 
 /**
  * Backend auth/profile permission errors currently surface as mixed shapes:
@@ -68,7 +58,10 @@ function isPermissionDeniedError(error: unknown): boolean {
   if (!error) return false;
 
   if (error instanceof Error) {
-    return error.message.toLowerCase().includes('permission denied');
+    return (
+      error.message === PROFILE_PERMISSION_DENIED_ERROR_KEY ||
+      error.message.toLowerCase().includes('permission denied')
+    );
   }
 
   if (typeof error !== 'object') return false;
@@ -82,47 +75,35 @@ function isPermissionDeniedError(error: unknown): boolean {
     typeof maybeError.message === 'string'
       ? maybeError.message.toLowerCase()
       : '';
+  const rawMessage =
+    typeof maybeError.message === 'string' ? maybeError.message : '';
   const type =
     typeof maybeError.type === 'string' ? maybeError.type.toLowerCase() : '';
 
-  return message.includes('permission denied') || type === 'permission-denied';
+  return (
+    rawMessage === PROFILE_PERMISSION_DENIED_ERROR_KEY ||
+    message.includes('permission denied') ||
+    type === 'permission-denied'
+  );
 }
 
 function FloatingDot({
+  progress,
+  phase,
   delay,
   amplitude,
   positionClassName,
   appearanceClassName,
 }: {
+  progress: SharedValue<number>;
+  phase: number;
   amplitude: number;
   appearanceClassName: string;
   delay: number;
   positionClassName: string;
 }): React.JSX.Element {
-  const translateY = useSharedValue(0);
-
-  useEffect(() => {
-    translateY.set(
-      withRepeat(
-        withSequence(
-          withTiming(amplitude, {
-            duration: 2400,
-            reduceMotion: ReduceMotion.System,
-          }),
-          withTiming(-amplitude, {
-            duration: 2400,
-            reduceMotion: ReduceMotion.System,
-          })
-        ),
-        -1,
-        true
-      )
-    );
-    return () => cancelAnimation(translateY);
-  }, [amplitude, translateY]);
-
   const dotStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.get() }],
+    transform: [{ translateY: Math.sin(progress.get() + phase) * amplitude }],
   }));
 
   return (
@@ -137,14 +118,26 @@ function FloatingDot({
 
 export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
   const router = useRouter();
-  const { isAuthenticated, isLoading: isAuthLoading, user } = useAuth();
+  const {
+    isAuthenticated,
+    isLoading: isAuthLoading,
+    signOut,
+    user,
+  } = useAuth();
   const { profile } = useProfileData();
   const { t } = useTranslation('auth');
   const isDark = useAppIsDark();
-  const searchParams = useLocalSearchParams<OnboardingLocalIdentityParams>();
   const ctaButton = useButtonPress();
+  const signupDraft = useSignupOnboardingDraftStore((state) => state.draft);
+  const setSignupDraft = useSignupOnboardingDraftStore(
+    (state) => state.setDraft
+  );
+  const resetSignupDraft = useSignupOnboardingDraftStore(
+    (state) => state.resetDraft
+  );
 
   const sparkleScale = useSharedValue(1);
+  const floatingProgress = useSharedValue(0);
 
   useEffect(() => {
     sparkleScale.set(
@@ -166,34 +159,39 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
     return () => cancelAnimation(sparkleScale);
   }, [sparkleScale]);
 
+  useEffect(() => {
+    floatingProgress.set(
+      withRepeat(
+        withTiming(Math.PI * 2, {
+          duration: 5600,
+          easing: Easing.linear,
+          reduceMotion: ReduceMotion.System,
+        }),
+        -1,
+        false
+      )
+    );
+
+    return () => cancelAnimation(floatingProgress);
+  }, [floatingProgress]);
+
   const sparkleStyle = useAnimatedStyle(() => ({
     transform: [{ scale: sparkleScale.get() }],
   }));
 
-  async function persistAuthenticatedOnboardingChoices(
-    isSetupCompleted: boolean
-  ): Promise<void> {
+  async function persistAuthenticatedOnboardingChoices(): Promise<void> {
     if (!user?.id) return;
 
-    const onboardingDisplayName = readSingleSearchParam(
-      searchParams.onboardingDisplayName
-    )
+    const onboardingDisplayName = signupDraft.displayName
       ?.trim()
       .replace(/\s+/g, ' ');
-    const onboardingDateOfBirth = readSingleSearchParam(
-      searchParams.onboardingDateOfBirth
-    )?.trim();
-    const memberSegment = parseOnboardingMemberSegmentSearchParam(
-      searchParams.onboardingSegment
-    );
+    const memberSegment = signupDraft.memberSegment;
     const locationPermissionStatus =
-      parseOnboardingPermissionStatusSearchParam(
-        searchParams.onboardingLocationPermissionStatus
-      ) ?? onboardingPermissionStatuses.undetermined;
+      signupDraft.locationPermissionStatus ??
+      onboardingPermissionStatuses.undetermined;
     const pushNotificationPermissionStatus =
-      parseOnboardingPermissionStatusSearchParam(
-        searchParams.onboardingPushPermissionStatus
-      ) ?? onboardingPermissionStatuses.undetermined;
+      signupDraft.pushNotificationPermissionStatus ??
+      onboardingPermissionStatuses.undetermined;
 
     const resolvedLocationPermissionStatus =
       locationPermissionStatus === onboardingPermissionStatuses.undetermined &&
@@ -212,127 +210,85 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
         : pushNotificationPermissionStatus;
 
     await updateProfile(user.id, {
-      ...(onboardingDateOfBirth
-        ? { date_of_birth: onboardingDateOfBirth }
-        : {}),
       ...(onboardingDisplayName && onboardingDisplayName.length >= 2
         ? { full_name: onboardingDisplayName }
         : {}),
       ...(memberSegment ? { member_segment: memberSegment } : {}),
       location_permission_status: resolvedLocationPermissionStatus,
       push_notification_permission_status: resolvedPushPermissionStatus,
-      ...(isSetupCompleted
-        ? { onboarding_completed_at: new Date().toISOString() }
-        : {}),
+      onboarding_completed_at: new Date().toISOString(),
     });
   }
 
-  async function navigateToSignup(isSetupCompleted: boolean): Promise<void> {
-    const onboardingDateOfBirth = readSingleSearchParam(
-      searchParams.onboardingDateOfBirth
-    );
-    const onboardingDisplayName = readSingleSearchParam(
-      searchParams.onboardingDisplayName
-    );
-
-    const onboardingPrivacyAccepted = readSingleSearchParam(
-      searchParams.onboardingPrivacyAccepted
-    );
-    const onboardingSegment = readSingleSearchParam(
-      searchParams.onboardingSegment
-    );
-    const onboardingTermsAccepted = readSingleSearchParam(
-      searchParams.onboardingTermsAccepted
-    );
-    const onboardingLocationPermissionStatus = readSingleSearchParam(
-      searchParams.onboardingLocationPermissionStatus
-    );
-    const onboardingPushPermissionStatus = readSingleSearchParam(
-      searchParams.onboardingPushPermissionStatus
-    );
-
-    if (isAuthLoading) {
+  async function handleAuthenticatedSignupFallback(): Promise<void> {
+    try {
+      await signOut({ preserveSignupDraft: true });
+    } catch (error: unknown) {
+      console.error(
+        '[OnboardingFinalDetails] Failed to sign out before auth fallback:',
+        {
+          error,
+        }
+      );
+      Alert.alert(t('verificationFailedTitle'), t('unableToSignOut'));
       return;
     }
 
-    if (isAuthenticated && user?.id) {
-      let shouldFallbackToSignup = false;
+    router.replace({
+      pathname: '/login',
+      params: { authFlow: 'signup' },
+    });
+  }
 
+  async function navigateToSignup(): Promise<void> {
+    if (isAuthLoading) return;
+
+    if (isAuthenticated && user?.id) {
       try {
-        await persistAuthenticatedOnboardingChoices(isSetupCompleted);
+        await persistAuthenticatedOnboardingChoices();
       } catch (error: unknown) {
         if (isPermissionDeniedError(error)) {
-          shouldFallbackToSignup = true;
+          setSignupDraft({ hasCompletedSetup: true });
           console.warn(
-            '[OnboardingFinalDetails] Skipping authenticated profile update after auth became unavailable:',
+            '[OnboardingFinalDetails] Authenticated onboarding update lost permissions; recovering through auth flow.',
             {
               error,
             }
           );
-        } else {
-          console.error(
-            '[OnboardingFinalDetails] Failed to persist onboarding updates:',
-            {
-              error,
-            }
-          );
-          Alert.alert(
-            t('onboardingSaveErrorTitle'),
-            t('onboardingSaveErrorMessage')
-          );
+          await handleAuthenticatedSignupFallback();
           return;
         }
-      }
 
-      if (!shouldFallbackToSignup) {
-        router.replace('/profile');
+        console.error(
+          '[OnboardingFinalDetails] Failed to persist onboarding updates:',
+          {
+            error,
+          }
+        );
+        Alert.alert(
+          t('onboardingSaveErrorTitle'),
+          t('onboardingSaveErrorMessage')
+        );
         return;
       }
+
+      // Navigate directly to the authenticated profile surface after a
+      // successful completion write to avoid relying on eventual-consistency
+      // timing in the post-auth profile bootstrap redirect.
+      resetSignupDraft();
+      router.replace('/profile');
+      return;
     }
 
+    setSignupDraft({ hasCompletedSetup: true });
     router.push({
-      pathname: '/signup',
-      params: {
-        ...(onboardingDateOfBirth ? { onboardingDateOfBirth } : {}),
-        ...(onboardingDisplayName ? { onboardingDisplayName } : {}),
-        ...(onboardingPrivacyAccepted
-          ? { onboardingPrivacyAccepted }
-          : { onboardingPrivacyAccepted: '0' }),
-        ...(onboardingSegment ? { onboardingSegment } : {}),
-        ...(onboardingTermsAccepted
-          ? { onboardingTermsAccepted }
-          : { onboardingTermsAccepted: '0' }),
-        ...(onboardingLocationPermissionStatus
-          ? {
-              onboardingLocationPermissionStatus,
-            }
-          : {
-              onboardingLocationPermissionStatus:
-                onboardingPermissionStatuses.undetermined,
-            }),
-        ...(onboardingPushPermissionStatus
-          ? {
-              onboardingPushPermissionStatus,
-            }
-          : {
-              onboardingPushPermissionStatus:
-                onboardingPermissionStatuses.undetermined,
-            }),
-        ...(isSetupCompleted
-          ? {
-              onboardingCompletedSetup: '1',
-            }
-          : { onboardingCompletedSetup: '0' }),
-      },
+      pathname: '/login',
+      params: { authFlow: 'signup' },
     });
   }
 
   function handleCompleteSetup(): void {
-    void navigateToSignup(true);
-  }
-
-  function handleDoThisLater(): void {
-    void navigateToSignup(false);
+    void navigateToSignup();
   }
 
   return (
@@ -358,30 +314,40 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
 
       <View className="pointer-events-none absolute inset-0 opacity-45 dark:opacity-25">
         <FloatingDot
+          progress={floatingProgress}
+          phase={0}
           positionClassName="absolute left-10 top-20 size-4"
           appearanceClassName="size-full rounded-full bg-primary/50 dark:bg-primary-bright/40"
           delay={200}
           amplitude={6}
         />
         <FloatingDot
+          progress={floatingProgress}
+          phase={0.9}
           positionClassName="absolute right-16 top-55 size-3"
           appearanceClassName="size-full rounded-sm bg-secondary/50 dark:bg-secondary/30"
           delay={400}
           amplitude={8}
         />
         <FloatingDot
+          progress={floatingProgress}
+          phase={1.5}
           positionClassName="absolute left-24 top-120 h-5 w-2"
           appearanceClassName="size-full rounded-full bg-warning/45 dark:bg-warning-dark/30"
           delay={300}
           amplitude={5}
         />
         <FloatingDot
+          progress={floatingProgress}
+          phase={2.2}
           positionClassName="absolute right-24 top-110 size-3"
           appearanceClassName="size-full rounded-full bg-primary/40 dark:bg-primary-bright/30"
           delay={500}
           amplitude={7}
         />
         <FloatingDot
+          progress={floatingProgress}
+          phase={2.8}
           positionClassName="absolute bottom-20 right-8 size-6"
           appearanceClassName="size-full rounded-full bg-border/70 dark:bg-dark-border/60"
           delay={350}
@@ -396,179 +362,164 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
       />
 
       <View className="flex-1 px-6 pb-12">
-        <View className="items-center">
-          <Animated.View
-            entering={withRM(
-              ZoomIn.springify().damping(12).stiffness(160).delay(ICON_DELAY)
-            )}
-            className="mb-4 size-14 items-center justify-center rounded-full bg-primary-fixed dark:bg-primary/20"
-          >
+        <AuthScreenContent className="flex-1">
+          <View className="items-center">
             <Animated.View
-              style={sparkleStyle}
-              className="items-center justify-center"
+              entering={withRM(
+                ZoomIn.springify().damping(12).stiffness(160).delay(ICON_DELAY)
+              )}
+              className="mb-4 size-14 items-center justify-center rounded-full bg-primary-fixed dark:bg-primary/20"
             >
-              <Sparkles
-                className="text-primary dark:text-primary-bright"
-                size={24}
-              />
+              <Animated.View
+                style={sparkleStyle}
+                className="items-center justify-center"
+              >
+                <Sparkles
+                  className="text-primary dark:text-primary-bright"
+                  size={24}
+                />
+              </Animated.View>
             </Animated.View>
-          </Animated.View>
-
-          <Animated.View
-            entering={withRM(
-              FadeInUp.springify().damping(18).stiffness(140).delay(TITLE_DELAY)
-            )}
-          >
-            <Text className="text-center text-[28px] font-extrabold leading-9 text-text dark:text-text-primary-dark">
-              {t('onboardingClubWelcomeTitle')}
-            </Text>
-          </Animated.View>
-
-          <Animated.View
-            entering={withRM(
-              FadeIn.duration(motion.dur.md).delay(TITLE_DELAY + 100)
-            )}
-          >
-            <Text className="mt-3 px-2 text-center text-[15px] leading-6 text-text-secondary dark:text-text-secondary-dark">
-              {t('onboardingClubWelcomeSubtitle')}
-            </Text>
-          </Animated.View>
-        </View>
-
-        <Animated.View
-          entering={withRM(
-            FadeInUp.springify().damping(16).stiffness(120).delay(CARD_DELAY)
-          )}
-          className="mt-6 overflow-hidden rounded-3xl border border-border/70 bg-white/92 p-5 dark:border-dark-border dark:bg-dark-bg-card/90"
-        >
-          <Image
-            className="absolute inset-0 h-full w-full opacity-14"
-            source={{ uri: WELCOME_COCKTAIL_IMAGE_URI }}
-            cachePolicy="memory-disk"
-            contentFit="cover"
-            transition={180}
-          />
-
-          <View className="relative z-10 items-center">
-            <Text className="text-[12px] font-bold uppercase tracking-[4px] text-secondary dark:text-secondary-fixed">
-              {t('onboardingClubValueLabel')}
-            </Text>
-
-            <Text className="mt-3 text-center text-[26px] font-bold leading-8 text-text dark:text-text-primary-dark">
-              {t('onboardingClubRewardTitle')}
-            </Text>
 
             <Animated.View
               entering={withRM(
                 FadeInUp.springify()
-                  .damping(14)
-                  .stiffness(130)
-                  .delay(CARD_DELAY + 180)
+                  .damping(18)
+                  .stiffness(140)
+                  .delay(TITLE_DELAY)
               )}
-              className="mt-5 w-full rounded-2xl border-2 border-dashed border-border-light bg-surface-container-low px-4 py-3 dark:border-dark-border dark:bg-dark-bg-elevated"
             >
-              <View className="flex-row items-center justify-between gap-3">
-                <View className="flex-row items-center gap-3">
-                  <Animated.View
-                    entering={withRM(
-                      ZoomIn.springify()
-                        .damping(12)
-                        .stiffness(160)
-                        .delay(CARD_DELAY + 320)
-                    )}
-                    className="size-16 items-center justify-center rounded-xl bg-primary dark:bg-primary-bright"
-                  >
-                    <Ticket color={Colors.white} size={22} />
-                  </Animated.View>
-
-                  <View>
-                    <Text className="text-[17px] font-bold text-text dark:text-text-primary-dark">
-                      {t('onboardingClubVoucherCode', {
-                        code: config.onboardingClubVoucher.code,
-                      })}
-                    </Text>
-                    <Text className="text-[13px] text-text-secondary dark:text-text-secondary-dark">
-                      {t('onboardingClubVoucherValidity', {
-                        scope: config.onboardingClubVoucher.scope,
-                      })}
-                    </Text>
-                  </View>
-                </View>
-
-                <View className="size-12 items-center justify-center rounded-xl bg-gold/15">
-                  <Sparkles className="text-gold" size={18} />
-                </View>
-              </View>
+              <Text className="text-center text-[28px] font-extrabold leading-9 text-text dark:text-text-primary-dark">
+                {t('onboardingClubWelcomeTitle')}
+              </Text>
             </Animated.View>
 
             <Animated.View
               entering={withRM(
-                FadeIn.duration(motion.dur.md).delay(CARD_DELAY + 400)
+                FadeIn.duration(motion.dur.md).delay(TITLE_DELAY + 100)
               )}
             >
-              <Text className="mt-5 px-2 text-center text-[14px] leading-6 text-text-secondary dark:text-text-secondary-dark">
-                {t('onboardingClubVoucherInstruction')}
+              <Text className="mt-3 px-2 text-center text-[15px] leading-6 text-text-secondary dark:text-text-secondary-dark">
+                {t('onboardingClubWelcomeSubtitle')}
               </Text>
             </Animated.View>
           </View>
-        </Animated.View>
 
-        <Animated.View
-          entering={withRM(FadeIn.duration(motion.dur.md).delay(CTA_DELAY))}
-        >
-          <Animated.View style={ctaButton.animatedStyle}>
-            <Pressable
-              accessibilityRole="button"
-              className="mt-8 overflow-hidden rounded-full"
-              onPress={() => {
-                hapticLight();
-                handleCompleteSetup();
-              }}
-              onPressIn={ctaButton.handlePressIn}
-              onPressOut={ctaButton.handlePressOut}
-              testID="onboarding-final-details-complete"
-            >
-              <LinearGradient
-                colors={Colors.gradientPrimary}
-                end={{ x: 1, y: 0 }}
-                start={{ x: 0, y: 0 }}
-                style={{
-                  alignItems: 'center',
-                  borderRadius: 999,
-                  height: 54,
-                  justifyContent: 'center',
-                }}
-              >
-                <View className="flex-row items-center gap-2">
-                  <Text className="text-[17px] font-bold text-white">
-                    {t('onboardingClubPrimaryCta')}
-                  </Text>
-                  <ArrowRight color={Colors.white} size={22} />
-                </View>
-              </LinearGradient>
-            </Pressable>
-          </Animated.View>
-        </Animated.View>
-
-        <Animated.View
-          entering={withRM(
-            FadeIn.duration(motion.dur.md).delay(CTA_DELAY + 100)
-          )}
-        >
-          <Pressable
-            accessibilityRole="button"
-            className="mt-5 items-center"
-            onPress={() => {
-              hapticLight();
-              handleDoThisLater();
-            }}
-            testID="onboarding-final-details-later"
+          <Animated.View
+            entering={withRM(
+              FadeInUp.springify().damping(16).stiffness(120).delay(CARD_DELAY)
+            )}
+            className="mt-6 overflow-hidden rounded-3xl border border-border/70 bg-white/92 p-5 dark:border-dark-border dark:bg-dark-bg-card/90"
           >
-            <Text className="text-[16px] font-bold text-secondary dark:text-secondary-fixed">
-              {t('onboardingClubSecondaryCta')}
-            </Text>
-          </Pressable>
-        </Animated.View>
+            <Image
+              className="absolute inset-0 h-full w-full opacity-14"
+              source={{ uri: WELCOME_COCKTAIL_IMAGE_URI }}
+              cachePolicy="memory-disk"
+              contentFit="cover"
+              transition={180}
+            />
+
+            <View className="relative z-10 items-center">
+              <Text className="text-[12px] font-bold uppercase tracking-[4px] text-secondary dark:text-secondary-fixed">
+                {t('onboardingClubValueLabel')}
+              </Text>
+
+              <Text className="mt-3 text-center text-[26px] font-bold leading-8 text-text dark:text-text-primary-dark">
+                {t('onboardingClubRewardTitle')}
+              </Text>
+
+              <Animated.View
+                entering={withRM(
+                  FadeInUp.springify()
+                    .damping(14)
+                    .stiffness(130)
+                    .delay(CARD_DELAY + 180)
+                )}
+                className="mt-5 w-full rounded-2xl border-2 border-dashed border-border-light bg-surface-container-low px-4 py-3 dark:border-dark-border dark:bg-dark-bg-elevated"
+              >
+                <View className="flex-row items-center justify-between gap-3">
+                  <View className="flex-row items-center gap-3">
+                    <Animated.View
+                      entering={withRM(
+                        ZoomIn.springify()
+                          .damping(12)
+                          .stiffness(160)
+                          .delay(CARD_DELAY + 320)
+                      )}
+                      className="size-16 items-center justify-center rounded-xl bg-primary dark:bg-primary-bright"
+                    >
+                      <Ticket color={Colors.white} size={22} />
+                    </Animated.View>
+
+                    <View>
+                      <Text className="text-[17px] font-bold text-text dark:text-text-primary-dark">
+                        {t('onboardingClubVoucherCode', {
+                          code: config.onboardingClubVoucher.code,
+                        })}
+                      </Text>
+                      <Text className="text-[13px] text-text-secondary dark:text-text-secondary-dark">
+                        {t('onboardingClubVoucherValidity', {
+                          scope: config.onboardingClubVoucher.scope,
+                        })}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View className="size-12 items-center justify-center rounded-xl bg-gold/15">
+                    <Sparkles className="text-gold" size={18} />
+                  </View>
+                </View>
+              </Animated.View>
+
+              <Animated.View
+                entering={withRM(
+                  FadeIn.duration(motion.dur.md).delay(CARD_DELAY + 400)
+                )}
+              >
+                <Text className="mt-5 px-2 text-center text-[14px] leading-6 text-text-secondary dark:text-text-secondary-dark">
+                  {t('onboardingClubVoucherInstruction')}
+                </Text>
+              </Animated.View>
+            </View>
+          </Animated.View>
+
+          <Animated.View
+            entering={withRM(FadeIn.duration(motion.dur.md).delay(CTA_DELAY))}
+          >
+            <Animated.View style={ctaButton.animatedStyle}>
+              <Pressable
+                accessibilityRole="button"
+                className="mt-8 overflow-hidden rounded-full"
+                onPress={() => {
+                  hapticLight();
+                  handleCompleteSetup();
+                }}
+                onPressIn={ctaButton.handlePressIn}
+                onPressOut={ctaButton.handlePressOut}
+                testID="onboarding-final-details-complete"
+              >
+                <LinearGradient
+                  colors={Colors.gradientPrimary}
+                  end={{ x: 1, y: 0 }}
+                  start={{ x: 0, y: 0 }}
+                  style={{
+                    alignItems: 'center',
+                    borderRadius: 999,
+                    height: 54,
+                    justifyContent: 'center',
+                  }}
+                >
+                  <View className="flex-row items-center gap-2">
+                    <Text className="text-[17px] font-bold text-white">
+                      {t('onboardingClubPrimaryCta')}
+                    </Text>
+                    <ArrowRight color={Colors.white} size={22} />
+                  </View>
+                </LinearGradient>
+              </Pressable>
+            </Animated.View>
+          </Animated.View>
+        </AuthScreenContent>
       </View>
     </View>
   );

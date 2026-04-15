@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { Event } from '@/lib/types';
 import { useEventsData, useSavedEventsData } from '@/providers/DataProvider';
+import { AppScreenContent } from '@/src/components/app/app-screen-content';
 import {
   EventListCard,
   EventsListFooter,
@@ -64,7 +65,7 @@ export default function EventsScreen(): React.JSX.Element {
   const contentContainerStyle = useMemo(
     () => ({
       ...listContentContainerStyle,
-      paddingTop: 12,
+      paddingTop: 0,
     }),
     [listContentContainerStyle]
   );
@@ -75,49 +76,52 @@ export default function EventsScreen(): React.JSX.Element {
       className="flex-1 bg-background dark:bg-dark-bg"
       style={{ paddingTop: insets.top }}
     >
-      <ScreenHeader testID="events-screen-header" title={t('title')} />
-
-      <SearchInput
-        className="mb-3"
-        onChangeText={setSearchQuery}
-        placeholder={t('searchPlaceholder')}
-        testID="events-search"
-      />
-
-      <FlashList
-        contentContainerStyle={contentContainerStyle}
-        data={listEvents}
-        keyExtractor={(item) => item.id}
-        ListFooterComponent={
-          <EventsListFooter
-            eventsLoading={eventsLoading}
-            filteredEventsLength={filteredEvents.length}
-            isDark={isDark}
-            selectedDayLabel={selectedDay?.fullLabel ?? ''}
-            t={t}
-            onOpenPrivateEvent={() => router.push('/private-event')}
-          />
-        }
-        ListHeaderComponent={
-          <EventsListHeader
-            activeCategory={activeCategory}
-            featuredEvent={featuredEvent}
-            isEventSaved={isEventSaved}
-            selectedDayFullLabel={selectedDay?.fullLabel ?? ''}
-            selectedDayKey={selectedDayKey}
-            t={t}
-            weekStripItems={weekStripItems}
-            onCategorySelect={setActiveCategory}
-            onOpenEvent={openEvent}
-            onToggleSavedEvent={(id) => {
-              void toggleSavedEvent(id);
-            }}
-            onWeekDaySelect={setSelectedDayKey}
-          />
-        }
-        renderItem={renderItem}
-        showsVerticalScrollIndicator={false}
-      />
+      <AppScreenContent className="flex-1">
+        <FlashList
+          contentInsetAdjustmentBehavior="automatic"
+          contentContainerStyle={contentContainerStyle}
+          data={listEvents}
+          keyExtractor={(item) => item.id}
+          ListFooterComponent={
+            <EventsListFooter
+              eventsLoading={eventsLoading}
+              filteredEventsLength={filteredEvents.length}
+              isDark={isDark}
+              selectedDayLabel={selectedDay?.fullLabel ?? ''}
+              t={t}
+              onOpenPrivateEvent={() => router.push('/private-event')}
+            />
+          }
+          ListHeaderComponent={
+            <>
+              <ScreenHeader testID="events-screen-header" title={t('title')} />
+              <SearchInput
+                className="mb-3"
+                onChangeText={setSearchQuery}
+                placeholder={t('searchPlaceholder')}
+                testID="events-search"
+              />
+              <EventsListHeader
+                activeCategory={activeCategory}
+                featuredEvent={featuredEvent}
+                isEventSaved={isEventSaved}
+                selectedDayFullLabel={selectedDay?.fullLabel ?? ''}
+                selectedDayKey={selectedDayKey}
+                t={t}
+                weekStripItems={weekStripItems}
+                onCategorySelect={setActiveCategory}
+                onOpenEvent={openEvent}
+                onToggleSavedEvent={(id) => {
+                  void toggleSavedEvent(id);
+                }}
+                onWeekDaySelect={setSelectedDayKey}
+              />
+            </>
+          }
+          renderItem={renderItem}
+          showsVerticalScrollIndicator={false}
+        />
+      </AppScreenContent>
     </View>
   );
 }

@@ -142,45 +142,75 @@ function buildInstantAdminUrl(
   return url.toString();
 }
 
-async function instantAdminFetch<TResult>(
+export async function instantAdminFetch<TResult>(
   config: InstantAdminConfig,
   path: string,
   init: RequestInit
 ): Promise<TResult | undefined> {
-  const timeoutSignal = AbortSignal.timeout(30_000);
-  const signal =
-    init.signal != null
-      ? AbortSignal.any([timeoutSignal, init.signal])
-      : timeoutSignal;
+  const timeoutController = new AbortController();
+  const abortTimer = setTimeout(() => {
+    timeoutController.abort(
+      new Error('instant_admin_request_timeout_after_30000ms')
+    );
+  }, 30_000);
+  const requestController = new AbortController();
+  const callerSignal = init.signal;
 
-  const response = await fetch(buildInstantAdminUrl(config, path), {
-    ...init,
-    headers: {
-      Authorization: `Bearer ${config.adminToken}`,
-      'Content-Type': 'application/json',
-      ...init.headers,
-      'app-id': config.appId,
-    },
-    signal,
+  const onTimeoutAbort = (): void => {
+    requestController.abort(timeoutController.signal.reason);
+  };
+  timeoutController.signal.addEventListener('abort', onTimeoutAbort, {
+    once: true,
   });
 
-  if (!response.ok) {
-    throw createInstantAdminApiError(
-      response.status,
-      await readInstantAdminErrorBody(response)
-    );
+  let onCallerAbort: (() => void) | undefined;
+  if (callerSignal) {
+    if (callerSignal.aborted) {
+      requestController.abort(callerSignal.reason);
+    } else {
+      onCallerAbort = (): void => {
+        requestController.abort(callerSignal.reason);
+      };
+      callerSignal.addEventListener('abort', onCallerAbort, { once: true });
+    }
   }
 
-  if (response.status === 204) {
-    return undefined;
-  }
+  try {
+    const response = await fetch(buildInstantAdminUrl(config, path), {
+      ...init,
+      headers: {
+        Authorization: `Bearer ${config.adminToken}`,
+        'Content-Type': 'application/json',
+        ...init.headers,
+        'app-id': config.appId,
+      },
+      signal: requestController.signal,
+    });
 
-  const responseText = await response.text();
-  if (!responseText) {
-    return undefined;
-  }
+    if (!response.ok) {
+      throw createInstantAdminApiError(
+        response.status,
+        await readInstantAdminErrorBody(response)
+      );
+    }
 
-  return JSON.parse(responseText) as TResult;
+    if (response.status === 204) {
+      return undefined;
+    }
+
+    const responseText = await response.text();
+    if (!responseText) {
+      return undefined;
+    }
+
+    return JSON.parse(responseText) as TResult;
+  } finally {
+    clearTimeout(abortTimer);
+    timeoutController.signal.removeEventListener('abort', onTimeoutAbort);
+    if (callerSignal && onCallerAbort) {
+      callerSignal.removeEventListener('abort', onCallerAbort);
+    }
+  }
 }
 
 function createInstantAdminDb(config: InstantAdminConfig): InstantAdminDb {

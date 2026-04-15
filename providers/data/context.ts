@@ -14,9 +14,24 @@ import type {
   Referral,
   SavedEvent,
 } from '@/lib/types';
+export const profileBootstrapStates = {
+  authenticating: 'authenticating',
+  bootstrappingProfile: 'bootstrapping_profile',
+  needsOnboarding: 'needs_onboarding',
+  ready: 'ready',
+  recoverableError: 'recoverable_error',
+  signedOut: 'signed_out',
+  terminalError: 'terminal_error',
+} as const;
+
+export type ProfileBootstrapState =
+  (typeof profileBootstrapStates)[keyof typeof profileBootstrapStates];
 
 export type ProfileData = {
+  bootstrapError: Error | null;
+  bootstrapState: ProfileBootstrapState;
   dismissVoucher: () => void;
+  isAuthenticatedButNotReady: boolean;
   profile: Profile | null;
   /** True when `profileProvisionError` is set and another `ensureProfile` attempt may succeed (e.g. transient failure). */
   isRetryable: boolean;
@@ -126,7 +141,10 @@ export const EMPTY_MENU_ITEMS: MenuItemContent[] = [];
 export const EMPTY_PRIVATE_EVENT_TYPES: PrivateEventTypeOption[] = [];
 
 const FALLBACK_PROFILE: ProfileData = {
+  bootstrapError: null,
+  bootstrapState: profileBootstrapStates.signedOut,
   dismissVoucher: () => {},
+  isAuthenticatedButNotReady: false,
   profile: null,
   isRetryable: false,
   profileProvisionError: null,

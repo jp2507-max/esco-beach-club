@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { type RewardTierKey, rewardTierKeys } from '@/lib/types';
 import { useMemberSummary, useProfileData } from '@/providers/DataProvider';
+import { AppScreenContent } from '@/src/components/app/app-screen-content';
 import {
   MembershipActivitySection,
   MembershipBenefitsSection,
@@ -34,6 +35,7 @@ import { ScrollView, View } from '@/src/tw';
 export default function MembershipScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const { t, i18n } = useTranslation('membership');
+  const { t: tCommon } = useTranslation('common');
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const { profile } = useProfileData();
@@ -71,9 +73,10 @@ export default function MembershipScreen(): React.JSX.Element {
   const tierLevel: RewardTierKey =
     memberSummary.lifetimeTierKey ?? rewardTierKeys.member;
   const tierConfig = TIER_CONFIG[tierLevel];
-  const userName = memberSummary.fullName || '—';
+  const valueUnavailable = tCommon('valueUnavailable');
+  const userName = memberSummary.fullName || valueUnavailable;
   const memberSince = useMemo(() => {
-    if (!memberSummary.memberSince) return '—';
+    if (!memberSummary.memberSince) return valueUnavailable;
 
     try {
       const date = new Date(memberSummary.memberSince);
@@ -84,9 +87,9 @@ export default function MembershipScreen(): React.JSX.Element {
       }).format(date);
     } catch (error) {
       console.error('[Membership] Date format failed', error);
-      return memberSummary.memberSince.slice(0, 10);
+      return memberSummary.memberSince.slice(0, 10) || valueUnavailable;
     }
-  }, [i18n.language, memberSummary.memberSince]);
+  }, [i18n.language, memberSummary.memberSince, valueUnavailable]);
   const tierLabel = t(
     `tiers.${getRewardTierLabelKey(memberSummary.lifetimeTierKey)}`
   );
@@ -127,43 +130,45 @@ export default function MembershipScreen(): React.JSX.Element {
     >
       <ProfileSubScreenHeader testID="membership-back" title={t('title')} />
 
-      <ScrollView
-        contentContainerClassName="px-5 pb-10 pt-1"
-        showsVerticalScrollIndicator={false}
-      >
-        <MembershipTierHeroCard
-          cashbackBalancePoints={memberSummary.cashbackBalancePoints}
-          heroStyle={heroStyle}
-          memberSince={memberSince}
-          nextTierLabel={nextTierLabel}
-          progressPercent={memberSummary.tierProgressPercent}
-          progressPoints={memberSummary.activeTierProgressPoints}
-          progressTargetPoints={memberSummary.tierProgressTargetPoints}
-          showTierProgress={showTierProgress}
-          t={t}
-          tierConfig={tierConfig}
-          tierLabel={tierLabel}
-          tierProgressExpiryLabel={tierProgressExpiryLabel}
-          userName={userName}
-        />
+      <AppScreenContent className="flex-1">
+        <ScrollView
+          contentContainerClassName="px-5 pb-10 pt-1"
+          showsVerticalScrollIndicator={false}
+        >
+          <MembershipTierHeroCard
+            cashbackBalancePoints={memberSummary.cashbackBalancePoints}
+            heroStyle={heroStyle}
+            memberSince={memberSince}
+            nextTierLabel={nextTierLabel}
+            progressPercent={memberSummary.tierProgressPercent}
+            progressPoints={memberSummary.activeTierProgressPoints}
+            progressTargetPoints={memberSummary.tierProgressTargetPoints}
+            showTierProgress={showTierProgress}
+            t={t}
+            tierConfig={tierConfig}
+            tierLabel={tierLabel}
+            tierProgressExpiryLabel={tierProgressExpiryLabel}
+            userName={userName}
+          />
 
-        <MembershipBenefitsSection
-          benefits={benefits}
-          fadeStyle={fadeStyle}
-          isDark={isDark}
-          t={t}
-        />
+          <MembershipBenefitsSection
+            benefits={benefits}
+            fadeStyle={fadeStyle}
+            isDark={isDark}
+            t={t}
+          />
 
-        <MembershipActivitySection
-          activities={activities}
-          fadeStyle={fadeStyle}
-          isActivityLoading={isActivityLoading}
-          isDark={isDark}
-          t={t}
-        />
+          <MembershipActivitySection
+            activities={activities}
+            fadeStyle={fadeStyle}
+            isActivityLoading={isActivityLoading}
+            isDark={isDark}
+            t={t}
+          />
 
-        <View className="h-6" />
-      </ScrollView>
+          <View className="h-6" />
+        </ScrollView>
+      </AppScreenContent>
     </View>
   );
 }

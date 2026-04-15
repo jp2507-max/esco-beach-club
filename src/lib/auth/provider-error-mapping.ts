@@ -44,6 +44,13 @@ const GOOGLE_AUDIENCE_MISMATCH_MARKERS = [
   'nonces mismatch',
 ] as const;
 
+const GOOGLE_DEVELOPER_CONFIG_MISMATCH_MARKERS = [
+  'developer_error',
+  'code: 10',
+  'developer console is not set up correctly',
+  'configuration mismatch',
+] as const;
+
 function mapAuthErrorMessageToKey(
   message: string,
   options?: MapAuthErrorOptions
@@ -58,7 +65,16 @@ function mapAuthErrorMessageToKey(
     (marker) => normalizedMessage.includes(marker)
   );
 
-  if (!isOauthClientNotFound && !isGoogleAudienceMismatch) {
+  const isGoogleDeveloperConfigMismatch =
+    GOOGLE_DEVELOPER_CONFIG_MISMATCH_MARKERS.some((marker) =>
+      normalizedMessage.includes(marker)
+    );
+
+  if (
+    !isOauthClientNotFound &&
+    !isGoogleAudienceMismatch &&
+    !isGoogleDeveloperConfigMismatch
+  ) {
     return null;
   }
 
@@ -70,6 +86,10 @@ function mapAuthErrorMessageToKey(
     normalizedMessage.includes('google') || options?.oauthProvider === 'google';
 
   if (isGoogleScoped) {
+    if (isGoogleDeveloperConfigMismatch) {
+      return 'googleAndroidAuthNotConfigured';
+    }
+
     return 'googleOauthClientNotConfigured';
   }
 

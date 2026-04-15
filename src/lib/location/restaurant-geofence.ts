@@ -76,7 +76,8 @@ async function handleRestaurantEntry(
     addMonitoringBreadcrumb({
       category: 'restaurant-presence',
       data: { source },
-      message: 'Skipped venue upsell notification because cooldown is active.',
+      message:
+        'Skipped restaurant arrival notification because cooldown is active.',
     });
     return;
   }
@@ -88,7 +89,7 @@ async function handleRestaurantEntry(
     addMonitoringBreadcrumb({
       category: 'restaurant-presence',
       data: { source },
-      message: 'Scheduled venue upsell notification.',
+      message: 'Scheduled restaurant arrival notification.',
     });
   } catch (error: unknown) {
     captureHandledError(error, {

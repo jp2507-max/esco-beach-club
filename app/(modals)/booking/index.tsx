@@ -7,6 +7,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/colors';
 import { submitTableReservation } from '@/lib/api';
 import { useProfileData } from '@/providers/DataProvider';
+import {
+  APP_SHEET_MAX_WIDTH,
+  AppScreenContent,
+} from '@/src/components/app/app-screen-content';
 import { BookingContactInlineLinks } from '@/src/components/booking/booking-contact-actions';
 import {
   BookingFooterBar,
@@ -226,19 +230,21 @@ export default function BookingModalScreen(): React.JSX.Element {
         className="flex-1 bg-background dark:bg-dark-bg"
         style={{ paddingTop: insets.top }}
       >
-        <ModalHeader
-          className="border-b border-border dark:border-dark-border"
-          closeTestID="close-booking"
-          onClose={() => router.back()}
-          subtitle={eventTitle}
-          title={t('booking:reserveSpot')}
-        />
-        <View className="flex-1 items-center justify-center px-6">
-          <ActivityIndicator
-            color={isDark ? Colors.primaryBright : Colors.primary}
-            size="large"
+        <AppScreenContent className="flex-1" maxWidth={APP_SHEET_MAX_WIDTH}>
+          <ModalHeader
+            className="border-b border-border dark:border-dark-border"
+            closeTestID="close-booking"
+            onClose={() => router.back()}
+            subtitle={eventTitle}
+            title={t('booking:reserveSpot')}
           />
-        </View>
+          <View className="flex-1 items-center justify-center px-6">
+            <ActivityIndicator
+              color={isDark ? Colors.primaryBright : Colors.primary}
+              size="large"
+            />
+          </View>
+        </AppScreenContent>
       </View>
     );
   }
@@ -248,39 +254,44 @@ export default function BookingModalScreen(): React.JSX.Element {
       className="flex-1 bg-background dark:bg-dark-bg"
       style={{ paddingTop: insets.top }}
     >
-      <ModalHeader
-        className="border-b border-border dark:border-dark-border"
-        closeTestID="close-booking"
-        onClose={() => router.back()}
-        subtitle={eventTitle}
-        title={t('booking:reserveSpot')}
-      />
+      <AppScreenContent maxWidth={APP_SHEET_MAX_WIDTH}>
+        <ModalHeader
+          className="border-b border-border dark:border-dark-border"
+          closeTestID="close-booking"
+          onClose={() => router.back()}
+          subtitle={eventTitle}
+          title={t('booking:reserveSpot')}
+        />
+      </AppScreenContent>
 
-      <BookingFormContent
-        canChangeGuestCount={canChangeGuestCount}
-        contactEmail={contactEmail}
-        contentStyle={contentStyle}
-        dates={dates}
-        emailErrorMessage={emailErrorMessage}
-        footerExtras={<BookingContactInlineLinks />}
-        isDark={isDark}
-        isSubmitting={isSubmitting}
-        now={now}
-        pax={pax}
-        availableTimeSlots={availableTimeSlots}
-        selectedDateKey={selectedDateKey}
-        selectedTime={selectedTime}
-        specialRequest={specialRequest}
-        t={t}
-        onContactEmailChange={setContactEmail}
-        onPaxChange={handlePaxChange}
-        onSelectDate={handleSelectDate}
-        onSelectTime={handleSelectTime}
-        onSpecialRequestChange={setSpecialRequest}
-      />
+      <AppScreenContent className="flex-1" maxWidth={APP_SHEET_MAX_WIDTH}>
+        <BookingFormContent
+          canChangeGuestCount={canChangeGuestCount}
+          contactEmail={contactEmail}
+          contentStyle={contentStyle}
+          dates={dates}
+          emailErrorMessage={emailErrorMessage}
+          footerExtras={<BookingContactInlineLinks />}
+          isDark={isDark}
+          isSubmitting={isSubmitting}
+          now={now}
+          pax={pax}
+          availableTimeSlots={availableTimeSlots}
+          selectedDateKey={selectedDateKey}
+          selectedTime={selectedTime}
+          specialRequest={specialRequest}
+          t={t}
+          onContactEmailChange={setContactEmail}
+          onPaxChange={handlePaxChange}
+          onSelectDate={handleSelectDate}
+          onSelectTime={handleSelectTime}
+          onSpecialRequestChange={setSpecialRequest}
+        />
+      </AppScreenContent>
 
       <BookingFooterBar
         canConfirm={canConfirm}
+        contentMaxWidth={APP_SHEET_MAX_WIDTH}
         insetsBottom={insets.bottom}
         isSubmitting={isSubmitting}
         t={t}

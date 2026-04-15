@@ -1,5 +1,6 @@
-export type { MemberSummary } from './data/context';
+export type { MemberSummary, ProfileBootstrapState } from './data/context';
 export {
+  profileBootstrapStates,
   useBookingContentData,
   useEventsData,
   useMemberOffersData,

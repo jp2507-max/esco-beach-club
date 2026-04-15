@@ -1,7 +1,9 @@
-import { createHash } from 'node:crypto';
+import { sha256Hex } from '@/src/lib/crypto/web-crypto';
 
-export function buildRewardTransactionId(reference: string): string {
+export async function buildRewardTransactionId(
+  reference: string
+): Promise<string> {
   const normalized = reference.trim();
-  const digest = createHash('sha256').update(normalized, 'utf8').digest('hex');
+  const digest = await sha256Hex(normalized);
   return `reward-bill-${digest}`;
 }

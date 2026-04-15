@@ -4,16 +4,22 @@ import {
   type ClientApiFailure,
   readApiErrorDetails,
 } from '@/src/lib/api/client-api';
+import { addMonitoringBreadcrumb } from '@/src/lib/monitoring';
 
 export type AccountDeletionApiResult<T> =
   | { ok: true; body: T | null; status: number }
   | ClientApiFailure;
 
-async function postJson<T>(
-  path: string,
-  refreshToken: string,
-  body: Record<string, unknown>
-): Promise<AccountDeletionApiResult<T>> {
+const DEFAULT_ACCOUNT_DELETION_TIMEOUT_MS = 15000;
+const SCHEDULE_ACCOUNT_DELETION_TIMEOUT_MS = 30000;
+
+async function postJson<T>(params: {
+  body: Record<string, unknown>;
+  path: string;
+  refreshToken: string;
+  timeoutMs?: number;
+}): Promise<AccountDeletionApiResult<T>> {
+  const { body, path, refreshToken, timeoutMs } = params;
   const url = buildClientApiUrl(path, {
     explicitBaseUrl: process.env.EXPO_PUBLIC_ACCOUNT_API_BASE_URL,
     fallbackBaseUrl: process.env.EXPO_PUBLIC_REFERRAL_API_BASE_URL,
@@ -23,7 +29,8 @@ async function postJson<T>(
   }
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 15000);
+  const timeout = timeoutMs ?? DEFAULT_ACCOUNT_DELETION_TIMEOUT_MS;
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
 
   try {
     const response = await fetch(url, {
@@ -51,20 +58,54 @@ async function postJson<T>(
       };
     }
 
+    const errorDetails = readApiErrorDetails(responseBody, response.status);
+    addMonitoringBreadcrumb({
+      category: 'account-deletion',
+      data: {
+        code: errorDetails.code ?? null,
+        path,
+        status: response.status,
+      },
+      level: response.status >= 500 ? 'warning' : 'info',
+      message: 'account deletion api http error',
+    });
+
     return {
       ok: false,
       reason: 'http_error',
       status: response.status,
-      ...readApiErrorDetails(responseBody, response.status),
+      ...errorDetails,
     };
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
+      const effectiveTimeoutMs = timeout;
+
+      addMonitoringBreadcrumb({
+        category: 'account-deletion',
+        data: {
+          path,
+          timeoutMs: effectiveTimeoutMs,
+        },
+        level: 'warning',
+        message: 'account deletion api request timed out',
+      });
+
       return {
         ok: false,
-        reason: 'network',
+        reason: 'timeout',
         message: 'request timed out',
       };
     }
+
+    addMonitoringBreadcrumb({
+      category: 'account-deletion',
+      data: {
+        message: error instanceof Error ? error.message : 'fetch failed',
+        path,
+      },
+      level: 'error',
+      message: 'account deletion api network failure',
+    });
 
     return {
       ok: false,
@@ -85,8 +126,13 @@ export type ScheduleAccountDeletionResponse = {
     status: string;
   };
   revocation?: {
+    status:
+      | 'failed'
+      | 'missing_authorization_code'
+      | 'not_configured'
+      | 'not_required'
+      | 'revoked';
     message?: string;
-    status: string;
   };
 };
 
@@ -95,16 +141,17 @@ export function postScheduleAccountDeletion(params: {
   authProvider?: AuthProviderType | null;
   refreshToken: string;
 }): Promise<AccountDeletionApiResult<ScheduleAccountDeletionResponse>> {
-  return postJson<ScheduleAccountDeletionResponse>(
-    '/api/account/delete/request',
-    params.refreshToken,
-    {
+  return postJson<ScheduleAccountDeletionResponse>({
+    body: {
       ...(params.appleAuthorizationCode
         ? { appleAuthorizationCode: params.appleAuthorizationCode }
         : {}),
       ...(params.authProvider ? { authProvider: params.authProvider } : {}),
-    }
-  );
+    },
+    path: '/api/account/delete/request',
+    refreshToken: params.refreshToken,
+    timeoutMs: SCHEDULE_ACCOUNT_DELETION_TIMEOUT_MS,
+  });
 }
 
 export type RestoreAccountDeletionResponse = {
@@ -119,9 +166,9 @@ export type RestoreAccountDeletionResponse = {
 export function postRestoreAccountDeletion(params: {
   refreshToken: string;
 }): Promise<AccountDeletionApiResult<RestoreAccountDeletionResponse>> {
-  return postJson<RestoreAccountDeletionResponse>(
-    '/api/account/delete/restore',
-    params.refreshToken,
-    {}
-  );
+  return postJson<RestoreAccountDeletionResponse>({
+    body: {},
+    path: '/api/account/delete/restore',
+    refreshToken: params.refreshToken,
+  });
 }

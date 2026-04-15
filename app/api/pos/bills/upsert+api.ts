@@ -1,6 +1,5 @@
-import { createHmac, timingSafeEqual } from 'node:crypto';
-
 import { jsonResponse } from '@/src/lib/api/route-helpers';
+import { verifyHmacSha256Base64Url } from '@/src/lib/crypto/web-crypto';
 import type { InstantRecord } from '@/src/lib/mappers';
 import { buildPosBillEntryKey } from '@/src/lib/pos/build-pos-bill-entry-key';
 import {
@@ -136,12 +135,12 @@ function chunkPosBillSyncItems<T>(
   return chunks;
 }
 
-function verifyPosSyncSignature(params: {
+async function verifyPosSyncSignature(params: {
   rawBody: string;
   secret: string;
   signature: string;
   timestamp: string;
-}): boolean {
+}): Promise<boolean> {
   const parsedTimestamp = Number.parseInt(params.timestamp, 10);
   if (!Number.isFinite(parsedTimestamp)) return false;
 
@@ -149,18 +148,11 @@ function verifyPosSyncSignature(params: {
     return false;
   }
 
-  const expectedSignature = createHmac('sha256', params.secret)
-    .update(`${params.timestamp}.${params.rawBody}`)
-    .digest('base64url');
-
-  const actualBuffer = Buffer.from(params.signature);
-  const expectedBuffer = Buffer.from(expectedSignature);
-
-  if (actualBuffer.length !== expectedBuffer.length) {
-    return false;
-  }
-
-  return timingSafeEqual(actualBuffer, expectedBuffer);
+  return verifyHmacSha256Base64Url({
+    payload: `${params.timestamp}.${params.rawBody}`,
+    secret: params.secret,
+    signature: params.signature,
+  });
 }
 
 function toPosBillRecord(params: {
@@ -227,12 +219,12 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   if (
-    !verifyPosSyncSignature({
+    !(await verifyPosSyncSignature({
       rawBody,
       secret: sharedSecret,
       signature,
       timestamp,
-    })
+    }))
   ) {
     return jsonResponse({ error: 'unauthorized' }, 401);
   }

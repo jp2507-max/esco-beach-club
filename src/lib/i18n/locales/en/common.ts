@@ -31,6 +31,7 @@ const common = {
   },
   back: 'Back',
   backHint: 'Returns to the previous screen',
+  valueUnavailable: '—',
   rateUs: {
     title: 'Rate Your Experience',
     howWasVisit: 'How was your visit?',
@@ -174,9 +175,9 @@ const common = {
         collection: {
           title: 'What we collect',
           body1:
-            'We collect the account and profile details needed to run the membership experience, including email address, member identifier, referral code, profile name, date of birth, and other details you submit in booking or private-event request forms.',
+            'We collect the account and profile details needed to run the membership experience, including email address, member identifier, referral code, profile name, and other details you submit in booking or private-event request forms. If you choose to add your date of birth later, we use it for optional member personalization such as birthday wishes or birthday perks.',
           body2:
-            'The app can request optional location, notification, and camera permissions. In the current release, location is used on device for venue-arrival features, notifications are used for local reminders and offers, and camera access is reserved for staff QR scanning flows.',
+            'The app can request optional location, notification, and camera permissions. In the current release, location is used on device for venue-arrival features, notifications are used for local reminders and offers, and camera access is used for member bill QR scanning.',
         },
         use: {
           title: 'How we use data',

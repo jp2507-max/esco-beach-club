@@ -1,4 +1,5 @@
 /** Auth error keys that map to i18n translations in the auth namespace */
+
 export const AUTH_ERROR_KEYS = [
   'emailRequired',
   'emailAndCodeRequired',
@@ -7,6 +8,7 @@ export const AUTH_ERROR_KEYS = [
   'appleIdTokenMissing',
   'appleOauthClientNotConfigured',
   'googleAuthNotConfigured',
+  'googleAndroidAuthNotConfigured',
   'googleOauthClientNotConfigured',
   'googleIdTokenMissing',
   'googlePlayServicesUnavailable',
@@ -15,6 +17,7 @@ export const AUTH_ERROR_KEYS = [
   'unableToSendCode',
   'unableToSignInWithApple',
   'unableToSignInWithGoogle',
+  'profilePermissionDenied',
   'unableToCompleteProfileSetup',
   'unableToVerifyCode',
   'unableToSignOut',

@@ -16,6 +16,7 @@ import {
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  type LayoutChangeEvent,
   Linking,
   Modal,
   Platform,
@@ -35,6 +36,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/providers/AuthProvider';
 import { useMemberSummary } from '@/providers/DataProvider';
+import {
+  APP_SCREEN_MAX_WIDTH,
+  AppScreenContent,
+} from '@/src/components/app/app-screen-content';
 import { MemberQrAccessCard } from '@/src/components/ui';
 import { motion, rmTiming } from '@/src/lib/animations/motion';
 import {
@@ -53,6 +58,7 @@ import { captureHandledError } from '@/src/lib/monitoring';
 import { getTierQrGradient } from '@/src/lib/profile/membership-screen';
 import { postClaimRewardBill } from '@/src/lib/reward-claim-api';
 import { tryAcquireScanLock } from '@/src/lib/rewards/scan-lock';
+import { getScannerFrameLayout } from '@/src/lib/rewards/scanner-layout';
 import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
 import { Pressable, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
@@ -83,9 +89,6 @@ type ScanErrorMessageKey =
   | 'billScanner.errors.sessionExpired'
   | 'billScanner.errors.networkUnavailable'
   | 'billScanner.errors.generic';
-
-const FRAME_MAX_SIZE = 340;
-const FRAME_MIN_SIZE = 224;
 
 /** Viewfinder always has a dark background (camera feed). */
 const VIEWFINDER_BG = '#08060e';
@@ -142,7 +145,8 @@ function resolveScanErrorKey(
 
 export default function QrTabScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
+  const { height, width } = useWindowDimensions();
+  const boundedContentWidth = Math.min(width, APP_SCREEN_MAX_WIDTH);
   const isFocused = useIsFocused();
   const { t } = useTranslation('profile');
   const { t: tCommon } = useTranslation('common');
@@ -153,17 +157,38 @@ export default function QrTabScreen(): React.JSX.Element {
   const [scanFeedback, setScanFeedback] = useState<ScanFeedback>(null);
   const [isMemberCardOpen, setIsMemberCardOpen] = useState(false);
   const [isScanLocked, setIsScanLocked] = useState(false);
+  const [headerHeight, setHeaderHeight] = useState(0);
+  const [controlsHeight, setControlsHeight] = useState(0);
   const scanLockRef = useRef(false);
 
-  const frameSize = useMemo((): number => {
-    const nextSize = Math.floor(width - 56);
-    return Math.max(FRAME_MIN_SIZE, Math.min(FRAME_MAX_SIZE, nextSize));
-  }, [width]);
+  const scannerLayout = useMemo(
+    () =>
+      getScannerFrameLayout({
+        controlsHeight,
+        headerHeight,
+        windowHeight: height,
+        windowWidth: boundedContentWidth,
+      }),
+    [boundedContentWidth, controlsHeight, headerHeight, height]
+  );
+  const frameSize = scannerLayout.frameSize;
+  const isCompactScannerLayout = scannerLayout.isCompact;
 
   const memberQrSize = useMemo((): number => {
-    const nextSize = Math.floor(width - 164);
+    const nextSize = Math.floor(boundedContentWidth - 164);
     return Math.max(180, Math.min(240, nextSize));
-  }, [width]);
+  }, [boundedContentWidth]);
+
+  function handleMeasuredHeight(
+    setter: React.Dispatch<React.SetStateAction<number>>
+  ): (event: LayoutChangeEvent) => void {
+    return (event) => {
+      const nextHeight = Math.round(event.nativeEvent.layout.height);
+      setter((currentHeight) =>
+        currentHeight === nextHeight ? currentHeight : nextHeight
+      );
+    };
+  }
 
   /* ── Derived theme values ── */
 
@@ -554,7 +579,7 @@ export default function QrTabScreen(): React.JSX.Element {
     return (
       <View
         className="items-center justify-center"
-        style={{ minHeight: frameSize + 32 }}
+        style={{ minHeight: scannerLayout.bodyMinHeight }}
       >
         {/* Ambient glow ring */}
         <Animated.View
@@ -633,71 +658,86 @@ export default function QrTabScreen(): React.JSX.Element {
   return (
     <View className="flex-1 bg-background dark:bg-dark-bg">
       {/* Compact header */}
-      <View className="px-5" style={{ paddingTop: insets.top + 10 }}>
-        <View className="flex-row items-start justify-between gap-3">
-          <View className="min-w-0 flex-1">
-            <Text className="text-[11px] font-extrabold uppercase tracking-[3px] text-primary dark:text-primary-bright">
-              {t('billScanner.eyebrow')}
-            </Text>
-            <Text
-              className="mt-1.5 text-[22px] font-black leading-6.5 text-text dark:text-text-primary-dark"
-              numberOfLines={2}
-            >
-              {t('billScanner.title')}
-            </Text>
-          </View>
-          <View className="rounded-2xl border border-border bg-card px-4 py-2.5 dark:border-dark-border dark:bg-dark-bg-card">
-            <Text className="text-[11px] font-bold uppercase tracking-[2px] text-text-muted dark:text-text-muted-dark">
-              {t('billScanner.balanceLabel')}
-            </Text>
-            <Text className="mt-0.5 text-right text-xl font-black text-text dark:text-text-primary-dark">
-              {memberSummary.cashbackBalancePoints}
-            </Text>
+      <AppScreenContent>
+        <View
+          className="px-5"
+          style={{ paddingTop: insets.top + 10 }}
+          onLayout={handleMeasuredHeight(setHeaderHeight)}
+        >
+          <View className="flex-row items-start justify-between gap-3">
+            <View className="min-w-0 flex-1">
+              <Text className="text-[11px] font-extrabold uppercase tracking-[3px] text-primary dark:text-primary-bright">
+                {t('billScanner.eyebrow')}
+              </Text>
+              <Text
+                className="mt-1.5 text-[22px] font-black leading-6.5 text-text dark:text-text-primary-dark"
+                numberOfLines={2}
+              >
+                {t('billScanner.title')}
+              </Text>
+            </View>
+            <View className="rounded-2xl border border-border bg-card px-4 py-2.5 dark:border-dark-border dark:bg-dark-bg-card">
+              <Text className="text-[11px] font-bold uppercase tracking-[2px] text-text-muted dark:text-text-muted-dark">
+                {t('billScanner.balanceLabel')}
+              </Text>
+              <Text className="mt-0.5 text-right text-xl font-black text-text dark:text-text-primary-dark">
+                {memberSummary.cashbackBalancePoints}
+              </Text>
+            </View>
           </View>
         </View>
-      </View>
+      </AppScreenContent>
 
       {/* Viewfinder zone */}
-      <View className="flex-1 items-center justify-center px-5">
-        {renderScannerBody()}
-      </View>
+      <AppScreenContent className="flex-1">
+        <View
+          className="flex-1 items-center px-5"
+          style={{
+            justifyContent: isCompactScannerLayout ? 'flex-start' : 'center',
+            paddingTop: isCompactScannerLayout ? 8 : 0,
+          }}
+        >
+          {renderScannerBody()}
+        </View>
+      </AppScreenContent>
 
       {/* Bottom controls */}
-      <View
-        className="gap-3 px-5"
-        style={{ paddingBottom: Math.max(insets.bottom + 12, 24) }}
-      >
-        {renderFeedbackCard()}
-
-        <Pressable
-          accessibilityHint={t('billScanner.fallbackHint')}
-          accessibilityLabel={t('billScanner.fallbackCta')}
-          accessibilityRole="button"
-          className="h-14 flex-row items-center justify-center rounded-full border border-border bg-card dark:border-dark-border dark:bg-dark-bg-card"
-          onPress={handleOpenMemberCard}
+      <AppScreenContent>
+        <View
+          className="gap-3 px-5"
+          style={{ paddingBottom: Math.max(insets.bottom + 12, 24) }}
+          onLayout={handleMeasuredHeight(setControlsHeight)}
         >
-          <QrCode color={textColor} size={18} />
-          <Text className="ml-2 text-sm font-semibold text-text dark:text-text-primary-dark">
-            {t('billScanner.fallbackCta')}
-          </Text>
-        </Pressable>
+          {renderFeedbackCard()}
 
-        <View className="flex-row items-center justify-center gap-2 px-3">
-          <ShieldCheck color={accentColor} size={14} />
-          <Text className="text-center text-xs leading-5 text-text-muted dark:text-text-muted-dark">
-            {t('billScanner.securityNote')}
-          </Text>
+          <Pressable
+            accessibilityHint={t('billScanner.fallbackHint')}
+            accessibilityLabel={t('billScanner.fallbackCta')}
+            accessibilityRole="button"
+            className="h-14 flex-row items-center justify-center rounded-full border border-border bg-card dark:border-dark-border dark:bg-dark-bg-card"
+            onPress={handleOpenMemberCard}
+          >
+            <QrCode color={textColor} size={18} />
+            <Text className="ml-2 text-sm font-semibold text-text dark:text-text-primary-dark">
+              {t('billScanner.fallbackCta')}
+            </Text>
+          </Pressable>
+
+          <View className="flex-row items-center justify-center gap-2 px-3">
+            <ShieldCheck color={accentColor} size={14} />
+            <Text className="text-center text-xs leading-5 text-text-muted dark:text-text-muted-dark">
+              {t('billScanner.securityNote')}
+            </Text>
+          </View>
         </View>
-      </View>
+      </AppScreenContent>
 
       {/* Member QR modal */}
       <Modal
         animationType="slide"
         transparent
         visible={isMemberCardOpen}
-        presentationStyle={
-          Platform.OS === 'ios' ? 'overFullScreen' : 'fullScreen'
-        }
+        presentationStyle="overFullScreen"
         onRequestClose={handleCloseMemberCard}
       >
         <View className="flex-1 bg-black/70">

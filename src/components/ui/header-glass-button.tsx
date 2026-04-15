@@ -19,6 +19,8 @@ import {
 import { useReducedMotion } from 'react-native-reanimated';
 
 import { Colors } from '@/constants/colors';
+import { getAndroidRippleConfig } from '@/src/lib/styles/android-ripple';
+import { shadows } from '@/src/lib/styles/shadows';
 import { cn } from '@/src/lib/utils';
 import { Pressable, View } from '@/src/tw';
 
@@ -147,21 +149,59 @@ export function HeaderGlassButton({
       ? glassStyle
       : 'none';
   const shouldAnimateGlass = !isReducedMotion && effectiveGlassStyle !== 'none';
+  const androidRipple = React.useMemo(
+    () =>
+      getAndroidRippleConfig(
+        isDark ? Colors.ACTIVE_BG_DARK : Colors.ACTIVE_BG_LIGHT
+      ),
+    [isDark]
+  );
+  const androidFallbackStyle = React.useMemo<StyleProp<ViewStyle>>(
+    () =>
+      Platform.OS === 'android'
+        ? [
+            shadows.level2,
+            variant === 'overlay'
+              ? {
+                  backgroundColor: 'rgba(0,0,0,0.35)',
+                  borderColor: 'rgba(255,255,255,0.35)',
+                  shadowColor: Colors.black,
+                }
+              : {
+                  backgroundColor: isDark
+                    ? Colors.darkBgElevated
+                    : Colors.surfaceContainerLow,
+                  borderColor: isDark
+                    ? Colors.darkBorderBright
+                    : Colors.borderLight,
+                  shadowColor: isDark ? Colors.black : Colors.primary,
+                },
+          ]
+        : undefined,
+    [isDark, variant]
+  );
 
   return (
     <Pressable
+      android_ripple={androidRipple}
       accessibilityHint={accessibilityHint}
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
       accessibilityState={accessibilityState}
       className={cn(
         'size-10 items-center justify-center rounded-full border',
-        canUseGlass ? glassContainerClassName : fallbackContainerClassName,
+        canUseGlass
+          ? glassContainerClassName
+          : Platform.OS === 'android'
+            ? variant === 'overlay'
+              ? 'border-white/35 bg-transparent'
+              : 'bg-transparent'
+            : fallbackContainerClassName,
         className
       )}
       disabled={disabled}
       onPress={onPress}
-      style={style}
+      style={[androidFallbackStyle, style]}
       testID={testID}
     >
       {canUseGlass ? (
@@ -182,17 +222,14 @@ export function HeaderGlassButton({
                 : Colors.overlayTintLight
           }
         />
-      ) : (
+      ) : Platform.OS === 'ios' ? (
         <BlurView
-          experimentalBlurMethod={
-            Platform.OS === 'android' ? 'dimezisBlurView' : undefined
-          }
           intensity={78}
           pointerEvents="none"
           style={[StyleSheet.absoluteFillObject, GLASS_FILL_STYLE]}
           tint={variant === 'overlay' || isDark ? 'dark' : 'light'}
         />
-      )}
+      ) : null}
       <View className="items-center justify-center">{children}</View>
     </Pressable>
   );

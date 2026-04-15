@@ -15,16 +15,8 @@ const profile = {
     savedEvents: 'Saved Events',
     settings: 'Settings',
     helpSupport: 'Help & Support',
-    restartOnboarding: 'Restart Onboarding',
     logOut: 'Log Out',
     deleteAccount: 'Delete Account',
-  },
-  restartOnboarding: {
-    confirmTitle: 'Restart onboarding?',
-    confirmMessage:
-      'We will take you back through the onboarding flow to update your setup choices.',
-    cancel: 'Cancel',
-    start: 'Start',
   },
   notifications: {
     title: 'Notifications',
@@ -265,18 +257,28 @@ const profile = {
       'Need help first? Contact support before deleting your account.',
     loadingState: 'Checking account deletion status...',
     errors: {
+      appleRevocationFailed:
+        'We could not verify your Apple account for deletion. Please try again.',
       appleVerificationCanceled:
         'Apple verification was canceled, so deletion was not scheduled.',
       apiUnavailable:
         'Account deletion is not configured for this build yet. Start the Expo dev server with API routes or set EXPO_PUBLIC_ACCOUNT_API_BASE_URL.',
+      authProviderUnresolved:
+        'We could not determine how this account signs in. Contact support to finish deletion.',
       instantAuthUnavailable:
         'Account deletion is temporarily unavailable because the local API server cannot reach InstantDB. Check this machine’s DNS or internet connection and try again.',
       networkUnavailable:
         'Could not reach the account deletion service. Check your connection and try again.',
+      requestTimedOut:
+        'The account deletion request took too long. Please try again.',
       restoreFailed: 'Could not restore your account. Please try again.',
       scheduleFailed: 'Could not schedule account deletion. Please try again.',
+      serverSchemaMisconfigured:
+        'Account deletion is temporarily unavailable because the server schema is outdated.',
       serverMisconfigured:
         'Account deletion is temporarily unavailable because the server is missing Instant admin credentials.',
+      serverUnexpected:
+        'Account deletion hit a server error. Please try again shortly.',
       sessionExpired:
         'Your secure session expired. Please sign in again and retry.',
     },
@@ -284,6 +286,10 @@ const profile = {
   editProfile: {
     title: 'Edit Profile',
     subtitle: 'Keep your member details up to date.',
+    dateOfBirth: 'Birthday',
+    dateOfBirthHint:
+      'Optional. Add it if you want birthday wishes and member birthday perks.',
+    dateOfBirthPlaceholder: 'Select your birthday',
     fullName: 'Full name',
     bio: 'Bio',
     bioPlaceholder: 'Tell members a little about yourself',
@@ -323,77 +329,6 @@ const profile = {
         vi: 'Tiếng Việt',
       },
     },
-  },
-  staff: {
-    accessDeniedDescription:
-      'This hidden screen is only available to allowlisted Esco staff accounts.',
-    accessDeniedTitle: 'Staff access required',
-    allowlistPending:
-      'Ask an admin to add this account to the staff allowlist.',
-    approvalRequired:
-      'Manager approval is required for sensitive manual adjustments.',
-    award: 'Record points',
-    awarding: 'Recording...',
-    awardTitle: 'Record points adjustment',
-    badge: 'Staff',
-    billAmountLabel: 'Bill amount (VND)',
-    billAmountPlaceholder: '100000',
-    cameraPermissionDescription:
-      'Grant camera access so staff can scan member QR codes at Esco Beach.',
-    cameraPermissionTitle: 'Camera access needed',
-    currentPoints: 'Current points balance: {{value}}',
-    errors: {
-      billBelowMinimumSpend:
-        'This bill does not meet the minimum spend threshold.',
-      generic: 'Something went wrong. Please try again.',
-      invalidBillAmount: 'Enter a valid bill amount in VND.',
-      invalidRewardServiceResponse:
-        'The reward service returned an invalid response. Please try again.',
-      invalidQr: 'This QR code is not a valid Esco member code.',
-      rewardServiceRejectedRequest:
-        'The reward service rejected this request. Please review the bill details and try again.',
-      rewardServiceUnavailable:
-        'The reward service is currently unavailable. Please try again shortly.',
-      managerApprovalRequired:
-        'A valid manager PIN is required for transactions above the approval cap.',
-      memberNotFound: 'We could not find a member for that ID.',
-      receiptReferenceRequired:
-        'A receipt or bill reference is required to record points securely.',
-      staffAccessRequired:
-        'This account is not allowlisted for manual reward adjustments.',
-      title: 'Unable to complete action',
-    },
-    findMember: 'Find member',
-    formulaNote: '{{points}} point is earned for every {{amount}} spent.',
-    goBack: 'Go back',
-    grantPermission: 'Grant camera access',
-    invalidQrTitle: 'Invalid QR code',
-    loading: 'Checking staff access...',
-    lookupHint: 'Scan a member QR code or enter the member ID manually.',
-    managerPinLabel: 'Manager PIN',
-    managerPinPlaceholder: 'Enter manager PIN',
-    manualEntryNote:
-      'If scanning fails, enter the member ID manually and continue below.',
-    memberFoundBadge: 'Member found',
-    memberIdLabel: 'Member ID',
-    memberIdPlaceholder: 'ESCO-XXXXXXXX',
-    memberLookup: 'Member lookup',
-    memberNotFound: 'No member matches that code.',
-    memberNotFoundTitle: 'Member not found',
-    memberPendingLookup:
-      'Tap Find Member to confirm this member before recording points.',
-    pointsPreviewDescription:
-      'Points are rounded down to full {{amount}} spend steps.',
-    pointsPreviewLabel: 'Points preview',
-    receiptReferenceLabel: 'Receipt reference',
-    receiptReferencePlaceholder: 'Receipt or bill number',
-    scanAgain: 'Scan again',
-    subtitle:
-      'Scan a customer QR or enter their member ID to record a secure points adjustment.',
-    successMessage:
-      '{{name}} received {{points}} points from a bill of {{amount}}.',
-    successTitle: 'Points recorded',
-    title: 'Reward scanner',
   },
   invite: {
     allReferralsTitle: 'Your referrals',

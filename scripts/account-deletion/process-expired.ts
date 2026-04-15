@@ -241,34 +241,19 @@ async function recoverAccountDeletionRequestAfterError(params: {
 }
 
 async function resolveProfileIdForUser(userId: string): Promise<string | null> {
-  const directResult = await db.query({
+  const canonicalResult = await db.query({
     profiles: {
-      $: { where: { 'user.id': userId } },
+      $: { where: { id: userId } },
     },
   });
-  const directProfile = directResult.profiles?.[0] as
+  const canonicalProfile = canonicalResult.profiles?.[0] as
     | { id?: string }
     | undefined;
-  if (directProfile?.id) {
-    return directProfile.id;
+  if (canonicalProfile?.id) {
+    return canonicalProfile.id;
   }
 
-  const linkedResult = await db.query({
-    $users: {
-      $: { where: { id: userId } },
-      profile: {},
-    },
-  });
-  const linkedUser = linkedResult.$users?.[0] as
-    | {
-        profile?: { id?: string } | { id?: string }[] | null;
-      }
-    | undefined;
-  const linkedProfile = Array.isArray(linkedUser?.profile)
-    ? linkedUser.profile[0]
-    : linkedUser?.profile;
-
-  return linkedProfile?.id ?? null;
+  return null;
 }
 
 async function cleanupProfileLinkedData(

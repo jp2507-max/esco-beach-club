@@ -152,7 +152,7 @@ export function ControlledDateInput<TFieldValues extends FieldValues>({
                 ) : null}
                 <Text
                   className={cn(
-                    'min-h-[24px] text-[15px] font-semibold',
+                    'min-h-6 text-[15px] font-semibold',
                     displayValue
                       ? 'text-text dark:text-text-primary-dark'
                       : 'text-text-muted dark:text-text-muted-dark'
@@ -174,6 +174,7 @@ export function ControlledDateInput<TFieldValues extends FieldValues>({
             {Platform.OS === 'ios' ? (
               <Modal
                 animationType="slide"
+                presentationStyle="overFullScreen"
                 transparent
                 visible={isPickerVisible}
                 onRequestClose={handleConfirm}

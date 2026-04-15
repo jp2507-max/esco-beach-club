@@ -7,7 +7,6 @@ import {
 } from '@react-native-google-signin/google-signin';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { Platform } from 'react-native';
-
 const DEFAULT_APPLE_CLIENT_NAME = 'apple';
 const DEFAULT_GOOGLE_CLIENT_NAME = 'google';
 
@@ -27,6 +26,28 @@ const googleIosUrlScheme =
   process.env.EXPO_PUBLIC_GOOGLE_IOS_URL_SCHEME?.trim();
 
 let hasConfiguredGoogleSignIn = false;
+
+export const googlePostDeleteCleanupStatuses = {
+  failedNonBlocking: 'failed_non_blocking',
+  revoked: 'revoked',
+  skippedNoSession: 'skipped_no_session',
+} as const;
+
+export type GooglePostDeleteCleanupStatus =
+  (typeof googlePostDeleteCleanupStatuses)[keyof typeof googlePostDeleteCleanupStatuses];
+
+export type GooglePostDeleteCleanupResult =
+  | {
+      status: typeof googlePostDeleteCleanupStatuses.revoked;
+    }
+  | {
+      status: typeof googlePostDeleteCleanupStatuses.skippedNoSession;
+    }
+  | {
+      error: unknown;
+      message: string;
+      status: typeof googlePostDeleteCleanupStatuses.failedNonBlocking;
+    };
 
 export type GoogleSignInAudience = 'ios' | 'web';
 
@@ -104,6 +125,35 @@ function getGoogleInstantClientName(audience: GoogleSignInAudience): string {
   return googleWebInstantClientName || googleClientName;
 }
 
+function maskClientId(clientId?: string): string {
+  if (!clientId) return 'missing';
+  if (clientId.length <= 12) return clientId;
+
+  return `${clientId.slice(0, 8)}...${clientId.slice(-4)}`;
+}
+
+function logGoogleAndroidDeveloperConfigMismatch(params: {
+  audience: GoogleSignInAudience;
+  error: unknown;
+  normalizedErrorMessage: string | null;
+}): void {
+  if (!__DEV__) return;
+
+  console.error('[GoogleSignIn] Android developer configuration mismatch', {
+    audience: params.audience,
+    error: params.error,
+    googleWebClientId: maskClientId(googleWebClientId),
+    hasGoogleWebClientId: !!googleWebClientId,
+    instantGoogleClientName: getGoogleInstantClientName(params.audience),
+    normalizedErrorMessage: params.normalizedErrorMessage,
+    troubleshooting: [
+      'Verify the Android OAuth client package name matches com.escobeachclub.app.',
+      'Add SHA-1 and SHA-256 fingerprints for the exact EAS signing key used by this build.',
+      'Keep EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID set to the Web OAuth client ID.',
+    ],
+  });
+}
+
 export function canTryGoogleAudienceFallback(): boolean {
   return Platform.OS === 'ios' && !!googleIosClientId && !!googleWebClientId;
 }
@@ -142,6 +192,61 @@ export function configureGoogleSignIn(
   }
 
   hasConfiguredGoogleSignIn = true;
+}
+
+function hasGoogleSessionForCleanup(): boolean {
+  const hasPreviousSignIn = GoogleSignin.hasPreviousSignIn();
+  if (hasPreviousSignIn) return true;
+
+  return GoogleSignin.getCurrentUser() !== null;
+}
+
+function getGoogleCleanupFailureMessage(error: unknown): string {
+  if (isErrorWithCode(error)) {
+    return `${error.code}: ${error.message}`;
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return 'unknown_error';
+}
+
+export async function cleanupGoogleSessionAfterDeletion(): Promise<GooglePostDeleteCleanupResult> {
+  if (!isGoogleSignInAvailable()) {
+    return {
+      status: googlePostDeleteCleanupStatuses.skippedNoSession,
+    };
+  }
+
+  configureGoogleSignIn();
+
+  if (!hasGoogleSessionForCleanup()) {
+    return {
+      status: googlePostDeleteCleanupStatuses.skippedNoSession,
+    };
+  }
+
+  try {
+    await GoogleSignin.revokeAccess();
+
+    return {
+      status: googlePostDeleteCleanupStatuses.revoked,
+    };
+  } catch (error) {
+    try {
+      await GoogleSignin.signOut();
+    } catch {
+      // Non-blocking cleanup best effort
+    }
+
+    return {
+      error,
+      message: getGoogleCleanupFailureMessage(error),
+      status: googlePostDeleteCleanupStatuses.failedNonBlocking,
+    };
+  }
 }
 
 export function isGoogleSignInAvailable(): boolean {
@@ -324,6 +429,34 @@ export async function getGoogleIdTokenWithOptions(
       if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
         throw new Error('googlePlayServicesUnavailable');
       }
+
+      const errorCode = `${error.code}`.trim().toUpperCase();
+
+      if (errorCode === 'DEVELOPER_ERROR' || errorCode === '10') {
+        logGoogleAndroidDeveloperConfigMismatch({
+          audience,
+          error,
+          normalizedErrorMessage,
+        });
+        throw new Error('googleAndroidAuthNotConfigured');
+      }
+    }
+
+    if (
+      Platform.OS === 'android' &&
+      normalizedErrorMessage &&
+      (normalizedErrorMessage.includes('developer_error') ||
+        normalizedErrorMessage.includes('code: 10') ||
+        normalizedErrorMessage.includes(
+          'developer console is not set up correctly'
+        ))
+    ) {
+      logGoogleAndroidDeveloperConfigMismatch({
+        audience,
+        error,
+        normalizedErrorMessage,
+      });
+      throw new Error('googleAndroidAuthNotConfigured');
     }
 
     throw error;

@@ -13,21 +13,34 @@ import {
 } from '@tanstack/react-query';
 import { isRunningInExpoGo } from 'expo';
 import * as Linking from 'expo-linking';
-import { Stack, useNavigationContainerRef } from 'expo-router';
+import {
+  Stack,
+  useNavigationContainerRef,
+  usePathname,
+  useRouter,
+} from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
+import * as SystemUI from 'expo-system-ui';
 import * as Updates from 'expo-updates';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AppState, type AppStateStatus, Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { Colors } from '@/constants/colors';
 import { AuthProvider, useAuth } from '@/providers/AuthProvider';
-import { DataProvider } from '@/providers/DataProvider';
+import {
+  DataProvider,
+  profileBootstrapStates,
+  useProfileData,
+} from '@/providers/DataProvider';
 import { RestaurantPresenceProvider } from '@/providers/RestaurantPresenceProvider';
 import { AppLaunchScreen } from '@/src/components/app/app-launch-screen';
 import { ReferralClaimEffect } from '@/src/components/referral/referral-claim-effect';
+import { isAllowedPendingDeletionPath } from '@/src/lib/account-deletion/pending-deletion-routing';
+import { useAccountDeletionRequest } from '@/src/lib/account-deletion/use-account-deletion-request';
 import { motion } from '@/src/lib/animations/motion';
-import { configureGoogleSignIn } from '@/src/lib/auth/social-auth';
 import { getEscoNavigationTheme } from '@/src/lib/navigation/app-navigation-theme';
 import { createNativeHeaderOptions } from '@/src/lib/navigation/stack-header-options';
 import {
@@ -58,6 +71,22 @@ type ExpoManifestExtra = {
     slug?: string;
   };
 };
+
+function isBootstrapRenderable(bootstrapState: string): boolean {
+  return (
+    bootstrapState !== profileBootstrapStates.authenticating &&
+    bootstrapState !== profileBootstrapStates.bootstrappingProfile
+  );
+}
+
+function canAccessAuthenticatedRoutesForBootstrapState(
+  bootstrapState: string
+): boolean {
+  return (
+    bootstrapState === profileBootstrapStates.ready ||
+    bootstrapState === profileBootstrapStates.needsOnboarding
+  );
+}
 
 function setExpoUpdateSentryTags(): void {
   const manifest = Updates.manifest;
@@ -217,10 +246,6 @@ function AuthRuntimeBootstrap(): null {
   const preference = useThemePreferenceStore((state) => state.preference);
   const hasAppliedThemePreferenceRef = useRef(false);
 
-  useEffect(() => {
-    configureGoogleSignIn();
-  }, []);
-
   // Re-apply when preference changes (and after mount) so native UI stays aligned
   // with the store; module init already applied once on import.
   useEffect(() => {
@@ -278,11 +303,43 @@ function AuthenticatedDataProvider({
   );
 }
 
+function PendingAccountDeletionGate(): null {
+  const pathname = usePathname();
+  const router = useRouter();
+  const { isAuthenticated, user } = useAuth();
+  const { bootstrapState } = useProfileData();
+  const { isDeletionPending, isLoading } = useAccountDeletionRequest(user?.id);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    if (bootstrapState !== profileBootstrapStates.ready) return;
+    if (isLoading || !isDeletionPending) return;
+    if (isAllowedPendingDeletionPath(pathname)) return;
+
+    router.replace('/profile/delete-account');
+  }, [
+    bootstrapState,
+    isAuthenticated,
+    isDeletionPending,
+    isLoading,
+    pathname,
+    router,
+  ]);
+
+  return null;
+}
+
 function RootLayoutNav() {
   const { isAuthenticated, isLoading } = useAuth();
+  const { bootstrapState } = useProfileData();
   const { t } = useTranslation('common');
   const isDark = useAppIsDark();
   const hasHiddenNativeSplashRef = useRef(false);
+  const canAccessAuthenticatedRoutes =
+    isAuthenticated &&
+    canAccessAuthenticatedRoutesForBootstrapState(bootstrapState);
+  const shouldShowLaunchScreen =
+    isLoading || (isAuthenticated && !isBootstrapRenderable(bootstrapState));
 
   const hideNativeSplash = useCallback((): void => {
     if (hasHiddenNativeSplashRef.current) return;
@@ -294,7 +351,7 @@ function RootLayoutNav() {
     if (!isLoading) hideNativeSplash();
   }, [hideNativeSplash, isLoading]);
 
-  if (isLoading) {
+  if (shouldShowLaunchScreen) {
     return <AppLaunchScreen isDark={isDark} onReady={hideNativeSplash} />;
   }
 
@@ -315,7 +372,7 @@ function RootLayoutNav() {
       <Stack.Screen name="privacy" />
       <Stack.Screen name="support" />
       <Stack.Screen name="terms" />
-      <Stack.Protected guard={isAuthenticated}>
+      <Stack.Protected guard={canAccessAuthenticatedRoutes}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen
           name="(shared)"
@@ -338,8 +395,20 @@ function EscoNavigationTheme({
     () => getEscoNavigationTheme(isDark),
     [isDark]
   );
+  const systemBackgroundColor = isDark ? Colors.darkBg : Colors.background;
 
-  return <ThemeProvider value={navigationTheme}>{children}</ThemeProvider>;
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+
+    void SystemUI.setBackgroundColorAsync(systemBackgroundColor);
+  }, [systemBackgroundColor]);
+
+  return (
+    <ThemeProvider value={navigationTheme}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+      {children}
+    </ThemeProvider>
+  );
 }
 
 function RootLayout(): React.JSX.Element {
@@ -364,6 +433,7 @@ function RootLayout(): React.JSX.Element {
               fallback={<AppErrorFallback />}
             >
               <AuthenticatedDataProvider>
+                <PendingAccountDeletionGate />
                 <RootLayoutNav />
               </AuthenticatedDataProvider>
             </Sentry.ErrorBoundary>

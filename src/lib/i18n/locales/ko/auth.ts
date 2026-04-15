@@ -15,7 +15,6 @@ const auth = {
   onboardingBasicsTitle: '당신만의 오아시스를 만들어보세요',
   onboardingBasicsSubtitle: '프리미엄 여정을 위한 기본 정보부터 시작해요.',
   onboardingBasicsDisplayNamePlaceholder: '어떻게 불러드릴까요?',
-  onboardingBasicsDateOfBirthPlaceholder: '생년월일을 선택해 주세요',
   onboardingBasicsNext: '다음',
   onboardingBasicsAgreementPrefix: '계속하면 다음에 동의하게 됩니다:',
   onboardingBasicsTermsCta: '서비스 이용약관',
@@ -99,9 +98,13 @@ const auth = {
   onboardingPermissionsActionAllow: '권한 허용',
   onboardingPermissionsActionRetry: '다시 시도',
   onboardingPermissionsActionEnabled: '활성화됨',
+  onboardingPermissionsActionManage: '관리',
   onboardingPermissionsContinue: '계속',
   onboardingPermissionsNotNow: '지금은 안 할게요',
   onboardingPermissionsOpenSettings: '기기 설정 열기',
+  onboardingPermissionsPushAlreadyEnabledTitle: '알림이 이미 활성화되어 있어요',
+  onboardingPermissionsPushAlreadyEnabledMessage:
+    '이미 설정되어 있습니다. 필요하면 기기 설정에서 알림을 관리해 주세요.',
   onboardingPermissionsErrorTitle: '권한 요청 실패',
   onboardingPermissionsErrorMessage:
     '권한 팝업을 열 수 없습니다. 다시 시도하거나 지금은 건너뛸 수 있어요.',
@@ -112,10 +115,10 @@ const auth = {
     '저장 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.',
   venueUpsellNotificationChannelName: '현장 오퍼',
   venueUpsellNotificationChannelDescription:
-    '레스토랑 도착 시 받을 수 있는 실시간 오퍼입니다.',
-  venueUpsellNotificationTitle: '바에서 리워드 포인트 적립',
+    '레스토랑 도착 시 받는 환영 알림입니다.',
+  venueUpsellNotificationTitle: '레스토랑에 오신 것을 환영해요',
   venueUpsellNotificationBody:
-    '지금 칵테일을 주문하고 리워드 포인트를 잔액에 추가하세요!',
+    '오늘 주문으로 리워드 포인트 적립하는 것, 잊지 마세요.',
   onboardingClubWelcomeTitle: '클럽에 오신 것을 환영합니다!',
   onboardingClubWelcomeSubtitle:
     '햇살이 가득하고 멤버십이 활성화되었습니다. 새로운 라이프스타일을 위한 첫 건배를 시작해 보세요.',
@@ -130,8 +133,6 @@ const auth = {
   displayNameLabel: '표시 이름',
   displayNamePlaceholder: '표시할 이름',
   emailLabel: '이메일',
-  dateOfBirthLabel: '생년월일',
-  dateOfBirthPlaceholder: 'YYYY-MM-DD',
   emailPlaceholder: '이메일 주소',
   codePlaceholder: '인증 코드',
   continueWithApple: 'Apple로 계속하기',
@@ -149,6 +150,8 @@ const auth = {
   appleOauthClientNotConfigured:
     'Apple 로그인 구성이 잘못되었습니다. 지원팀에 문의해 주세요.',
   googleAuthNotConfigured: 'Google 로그인이 아직 구성되지 않았습니다.',
+  googleAndroidAuthNotConfigured:
+    '이 Android 빌드에서는 Google 로그인이 아직 구성되지 않았습니다. 설치된 빌드에 맞는 Android OAuth 패키지 이름과 SHA 지문을 확인해 주세요.',
   googleOauthClientNotConfigured:
     'Google 로그인 구성이 잘못되었습니다. 지원팀에 문의해 주세요.',
   googleIdTokenMissing: 'Google에서 신원 토큰을 반환하지 않았습니다.',
@@ -158,6 +161,8 @@ const auth = {
   unableToSendCode: '코드를 보낼 수 없습니다.',
   unableToSignInWithApple: 'Apple로 로그인할 수 없습니다.',
   unableToSignInWithGoogle: 'Google로 로그인할 수 없습니다.',
+  profilePermissionDenied:
+    '로그인은 완료되었지만 프로필 권한 때문에 설정을 마칠 수 없습니다. 로그아웃 후 다시 시도해 주세요.',
   unableToCompleteProfileSetup:
     '로그인은 완료되었지만 프로필 설정을 마무리하지 못했습니다. 다시 시도해 주세요.',
   unableToVerifyCode: '코드를 확인할 수 없습니다.',
@@ -173,9 +178,9 @@ const auth = {
   invalidEmailTitle: '유효하지 않은 이메일',
   invalidEmailMessage: '올바른 이메일 주소를 입력하세요.',
   invalidSignupInfoTitle: '입력 정보가 부족합니다',
-  invalidSignupInfoMessage: '표시 이름, 이메일, 생년월일을 모두 입력해 주세요.',
+  invalidSignupInfoMessage: '표시 이름과 이메일을 입력해 주세요.',
   onboardingBasicsInvalidTitle: '입력 정보가 부족합니다',
-  onboardingBasicsInvalidMessage: '표시 이름과 생년월일을 입력해 주세요.',
+  onboardingBasicsInvalidMessage: '표시 이름을 입력해 주세요.',
   missingCodeTitle: '코드가 없습니다',
   missingCodeMessage: '이메일로 받은 인증 코드를 입력하세요.',
   wrongEmailPrefix: '이메일이 잘못되었나요?',
@@ -211,6 +216,15 @@ const auth = {
   onboardingWelcomePointGlobalTitle: '글로벌 네트워크',
   onboardingWelcomePointGlobalDescription:
     '40개국 이상, 6개 대륙에서 리워드를 누리세요.',
+  profileBootstrapLoadingMessage:
+    '멤버 프로필을 준비하고 접근 권한을 확인하고 있습니다.',
+  profileBootstrapErrorTitle: '프로필 설정을 마무리하세요',
+  profileBootstrapErrorMessage:
+    '세션은 활성화되었지만 멤버 프로필을 끝까지 불러오지 못했습니다. 잠시 기다리거나 안전하게 로그아웃할 수 있습니다.',
+  profileBootstrapTerminalTitle: '멤버 프로필을 불러올 수 없습니다',
+  profileBootstrapRetryAction: '다시 시도',
+  profileBootstrapSignOutAction: '로그아웃',
+  profileBootstrapBackToSignInAction: '로그인으로 돌아가기',
   genericError: '문제가 발생했습니다. 다시 시도하거나 지원팀에 문의해 주세요.',
   member: '회원',
 } as const;

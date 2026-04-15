@@ -1,6 +1,7 @@
 import * as Sentry from '@sentry/react-native';
 
 type MonitoringContext = {
+  contexts?: Record<string, Record<string, unknown>>;
   extras?: Record<string, unknown>;
   tags?: Record<string, string>;
 };
@@ -16,6 +17,7 @@ export function captureHandledError(
   context: MonitoringContext = {}
 ): void {
   Sentry.captureException(normalizeError(error), {
+    contexts: context.contexts,
     level: 'error',
     extra: context.extras,
     tags: context.tags,

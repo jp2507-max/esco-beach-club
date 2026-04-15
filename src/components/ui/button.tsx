@@ -5,6 +5,7 @@ import { useColorScheme } from 'react-native';
 
 import { Colors } from '@/constants/colors';
 import { useButtonPress } from '@/src/lib/animations/use-button-press';
+import { getAndroidRippleConfig } from '@/src/lib/styles/android-ripple';
 import { cn } from '@/src/lib/utils';
 import { ActivityIndicator, type Pressable, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
@@ -89,6 +90,13 @@ export function Button({
   const isDark = useColorScheme() === 'dark';
   const spinnerColor = getSpinnerColor(variant, isDark);
   const { animatedStyle, handlePressIn, handlePressOut } = useButtonPress();
+  const androidRipple = React.useMemo(
+    () =>
+      getAndroidRippleConfig(
+        isDark ? Colors.ACTIVE_BG_DARK : Colors.ACTIVE_BG_LIGHT
+      ),
+    [isDark]
+  );
 
   const handlePressInCombined = React.useCallback<
     NonNullable<ComponentProps<typeof Pressable>['onPressIn']>
@@ -123,6 +131,7 @@ export function Button({
 
   return (
     <Animated.Pressable
+      android_ripple={androidRipple}
       accessibilityRole={accessibilityRole}
       className={cn(
         'items-center justify-center',

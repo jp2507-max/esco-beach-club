@@ -1,8 +1,11 @@
 import type { ComponentProps } from 'react';
 import React from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
+import { useColorScheme } from 'react-native';
 
+import { Colors } from '@/constants/colors';
 import { useButtonPress } from '@/src/lib/animations/use-button-press';
+import { getAndroidRippleConfig } from '@/src/lib/styles/android-ripple';
 import { cn } from '@/src/lib/utils';
 import { type Pressable } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
@@ -16,9 +19,17 @@ export function SurfacePressableCard({
   style,
   ...props
 }: SurfacePressableCardProps): React.JSX.Element {
+  const isDark = useColorScheme() === 'dark';
   const { animatedStyle, handlePressIn, handlePressOut } = useButtonPress(
     0.985,
     'gentle'
+  );
+  const androidRipple = React.useMemo(
+    () =>
+      getAndroidRippleConfig(
+        isDark ? Colors.ACTIVE_BG_DARK : Colors.ACTIVE_BG_LIGHT
+      ),
+    [isDark]
   );
 
   const handlePressInCombined = React.useCallback<
@@ -54,6 +65,7 @@ export function SurfacePressableCard({
 
   return (
     <Animated.Pressable
+      android_ripple={androidRipple}
       className={cn(
         'rounded-[22px] border border-border bg-white dark:border-dark-border dark:bg-dark-bg-card',
         className

@@ -16,7 +16,6 @@ const auth = {
   onboardingBasicsSubtitle:
     "Let's start with the basics for your premium escape.",
   onboardingBasicsDisplayNamePlaceholder: 'How should we call you?',
-  onboardingBasicsDateOfBirthPlaceholder: 'Select your birthday',
   onboardingBasicsNext: 'Next',
   onboardingBasicsAgreementPrefix: 'By continuing, you agree to our',
   onboardingBasicsTermsCta: 'Terms of Service',
@@ -99,9 +98,13 @@ const auth = {
   onboardingPermissionsActionAllow: 'Allow Access',
   onboardingPermissionsActionRetry: 'Try Again',
   onboardingPermissionsActionEnabled: 'Enabled',
+  onboardingPermissionsActionManage: 'Manage',
   onboardingPermissionsContinue: 'Continue',
   onboardingPermissionsNotNow: 'Not now',
   onboardingPermissionsOpenSettings: 'Open Device Settings',
+  onboardingPermissionsPushAlreadyEnabledTitle: 'Notifications are enabled',
+  onboardingPermissionsPushAlreadyEnabledMessage:
+    'You are already set. Manage notification preferences in your device settings if needed.',
   onboardingPermissionsErrorTitle: 'Permission Request Failed',
   onboardingPermissionsErrorMessage:
     'We could not open the permission prompt. Please try again or continue for now.',
@@ -112,10 +115,10 @@ const auth = {
     'Something went wrong while saving. Please try again.',
   venueUpsellNotificationChannelName: 'Venue offers',
   venueUpsellNotificationChannelDescription:
-    'Timely offers when you arrive at the restaurant.',
-  venueUpsellNotificationTitle: 'Earn reward points at the bar',
+    'Welcome updates when you arrive at the restaurant.',
+  venueUpsellNotificationTitle: 'Great to see you at the restaurant',
   venueUpsellNotificationBody:
-    'Order a cocktail now to add reward points to your balance.',
+    'Don’t forget to earn your points on your order today.',
   onboardingClubWelcomeTitle: 'Welcome to the Club!',
   onboardingClubWelcomeSubtitle:
     'The sun is out and your membership is active. Let’s start with a toast to your new lifestyle.',
@@ -130,8 +133,6 @@ const auth = {
   displayNameLabel: 'Display Name',
   displayNamePlaceholder: 'Your display name',
   emailLabel: 'Email',
-  dateOfBirthLabel: 'Date of Birth',
-  dateOfBirthPlaceholder: 'YYYY-MM-DD',
   emailPlaceholder: 'Email address',
   codePlaceholder: 'Verification code',
   continueWithApple: 'Continue with Apple',
@@ -148,6 +149,8 @@ const auth = {
   appleOauthClientNotConfigured:
     'Apple sign-in is misconfigured. Please contact support.',
   googleAuthNotConfigured: 'Google Sign-In is not configured yet.',
+  googleAndroidAuthNotConfigured:
+    'Google Sign-In is not configured for this Android build yet. Verify the Android OAuth package name and SHA fingerprints for the installed build.',
   googleOauthClientNotConfigured:
     'Google sign-in is misconfigured. Please contact support.',
   googleIdTokenMissing: 'Google did not return an identity token.',
@@ -157,6 +160,8 @@ const auth = {
   unableToSendCode: 'Unable to send code.',
   unableToSignInWithApple: 'Unable to sign in with Apple.',
   unableToSignInWithGoogle: 'Unable to sign in with Google.',
+  profilePermissionDenied:
+    'Signed in, but profile permissions blocked setup. Please sign out and try again.',
   unableToCompleteProfileSetup:
     'Signed in, but we could not complete your profile setup. Please try again.',
   unableToVerifyCode: 'Unable to verify code.',
@@ -172,11 +177,9 @@ const auth = {
   invalidEmailTitle: 'Invalid Email',
   invalidEmailMessage: 'Please enter a valid email address.',
   invalidSignupInfoTitle: 'Incomplete Details',
-  invalidSignupInfoMessage:
-    'Please enter your display name, email, and date of birth.',
+  invalidSignupInfoMessage: 'Please enter your display name and email.',
   onboardingBasicsInvalidTitle: 'Incomplete Details',
-  onboardingBasicsInvalidMessage:
-    'Please enter your display name and date of birth.',
+  onboardingBasicsInvalidMessage: 'Please enter your display name.',
   missingCodeTitle: 'Missing Code',
   missingCodeMessage: 'Please enter the verification code from your email.',
   wrongEmailPrefix: 'Wrong email?',
@@ -212,6 +215,15 @@ const auth = {
   onboardingWelcomePointGlobalTitle: 'Global Network',
   onboardingWelcomePointGlobalDescription:
     'Access rewards across 40+ countries and 6 continents.',
+  profileBootstrapLoadingMessage:
+    'Preparing your member profile and checking your access.',
+  profileBootstrapErrorTitle: 'Finish setting up your profile',
+  profileBootstrapErrorMessage:
+    'Your session is active, but we could not finish loading your member profile. Please wait a moment or sign out safely.',
+  profileBootstrapTerminalTitle: 'We could not load your member profile',
+  profileBootstrapRetryAction: 'Retry',
+  profileBootstrapSignOutAction: 'Sign out',
+  profileBootstrapBackToSignInAction: 'Back to sign in',
   genericError: 'Something went wrong. Please try again or contact support.',
   member: 'Member',
 } as const;

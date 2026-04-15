@@ -119,11 +119,9 @@ export default function SuccessScreen(): React.JSX.Element {
             className="size-27.5 items-center justify-center rounded-full"
             style={{
               backgroundColor: Colors.success,
-              elevation: 12,
+              ...shadows.level5,
               shadowColor: Colors.success,
-              shadowOffset: { height: 8, width: 0 },
-              shadowOpacity: 0.35,
-              shadowRadius: 20,
+              shadowOpacity: 0.28,
             }}
           >
             <CircleCheck color={Colors.white} size={56} />

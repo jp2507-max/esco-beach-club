@@ -18,11 +18,6 @@ type ProfileRecord = {
   id?: string;
 };
 
-type LinkedUserRecord = {
-  id?: string;
-  profile?: ProfileRecord | ProfileRecord[] | null;
-};
-
 function firstProfileRecord(value: unknown): ProfileRecord | null {
   if (Array.isArray(value)) {
     const [first] = value;
@@ -32,43 +27,20 @@ function firstProfileRecord(value: unknown): ProfileRecord | null {
   return isRecord(value) ? (value as ProfileRecord) : null;
 }
 
-function firstLinkedUserRecord(value: unknown): LinkedUserRecord | null {
-  if (Array.isArray(value)) {
-    const [first] = value;
-    return isRecord(first) ? (first as LinkedUserRecord) : null;
-  }
-
-  return isRecord(value) ? (value as LinkedUserRecord) : null;
-}
-
 async function resolveProfileForUser(
   adminDb: NonNullable<ReturnType<typeof getInstantAdminDb>>,
   userId: string
 ): Promise<ProfileRecord | null> {
-  const directResult = await adminDb.query<{
+  const result = await adminDb.query<{
     profiles?: ProfileRecord[];
   }>({
     profiles: {
-      $: { where: { 'user.id': userId } },
-    },
-  });
-  const directProfile = firstProfileRecord(directResult.profiles);
-  if (directProfile?.id) {
-    return directProfile;
-  }
-
-  const linkedResult = await adminDb.query<{
-    $users?: LinkedUserRecord[];
-  }>({
-    $users: {
       $: { where: { id: userId } },
-      profile: {},
     },
   });
-  const linkedUser = firstLinkedUserRecord(linkedResult.$users);
-  const linkedProfile = firstProfileRecord(linkedUser?.profile ?? null);
+  const profile = firstProfileRecord(result.profiles);
 
-  return linkedProfile?.id ? linkedProfile : null;
+  return profile?.id ? profile : null;
 }
 
 export async function POST(request: Request): Promise<Response> {
