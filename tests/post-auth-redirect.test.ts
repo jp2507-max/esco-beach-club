@@ -24,6 +24,15 @@ describe('post auth redirect helpers', () => {
     expect(
       shouldAutoRetryProfileProvision({
         bootstrapState: profileBootstrapStates.recoverableError,
+        isRetryingProvision: true,
+        retriedProvisionUserId: null,
+        userId: 'user-1',
+      })
+    ).toBe(false);
+
+    expect(
+      shouldAutoRetryProfileProvision({
+        bootstrapState: profileBootstrapStates.recoverableError,
         isRetryingProvision: false,
         retriedProvisionUserId: 'user-1',
         userId: 'user-1',

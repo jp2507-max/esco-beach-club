@@ -170,7 +170,7 @@ export default function EventDetailsScreen(): React.JSX.Element {
             </View>
           </View>
         </View>
-        <AppScreenContent className="flex-1" style={{ marginTop: -16 }}>
+        <AppScreenContent className="flex-1 -mt-4">
           <View className="flex-1 rounded-t-[20px] bg-background px-5 pt-6 dark:bg-dark-bg">
             <SkeletonText className="mb-6" lines={3} />
             <SkeletonText className="mb-2 h-6 w-48" lines={1} />
@@ -362,7 +362,7 @@ export default function EventDetailsScreen(): React.JSX.Element {
         </View>
       </Animated.View>
 
-      <AppScreenContent className="flex-1" style={{ marginTop: -16 }}>
+      <AppScreenContent className="flex-1 -mt-4">
         <Animated.ScrollView
           contentInsetAdjustmentBehavior="automatic"
           className="flex-1 rounded-t-[20px] bg-background dark:bg-dark-bg"

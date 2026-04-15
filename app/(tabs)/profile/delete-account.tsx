@@ -287,12 +287,6 @@ export default function DeleteAccountScreen(): React.JSX.Element {
               operation: 'apple_pre_delete_verification',
             },
           });
-
-          if (!shouldContinue) {
-            hapticError();
-            Alert.alert(t('deleteAccount.errors.appleRevocationFailed'));
-            return;
-          }
         }
       }
 

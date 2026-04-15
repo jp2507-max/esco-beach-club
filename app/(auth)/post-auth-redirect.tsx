@@ -171,6 +171,7 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
     if (!shouldRetryProvision || !userId) return;
 
     const retryUserId = userId;
+    let mounted = true;
     setIsRetryingProvision(true);
 
     void (async (): Promise<void> => {
@@ -187,10 +188,16 @@ export default function PostAuthRedirectScreen(): React.JSX.Element {
           );
         }
       } finally {
+        if (!mounted) return;
+
         setRetriedProvisionUserId(retryUserId);
         setIsRetryingProvision(false);
       }
     })();
+
+    return () => {
+      mounted = false;
+    };
   }, [retryProfileProvision, shouldRetryProvision, userId]);
 
   React.useEffect(() => {
