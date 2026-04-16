@@ -43,6 +43,11 @@ mock.module('expo-haptics', () => ({
   selectionAsync: selectionAsyncMock,
 }));
 
+const hadOriginalDev = Object.prototype.hasOwnProperty.call(
+  globalThis,
+  '__DEV__'
+);
+const originalDev = (globalThis as { __DEV__?: boolean }).__DEV__;
 (globalThis as { __DEV__?: boolean }).__DEV__ = false;
 
 const {
@@ -70,6 +75,12 @@ describe('haptics', () => {
   });
 
   afterAll(() => {
+    if (hadOriginalDev) {
+      (globalThis as { __DEV__?: boolean }).__DEV__ = originalDev;
+    } else {
+      delete (globalThis as { __DEV__?: boolean }).__DEV__;
+    }
+
     mock.restore();
   });
 

@@ -38,6 +38,7 @@
     "start": "bunx expo start --tunnel",
     "start-web": "bunx expo start --web --tunnel",
     "start-web-dev": "bunx expo start --web --clear",
+    "web": "bunx expo start --web --clear",
     "check:expo": "expo install --check",
     "doctor": "expo install --check && expo-doctor",
     "lint": "expo lint",

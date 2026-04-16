@@ -25,6 +25,7 @@ import {
 
 const PROFILE_PROVISION_RETRY_DELAYS_MS = [50, 150, 300] as const;
 export const PROFILE_PERMISSION_DENIED_ERROR_KEY = 'profilePermissionDenied';
+const isDevEnvironment = typeof __DEV__ !== 'undefined' && __DEV__;
 
 type ProfileBootstrapOperation =
   | 'create_profile'
@@ -225,6 +226,22 @@ export async function ensureProfileWithDb(
           params.userId
         );
 
+        if (existingCanonicalProfile) {
+          if (isDevEnvironment) {
+            console.warn(
+              '[ensureProfile] Skipping recoverable canonical create denial',
+              {
+                attempt,
+                maxAttempts,
+                profileId,
+                userId: params.userId,
+              }
+            );
+          }
+
+          return existingCanonicalProfile;
+        }
+
         captureHandledError(error, {
           tags: {
             area: 'profile',
@@ -239,7 +256,7 @@ export async function ensureProfileWithDb(
           },
         });
 
-        if (__DEV__) {
+        if (isDevEnvironment) {
           console.error('[ensureProfile] Canonical profile create denied', {
             attempt,
             maxAttempts,
@@ -248,11 +265,6 @@ export async function ensureProfileWithDb(
             profileId,
             userId: params.userId,
           });
-        }
-
-        const existingProfile = existingCanonicalProfile;
-        if (existingProfile) {
-          return existingProfile;
         }
 
         if (attempt < maxAttempts) {

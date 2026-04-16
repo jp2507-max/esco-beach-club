@@ -109,7 +109,11 @@ export default function RateUsScreen(): React.JSX.Element {
   const starScales = useStarScales();
   const successScale = useSharedValue(0);
   const userId = useUserId();
-  const { control, handleSubmit, setValue } = useForm<ReviewFormValues>({
+  const {
+    control,
+    handleSubmit: handleFormSubmit,
+    setValue,
+  } = useForm<ReviewFormValues>({
     defaultValues: {
       comment: '',
       rating: 0,
@@ -168,6 +172,16 @@ export default function RateUsScreen(): React.JSX.Element {
   function handleInvalidSubmit(): void {
     hapticError();
     Alert.alert(t('rateUs.ratingRequired'), t('rateUs.ratingRequiredMessage'));
+  }
+
+  function handleSubmit(): void {
+    if (reviewMutation.isPending) return;
+    if (rating === 0) {
+      handleInvalidSubmit();
+      return;
+    }
+
+    void handleFormSubmit(handleValidSubmit, handleInvalidSubmit)();
   }
 
   function handleValidSubmit(values: ReviewFormValues): void {
@@ -272,12 +286,10 @@ export default function RateUsScreen(): React.JSX.Element {
                 <Pressable
                   accessibilityRole="button"
                   className="w-full flex-row items-center justify-center rounded-2xl bg-primary py-4"
-                  disabled={rating === 0 || reviewMutation.isPending}
-                  onPress={handleSubmit(handleValidSubmit, handleInvalidSubmit)}
+                  disabled={reviewMutation.isPending}
+                  onPress={handleSubmit}
                   style={
-                    rating === 0 || reviewMutation.isPending
-                      ? { opacity: 0.5 }
-                      : undefined
+                    reviewMutation.isPending ? { opacity: 0.5 } : undefined
                   }
                   testID="submit-review"
                 >

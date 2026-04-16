@@ -38,6 +38,16 @@ type SignOutParams = {
   preserveSignupDraft?: boolean;
 };
 
+const NON_REPORTABLE_AUTH_ERROR_KEYS = new Set([
+  'providerSignInCanceled',
+  'providerSignInInProgress',
+  'signupConsentRequired',
+]);
+
+function shouldCaptureAuthError(errorKey: string): boolean {
+  return !NON_REPORTABLE_AUTH_ERROR_KEYS.has(errorKey);
+}
+
 export const [AuthProvider, useAuth] = createContextHook(() => {
   const { t } = useTranslation(['auth', 'common']);
   const { error: authError, isLoading, user } = db.useAuth();
@@ -89,17 +99,21 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       const nextError = toError(error, 'unableToSignInWithApple', {
         oauthProvider: 'apple',
       });
-      captureHandledError(error, {
-        extras: {
-          mappedErrorKey: nextError.message,
-          rawAuthErrorMessage: extractAuthErrorMessage(error),
-        },
-        tags: {
-          area: 'auth',
-          auth_phase: resolveAuthPhase(nextError.message),
-          operation: 'sign_in_with_apple',
-        },
-      });
+
+      if (shouldCaptureAuthError(nextError.message)) {
+        captureHandledError(error, {
+          extras: {
+            mappedErrorKey: nextError.message,
+            rawAuthErrorMessage: extractAuthErrorMessage(error),
+          },
+          tags: {
+            area: 'auth',
+            auth_phase: resolveAuthPhase(nextError.message),
+            operation: 'sign_in_with_apple',
+          },
+        });
+      }
+
       setAppleSignInError(nextError);
       throw nextError;
     } finally {
@@ -130,17 +144,21 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       const nextError = toError(error, 'unableToSignInWithGoogle', {
         oauthProvider: 'google',
       });
-      captureHandledError(error, {
-        extras: {
-          mappedErrorKey: nextError.message,
-          rawAuthErrorMessage: extractAuthErrorMessage(error),
-        },
-        tags: {
-          area: 'auth',
-          auth_phase: resolveAuthPhase(nextError.message),
-          operation: 'sign_in_with_google',
-        },
-      });
+
+      if (shouldCaptureAuthError(nextError.message)) {
+        captureHandledError(error, {
+          extras: {
+            mappedErrorKey: nextError.message,
+            rawAuthErrorMessage: extractAuthErrorMessage(error),
+          },
+          tags: {
+            area: 'auth',
+            auth_phase: resolveAuthPhase(nextError.message),
+            operation: 'sign_in_with_google',
+          },
+        });
+      }
+
       setGoogleSignInError(nextError);
       throw nextError;
     } finally {

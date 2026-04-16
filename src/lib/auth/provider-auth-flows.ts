@@ -32,6 +32,19 @@ import { captureHandledError } from '@/src/lib/monitoring';
 const DEFAULT_APPLE_CLIENT_NAME = 'apple';
 const isDevEnvironment = typeof __DEV__ !== 'undefined' && __DEV__;
 
+function isNonBlockingAuthProviderPersistenceError(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  const normalizedMessage = error.message.trim().toLowerCase();
+
+  return (
+    normalizedMessage === 'profilepermissiondenied' ||
+    normalizedMessage.includes('permission denied')
+  );
+}
+
 function resolveOnboardingData(params: {
   onboardingData: SignupOnboardingData | undefined;
 }): SignupOnboardingData | null {
@@ -77,6 +90,21 @@ async function persistProfileAuthProvider(params: {
   try {
     await setProfileAuthProvider(signInUser.id, params.providerType);
   } catch (error: unknown) {
+    if (isNonBlockingAuthProviderPersistenceError(error)) {
+      if (isDevEnvironment) {
+        console.warn(
+          '[AuthProvider] Skipping non-blocking auth provider persistence error',
+          {
+            error,
+            providerType: params.providerType,
+            signInUserId: signInUser.id,
+          }
+        );
+      }
+
+      return;
+    }
+
     captureHandledError(error, {
       tags: {
         area: 'auth',

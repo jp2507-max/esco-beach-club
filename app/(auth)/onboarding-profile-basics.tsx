@@ -54,6 +54,7 @@ export default function OnboardingProfileBasicsScreen(): React.JSX.Element {
   });
 
   function onValidSubmit(values: OnboardingBasicsFormValues): void {
+    hapticLight();
     setSignupDraft({
       displayName: values.displayName,
     });
@@ -156,10 +157,7 @@ export default function OnboardingProfileBasicsScreen(): React.JSX.Element {
                 <Pressable
                   accessibilityRole="button"
                   className="mt-7 overflow-hidden rounded-full"
-                  onPress={(e) => {
-                    hapticLight();
-                    onSubmit(e);
-                  }}
+                  onPress={onSubmit}
                   onPressIn={ctaButton.handlePressIn}
                   onPressOut={ctaButton.handlePressOut}
                   testID="onboarding-basics-next"

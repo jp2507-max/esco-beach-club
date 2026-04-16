@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test';
 
+const captureHandledErrorMock = mock(() => {});
+
 mock.module('@/src/lib/instant', () => ({
   db: {
     queryOnce: async () => ({ data: {} }),
@@ -24,7 +26,7 @@ mock.module('@/src/lib/instant', () => ({
   },
 }));
 mock.module('@/src/lib/monitoring', () => ({
-  captureHandledError() {},
+  captureHandledError: captureHandledErrorMock,
 }));
 let generatedPublicIdentifierIndex = 0;
 
@@ -219,6 +221,7 @@ function createFakeProfileDb(initialProfiles: FakeProfileRecord[] = []) {
 describe('profile bootstrap', () => {
   beforeEach(() => {
     generatedPublicIdentifierIndex = 0;
+    captureHandledErrorMock.mockReset();
   });
 
   test('creates a canonical profile without requiring a user link', async () => {
@@ -338,5 +341,89 @@ describe('profile bootstrap', () => {
     expect(profile?.id).toBe(TEST_USER_ID);
     expect(createAttempts).toBe(2);
     expect(fakeDb.txCalls).toHaveLength(1);
+  });
+
+  test('does not report recoverable permission denial when canonical profile is found', async () => {
+    const nowIso = '2026-01-01T00:00:00.000Z';
+    const recoveredProfile: FakeProfileRecord = {
+      id: TEST_USER_ID,
+      avatar_url: null,
+      bio: '',
+      cashback_points_balance: 0,
+      cashback_points_lifetime_earned: 0,
+      created_at: nowIso,
+      date_of_birth: null,
+      full_name: 'Recovered Member',
+      has_seen_welcome_voucher: false,
+      lifetime_tier_key: 'MEMBER',
+      location_permission_status: 'UNDETERMINED',
+      member_id: 'ESCO-0000000000000001',
+      member_segment: null,
+      member_since: nowIso,
+      next_tier_key: 'LEGEND',
+      nights_left: 0,
+      onboarding_completed_at: null,
+      push_notification_permission_status: 'UNDETERMINED',
+      referral_code: 'ESCO-0000000000000002',
+      saved: 0,
+      tier_progress_expires_at: null,
+      tier_progress_points: 0,
+      tier_progress_started_at: null,
+      tier_progress_target_points: 10,
+      updated_at: nowIso,
+      userId: TEST_USER_ID,
+    };
+
+    let profileLookupCount = 0;
+    const database = {
+      async queryOnce() {
+        profileLookupCount += 1;
+
+        if (profileLookupCount === 1) {
+          return {
+            data: {
+              profiles: [],
+            },
+          };
+        }
+
+        return {
+          data: {
+            profiles: [recoveredProfile],
+          },
+        };
+      },
+      async transact() {
+        throw new Error('Permission denied: not perms-pass?');
+      },
+      tx: {
+        profiles: new Proxy(
+          {},
+          {
+            get(_target, id: string) {
+              return {
+                create(payload: Record<string, unknown>) {
+                  return { id, payload, type: 'create' as const };
+                },
+                update(payload: Record<string, unknown>) {
+                  return { id, payload, type: 'update' as const };
+                },
+              };
+            },
+          }
+        ),
+      },
+    };
+
+    const profile = await ensureProfileWithDb(
+      database as Parameters<typeof ensureProfileWithDb>[0],
+      {
+        userId: TEST_USER_ID,
+      }
+    );
+
+    expect(profile?.id).toBe(TEST_USER_ID);
+    expect(profile?.full_name).toBe('Recovered Member');
+    expect(captureHandledErrorMock).toHaveBeenCalledTimes(0);
   });
 });
