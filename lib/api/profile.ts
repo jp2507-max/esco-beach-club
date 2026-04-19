@@ -61,14 +61,12 @@ export type ProfileBootstrapStage =
 
 export class ProfileBootstrapError extends Error {
   readonly isRetryable: boolean;
-  readonly canonicalProfileExists: boolean;
   readonly operation: ProfileBootstrapOperation;
   readonly stage: ProfileBootstrapStage;
 
   constructor(
     message: string,
     options: {
-      canonicalProfileExists?: boolean;
       isRetryable: boolean;
       operation?: ProfileBootstrapOperation;
       stage: ProfileBootstrapStage;
@@ -76,7 +74,6 @@ export class ProfileBootstrapError extends Error {
   ) {
     super(message);
     Object.setPrototypeOf(this, new.target.prototype);
-    this.canonicalProfileExists = options.canonicalProfileExists ?? false;
     this.name = 'ProfileBootstrapError';
     this.isRetryable = options.isRetryable;
     this.operation = options.operation ?? 'load_profile';
@@ -249,7 +246,6 @@ export async function ensureProfileWithDb(
           },
           extras: {
             ...getErrorMonitoringExtras(error),
-            canonicalProfileExists: Boolean(existingCanonicalProfile),
             payloadKeys: Object.keys(payload),
             profileId,
             userId: params.userId,
@@ -260,7 +256,6 @@ export async function ensureProfileWithDb(
           console.error('[ensureProfile] Canonical profile create denied', {
             attempt,
             maxAttempts,
-            canonicalProfileExists: Boolean(existingCanonicalProfile),
             payloadKeys: Object.keys(payload),
             profileId,
             userId: params.userId,
@@ -273,7 +268,6 @@ export async function ensureProfileWithDb(
         }
 
         throw new ProfileBootstrapError(PROFILE_PERMISSION_DENIED_ERROR_KEY, {
-          canonicalProfileExists: Boolean(existingCanonicalProfile),
           isRetryable: false,
           operation: 'create_profile',
           stage: profileBootstrapStages.ensureProfile,

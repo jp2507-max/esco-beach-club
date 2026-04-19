@@ -135,7 +135,7 @@ function isAppleSignInCanceledError(error: unknown): boolean {
     return true;
   }
 
-  return isUnknownReasonMessage;
+  return false;
 }
 
 function hasGoogleSignInPlatformConfig(): boolean {

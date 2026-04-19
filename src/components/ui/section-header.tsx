@@ -1,6 +1,9 @@
 import type { ComponentProps } from 'react';
 import React from 'react';
+import { useColorScheme } from 'react-native';
 
+import { Colors } from '@/constants/colors';
+import { getAndroidRippleConfig } from '@/src/lib/styles/android-ripple';
 import { cn } from '@/src/lib/utils';
 import { Pressable, Text, View } from '@/src/tw';
 
@@ -18,6 +21,16 @@ export function SectionHeader({
   title,
   ...props
 }: SectionHeaderProps): React.JSX.Element {
+  const isDark = useColorScheme() === 'dark';
+  const androidRipple = React.useMemo(
+    () =>
+      getAndroidRippleConfig(
+        isDark ? Colors.ACTIVE_BG_DARK : Colors.ACTIVE_BG_LIGHT,
+        { borderless: true }
+      ),
+    [isDark]
+  );
+
   return (
     <View
       className={cn('flex-row items-center justify-between gap-3', className)}
@@ -28,7 +41,12 @@ export function SectionHeader({
       </Text>
       {actionLabel ? (
         onActionPress ? (
-          <Pressable accessibilityRole="button" onPress={onActionPress}>
+          <Pressable
+            accessibilityRole="button"
+            android_ripple={androidRipple}
+            hitSlop={8}
+            onPress={onActionPress}
+          >
             <Text className="text-sm font-semibold text-primary dark:text-primary-bright">
               {actionLabel}
             </Text>

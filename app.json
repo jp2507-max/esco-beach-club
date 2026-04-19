@@ -15,20 +15,29 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "assets/app-icon.icon",
-      "supportsTablet": false,
+      "supportsTablet": true,
       "bundleIdentifier": "com.escobeachclub.app",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Allow Esco Beach Club to access your location in the background so we can recognize when you arrive at the restaurant and unlock member-only venue offers.",
         "NSLocationWhenInUseUsageDescription": "Allow Esco Beach Club to access your location so we can show nearby events, partner perks, and venue updates.",
-        "NSUserNotificationUsageDescription": "Allow Esco Beach Club to send booking updates, event reminders, and exclusive member offers."
+        "NSUserNotificationUsageDescription": "Allow Esco Beach Club to send booking updates, event reminders, and exclusive member offers.",
+        "UISupportedInterfaceOrientations~ipad": [
+          "UIInterfaceOrientationPortrait",
+          "UIInterfaceOrientationPortraitUpsideDown",
+          "UIInterfaceOrientationLandscapeLeft",
+          "UIInterfaceOrientationLandscapeRight"
+        ]
       }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "assets/android-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#ffffff",
+        "monochromeImage": "assets/android-icon-monochrome.png"
       },
+      "allowBackup": false,
+      "predictiveBackGestureEnabled": true,
       "permissions": [
         "ACCESS_BACKGROUND_LOCATION",
         "ACCESS_COARSE_LOCATION",
@@ -78,7 +87,13 @@
           "locationWhenInUsePermission": "Allow Esco Beach Club to access your location so we can show nearby events, partner perks, and venue updates."
         }
       ],
-      "expo-notifications",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#E91E63"
+        }
+      ],
       "expo-localization",
       "expo-web-browser",
       [
@@ -90,7 +105,16 @@
         }
       ],
       "@react-native-google-signin/google-signin",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableMinifyInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

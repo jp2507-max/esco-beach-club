@@ -393,9 +393,9 @@ describe('profile bootstrap', () => {
           },
         };
       },
-      async transact() {
+      transact: mock(() => {
         throw new Error('Permission denied: not perms-pass?');
-      },
+      }),
       tx: {
         profiles: new Proxy(
           {},
@@ -424,6 +424,7 @@ describe('profile bootstrap', () => {
 
     expect(profile?.id).toBe(TEST_USER_ID);
     expect(profile?.full_name).toBe('Recovered Member');
+    expect(database.transact).toHaveBeenCalledTimes(1);
     expect(captureHandledErrorMock).toHaveBeenCalledTimes(0);
   });
 });

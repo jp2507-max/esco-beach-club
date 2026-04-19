@@ -203,17 +203,21 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       });
     } catch (error: unknown) {
       const nextError = toError(error, 'unableToVerifyCode');
-      captureHandledError(error, {
-        extras: {
-          mappedErrorKey: nextError.message,
-          rawAuthErrorMessage: extractAuthErrorMessage(error),
-        },
-        tags: {
-          area: 'auth',
-          auth_phase: resolveAuthPhase(nextError.message),
-          operation: 'verify_magic_code',
-        },
-      });
+
+      if (shouldCaptureAuthError(nextError.message)) {
+        captureHandledError(error, {
+          extras: {
+            mappedErrorKey: nextError.message,
+            rawAuthErrorMessage: extractAuthErrorMessage(error),
+          },
+          tags: {
+            area: 'auth',
+            auth_phase: resolveAuthPhase(nextError.message),
+            operation: 'verify_magic_code',
+          },
+        });
+      }
+
       setVerifyCodeError(nextError);
       throw nextError;
     } finally {
