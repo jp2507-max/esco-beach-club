@@ -5,7 +5,7 @@ const FRAME_BODY_COMPACT_PADDING = 20;
 const FRAME_HEIGHT_RESERVE = 12;
 const HEADER_HEIGHT_ESTIMATE = 96;
 const CONTROLS_HEIGHT_ESTIMATE = 228;
-const WIDTH_PADDING = 56;
+const WIDTH_PADDING = 40;
 
 export type ScannerFrameLayout = {
   bodyMinHeight: number;

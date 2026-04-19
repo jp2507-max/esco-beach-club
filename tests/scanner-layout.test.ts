@@ -15,7 +15,7 @@ describe('scanner layout sizing', () => {
 
     expect(layout.isCompact).toBe(true);
     expect(layout.bodyMinHeight).toBeLessThanOrEqual(availableHeight);
-    expect(layout.frameSize).toBeLessThanOrEqual(304);
+    expect(layout.frameSize).toBe(320);
   });
 
   test('preserves the larger scanner frame when height allows it', () => {

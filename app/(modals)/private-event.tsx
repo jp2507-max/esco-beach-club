@@ -44,7 +44,12 @@ import {
   type PrivateEventFormValues,
   privateEventSchema,
 } from '@/src/lib/forms/schemas';
-import { hapticSelection } from '@/src/lib/haptics/haptics';
+import {
+  hapticError,
+  hapticMedium,
+  hapticSelection,
+  hapticSuccess,
+} from '@/src/lib/haptics/haptics';
 import { captureHandledError } from '@/src/lib/monitoring';
 import { cn } from '@/src/lib/utils';
 import {
@@ -195,6 +200,7 @@ function PrivateEventScreenContent(): React.JSX.Element {
       });
     },
     onSuccess: () => {
+      hapticSuccess();
       setSubmitted(true);
       successScale.set(withSpring(1, motion.spring.bouncy));
     },
@@ -206,6 +212,7 @@ function PrivateEventScreenContent(): React.JSX.Element {
           operation: 'submit_inquiry',
         },
       });
+      hapticError();
       const message =
         err instanceof Error ? err.message : t('privateEvent.submitError');
       Alert.alert(t('privateEvent.submissionFailed'), message);
@@ -217,6 +224,7 @@ function PrivateEventScreenContent(): React.JSX.Element {
   const isSubmitting = inquiryMutation.isPending;
 
   function handleInvalidSubmit(): void {
+    hapticError();
     Alert.alert(
       t('privateEvent.missingInfo'),
       t('privateEvent.missingInfoMessage')
@@ -234,6 +242,8 @@ function PrivateEventScreenContent(): React.JSX.Element {
   }
 
   function handleValidSubmit(values: PrivateEventFormValues): void {
+    if (inquiryMutation.isPending) return;
+    hapticMedium();
     inquiryMutation.mutate(values);
   }
 

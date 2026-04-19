@@ -202,6 +202,52 @@ const common = {
         },
       },
     },
+    accountDeletion: {
+      title: 'Esco Beach Club Account Deletion',
+      intro:
+        'This public page explains how to request deletion of your Esco Beach Club account, what happens during the 30-day restore window, which data is removed, and which records may be retained after deletion for legal or security reasons.',
+      sections: {
+        overview: {
+          title: 'At a glance',
+          body1:
+            'Start deletion from inside the app at Profile > Delete Account, or contact support if you cannot access the in-app flow.',
+          body2:
+            'Once scheduled, the account enters a 30-day restore window so you can sign in again and cancel deletion before it becomes final.',
+          body3:
+            'When deletion is finalized, the account profile, member details, saved events, booking history, private-event request history, and member-specific benefits are removed.',
+          body4:
+            'We may keep limited records only when required for legal compliance, fraud prevention, security, accounting, or to document that a deletion request was handled.',
+        },
+        request: {
+          title: 'How to request deletion',
+          body1:
+            'Open the app, go to Profile > Delete Account, review the warnings, and submit the request while signed in.',
+          body2:
+            'If you cannot sign in, contact support and we will help you reach the deletion flow.',
+        },
+        restore: {
+          title: '30-day restore window',
+          body1:
+            'After scheduling deletion, your account can be restored by signing in again within 30 days.',
+          body2:
+            'If you do not restore the account before the deadline, deletion becomes final and access to the member profile ends.',
+        },
+        removed: {
+          title: 'What is deleted',
+          body1:
+            'Your account profile, member details, saved events, booking and private-event request history, and member-specific access or benefits linked to the account are removed when deletion is finalized.',
+          body2:
+            'Linked sign-in access is revoked where supported by the provider.',
+        },
+        retained: {
+          title: 'What may be retained',
+          body1:
+            'We may keep limited records needed to comply with law, prevent fraud or abuse, maintain security, complete accounting, or document that a deletion request was handled.',
+          body2:
+            'These retained records are kept only for the time needed for those purposes.',
+        },
+      },
+    },
     terms: {
       title: 'Terms of Service',
       intro:

@@ -18,6 +18,7 @@ import {
   withTiming,
   ZoomIn,
 } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
 import { updateProfile } from '@/lib/api';
@@ -31,9 +32,10 @@ import { motion, withRM } from '@/src/lib/animations/motion';
 import { useButtonPress } from '@/src/lib/animations/use-button-press';
 import { config } from '@/src/lib/config';
 import { hapticLight } from '@/src/lib/haptics/haptics';
+import { computeOnboardingFooterPadding } from '@/src/lib/layout/onboarding-footer-padding';
 import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
 import { useSignupOnboardingDraftStore } from '@/src/stores/signup-onboarding-store';
-import { Pressable, Text, View } from '@/src/tw';
+import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 import { Image } from '@/src/tw/image';
 
@@ -126,6 +128,7 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
   } = useAuth();
   const { profile } = useProfileData();
   const { t } = useTranslation('auth');
+  const insets = useSafeAreaInsets();
   const isDark = useAppIsDark();
   const ctaButton = useButtonPress();
   const signupDraft = useSignupOnboardingDraftStore((state) => state.draft);
@@ -138,6 +141,7 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
 
   const sparkleScale = useSharedValue(1);
   const floatingProgress = useSharedValue(0);
+  const footerPaddingBottom = computeOnboardingFooterPadding(insets.bottom);
 
   useEffect(() => {
     sparkleScale.set(
@@ -361,8 +365,17 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
         testIDPrefix="onboarding-final-details"
       />
 
-      <View className="flex-1 px-6 pb-12">
-        <AuthScreenContent className="flex-1">
+      <ScrollView
+        className="flex-1"
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={{
+          flexGrow: 1,
+          paddingHorizontal: 24,
+          paddingBottom: 16,
+        }}
+        showsVerticalScrollIndicator={false}
+      >
+        <AuthScreenContent>
           <View className="items-center">
             <Animated.View
               entering={withRM(
@@ -482,14 +495,25 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
               </Animated.View>
             </View>
           </Animated.View>
+        </AuthScreenContent>
+      </ScrollView>
 
+      <View
+        className="bg-background dark:bg-dark-bg"
+        style={{
+          paddingHorizontal: 24,
+          paddingTop: 12,
+          paddingBottom: footerPaddingBottom,
+        }}
+      >
+        <AuthScreenContent>
           <Animated.View
             entering={withRM(FadeIn.duration(motion.dur.md).delay(CTA_DELAY))}
           >
             <Animated.View style={ctaButton.animatedStyle}>
               <Pressable
                 accessibilityRole="button"
-                className="mt-8 overflow-hidden rounded-full"
+                className="overflow-hidden rounded-full"
                 onPress={() => {
                   hapticLight();
                   handleCompleteSetup();

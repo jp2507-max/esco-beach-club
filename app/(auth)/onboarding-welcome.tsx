@@ -10,6 +10,7 @@ import {
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { FadeIn, FadeInLeft, FadeInUp } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
 import { AuthScreenContent } from '@/src/components/auth/auth-screen-content';
@@ -18,9 +19,10 @@ import { motion, withRM } from '@/src/lib/animations/motion';
 import { useButtonPress } from '@/src/lib/animations/use-button-press';
 import { config } from '@/src/lib/config';
 import { hapticLight } from '@/src/lib/haptics/haptics';
+import { computeOnboardingFooterPadding } from '@/src/lib/layout/onboarding-footer-padding';
 import { shadows } from '@/src/lib/styles/shadows';
 import { useSignupOnboardingDraftStore } from '@/src/stores/signup-onboarding-store';
-import { Pressable, Text, View } from '@/src/tw';
+import { Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 import { Image } from '@/src/tw/image';
 
@@ -43,10 +45,12 @@ const CARD_STAGGER = 60;
 export default function OnboardingWelcomeScreen(): React.JSX.Element {
   const router = useRouter();
   const { t } = useTranslation('auth');
+  const insets = useSafeAreaInsets();
   const ctaButton = useButtonPress();
   const resetSignupDraft = useSignupOnboardingDraftStore(
     (state) => state.resetDraft
   );
+  const footerPaddingBottom = computeOnboardingFooterPadding(insets.bottom);
 
   const featureCards: FeatureCard[] = [
     {
@@ -80,8 +84,17 @@ export default function OnboardingWelcomeScreen(): React.JSX.Element {
         testIDPrefix="onboarding"
       />
 
-      <View className="flex-1 px-5 pb-8">
-        <AuthScreenContent className="flex-1">
+      <ScrollView
+        className="flex-1"
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={{
+          flexGrow: 1,
+          paddingHorizontal: 20,
+          paddingBottom: 16,
+        }}
+        showsVerticalScrollIndicator={false}
+      >
+        <AuthScreenContent>
           <Animated.View
             entering={withRM(FadeIn.duration(motion.dur.lg).delay(HERO_DELAY))}
             className="overflow-hidden rounded-3xl border border-border/60 dark:border-dark-border"
@@ -184,14 +197,25 @@ export default function OnboardingWelcomeScreen(): React.JSX.Element {
               </Animated.View>
             ))}
           </View>
+        </AuthScreenContent>
+      </ScrollView>
 
+      <View
+        className="bg-background dark:bg-dark-bg"
+        style={{
+          paddingHorizontal: 20,
+          paddingTop: 12,
+          paddingBottom: footerPaddingBottom,
+        }}
+      >
+        <AuthScreenContent>
           <Animated.View
             entering={withRM(
               FadeIn.duration(motion.dur.md).delay(
                 CARD_BASE_DELAY + featureCards.length * CARD_STAGGER + 60
               )
             )}
-            className="mt-auto gap-3"
+            className="gap-3"
           >
             <Animated.View style={ctaButton.animatedStyle}>
               <Pressable

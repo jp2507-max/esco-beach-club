@@ -1,10 +1,11 @@
 import { Search, X } from 'lucide-react-native';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TextInput as RNTextInputType } from 'react-native';
 import { useColorScheme } from 'react-native';
 
 import { Colors } from '@/constants/colors';
+import { getAndroidRippleConfig } from '@/src/lib/styles/android-ripple';
 import { cn } from '@/src/lib/utils';
 import { Pressable, TextInput, View } from '@/src/tw';
 
@@ -52,6 +53,15 @@ export function SearchInput({
     inputRef.current?.blur();
   }, [controlledValue, onChangeText]);
 
+  const androidRipple = useMemo(
+    () =>
+      getAndroidRippleConfig(
+        isDark ? Colors.ACTIVE_BG_DARK : Colors.ACTIVE_BG_LIGHT,
+        { borderless: true }
+      ),
+    [isDark]
+  );
+
   return (
     <View
       className={cn(
@@ -83,6 +93,7 @@ export function SearchInput({
           accessibilityHint={t('searchInput.clearHint')}
           accessibilityLabel={t('searchInput.clearLabel')}
           accessibilityRole="button"
+          android_ripple={androidRipple}
           hitSlop={8}
           onPress={handleClear}
           testID={`${testID}-clear`}

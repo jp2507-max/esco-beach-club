@@ -2,6 +2,9 @@ import { afterAll, describe, expect, mock, test } from 'bun:test';
 
 const captureHandledErrorMock = mock(() => {});
 const googleConfigureMock = mock(() => {});
+const appleSignInAsyncMock = mock(async () => ({
+  identityToken: 'apple-id-token',
+}));
 const setProfileAuthProviderMock = mock(async () => {});
 const signInWithIdTokenMock = mock(async () => ({
   created: true,
@@ -62,9 +65,7 @@ mock.module('expo-apple-authentication', () => ({
     FULL_NAME: 0,
   },
   isAvailableAsync: async () => true,
-  signInAsync: async () => ({
-    identityToken: 'apple-id-token',
-  }),
+  signInAsync: appleSignInAsyncMock,
 }));
 
 mock.module('react-native', () => ({
@@ -125,6 +126,10 @@ const { signInWithAppleFlow } =
 
 describe('auth provider persistence after sign-in', () => {
   test('persists the provider after successful Apple sign-in', async () => {
+    appleSignInAsyncMock.mockReset();
+    appleSignInAsyncMock.mockResolvedValue({
+      identityToken: 'apple-id-token',
+    });
     setProfileAuthProviderMock.mockReset();
     signInWithIdTokenMock.mockReset();
     signInWithIdTokenMock.mockResolvedValue({
@@ -147,6 +152,10 @@ describe('auth provider persistence after sign-in', () => {
   });
 
   test('does not fail sign-in when provider persistence fails', async () => {
+    appleSignInAsyncMock.mockReset();
+    appleSignInAsyncMock.mockResolvedValue({
+      identityToken: 'apple-id-token',
+    });
     captureHandledErrorMock.mockReset();
     setProfileAuthProviderMock.mockReset();
     signInWithIdTokenMock.mockReset();
@@ -173,10 +182,65 @@ describe('auth provider persistence after sign-in', () => {
 
     expect(thrownError).toBeNull();
     expect(setProfileAuthProviderMock).toHaveBeenCalledTimes(1);
+    expect(captureHandledErrorMock).toHaveBeenCalledTimes(0);
+  });
+
+  test('captures non-permission persistence failures', async () => {
+    appleSignInAsyncMock.mockReset();
+    appleSignInAsyncMock.mockResolvedValue({
+      identityToken: 'apple-id-token',
+    });
+    captureHandledErrorMock.mockReset();
+    setProfileAuthProviderMock.mockReset();
+    signInWithIdTokenMock.mockReset();
+    signInWithIdTokenMock.mockResolvedValue({
+      created: true,
+      user: {
+        email: 'member@example.com',
+        id: 'user-123',
+      },
+    });
+    setProfileAuthProviderMock.mockRejectedValueOnce(new Error('db timeout'));
+
+    await signInWithAppleFlow({
+      t: ((key: string) => key) as (key: string) => string,
+    });
+
     expect(captureHandledErrorMock).toHaveBeenCalledTimes(1);
   });
 
+  test('maps Apple unknown authorization failure to canceled', async () => {
+    appleSignInAsyncMock.mockReset();
+    appleSignInAsyncMock.mockRejectedValueOnce({
+      code: 'ERR_REQUEST_UNKNOWN',
+      message: 'The authorization attempt failed for an unknown reason',
+    });
+    captureHandledErrorMock.mockReset();
+    setProfileAuthProviderMock.mockReset();
+    signInWithIdTokenMock.mockReset();
+
+    let thrownError: unknown = null;
+
+    try {
+      await signInWithAppleFlow({
+        t: ((key: string) => key) as (key: string) => string,
+      });
+    } catch (error: unknown) {
+      thrownError = error;
+    }
+
+    expect(thrownError).toBeInstanceOf(Error);
+    expect((thrownError as Error).message).toBe('providerSignInCanceled');
+    expect(signInWithIdTokenMock).toHaveBeenCalledTimes(0);
+    expect(setProfileAuthProviderMock).toHaveBeenCalledTimes(0);
+    expect(captureHandledErrorMock).toHaveBeenCalledTimes(0);
+  });
+
   test('does not forward onboarding fields into user create extraFields when dob is omitted', async () => {
+    appleSignInAsyncMock.mockReset();
+    appleSignInAsyncMock.mockResolvedValue({
+      identityToken: 'apple-id-token',
+    });
     signInWithIdTokenMock.mockReset();
     signInWithIdTokenMock.mockResolvedValue({
       created: true,
