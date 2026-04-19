@@ -32,6 +32,7 @@ import { motion, withRM } from '@/src/lib/animations/motion';
 import { useButtonPress } from '@/src/lib/animations/use-button-press';
 import { config } from '@/src/lib/config';
 import { hapticLight } from '@/src/lib/haptics/haptics';
+import { computeOnboardingFooterPadding } from '@/src/lib/layout/onboarding-footer-padding';
 import { useAppIsDark } from '@/src/lib/theme/use-app-is-dark';
 import { useSignupOnboardingDraftStore } from '@/src/stores/signup-onboarding-store';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
@@ -140,7 +141,7 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
 
   const sparkleScale = useSharedValue(1);
   const floatingProgress = useSharedValue(0);
-  const footerPaddingBottom = Math.max(insets.bottom, 12) + 8;
+  const footerPaddingBottom = computeOnboardingFooterPadding(insets.bottom);
 
   useEffect(() => {
     sparkleScale.set(
@@ -365,6 +366,7 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
       />
 
       <ScrollView
+        className="flex-1"
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={{
           flexGrow: 1,
@@ -497,6 +499,7 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
       </ScrollView>
 
       <View
+        className="bg-background dark:bg-dark-bg"
         style={{
           paddingHorizontal: 24,
           paddingTop: 12,

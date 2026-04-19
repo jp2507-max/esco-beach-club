@@ -19,6 +19,7 @@ import { motion, withRM } from '@/src/lib/animations/motion';
 import { useButtonPress } from '@/src/lib/animations/use-button-press';
 import { config } from '@/src/lib/config';
 import { hapticLight } from '@/src/lib/haptics/haptics';
+import { computeOnboardingFooterPadding } from '@/src/lib/layout/onboarding-footer-padding';
 import { shadows } from '@/src/lib/styles/shadows';
 import { useSignupOnboardingDraftStore } from '@/src/stores/signup-onboarding-store';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
@@ -49,7 +50,7 @@ export default function OnboardingWelcomeScreen(): React.JSX.Element {
   const resetSignupDraft = useSignupOnboardingDraftStore(
     (state) => state.resetDraft
   );
-  const footerPaddingBottom = Math.max(insets.bottom, 12) + 8;
+  const footerPaddingBottom = computeOnboardingFooterPadding(insets.bottom);
 
   const featureCards: FeatureCard[] = [
     {
@@ -84,6 +85,7 @@ export default function OnboardingWelcomeScreen(): React.JSX.Element {
       />
 
       <ScrollView
+        className="flex-1"
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={{
           flexGrow: 1,

@@ -3,10 +3,20 @@ param(
   [Parameter(Mandatory=$true)][string]$Destination,
   [Parameter(Mandatory=$true)][int]$Size,
   # Fraction of the canvas occupied by the rendered mark (adaptive-icon safe zone ~ 0.66).
-  [double]$SafeZone = 1.0
+  [double]$SafeZone = 0.66
 )
 
 Add-Type -AssemblyName System.Drawing
+
+if (
+  [double]::IsNaN($SafeZone) -or
+  [double]::IsInfinity($SafeZone) -or
+  $SafeZone -lt 0.5 -or
+  $SafeZone -gt 1.0
+) {
+  Write-Warning ("SafeZone {0} is out of bounds; using default 0.66." -f $SafeZone)
+  $SafeZone = 0.66
+}
 
 $src = [System.Drawing.Image]::FromFile((Resolve-Path $Source))
 
@@ -58,6 +68,11 @@ for ($y = 0; $y -lt $Size; $y++) {
 [System.Runtime.InteropServices.Marshal]::Copy($bytes, 0, $ptr, $bytes.Length)
 $canvas.UnlockBits($data)
 
-$canvas.Save((Resolve-Path -LiteralPath (Split-Path $Destination -Parent)).Path + '\' + (Split-Path $Destination -Leaf), [System.Drawing.Imaging.ImageFormat]::Png)
+$destinationPath = [System.IO.Path]::GetFullPath($Destination)
+$destinationDirectory = [System.IO.Path]::GetDirectoryName($destinationPath)
+if ($destinationDirectory -and -not (Test-Path -LiteralPath $destinationDirectory)) {
+  New-Item -ItemType Directory -Path $destinationDirectory -Force | Out-Null
+}
+$canvas.Save($destinationPath, [System.Drawing.Imaging.ImageFormat]::Png)
 $canvas.Dispose()
 Write-Output ("Wrote {0} ({1}x{1})" -f $Destination, $Size)

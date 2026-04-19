@@ -175,8 +175,16 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       return await sendMagicCodeFlow({ email });
     } catch (error: unknown) {
       const nextError = toError(error, 'unableToSendCode');
-      captureHandledError(nextError, {
-        tags: { area: 'auth', operation: 'send_magic_code' },
+      captureHandledError(error, {
+        extras: {
+          mappedErrorKey: nextError.message,
+          rawAuthErrorMessage: extractAuthErrorMessage(error),
+        },
+        tags: {
+          area: 'auth',
+          auth_phase: resolveAuthPhase(nextError.message),
+          operation: 'send_magic_code',
+        },
       });
       setSendCodeError(nextError);
       throw nextError;
@@ -236,8 +244,16 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       }
     } catch (error: unknown) {
       const nextError = toError(error, 'unableToSignOut');
-      captureHandledError(nextError, {
-        tags: { area: 'auth', operation: 'sign_out' },
+      captureHandledError(error, {
+        extras: {
+          mappedErrorKey: nextError.message,
+          rawAuthErrorMessage: extractAuthErrorMessage(error),
+        },
+        tags: {
+          area: 'auth',
+          auth_phase: resolveAuthPhase(nextError.message),
+          operation: 'sign_out',
+        },
       });
       setSignOutError(nextError);
       throw nextError;

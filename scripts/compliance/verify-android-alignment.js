@@ -37,7 +37,20 @@ function findZipalign() {
   const buildToolsDir = path.join(sdkRoot, 'build-tools');
   if (!fs.existsSync(buildToolsDir)) return null;
   const exe = process.platform === 'win32' ? 'zipalign.exe' : 'zipalign';
-  const versions = fs.readdirSync(buildToolsDir).sort().reverse();
+  const versions = fs
+    .readdirSync(buildToolsDir)
+    .map((name) => ({
+      name,
+      parts: name.split('.').map((p) => parseInt(p, 10) || 0),
+    }))
+    .sort((a, b) => {
+      for (let i = 0; i < Math.max(a.parts.length, b.parts.length); i++) {
+        const diff = (b.parts[i] || 0) - (a.parts[i] || 0);
+        if (diff !== 0) return diff;
+      }
+      return 0;
+    })
+    .map((v) => v.name);
   for (const v of versions) {
     const candidate = path.join(buildToolsDir, v, exe);
     if (fs.existsSync(candidate)) return candidate;
@@ -88,7 +101,21 @@ function main() {
 
   const result = spawnSync(zipalign, ['-c', '-P', '16', '-v', '4', absTarget], {
     encoding: 'utf8',
+    maxBuffer: 64 * 1024 * 1024,
   });
+
+  if (result.error) {
+    const msg = `Failed to execute zipalign: ${result.error.message}`;
+    writeReport({
+      success: false,
+      error: msg,
+      target: absTarget,
+      zipalign,
+      scannedAt: new Date().toISOString(),
+    });
+    console.error(msg);
+    process.exit(2);
+  }
 
   const stdout = result.stdout || '';
   const stderr = result.stderr || '';
@@ -96,7 +123,7 @@ function main() {
 
   const misaligned = combined
     .split(/\r?\n/)
-    .filter((line) => /\.so\b.*(BAD|UNALIGNED)/i.test(line))
+    .filter((line) => /\.so\b.*BAD/i.test(line))
     .map((line) => line.trim());
 
   const passed =

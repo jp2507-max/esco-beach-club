@@ -20,6 +20,7 @@ import { InfoDot } from '@/src/components/ui';
 import { motion, withRM } from '@/src/lib/animations/motion';
 import { useButtonPress } from '@/src/lib/animations/use-button-press';
 import { hapticLight, hapticSuccess } from '@/src/lib/haptics/haptics';
+import { computeOnboardingFooterPadding } from '@/src/lib/layout/onboarding-footer-padding';
 import {
   resolvePushPermissionStatus,
   toOnboardingPermissionStatus,
@@ -50,7 +51,7 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
   const setSignupDraft = useSignupOnboardingDraftStore(
     (state) => state.setDraft
   );
-  const footerPaddingBottom = Math.max(insets.bottom, 12) + 8;
+  const footerPaddingBottom = computeOnboardingFooterPadding(insets.bottom);
 
   const [locationStatus, setLocationStatus] =
     React.useState<OnboardingPermissionStatus>(
@@ -362,6 +363,7 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
       />
 
       <ScrollView
+        className="flex-1"
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={{
           flexGrow: 1,

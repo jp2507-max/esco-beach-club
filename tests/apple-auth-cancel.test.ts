@@ -66,6 +66,17 @@ describe('Apple sign-in cancellation mapping', () => {
     );
   });
 
+  test('maps ERR_REQUEST_UNKNOWN unknown-reason failures to providerSignInCanceled', async () => {
+    signInAsyncMock.mockRejectedValueOnce({
+      code: 'ERR_REQUEST_UNKNOWN',
+      message: 'The authorization attempt failed for an unknown reason',
+    });
+
+    await expect(getAppleAuthorizationCode()).rejects.toThrow(
+      'providerSignInCanceled'
+    );
+  });
+
   test('does not treat unrelated unknown-reason errors as cancellation', async () => {
     const systemError = {
       code: 'ERR_REQUEST_FAILED',
