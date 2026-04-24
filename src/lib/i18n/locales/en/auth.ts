@@ -61,7 +61,7 @@ const auth = {
     'Upload a photo so your cabana host can welcome you by name.',
   onboardingFinalDetailsLocationTitle: 'Location Services',
   onboardingFinalDetailsLocationDescription:
-    'Enable location so we can detect when you arrive at the restaurant and unlock in-venue offers.',
+    'We use location to detect when you arrive at the restaurant and unlock in-venue offers.',
   onboardingFinalDetailsNotificationsTitle: 'Stay Informed',
   onboardingFinalDetailsNotificationsDescription:
     'Never miss a booking confirmation or exclusive sunset hour invitation.',
@@ -79,14 +79,14 @@ const auth = {
     'We could not load the selected photo. Please try another image.',
   onboardingPermissionsTitle: 'Stay in the loop',
   onboardingPermissionsSubtitle:
-    'Enable only what helps: nearby perks and timely booking updates for members.',
+    'Choose what you want: nearby perks and timely booking updates for members.',
   onboardingPermissionsLocationInfoTitle: 'Why location helps members',
   onboardingPermissionsLocationInfoMessage:
     'We use location to detect restaurant entry, unlock timely venue offers, and highlight relevant nearby perks.',
   onboardingPermissionsBackgroundPromptTitle:
-    'Allow background location for venue alerts',
+    'Background location for venue alerts',
   onboardingPermissionsBackgroundPromptMessage:
-    'Enable background location so Esco Beach Club can recognize when you arrive at the restaurant and send timely in-venue offers.',
+    'Background location lets Esco Beach Club recognize when you arrive at the restaurant and send timely in-venue offers.',
   onboardingPermissionsBackgroundPromptContinue: 'Continue',
   onboardingPermissionsBackgroundPromptLater: 'Not now',
   onboardingPermissionsNotificationsInfoTitle: 'Why notifications help members',
@@ -95,7 +95,7 @@ const auth = {
   onboardingPermissionsStatusGranted: 'Enabled',
   onboardingPermissionsStatusDenied: 'Denied',
   onboardingPermissionsStatusUndetermined: 'Not now',
-  onboardingPermissionsActionAllow: 'Allow Access',
+  onboardingPermissionsActionAllow: 'Continue',
   onboardingPermissionsActionRetry: 'Try Again',
   onboardingPermissionsActionEnabled: 'Enabled',
   onboardingPermissionsActionManage: 'Manage',

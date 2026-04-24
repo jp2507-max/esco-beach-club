@@ -19,9 +19,8 @@
       "bundleIdentifier": "com.escobeachclub.app",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "Allow Esco Beach Club to access your location in the background so we can recognize when you arrive at the restaurant and unlock member-only venue offers.",
-        "NSLocationWhenInUseUsageDescription": "Allow Esco Beach Club to access your location so we can show nearby events, partner perks, and venue updates.",
-        "NSUserNotificationUsageDescription": "Allow Esco Beach Club to send booking updates, event reminders, and exclusive member offers.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Esco Beach Club uses background location to recognize when you arrive at the restaurant and deliver member-only venue offers.",
+        "NSLocationWhenInUseUsageDescription": "Esco Beach Club uses your location to show nearby events, partner perks, and venue updates.",
         "UISupportedInterfaceOrientations~ipad": [
           "UIInterfaceOrientationPortrait",
           "UIInterfaceOrientationPortraitUpsideDown",
@@ -73,18 +72,20 @@
       "expo-image",
       "./plugins/with-apple-privacy-manifest",
       [
-        "expo-camera",
-        {
-          "cameraPermission": "Allow Esco Beach Club to access your camera so you can scan bill QR codes and claim member points."
-        }
-      ],
-      [
         "expo-location",
         {
           "isAndroidBackgroundLocationEnabled": true,
           "isIosBackgroundLocationEnabled": true,
-          "locationAlwaysAndWhenInUsePermission": "Allow Esco Beach Club to access your location in the background so we can recognize when you arrive at the restaurant and unlock member-only venue offers.",
-          "locationWhenInUsePermission": "Allow Esco Beach Club to access your location so we can show nearby events, partner perks, and venue updates."
+          "locationAlwaysAndWhenInUsePermission": "Esco Beach Club uses background location to recognize when you arrive at the restaurant and deliver member-only venue offers.",
+          "locationWhenInUsePermission": "Esco Beach Club uses your location to show nearby events, partner perks, and venue updates."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Esco Beach Club uses the camera to scan bill QR codes and credit reward points to your account.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
         }
       ],
       [

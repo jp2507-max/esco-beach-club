@@ -61,7 +61,7 @@ const auth = {
     'Tải ảnh lên để host cabana có thể chào đón bạn bằng tên.',
   onboardingFinalDetailsLocationTitle: 'Dịch vụ vị trí',
   onboardingFinalDetailsLocationDescription:
-    'Bật vị trí để chúng tôi nhận biết khi bạn đến nhà hàng và mở khóa ưu đãi tại chỗ.',
+    'Chúng tôi dùng vị trí để nhận biết khi bạn đến nhà hàng và mở khóa ưu đãi tại chỗ.',
   onboardingFinalDetailsNotificationsTitle: 'Luôn cập nhật',
   onboardingFinalDetailsNotificationsDescription:
     'Không bỏ lỡ xác nhận đặt chỗ hoặc lời mời sunset hour độc quyền.',
@@ -79,15 +79,15 @@ const auth = {
     'Không thể tải ảnh đã chọn. Vui lòng thử ảnh khác.',
   onboardingPermissionsTitle: 'Luôn trong tầm cập nhật',
   onboardingPermissionsSubtitle:
-    'Chỉ bật quyền cần thiết để nhận ưu đãi gần bạn và cập nhật đặt chỗ đúng lúc.',
+    'Chọn những gì phù hợp: ưu đãi gần bạn và cập nhật đặt chỗ đúng lúc cho hội viên.',
   onboardingPermissionsLocationInfoTitle:
     'Vì sao vị trí hữu ích cho thành viên',
   onboardingPermissionsLocationInfoMessage:
     'Chúng tôi dùng vị trí để nhận biết khi bạn đến nhà hàng, mở ưu đãi đúng lúc tại địa điểm và gợi ý quyền lợi phù hợp gần bạn.',
   onboardingPermissionsBackgroundPromptTitle:
-    'Cho phép vị trí nền để nhận ưu đãi tại địa điểm',
+    'Vị trí nền cho ưu đãi tại địa điểm',
   onboardingPermissionsBackgroundPromptMessage:
-    'Hãy cho phép vị trí nền để Esco Beach Club nhận biết khi bạn đến nhà hàng và gửi ưu đãi tại chỗ đúng lúc.',
+    'Vị trí nền giúp Esco Beach Club nhận biết khi bạn đến nhà hàng và gửi ưu đãi tại chỗ đúng lúc.',
   onboardingPermissionsBackgroundPromptContinue: 'Tiếp tục',
   onboardingPermissionsBackgroundPromptLater: 'Để sau',
   onboardingPermissionsNotificationsInfoTitle:
@@ -97,7 +97,7 @@ const auth = {
   onboardingPermissionsStatusGranted: 'Đã bật',
   onboardingPermissionsStatusDenied: 'Đã từ chối',
   onboardingPermissionsStatusUndetermined: 'Để sau',
-  onboardingPermissionsActionAllow: 'Cho phép truy cập',
+  onboardingPermissionsActionAllow: 'Tiếp tục',
   onboardingPermissionsActionRetry: 'Thử lại',
   onboardingPermissionsActionEnabled: 'Đã bật',
   onboardingPermissionsActionManage: 'Quản lý',

@@ -154,6 +154,8 @@ export default function RateUsScreen(): React.JSX.Element {
     },
   });
 
+  const isSubmitDisabled = reviewMutation.isPending || rating === 0;
+
   function handleStarPress(star: number): void {
     hapticLight();
     setValue('rating', star, {
@@ -285,12 +287,11 @@ export default function RateUsScreen(): React.JSX.Element {
               <AppScreenContent className="px-6" maxWidth={APP_SHEET_MAX_WIDTH}>
                 <Pressable
                   accessibilityRole="button"
+                  accessibilityState={{ disabled: isSubmitDisabled }}
                   className="w-full flex-row items-center justify-center rounded-2xl bg-primary py-4"
-                  disabled={reviewMutation.isPending}
+                  disabled={isSubmitDisabled}
                   onPress={handleSubmit}
-                  style={
-                    reviewMutation.isPending ? { opacity: 0.5 } : undefined
-                  }
+                  style={isSubmitDisabled ? { opacity: 0.5 } : undefined}
                   testID="submit-review"
                 >
                   <Send color={Colors.white} size={18} />

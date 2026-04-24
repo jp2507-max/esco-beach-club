@@ -61,7 +61,7 @@ const auth = {
     '카바나 호스트가 이름으로 맞이할 수 있도록 사진을 업로드해 주세요.',
   onboardingFinalDetailsLocationTitle: '위치 서비스',
   onboardingFinalDetailsLocationDescription:
-    '레스토랑 도착을 감지하고 현장 전용 오퍼를 받으려면 위치를 활성화하세요.',
+    '위치 정보를 사용해 레스토랑 도착을 감지하고 현장 전용 오퍼를 제공합니다.',
   onboardingFinalDetailsNotificationsTitle: '알림 받기',
   onboardingFinalDetailsNotificationsDescription:
     '예약 확인과 선셋 아워 초대 소식을 놓치지 마세요.',
@@ -79,14 +79,14 @@ const auth = {
     '선택한 사진을 불러오지 못했습니다. 다른 이미지를 시도해 주세요.',
   onboardingPermissionsTitle: '혜택을 놓치지 마세요',
   onboardingPermissionsSubtitle:
-    '필요한 권한만 켜고, 근처 혜택과 중요한 예약 업데이트만 받아보세요.',
+    '필요한 항목을 선택하세요: 근처 혜택과 중요한 예약 업데이트.',
   onboardingPermissionsLocationInfoTitle: '위치 권한이 도움이 되는 이유',
   onboardingPermissionsLocationInfoMessage:
     '레스토랑 도착을 감지하고, 적절한 현장 오퍼와 근처 멤버 혜택을 보여드리는 데 사용됩니다.',
   onboardingPermissionsBackgroundPromptTitle:
-    '현장 알림을 위해 백그라운드 위치를 허용하세요',
+    '현장 알림을 위한 백그라운드 위치',
   onboardingPermissionsBackgroundPromptMessage:
-    '에스코 비치 클럽이 레스토랑 도착을 인식하고 현장 전용 오퍼를 제때 보낼 수 있도록 백그라운드 위치를 허용해 주세요.',
+    '백그라운드 위치를 통해 에스코 비치 클럽이 레스토랑 도착을 인식하고 현장 전용 오퍼를 제때 보낼 수 있습니다.',
   onboardingPermissionsBackgroundPromptContinue: '계속',
   onboardingPermissionsBackgroundPromptLater: '나중에',
   onboardingPermissionsNotificationsInfoTitle: '알림 권한이 도움이 되는 이유',
@@ -95,7 +95,7 @@ const auth = {
   onboardingPermissionsStatusGranted: '허용됨',
   onboardingPermissionsStatusDenied: '거부됨',
   onboardingPermissionsStatusUndetermined: '나중에',
-  onboardingPermissionsActionAllow: '권한 허용',
+  onboardingPermissionsActionAllow: '계속',
   onboardingPermissionsActionRetry: '다시 시도',
   onboardingPermissionsActionEnabled: '활성화됨',
   onboardingPermissionsActionManage: '관리',
