@@ -24,7 +24,11 @@ import {
   type EditProfileFormValues,
   editProfileSchema,
 } from '@/src/lib/forms/schemas';
-import { hapticSuccess } from '@/src/lib/haptics/haptics';
+import {
+  hapticError,
+  hapticMedium,
+  hapticSuccess,
+} from '@/src/lib/haptics/haptics';
 import { captureHandledError } from '@/src/lib/monitoring';
 import { KeyboardAvoidingView, ScrollView, Text } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
@@ -74,6 +78,7 @@ export default function EditProfileScreen(): React.JSX.Element {
           operation: 'edit_profile',
         },
       });
+      hapticError();
       console.error('[EditProfile] Failed to save profile:', error);
       Alert.alert(t('errors.saveProfileFailed'));
     },
@@ -85,6 +90,7 @@ export default function EditProfileScreen(): React.JSX.Element {
 
   function handleSave(values: EditProfileFormValues): void {
     if (saveProfileMutation.isPending) return;
+    hapticMedium();
     saveProfileMutation.mutate(values);
   }
 

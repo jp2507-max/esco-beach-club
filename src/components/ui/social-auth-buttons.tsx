@@ -8,6 +8,7 @@ import {
   isAppleSignInAvailable,
   isGoogleSignInAvailable,
 } from '@/src/lib/auth/social-auth';
+import { getAndroidRippleConfig } from '@/src/lib/styles/android-ripple';
 import { cn } from '@/src/lib/utils';
 import { ActivityIndicator, Pressable, Text, View } from '@/src/tw';
 
@@ -38,9 +39,19 @@ function ProviderButton({
   onPress,
   testID,
 }: ProviderButtonProps): React.JSX.Element {
+  const isDark = useColorScheme() === 'dark';
+  const androidRipple = React.useMemo(
+    () =>
+      getAndroidRippleConfig(
+        isDark ? Colors.ACTIVE_BG_DARK : Colors.ACTIVE_BG_LIGHT
+      ),
+    [isDark]
+  );
+
   return (
     <Pressable
       accessibilityRole="button"
+      android_ripple={androidRipple}
       className={cn(
         'min-h-12 flex-row items-center justify-center rounded-2xl border border-border bg-white px-4 py-3 dark:border-dark-border dark:bg-dark-bg-card',
         isLoading || disabled ? 'opacity-60' : undefined

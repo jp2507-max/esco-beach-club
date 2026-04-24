@@ -27,7 +27,12 @@ import { ProfileSubScreenHeader } from '@/src/components/ui';
 import { motion, rmTiming } from '@/src/lib/animations/motion';
 import { ControlledTextInput } from '@/src/lib/forms/controlled-text-input';
 import { type ReviewFormValues, reviewSchema } from '@/src/lib/forms/schemas';
-import { hapticLight, hapticSuccess } from '@/src/lib/haptics/haptics';
+import {
+  hapticError,
+  hapticLight,
+  hapticMedium,
+  hapticSuccess,
+} from '@/src/lib/haptics/haptics';
 import { captureHandledError } from '@/src/lib/monitoring';
 import {
   KeyboardAvoidingView,
@@ -104,7 +109,11 @@ export default function RateUsScreen(): React.JSX.Element {
   const starScales = useStarScales();
   const successScale = useSharedValue(0);
   const userId = useUserId();
-  const { control, handleSubmit, setValue } = useForm<ReviewFormValues>({
+  const {
+    control,
+    handleSubmit: handleFormSubmit,
+    setValue,
+  } = useForm<ReviewFormValues>({
     defaultValues: {
       comment: '',
       rating: 0,
@@ -138,11 +147,14 @@ export default function RateUsScreen(): React.JSX.Element {
           operation: 'submit_review',
         },
       });
+      hapticError();
       const message =
         err instanceof Error ? err.message : t('rateUs.reviewSubmitError');
       Alert.alert(t('rateUs.reviewFailed'), message);
     },
   });
+
+  const isSubmitDisabled = reviewMutation.isPending || rating === 0;
 
   function handleStarPress(star: number): void {
     hapticLight();
@@ -160,11 +172,23 @@ export default function RateUsScreen(): React.JSX.Element {
   }
 
   function handleInvalidSubmit(): void {
+    hapticError();
     Alert.alert(t('rateUs.ratingRequired'), t('rateUs.ratingRequiredMessage'));
+  }
+
+  function handleSubmit(): void {
+    if (reviewMutation.isPending) return;
+    if (rating === 0) {
+      handleInvalidSubmit();
+      return;
+    }
+
+    void handleFormSubmit(handleValidSubmit, handleInvalidSubmit)();
   }
 
   function handleValidSubmit(values: ReviewFormValues): void {
     if (reviewMutation.isPending) return;
+    hapticMedium();
     reviewMutation.mutate(values);
   }
 
@@ -263,14 +287,11 @@ export default function RateUsScreen(): React.JSX.Element {
               <AppScreenContent className="px-6" maxWidth={APP_SHEET_MAX_WIDTH}>
                 <Pressable
                   accessibilityRole="button"
+                  accessibilityState={{ disabled: isSubmitDisabled }}
                   className="w-full flex-row items-center justify-center rounded-2xl bg-primary py-4"
-                  disabled={rating === 0 || reviewMutation.isPending}
-                  onPress={handleSubmit(handleValidSubmit, handleInvalidSubmit)}
-                  style={
-                    rating === 0 || reviewMutation.isPending
-                      ? { opacity: 0.5 }
-                      : undefined
-                  }
+                  disabled={isSubmitDisabled}
+                  onPress={handleSubmit}
+                  style={isSubmitDisabled ? { opacity: 0.5 } : undefined}
                   testID="submit-review"
                 >
                   <Send color={Colors.white} size={18} />

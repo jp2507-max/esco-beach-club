@@ -200,6 +200,52 @@ const common = {
         },
       },
     },
+    accountDeletion: {
+      title: 'Xóa tài khoản Esco Beach Club',
+      intro:
+        'Trang công khai này giải thích cách yêu cầu xóa tài khoản Esco Beach Club, điều gì xảy ra trong thời gian khôi phục 30 ngày, dữ liệu nào sẽ bị xóa và những bản ghi nào có thể được lưu giữ sau khi xóa vì lý do pháp lý hoặc bảo mật.',
+      sections: {
+        overview: {
+          title: 'Tóm tắt nhanh',
+          body1:
+            'Bắt đầu xóa trong ứng dụng tại Hồ sơ > Xóa tài khoản, hoặc liên hệ hỗ trợ nếu bạn không thể truy cập luồng xóa trong ứng dụng.',
+          body2:
+            'Sau khi được lên lịch, tài khoản sẽ vào thời gian khôi phục 30 ngày để bạn có thể đăng nhập lại và hủy xóa trước khi việc xóa trở thành vĩnh viễn.',
+          body3:
+            'Khi xóa được hoàn tất, hồ sơ tài khoản, thông tin thành viên, sự kiện đã lưu, lịch sử đặt chỗ, lịch sử yêu cầu sự kiện riêng và các quyền lợi dành riêng cho thành viên sẽ bị xóa.',
+          body4:
+            'Chúng tôi chỉ có thể giữ lại các bản ghi giới hạn khi pháp luật yêu cầu, để ngăn chặn gian lận, duy trì bảo mật, hoàn tất kế toán hoặc ghi nhận rằng yêu cầu xóa đã được xử lý.',
+        },
+        request: {
+          title: 'Cách yêu cầu xóa',
+          body1:
+            'Mở ứng dụng, vào Hồ sơ > Xóa tài khoản, xem lại các cảnh báo và gửi yêu cầu khi đang đăng nhập.',
+          body2:
+            'Nếu bạn không thể đăng nhập, hãy liên hệ hỗ trợ để chúng tôi giúp bạn đến đúng luồng xóa tài khoản.',
+        },
+        restore: {
+          title: 'Thời gian khôi phục 30 ngày',
+          body1:
+            'Sau khi lên lịch xóa, bạn có thể khôi phục tài khoản bằng cách đăng nhập lại trong vòng 30 ngày.',
+          body2:
+            'Nếu không khôi phục trước hạn, việc xóa sẽ trở thành vĩnh viễn và quyền truy cập vào hồ sơ thành viên sẽ kết thúc.',
+        },
+        removed: {
+          title: 'Những gì bị xóa',
+          body1:
+            'Hồ sơ tài khoản, thông tin thành viên, sự kiện đã lưu, lịch sử đặt chỗ và yêu cầu sự kiện riêng, cùng các quyền truy cập hoặc quyền lợi dành riêng cho thành viên được liên kết với tài khoản sẽ bị xóa khi việc xóa được hoàn tất.',
+          body2:
+            'Quyền đăng nhập liên kết sẽ bị thu hồi khi nhà cung cấp hỗ trợ điều đó.',
+        },
+        retained: {
+          title: 'Những gì có thể được lưu giữ',
+          body1:
+            'Chúng tôi có thể lưu giữ một số bản ghi giới hạn cần thiết để tuân thủ pháp luật, ngăn chặn gian lận hoặc lạm dụng, duy trì bảo mật, hoàn tất kế toán, hoặc ghi nhận rằng một yêu cầu xóa đã được xử lý.',
+          body2:
+            'Các bản ghi được lưu giữ này chỉ được giữ trong thời gian cần thiết cho các mục đích đó.',
+        },
+      },
+    },
     terms: {
       title: 'Điều khoản dịch vụ',
       intro:

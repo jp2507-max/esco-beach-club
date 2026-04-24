@@ -694,7 +694,7 @@ export default function QrTabScreen(): React.JSX.Element {
           className="flex-1 items-center px-5"
           style={{
             justifyContent: isCompactScannerLayout ? 'flex-start' : 'center',
-            paddingTop: isCompactScannerLayout ? 8 : 0,
+            paddingTop: isCompactScannerLayout ? 4 : 0,
           }}
         >
           {renderScannerBody()}

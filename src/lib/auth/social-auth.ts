@@ -90,6 +90,54 @@ function createNonce(): string {
   );
 }
 
+function getNativeErrorCode(error: unknown): string | null {
+  if (
+    error &&
+    typeof error === 'object' &&
+    'code' in error &&
+    typeof error.code === 'string'
+  ) {
+    return error.code.trim().toUpperCase();
+  }
+
+  return null;
+}
+
+function getNativeErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message.trim().toLowerCase();
+  }
+
+  if (
+    error &&
+    typeof error === 'object' &&
+    'message' in error &&
+    typeof error.message === 'string'
+  ) {
+    return error.message.trim().toLowerCase();
+  }
+
+  return '';
+}
+
+function isAppleSignInCanceledError(error: unknown): boolean {
+  const code = getNativeErrorCode(error);
+  const normalizedMessage = getNativeErrorMessage(error);
+  const isUnknownReasonMessage = normalizedMessage.includes(
+    'authorization attempt failed for an unknown reason'
+  );
+
+  if (code === 'ERR_REQUEST_CANCELED') {
+    return true;
+  }
+
+  if (code === 'ERR_REQUEST_UNKNOWN' && isUnknownReasonMessage) {
+    return true;
+  }
+
+  return false;
+}
+
 function hasGoogleSignInPlatformConfig(): boolean {
   if (Platform.OS === 'web') return false;
 
@@ -296,12 +344,7 @@ export async function getAppleIdToken(): Promise<{
       nonce,
     };
   } catch (error: unknown) {
-    if (
-      error &&
-      typeof error === 'object' &&
-      'code' in error &&
-      error.code === 'ERR_REQUEST_CANCELED'
-    ) {
+    if (isAppleSignInCanceledError(error)) {
       throw new Error('providerSignInCanceled');
     }
 
@@ -332,12 +375,7 @@ export async function getAppleAuthorizationCode(): Promise<string> {
 
     return authorizationCode;
   } catch (error: unknown) {
-    if (
-      error &&
-      typeof error === 'object' &&
-      'code' in error &&
-      error.code === 'ERR_REQUEST_CANCELED'
-    ) {
+    if (isAppleSignInCanceledError(error)) {
       throw new Error('providerSignInCanceled');
     }
 

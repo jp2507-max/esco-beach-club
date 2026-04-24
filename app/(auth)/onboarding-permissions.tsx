@@ -7,6 +7,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Linking } from 'react-native';
 import { FadeIn, FadeInUp } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
 import {
@@ -19,6 +20,7 @@ import { InfoDot } from '@/src/components/ui';
 import { motion, withRM } from '@/src/lib/animations/motion';
 import { useButtonPress } from '@/src/lib/animations/use-button-press';
 import { hapticLight, hapticSuccess } from '@/src/lib/haptics/haptics';
+import { computeOnboardingFooterPadding } from '@/src/lib/layout/onboarding-footer-padding';
 import {
   resolvePushPermissionStatus,
   toOnboardingPermissionStatus,
@@ -26,7 +28,7 @@ import {
 import { ensureVenueUpsellNotificationChannel } from '@/src/lib/notifications';
 import { shadows } from '@/src/lib/styles/shadows';
 import { useSignupOnboardingDraftStore } from '@/src/stores/signup-onboarding-store';
-import { ActivityIndicator, Pressable, Text, View } from '@/src/tw';
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from '@/src/tw';
 import { Animated } from '@/src/tw/animated';
 
 function mapExpoPermissionStatus(
@@ -43,11 +45,13 @@ const CTA_DELAY = 320;
 export default function OnboardingPermissionsScreen(): React.JSX.Element {
   const router = useRouter();
   const { t } = useTranslation('auth');
+  const insets = useSafeAreaInsets();
   const ctaButton = useButtonPress();
   const signupDraft = useSignupOnboardingDraftStore((state) => state.draft);
   const setSignupDraft = useSignupOnboardingDraftStore(
     (state) => state.setDraft
   );
+  const footerPaddingBottom = computeOnboardingFooterPadding(insets.bottom);
 
   const [locationStatus, setLocationStatus] =
     React.useState<OnboardingPermissionStatus>(
@@ -358,8 +362,17 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
         testIDPrefix="onboarding-permissions"
       />
 
-      <View className="flex-1 px-5 pb-6">
-        <AuthScreenContent className="flex-1">
+      <ScrollView
+        className="flex-1"
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={{
+          flexGrow: 1,
+          paddingHorizontal: 20,
+          paddingBottom: 16,
+        }}
+        showsVerticalScrollIndicator={false}
+      >
+        <AuthScreenContent>
           <Animated.View
             entering={withRM(FadeIn.duration(motion.dur.md).delay(TITLE_DELAY))}
             className="mb-3 rounded-2xl bg-primary-fixed/45 px-4 py-2 dark:bg-primary/20"
@@ -562,10 +575,21 @@ export default function OnboardingPermissionsScreen(): React.JSX.Element {
               ) : null}
             </Animated.View>
           </View>
+        </AuthScreenContent>
+      </ScrollView>
 
+      <View
+        className="bg-background dark:bg-dark-bg"
+        style={{
+          paddingHorizontal: 20,
+          paddingTop: 12,
+          paddingBottom: footerPaddingBottom,
+        }}
+      >
+        <AuthScreenContent>
           <Animated.View
             entering={withRM(FadeIn.duration(motion.dur.md).delay(CTA_DELAY))}
-            className="mt-auto gap-3"
+            className="gap-3"
           >
             <Animated.View style={ctaButton.animatedStyle}>
               <Pressable

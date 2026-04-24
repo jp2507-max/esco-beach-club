@@ -32,7 +32,7 @@ const profile = {
   billScanner: {
     balanceLabel: 'Điểm',
     cameraPermissionDescription:
-      'Cho phép truy cập camera để mã QR trên hóa đơn có thể được quét ngay khi mở tab này.',
+      'Chúng tôi dùng camera để quét mã QR trên hóa đơn và cộng điểm ngay khi mở tab này.',
     cameraPermissionTitle: 'Mở camera để nhận điểm ngay',
     errorEyebrow: 'Thử quét lại',
     errorTitle: 'Không thể xử lý mã QR hóa đơn này',
@@ -44,7 +44,7 @@ const profile = {
     fallbackHint: 'Mở thẻ QR thành viên làm phương án dự phòng',
     fallbackTitle: 'QR thành viên dự phòng',
     frameHint: 'Đặt mã QR hóa đơn vào trong khung',
-    grantPermission: 'Bật camera',
+    grantPermission: 'Tiếp tục',
     grantPermissionHint:
       'Yêu cầu quyền camera hoặc mở cài đặt nếu trước đó đã bị từ chối',
     liveBadge: 'Máy quét đang hoạt động',

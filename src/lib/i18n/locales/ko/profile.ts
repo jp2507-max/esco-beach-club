@@ -32,7 +32,7 @@ const profile = {
   billScanner: {
     balanceLabel: '포인트',
     cameraPermissionDescription:
-      '이 탭을 열자마자 영수증 QR을 스캔할 수 있도록 카메라 접근을 허용해 주세요.',
+      '이 탭을 열자마자 영수증 QR을 스캔해 포인트를 적립하기 위해 카메라를 사용합니다.',
     cameraPermissionTitle: '즉시 포인트 적립을 위해 카메라가 필요합니다',
     errorEyebrow: '다시 스캔해 주세요',
     errorTitle: '이 영수증 QR을 처리할 수 없습니다',
@@ -44,7 +44,7 @@ const profile = {
     fallbackHint: '대체 수단으로 멤버 QR 카드를 엽니다',
     fallbackTitle: '멤버 QR 대체 화면',
     frameHint: '영수증 QR을 프레임 안에 맞춰 주세요',
-    grantPermission: '카메라 활성화',
+    grantPermission: '계속',
     grantPermissionHint:
       '카메라 권한을 요청하거나, 이전에 거부한 경우 설정을 엽니다',
     liveBadge: '스캐너 실행 중',

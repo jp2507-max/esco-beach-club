@@ -10,10 +10,6 @@ export default function AuthLayout(): React.JSX.Element {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={!isAuthenticated}>
         <Stack.Screen name="login" options={{ animation: 'fade' }} />
-        <Stack.Screen
-          name="signup"
-          options={{ animation: 'slide_from_right' }}
-        />
       </Stack.Protected>
 
       <Stack.Protected guard={isAuthenticated}>
@@ -21,30 +17,30 @@ export default function AuthLayout(): React.JSX.Element {
           name="post-auth-redirect"
           options={{ animation: 'none' }}
         />
-      </Stack.Protected>
 
-      {/* Onboarding stays outside protected groups so incomplete sessions can be
-          redirected here during auth/profile bootstrap. */}
-      <Stack.Screen
-        name="onboarding-welcome"
-        options={{ animation: 'slide_from_right' }}
-      />
-      <Stack.Screen
-        name="onboarding-profile-basics"
-        options={{ animation: 'slide_from_right' }}
-      />
-      <Stack.Screen
-        name="onboarding-local-identity"
-        options={{ animation: 'slide_from_right' }}
-      />
-      <Stack.Screen
-        name="onboarding-permissions"
-        options={{ animation: 'slide_from_right' }}
-      />
-      <Stack.Screen
-        name="onboarding-final-details"
-        options={{ animation: 'slide_from_right' }}
-      />
+        {/* Onboarding requires an authenticated session so account creation
+            always starts from email or social auth on the login screen. */}
+        <Stack.Screen
+          name="onboarding-welcome"
+          options={{ animation: 'slide_from_right' }}
+        />
+        <Stack.Screen
+          name="onboarding-profile-basics"
+          options={{ animation: 'slide_from_right' }}
+        />
+        <Stack.Screen
+          name="onboarding-local-identity"
+          options={{ animation: 'slide_from_right' }}
+        />
+        <Stack.Screen
+          name="onboarding-permissions"
+          options={{ animation: 'slide_from_right' }}
+        />
+        <Stack.Screen
+          name="onboarding-final-details"
+          options={{ animation: 'slide_from_right' }}
+        />
+      </Stack.Protected>
     </Stack>
   );
 }

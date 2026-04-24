@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { Mail, ShieldCheck, Waves } from 'lucide-react-native';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -43,7 +43,6 @@ import { Animated } from '@/src/tw/animated';
 
 export default function LoginScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
-  const router = useRouter();
   const searchParams = useLocalSearchParams<{
     authFlow?: string;
   }>();
@@ -99,8 +98,6 @@ export default function LoginScreen(): React.JSX.Element {
   }, [isSignupAuthFlow, signupDraft]);
   const isOnboardingAuthEntry =
     isSignupAuthFlow && onboardingData !== undefined;
-  const shouldRedirectToOnboarding =
-    isSignupAuthFlow && onboardingData === undefined;
   const verifyCodeForEmailFlow = React.useCallback<
     UseEmailCodeAuthFlowParams['verifyCode']
   >(
@@ -200,10 +197,6 @@ export default function LoginScreen(): React.JSX.Element {
 
     return t('genericError');
   }, [resolvedError, t]);
-
-  if (shouldRedirectToOnboarding) {
-    return <Redirect href="/(auth)/onboarding-welcome" />;
-  }
 
   return (
     <View className="flex-1">
@@ -400,30 +393,6 @@ export default function LoginScreen(): React.JSX.Element {
                   onApplePress={handleApplePress}
                   onGooglePress={handleGooglePress}
                 />
-              ) : null}
-
-              <View className="my-5 flex-row items-center">
-                <View className="h-px flex-1 bg-border dark:bg-dark-border" />
-                <Text className="mx-3 text-[13px] text-text-muted dark:text-text-muted-dark">
-                  {t('or')}
-                </Text>
-                <View className="h-px flex-1 bg-border dark:bg-dark-border" />
-              </View>
-
-              {!isOnboardingAuthEntry ? (
-                <Pressable
-                  accessibilityRole="button"
-                  className="items-center"
-                  onPress={() => router.push('/onboarding-welcome')}
-                  testID="login-go-signup"
-                >
-                  <Text className="text-sm text-text-secondary dark:text-text-secondary-dark">
-                    {t('needMemberAccount')}{' '}
-                    <Text className="font-bold text-primary dark:text-primary-bright">
-                      {t('createOne')}
-                    </Text>
-                  </Text>
-                </Pressable>
               ) : null}
             </Animated.View>
           </AuthScreenContent>

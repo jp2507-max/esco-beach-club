@@ -27,6 +27,10 @@ import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AppState, type AppStateStatus, Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import {
+  initialWindowMetrics,
+  SafeAreaProvider,
+} from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
 import { AuthProvider, useAuth } from '@/providers/AuthProvider';
@@ -152,14 +156,8 @@ Sentry.init({
   // Enable Logs
   enableLogs: __DEV__,
 
-  // Configure Session Replay
-  replaysSessionSampleRate: 0.1,
-  replaysOnErrorSampleRate: 1,
-  integrations: [
-    navigationIntegration,
-    Sentry.mobileReplayIntegration(),
-    Sentry.feedbackIntegration(),
-  ],
+  // Session Replay is intentionally disabled; errors and crashes still report.
+  integrations: [navigationIntegration, Sentry.feedbackIntegration()],
 
   // uncomment the line below to enable Spotlight (https://spotlightjs.com)
   // spotlight: __DEV__,
@@ -423,22 +421,24 @@ function RootLayout(): React.JSX.Element {
       <ReactQueryLifecycle />
       <AuthRuntimeBootstrap />
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <EscoNavigationTheme>
-          <AuthProvider>
-            <ReferralDeepLinkCapture />
-            <Sentry.ErrorBoundary
-              beforeCapture={(scope) => {
-                scope.setTag('component_boundary', 'root_layout');
-              }}
-              fallback={<AppErrorFallback />}
-            >
-              <AuthenticatedDataProvider>
-                <PendingAccountDeletionGate />
-                <RootLayoutNav />
-              </AuthenticatedDataProvider>
-            </Sentry.ErrorBoundary>
-          </AuthProvider>
-        </EscoNavigationTheme>
+        <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+          <EscoNavigationTheme>
+            <AuthProvider>
+              <ReferralDeepLinkCapture />
+              <Sentry.ErrorBoundary
+                beforeCapture={(scope) => {
+                  scope.setTag('component_boundary', 'root_layout');
+                }}
+                fallback={<AppErrorFallback />}
+              >
+                <AuthenticatedDataProvider>
+                  <PendingAccountDeletionGate />
+                  <RootLayoutNav />
+                </AuthenticatedDataProvider>
+              </Sentry.ErrorBoundary>
+            </AuthProvider>
+          </EscoNavigationTheme>
+        </SafeAreaProvider>
       </GestureHandlerRootView>
     </QueryClientProvider>
   );

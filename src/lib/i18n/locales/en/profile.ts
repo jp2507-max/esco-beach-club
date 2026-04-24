@@ -32,7 +32,7 @@ const profile = {
   billScanner: {
     balanceLabel: 'Points',
     cameraPermissionDescription:
-      'Allow camera access so your bill QR can be scanned the moment this tab opens.',
+      'We use the camera to scan your bill QR so points are credited the moment this tab opens.',
     cameraPermissionTitle: 'Camera access unlocks instant points',
     errorEyebrow: 'Try another scan',
     errorTitle: 'That bill QR could not be processed',
@@ -44,7 +44,7 @@ const profile = {
     fallbackHint: 'Opens your member QR card as a fallback',
     fallbackTitle: 'Member QR fallback',
     frameHint: 'Place the bill QR inside the frame',
-    grantPermission: 'Enable camera',
+    grantPermission: 'Continue',
     grantPermissionHint:
       'Requests camera access, or opens settings if access was previously denied',
     liveBadge: 'Scanner live',

@@ -19,7 +19,11 @@ import {
   type OnboardingLocalIdentityFormValues,
   onboardingLocalIdentitySchema,
 } from '@/src/lib/forms/schemas';
-import { hapticLight, hapticSelection } from '@/src/lib/haptics/haptics';
+import {
+  hapticError,
+  hapticLight,
+  hapticSelection,
+} from '@/src/lib/haptics/haptics';
 import { shadows } from '@/src/lib/styles/shadows';
 import { useSignupOnboardingDraftStore } from '@/src/stores/signup-onboarding-store';
 import { Pressable, ScrollView, Text, View } from '@/src/tw';
@@ -65,6 +69,7 @@ export default function OnboardingLocalIdentityScreen(): React.JSX.Element {
   }
 
   function onInvalidSubmit(): void {
+    hapticError();
     Alert.alert(
       t('onboardingLocalIdentityInvalidTitle'),
       t('onboardingLocalIdentityInvalidMessage')
@@ -86,7 +91,7 @@ export default function OnboardingLocalIdentityScreen(): React.JSX.Element {
         contentContainerClassName="flex-grow px-5 pb-6"
         showsVerticalScrollIndicator={false}
       >
-        <AuthScreenContent className="flex-grow">
+        <AuthScreenContent className="grow">
           <Animated.View
             entering={withRM(
               FadeIn.duration(motion.dur.md).delay(BANNER_DELAY)
