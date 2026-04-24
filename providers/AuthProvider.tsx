@@ -41,6 +41,9 @@ type SignOutParams = {
 const NON_REPORTABLE_AUTH_ERROR_KEYS = new Set([
   'providerSignInCanceled',
   'providerSignInInProgress',
+  'unableToCompleteProfileSetup',
+  'emailRequired',
+  'emailAndCodeRequired',
   'signupConsentRequired',
 ]);
 
@@ -166,12 +169,6 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         t,
       });
     } catch (error: unknown) {
-      if (__DEV__) {
-        console.error('[AuthProvider] Google sign-in flow failed', {
-          error,
-        });
-      }
-
       const nextError = toError(error, 'unableToSignInWithGoogle', {
         oauthProvider: 'google',
       });

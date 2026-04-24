@@ -371,6 +371,7 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
         contentContainerStyle={{
           flexGrow: 1,
           paddingHorizontal: 24,
+          paddingBottom: 16,
         }}
         showsVerticalScrollIndicator={false}
       >

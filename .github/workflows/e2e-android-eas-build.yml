@@ -28,8 +28,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: 📦 Checkout project repo
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
       - name: 📦 Download EAS APK
         run: wget "${{ github.event.inputs.apk-url }}" -O ./app-release.apk
+
+      - name: Verify Android 16 KB alignment
+        run: npm run check:android-alignment -- ./app-release.apk
 
       - name: Upload Test APK
         uses: actions/upload-artifact@v3

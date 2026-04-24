@@ -86,7 +86,7 @@ export default function OnboardingWelcomeScreen(): React.JSX.Element {
 
       <ScrollView
         className="flex-1"
-        contentInsetAdjustmentBehavior="automatic"
+        contentInsetAdjustmentBehavior="never"
         contentContainerStyle={{
           flexGrow: 1,
           paddingHorizontal: 20,

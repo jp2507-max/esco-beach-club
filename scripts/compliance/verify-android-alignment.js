@@ -139,8 +139,11 @@ function main() {
 
   const misaligned = combined
     .split(/\r?\n/)
-    .filter((line) => /\.so\b.*BAD/i.test(line))
+    .filter((line) => /BAD\b/i.test(line))
     .map((line) => line.trim());
+
+  const failureOutput =
+    result.status !== 0 && misaligned.length === 0 ? combined.trim() : '';
 
   const passed =
     result.status === 0 &&
@@ -153,6 +156,7 @@ function main() {
     zipalign,
     exitCode: result.status,
     misaligned,
+    ...(failureOutput ? { failureOutput } : {}),
     scannedAt: new Date().toISOString(),
   });
 
