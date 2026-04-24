@@ -29,8 +29,11 @@ function writeReport(report) {
 }
 
 function findZipalign() {
-  if (process.env.ZIPALIGN && fs.existsSync(process.env.ZIPALIGN)) {
-    return process.env.ZIPALIGN;
+  if (process.env.ZIPALIGN) {
+    if (fs.existsSync(process.env.ZIPALIGN)) return process.env.ZIPALIGN;
+    throw new Error(
+      `ZIPALIGN is set but path does not exist: ${process.env.ZIPALIGN}`
+    );
   }
   const sdkRoot = process.env.ANDROID_SDK_ROOT || process.env.ANDROID_HOME;
   if (!sdkRoot) return null;
@@ -84,7 +87,20 @@ function main() {
     process.exit(2);
   }
 
-  const zipalign = findZipalign();
+  let zipalign;
+  try {
+    zipalign = findZipalign();
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    writeReport({
+      success: false,
+      error: msg,
+      target: absTarget,
+      scannedAt: new Date().toISOString(),
+    });
+    console.error(msg);
+    process.exit(2);
+  }
   if (!zipalign) {
     const msg =
       'zipalign not found. Install Android SDK build-tools and set ANDROID_SDK_ROOT (or ANDROID_HOME), or pass ZIPALIGN=/abs/path.';

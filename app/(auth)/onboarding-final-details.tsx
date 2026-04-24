@@ -367,11 +367,10 @@ export default function OnboardingFinalDetailsScreen(): React.JSX.Element {
 
       <ScrollView
         className="flex-1"
-        contentInsetAdjustmentBehavior="automatic"
+        contentInsetAdjustmentBehavior="never"
         contentContainerStyle={{
           flexGrow: 1,
           paddingHorizontal: 24,
-          paddingBottom: 16,
         }}
         showsVerticalScrollIndicator={false}
       >

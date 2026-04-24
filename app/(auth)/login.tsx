@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { Redirect, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { Mail, ShieldCheck, Waves } from 'lucide-react-native';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -98,8 +98,6 @@ export default function LoginScreen(): React.JSX.Element {
   }, [isSignupAuthFlow, signupDraft]);
   const isOnboardingAuthEntry =
     isSignupAuthFlow && onboardingData !== undefined;
-  const shouldRedirectToOnboarding =
-    isSignupAuthFlow && onboardingData === undefined;
   const verifyCodeForEmailFlow = React.useCallback<
     UseEmailCodeAuthFlowParams['verifyCode']
   >(
@@ -199,10 +197,6 @@ export default function LoginScreen(): React.JSX.Element {
 
     return t('genericError');
   }, [resolvedError, t]);
-
-  if (shouldRedirectToOnboarding) {
-    return <Redirect href="/(auth)/onboarding-welcome" />;
-  }
 
   return (
     <View className="flex-1">

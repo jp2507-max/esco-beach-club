@@ -48,6 +48,20 @@ function shouldCaptureAuthError(errorKey: string): boolean {
   return !NON_REPORTABLE_AUTH_ERROR_KEYS.has(errorKey);
 }
 
+type AuthOperation =
+  | 'sign_in_with_apple'
+  | 'sign_in_with_google'
+  | 'send_magic_code'
+  | 'verify_magic_code'
+  | 'sign_out';
+
+type AuthPhase =
+  | 'oauth_exchange'
+  | 'profile_provision'
+  | 'email_send'
+  | 'email_verify'
+  | 'sign_out';
+
 export const [AuthProvider, useAuth] = createContextHook(() => {
   const { t } = useTranslation(['auth', 'common']);
   const { error: authError, isLoading, user } = db.useAuth();
@@ -76,12 +90,41 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   }
 
   function resolveAuthPhase(
-    errorKey: string
-  ): 'oauth_exchange' | 'profile_provision' {
-    return errorKey === 'unableToCompleteProfileSetup' ||
+    errorKey: string,
+    operation: AuthOperation
+  ): AuthPhase {
+    if (
+      errorKey === 'unableToCompleteProfileSetup' ||
       errorKey === 'profilePermissionDenied'
-      ? 'profile_provision'
-      : 'oauth_exchange';
+    ) {
+      return 'profile_provision';
+    }
+
+    if (operation === 'send_magic_code') return 'email_send';
+    if (operation === 'verify_magic_code') return 'email_verify';
+    if (operation === 'sign_out') return 'sign_out';
+
+    return 'oauth_exchange';
+  }
+
+  function reportAuthError(
+    error: unknown,
+    nextError: Error,
+    operation: AuthOperation
+  ): void {
+    if (!shouldCaptureAuthError(nextError.message)) return;
+
+    captureHandledError(error, {
+      extras: {
+        mappedErrorKey: nextError.message,
+        rawAuthErrorMessage: extractAuthErrorMessage(error),
+      },
+      tags: {
+        area: 'auth',
+        auth_phase: resolveAuthPhase(nextError.message, operation),
+        operation,
+      },
+    });
   }
 
   async function signInWithApple(params?: SignInProviderParams): Promise<void> {
@@ -100,19 +143,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         oauthProvider: 'apple',
       });
 
-      if (shouldCaptureAuthError(nextError.message)) {
-        captureHandledError(error, {
-          extras: {
-            mappedErrorKey: nextError.message,
-            rawAuthErrorMessage: extractAuthErrorMessage(error),
-          },
-          tags: {
-            area: 'auth',
-            auth_phase: resolveAuthPhase(nextError.message),
-            operation: 'sign_in_with_apple',
-          },
-        });
-      }
+      reportAuthError(error, nextError, 'sign_in_with_apple');
 
       setAppleSignInError(nextError);
       throw nextError;
@@ -145,19 +176,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         oauthProvider: 'google',
       });
 
-      if (shouldCaptureAuthError(nextError.message)) {
-        captureHandledError(error, {
-          extras: {
-            mappedErrorKey: nextError.message,
-            rawAuthErrorMessage: extractAuthErrorMessage(error),
-          },
-          tags: {
-            area: 'auth',
-            auth_phase: resolveAuthPhase(nextError.message),
-            operation: 'sign_in_with_google',
-          },
-        });
-      }
+      reportAuthError(error, nextError, 'sign_in_with_google');
 
       setGoogleSignInError(nextError);
       throw nextError;
@@ -175,17 +194,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       return await sendMagicCodeFlow({ email });
     } catch (error: unknown) {
       const nextError = toError(error, 'unableToSendCode');
-      captureHandledError(error, {
-        extras: {
-          mappedErrorKey: nextError.message,
-          rawAuthErrorMessage: extractAuthErrorMessage(error),
-        },
-        tags: {
-          area: 'auth',
-          auth_phase: resolveAuthPhase(nextError.message),
-          operation: 'send_magic_code',
-        },
-      });
+      reportAuthError(error, nextError, 'send_magic_code');
       setSendCodeError(nextError);
       throw nextError;
     } finally {
@@ -212,19 +221,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     } catch (error: unknown) {
       const nextError = toError(error, 'unableToVerifyCode');
 
-      if (shouldCaptureAuthError(nextError.message)) {
-        captureHandledError(error, {
-          extras: {
-            mappedErrorKey: nextError.message,
-            rawAuthErrorMessage: extractAuthErrorMessage(error),
-          },
-          tags: {
-            area: 'auth',
-            auth_phase: resolveAuthPhase(nextError.message),
-            operation: 'verify_magic_code',
-          },
-        });
-      }
+      reportAuthError(error, nextError, 'verify_magic_code');
 
       setVerifyCodeError(nextError);
       throw nextError;
@@ -244,17 +241,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       }
     } catch (error: unknown) {
       const nextError = toError(error, 'unableToSignOut');
-      captureHandledError(error, {
-        extras: {
-          mappedErrorKey: nextError.message,
-          rawAuthErrorMessage: extractAuthErrorMessage(error),
-        },
-        tags: {
-          area: 'auth',
-          auth_phase: resolveAuthPhase(nextError.message),
-          operation: 'sign_out',
-        },
-      });
+      reportAuthError(error, nextError, 'sign_out');
       setSignOutError(nextError);
       throw nextError;
     } finally {

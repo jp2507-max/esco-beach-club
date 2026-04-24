@@ -19,8 +19,6 @@
       "bundleIdentifier": "com.escobeachclub.app",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "Esco Beach Club uses background location to recognize when you arrive at the restaurant and deliver member-only venue offers.",
-        "NSLocationWhenInUseUsageDescription": "Esco Beach Club uses your location to show nearby events, partner perks, and venue updates.",
         "UISupportedInterfaceOrientations~ipad": [
           "UIInterfaceOrientationPortrait",
           "UIInterfaceOrientationPortraitUpsideDown",

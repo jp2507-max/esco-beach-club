@@ -52,7 +52,7 @@ const { getAppleAuthorizationCode } =
 
 describe('Apple sign-in cancellation mapping', () => {
   afterEach(() => {
-    signInAsyncMock.mockReset();
+    signInAsyncMock.mockClear();
   });
 
   test('maps ERR_REQUEST_CANCELED to providerSignInCanceled', async () => {

@@ -201,12 +201,8 @@ export default function OnboardingWelcomeScreen(): React.JSX.Element {
       </ScrollView>
 
       <View
-        className="bg-background dark:bg-dark-bg"
-        style={{
-          paddingHorizontal: 20,
-          paddingTop: 12,
-          paddingBottom: footerPaddingBottom,
-        }}
+        className="px-5 pt-3 bg-background dark:bg-dark-bg"
+        style={{ paddingBottom: footerPaddingBottom }}
       >
         <AuthScreenContent>
           <Animated.View

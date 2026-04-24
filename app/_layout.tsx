@@ -156,14 +156,8 @@ Sentry.init({
   // Enable Logs
   enableLogs: __DEV__,
 
-  // Configure Session Replay
-  replaysSessionSampleRate: 0.1,
-  replaysOnErrorSampleRate: 1,
-  integrations: [
-    navigationIntegration,
-    Sentry.mobileReplayIntegration(),
-    Sentry.feedbackIntegration(),
-  ],
+  // Session Replay is intentionally disabled; errors and crashes still report.
+  integrations: [navigationIntegration, Sentry.feedbackIntegration()],
 
   // uncomment the line below to enable Spotlight (https://spotlightjs.com)
   // spotlight: __DEV__,
